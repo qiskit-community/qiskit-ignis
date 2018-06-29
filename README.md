@@ -1,2 +1,7 @@
-# qiskit-tomography
-Quantum state and process tomography module for QISKit
+# Qiskit-Ignis
+
+Qiskit tools for quantum information science.
+
+## Contents
+
+- Tomography
