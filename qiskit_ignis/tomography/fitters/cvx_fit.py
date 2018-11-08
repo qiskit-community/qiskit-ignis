@@ -20,6 +20,55 @@ except:
     cvxpy = None
 
 
+def state_cvx_fit(data, basis_matrix, weights=None, **kwargs):
+    """
+    Reconstruct a quantum state using CVXPY convex optimization.
+
+    Args:
+        data (vector like): vector of expectation values
+        basis_matrix (matrix like): matrix of measurement operators
+        weights (vector like, optional): vector of weights to apply to the
+                                         objective function (default: None)
+        **kwargs (optional): kwargs for cvxpy solver.
+
+    Returns:
+        The fitted matrix rho that minimizes ||basis_matrix * vec(rho) - data||_2.
+
+    Additional Information:
+        This function is a wrapper for `cvx_fit`. See `tomography.fitters.cvx_fit`
+        documentation for additional information.
+    """
+    return cvx_fit(data, basis_matrix, weights=weights,
+                   PSD=True, trace=1, **kwargs)
+
+
+def process_cvx_fit(data, basis_matrix, weights=None, **kwargs):
+    """
+    Reconstruct a process (Choi) matrix using CVXPY convex optimization.
+
+    Args:
+        data (vector like): vector of expectation values
+        basis_matrix (matrix like): matrix of measurement operators
+        weights (vector like, optional): vector of weights to apply to the
+                                         objective function (default: None)
+        **kwargs (optional): kwargs for cvxpy solver.
+
+    Returns:
+        The fitted choi-matrix that minimizes ||basis_matrix * vec(choi) - data||_2.
+
+    Additional Information:
+        This function is a wrapper for `cvx_fit`. See `tomography.fitters.cvx_fit`
+        documentation for additional information.
+    """
+    # Calculate trace
+    rows, cols = np.shape(basis_matrix)
+    dim = int(np.sqrt(np.sqrt(cols)))
+    if dim ** 4 != cols:
+        raise ValueError("Input data does not correspond to a process matrix.")
+    return cvx_fit(data, basis_matrix, weights=weights,
+                   PSD=True, trace=dim, trace_preserving=True, **kwargs)
+
+
 ###########################################################################
 # CVXPY Fitter
 ###########################################################################

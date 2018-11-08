@@ -16,6 +16,65 @@ from scipy.linalg import lstsq
 from .utils import make_positive_semidefinite
 
 
+def state_mle_fit(data, basis_matrix, weights=None):
+    """
+    Reconstruct a density matrix using MLE least-squares fitting.
+
+    Args:
+        data (vector like): vector of expectation values
+        basis_matrix (matrix like): matrix of measurement operators
+        weights (vector like, optional): vector of weights to apply to the
+                                         objective function (default: None)
+        PSD (bool, optional): Enforced the fitted matrix to be positive
+                              semidefinite (default: True)
+        trace (int, optional): trace constraint for the fitted matrix
+                               (default: None).
+
+    Returns:
+        The fitted matrix rho that minimizes ||basis_matrix * vec(rho) - data||_2.
+
+    Additional Information:
+        This function is a wrapper for `mle_fit`. See `tomography.fitters.mle_fit`
+        documentation for additional information.
+    """
+    return mle_fit(data, basis_matrix, weights=weights, PSD=True, trace=1)
+
+
+def process_mle_fit(data, basis_matrix, weights=None):
+    """
+    Reconstruct a process (Choi) matrix using MLE least-squares fitting.
+
+    Note: due to limitations of the fitting method the returned Choi-matrix will
+          be completely-positive, but not necessarily trace preserving.
+
+    Args:
+        data (vector like): vector of expectation values
+        basis_matrix (matrix like): matrix of measurement operators
+        weights (vector like, optional): vector of weights to apply to the
+                                         objective function (default: None)
+        PSD (bool, optional): Enforced the fitted matrix to be positive
+                              semidefinite (default: True)
+        trace (int, optional): trace constraint for the fitted matrix
+                               (default: None).
+
+    Returns:
+        The fitted Choi-matrix that minimizes ||basis_matrix * vec(choi) - data||_2.
+
+    Additional Information:
+        Due to limitations of the fitting method the returned Choi-matrix will
+        be completely-positive, but not necessarily trace preserving.
+
+        This function is a wrapper for `mle_fit`. See `tomography.fitters.mle_fit`
+        documentation for additional information.
+    """
+    # Calculate trace of Choi-matrix from projector length
+    rows, cols = np.shape(basis_matrix)
+    dim = int(np.sqrt(np.sqrt(cols)))
+    if dim ** 4 != cols:
+        raise ValueError("Input data does not correspond to a process matrix.")
+    return mle_fit(data, basis_matrix, weights=weights, PSD=True, trace=dim)
+
+
 ###########################################################################
 # Linear Inversion (Least-Squares) Fitter
 ###########################################################################

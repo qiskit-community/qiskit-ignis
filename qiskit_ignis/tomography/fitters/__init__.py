@@ -13,8 +13,12 @@ Quantum tomography fitter functions
 # Import fitter utility functions
 from .utils import fitter_data
 from .utils import binomial_weights
-from .utils import make_positive_semidefinite
+from .utils import make_positive_semidefinite  # TODO: move to qiskit.quantum_info
 
 # Import Fitter Functions
+from .mle_fit import state_mle_fit
+from .mle_fit import process_mle_fit
 from .mle_fit import mle_fit
+from .cvx_fit import state_cvx_fit
+from .cvx_fit import process_cvx_fit
 from .cvx_fit import cvx_fit

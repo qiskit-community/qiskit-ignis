@@ -20,8 +20,10 @@ from .data import tomography_data
 
 # Tomography data fitting
 from .fitters import fitter_data
-from .fitters import mle_fit  # TODO: break into seperate state, process fitter functions
-from .fitters import cvx_fit  # TODO: break into seperate state, process fitter functions
+from .fitters import state_mle_fit
+from .fitters import process_mle_fit
+from .fitters import state_cvx_fit
+from .fitters import process_cvx_fit
 
 # Tomography subpackages
 from . import basis
@@ -33,4 +35,4 @@ from .data import combine_counts      # TODO: move to qiskit.tools
 from .data import expectation_counts  # TODO: move to qiskit.tools
 
 # TODO: move to qiskit.quantum_info
-from .fitters import make_positive_semidefinite # TODO: move to qiskit.quantum_info
+from .fitters import make_positive_semidefinite  # TODO: move to qiskit.quantum_info
