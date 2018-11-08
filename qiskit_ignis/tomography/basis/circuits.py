@@ -19,17 +19,22 @@ import qiskit as qk
 from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
 from qiskit._qiskiterror import QISKitError
 
-from .basis import TomographyBasis, PauliBasis, SICBasis
+from .tomographybasis import TomographyBasis
+from .paulibasis import PauliBasis
+from .sicbasis import SICBasis
 
 # Create logger
 logger = logging.getLogger(__name__)
 
 
+# TODO: Update docstrings
+
 ###########################################################################
 # State tomography circuits for measurement in Pauli basis
 ###########################################################################
 
-def state_tomography_circuits(circuit, measured_qubits):
+def state_tomography_circuits(circuit, measured_qubits,
+                              meas_labels='Pauli', meas_basis='Pauli',):
     """
     Return a list of quantum state tomography circuits.
 
@@ -42,6 +47,10 @@ def state_tomography_circuits(circuit, measured_qubits):
         measured_qubits (QuantumRegister): the qubits to be measured.
             This can also be a list of whole QuantumRegisters or
             individual QuantumRegister qubit tuples.
+        meas_labels (str, tuple, list(tuple)): The measurement operator
+            labels. See additional information for details (Default: 'Pauli').
+        meas_basis (str, TomographyBasis): The measurement basis.
+            See additional information for details (Default: 'Pauli').
 
     Returns:
         A list of QuantumCircuit objects containing the original circuit
@@ -54,16 +63,18 @@ def state_tomography_circuits(circuit, measured_qubits):
         a subset of state tomography circuits for a partial tomography
         experiment use the general function `tomography_circuits`.
     """
-    return tomography_circuits(circuit, measured_qubits,
-                               meas_labels='Pauli',
-                               meas_basis='Pauli')
+    return _tomography_circuits(circuit, measured_qubits,
+                                meas_labels=meas_labels, meas_basis=meas_basis,
+                                prep_labels=None, prep_basis=None)
 
 
 ###########################################################################
 # Process tomography circuits for preparation and measurement in Pauli basis
 ###########################################################################
 
-def process_tomography_circuits(circuit, measured_qubits):
+def process_tomography_circuits(circuit, measured_qubits,
+                                meas_labels='Pauli', meas_basis='Pauli',
+                                prep_labels='Pauli', prep_basis='Pauli'):
     """
     Return a list of quantum process tomography circuits.
 
@@ -78,6 +89,14 @@ def process_tomography_circuits(circuit, measured_qubits):
         measured_qubits (QuantumRegister): the qubits to be measured.
             This can also be a list of whole QuantumRegisters or
             individual QuantumRegister qubit tuples.
+        meas_labels (str, tuple, list(tuple)): The measurement operator
+            labels. See additional information for details (Default: 'Pauli').
+        meas_basis (str, TomographyBasis): The measurement basis.
+            See additional information for details (Default: 'Pauli').
+        prep_labels (str, tuple, list(tuple)): The preparation operator
+            labels. See additional information for details (Default: 'Pauli').
+        prep_basis (str, TomographyBasis): The preparation basis.
+            See additional information for details (Default: 'Pauli').
 
     Returns:
         A list of QuantumCircuit objects containing the original circuit
@@ -94,21 +113,20 @@ def process_tomography_circuits(circuit, measured_qubits):
         a subset of process tomography circuits for a partial tomography
         experiment use the general function `tomography_circuits`.
     """
-    return tomography_circuits(circuit, measured_qubits,
-                               meas_labels='Pauli', meas_basis='Pauli',
-                               prep_labels='Pauli', prep_basis='Pauli')
-
+    return _tomography_circuits(circuit, measured_qubits,
+                                meas_labels=meas_labels, meas_basis=meas_basis,
+                                prep_labels=prep_labels, prep_basis=prep_basis)
 
 
 ###########################################################################
 # General state and process tomography circuit functions
 ###########################################################################
 
-def tomography_circuits(circuit, measured_qubits,
-                        meas_labels='Pauli',
-                        meas_basis='Pauli',
-                        prep_labels=None,
-                        prep_basis=None):
+def _tomography_circuits(circuit, measured_qubits,
+                         meas_labels='Pauli',
+                         meas_basis='Pauli',
+                         prep_labels=None,
+                         prep_basis=None):
     """
     Return a list of quantum tomography circuits.
 
@@ -258,9 +276,9 @@ def tomography_circuits(circuit, measured_qubits,
 
     # Load built-in basis labels
     if isinstance(meas_labels, str):
-        meas_labels = default_measurement_labels(meas_labels)
+        meas_labels = _default_measurement_labels(meas_labels)
     if isinstance(prep_labels, str):
-        prep_labels = default_preparation_labels(prep_labels)
+        prep_labels = _default_preparation_labels(prep_labels)
 
     # Generate n-qubit labels
     meas_labels = _generate_labels(meas_labels, num_qubits)
@@ -299,7 +317,6 @@ def tomography_circuits(circuit, measured_qubits,
     return qst_circs
 
 
-
 ###########################################################################
 # Built-in circuit functions
 ###########################################################################
@@ -320,7 +337,7 @@ def default_basis(basis):
     raise ValueError('Unrecognised basis: {}'.format(basis))
 
 
-def default_measurement_labels(basis):
+def _default_measurement_labels(basis):
     """
     Built in measurement basis labels.
     """
@@ -329,7 +346,7 @@ def default_measurement_labels(basis):
     raise ValueError('Unrecognised basis string "{}"'.format(basis))
 
 
-def default_preparation_labels(basis):
+def _default_preparation_labels(basis):
     """
     Built in preparation basis labels.
     """
@@ -351,9 +368,9 @@ def tomography_circuit_tuples(measured_qubits, meas_labels='Pauli', prep_labels=
     """
 
     if isinstance(meas_labels, (str, TomographyBasis)):
-        meas_labels = default_measurement_labels(meas_labels)
+        meas_labels = _default_measurement_labels(meas_labels)
     if isinstance(prep_labels, (str, TomographyBasis)):
-        prep_labels = default_preparation_labels(prep_labels)
+        prep_labels = _default_preparation_labels(prep_labels)
 
     mls = _generate_labels(meas_labels, measured_qubits)
     pls = _generate_labels(prep_labels, measured_qubits)

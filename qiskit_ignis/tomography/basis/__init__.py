@@ -13,3 +13,7 @@ Quantum tomography basis
 from .tomographybasis import TomographyBasis
 from .paulibasis import PauliBasis
 from .sicbasis import SICBasis
+from .circuits import state_tomography_circuits
+from .circuits import process_tomography_circuits
+from .circuits import default_basis
+from .circuits import tomography_circuit_tuples

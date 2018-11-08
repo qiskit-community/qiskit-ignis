@@ -18,8 +18,7 @@ from scipy import linalg as la
 from qiskit._qiskiterror import QISKitError
 
 from ..data import marginal_counts, count_keys
-from ..basis import TomographyBasis
-from ..circuits import default_basis
+from ..basis import TomographyBasis, default_basis
 
 # Create logger
 logger = logging.getLogger(__name__)

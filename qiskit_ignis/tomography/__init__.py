@@ -11,9 +11,9 @@ Quantum State and Process Tomography module
 """
 
 # Tomography circuit generation
-from .circuits import state_tomography_circuits    # TODO: add basis kwarg
-from .circuits import process_tomography_circuits  # TODO: add basis kwarg
-from .circuits import tomography_circuits          # TODO: move to _internal helper function
+from .basis import state_tomography_circuits
+from .basis import process_tomography_circuits
+from . import basis
 
 # Tomography data formatting
 from .data import tomography_data
@@ -24,9 +24,6 @@ from .fitters import state_mle_fit
 from .fitters import process_mle_fit
 from .fitters import state_cvx_fit
 from .fitters import process_cvx_fit
-
-# Tomography subpackages
-from . import basis
 from . import fitters
 
 # Utility functions TODO: move to qiskit.tools
