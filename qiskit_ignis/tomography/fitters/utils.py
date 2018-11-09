@@ -91,9 +91,17 @@ def fitter_data(tomo_data,
 
     data = []
     basis_blocks = []
-    # Generate counts keys for converting to np array
-    ctkeys = count_keys(len(next(iter(tomo_data))[0]))
 
+    # Check if input data is state or process tomography data based
+    # on the label tuples
+    label = next(iter(tomo_data))
+    is_qpt = (isinstance(label, tuple) and len(label) == 2 and
+              isinstance(label[0], tuple) and isinstance(label[1], tuple))
+    # Generate counts keys for converting to np array
+    if is_qpt:
+        ctkeys = count_keys(len(label[1]))
+    else:
+        ctkeys = count_keys(len(label))
     for label, cts in tomo_data.items():
 
         # Convert counts dict to numpy array
@@ -105,8 +113,14 @@ def fitter_data(tomo_data,
         probs = np.array(cts) / shots
 
         # Get reconstruction basis operators
-        prep_op = _preparation_op(label[1], preparation)
-        meas_ops = _measurement_ops(label[0], measurement)
+        if is_qpt:
+            prep_label = label[0]
+            meas_label = label[1]
+        else:
+            prep_label = None
+            meas_label = label
+        prep_op = _preparation_op(prep_label, preparation)
+        meas_ops = _measurement_ops(meas_label, measurement)
         block = _basis_operator_matrix([np.kron(prep_op.T, mop) for mop in meas_ops])
 
         # Apply calibration pseudo-inverse before weights

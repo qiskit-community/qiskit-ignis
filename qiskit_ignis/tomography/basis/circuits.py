@@ -312,7 +312,12 @@ def _tomography_circuits(circuit, measured_qubits,
                 for j in range(num_qubits):
                     meas += measurement(ml[j], qubits[j], clbits[j])
             circ = prep + meas
-            circ.name = str((ml, pl))
+            if pl is None:
+                # state tomography circuit
+                circ.name = str(ml)
+            else:
+                # process tomography circuit
+                circ.name = str((pl, ml))
             qst_circs.append(circ)
     return qst_circs
 
