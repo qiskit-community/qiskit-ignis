@@ -63,7 +63,7 @@ def state_tomography_circuits(circuit, measured_qubits,
         a subset of state tomography circuits for a partial tomography
         experiment use the general function `tomography_circuits`.
     """
-    return _tomography_circuits(circuit, measured_qubits,
+    return _tomography_circuits(circuit, measured_qubits, None,
                                 meas_labels=meas_labels, meas_basis=meas_basis,
                                 prep_labels=None, prep_basis=None)
 
@@ -73,6 +73,7 @@ def state_tomography_circuits(circuit, measured_qubits,
 ###########################################################################
 
 def process_tomography_circuits(circuit, measured_qubits,
+                                prepared_qubits=None,
                                 meas_labels='Pauli', meas_basis='Pauli',
                                 prep_labels='Pauli', prep_basis='Pauli'):
     """
@@ -89,6 +90,9 @@ def process_tomography_circuits(circuit, measured_qubits,
         measured_qubits (QuantumRegister): the qubits to be measured.
             This can also be a list of whole QuantumRegisters or
             individual QuantumRegister qubit tuples.
+        prepared_qubits (QuantumRegister or None): the qubits to have state
+            preparation applied, if different from measured_qubits. If None
+            measured_qubits will be used for prepared qubits (Default: None).
         meas_labels (str, tuple, list(tuple)): The measurement operator
             labels. See additional information for details (Default: 'Pauli').
         meas_basis (str, TomographyBasis): The measurement basis.
@@ -113,7 +117,7 @@ def process_tomography_circuits(circuit, measured_qubits,
         a subset of process tomography circuits for a partial tomography
         experiment use the general function `tomography_circuits`.
     """
-    return _tomography_circuits(circuit, measured_qubits,
+    return _tomography_circuits(circuit, measured_qubits, prepared_qubits,
                                 meas_labels=meas_labels, meas_basis=meas_basis,
                                 prep_labels=prep_labels, prep_basis=prep_basis)
 
@@ -122,11 +126,9 @@ def process_tomography_circuits(circuit, measured_qubits,
 # General state and process tomography circuit functions
 ###########################################################################
 
-def _tomography_circuits(circuit, measured_qubits,
-                         meas_labels='Pauli',
-                         meas_basis='Pauli',
-                         prep_labels=None,
-                         prep_basis=None):
+def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
+                         meas_labels='Pauli', meas_basis='Pauli',
+                         prep_labels=None, prep_basis=None):
     """
     Return a list of quantum tomography circuits.
 
@@ -141,6 +143,9 @@ def _tomography_circuits(circuit, measured_qubits,
         measured_qubits (QuantumRegister): the qubits to be measured.
             This can also be a list of whole QuantumRegisters or
             individual QuantumRegister qubit tuples.
+        prepared_qubits (QuantumRegister or None): the qubits to have state
+            preparation applied, if different from measured_qubits. If None
+            measured_qubits will be used for prepared qubits (Default: None).
         meas_labels (None, str, tuple, list(tuple)): The measurement operator
             labels. If None no measurements will be appended. See additional
             information for details (Default: 'Pauli').
@@ -230,25 +235,44 @@ def _tomography_circuits(circuit, measured_qubits,
         may be invoked using the prep_circuit_fn='SIC'.
     """
 
+    # Check for different prepared qubits
+    if prepared_qubits is None:
+        prepared_qubits = measured_qubits
     # Check input circuit for measurements and measured qubits
     if isinstance(measured_qubits, list):
-        qubits = _format_registers(*measured_qubits)  # Unroll list of registers
+        meas_qubits = _format_registers(*measured_qubits)  # Unroll list of registers
     else:
-        qubits = _format_registers(measured_qubits)
-    num_qubits = len(qubits)
-    qubit_registers = set([q[0] for q in qubits])
+        meas_qubits = _format_registers(measured_qubits)
+    if isinstance(prepared_qubits, list):
+        prep_qubits = _format_registers(*prepared_qubits)  # Unroll list of registers
+    else:
+        prep_qubits = _format_registers(prepared_qubits)
+    if len(prep_qubits) != len(meas_qubits):
+        raise QISKitError("prepared_qubits and measured_qubits are different length.")
+    num_qubits = len(meas_qubits)
+    meas_qubit_registers = set([q[0] for q in meas_qubits])
     # Check qubits being measured are defined in circuit
-    for reg in qubit_registers:
+    for reg in meas_qubit_registers:
         if reg not in circuit.get_qregs().values():
-            logger.warning('WARNING: preparation circuit does not contain ' +
+            logger.warning('WARNING: circuit does not contain ' +
                            'measured QuantumRegister: {}'.format(reg.name))
+
+    prep_qubit_registers = set([q[0] for q in prep_qubits])
+    # Check qubits being measured are defined in circuit
+    for reg in prep_qubit_registers:
+        if reg not in circuit.get_qregs().values():
+            logger.warning('WARNING: circuit does not contain ' +
+                           'prepared QuantumRegister: {}'.format(reg.name))
+
+    # Get combined registers
+    qubit_registers = prep_qubit_registers.union(meas_qubit_registers)
 
     # Check if there are already measurements in the circuit
     for op in circuit:
         if isinstance(op, qk._measure.Measure):
-            logger.warning('WARNING: preparation circuit already contains measurements')
+            logger.warning('WARNING: circuit already contains measurements')
         if isinstance(op, qk._reset.Reset):
-            logger.warning('WARNING: preparation circuit contains resets')
+            logger.warning('WARNING: circuit contains resets')
 
     # Load built-in circuit functions
     if callable(meas_basis):
@@ -284,6 +308,7 @@ def _tomography_circuits(circuit, measured_qubits,
     meas_labels = _generate_labels(meas_labels, num_qubits)
     prep_labels = _generate_labels(prep_labels, num_qubits)
 
+    #
     # Note if the input circuit already has classical registers defined
     # the returned circuits add a new classical register for the tomography
     # measurments which will be inserted as the first classical register in
@@ -300,7 +325,7 @@ def _tomography_circuits(circuit, measured_qubits,
         # Generate preparation circuit
         if pl is not None:
             for j in range(num_qubits):
-                prep += preparation(pl[j], qubits[j])
+                prep += preparation(pl[j], prep_qubits[j])
             prep.barrier(*qubit_registers)
         # Add circuit being tomographed
         prep += circuit
@@ -310,7 +335,7 @@ def _tomography_circuits(circuit, measured_qubits,
             if ml is not None:
                 meas.barrier(*qubit_registers)
                 for j in range(num_qubits):
-                    meas += measurement(ml[j], qubits[j], clbits[j])
+                    meas += measurement(ml[j], meas_qubits[j], clbits[j])
             circ = prep + meas
             if pl is None:
                 # state tomography circuit
