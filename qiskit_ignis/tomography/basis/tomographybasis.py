@@ -9,9 +9,9 @@
 TomographyBasis class
 """
 
-# Import QISKit classes
-from qiskit import QuantumRegister, ClassicalRegister
-from qiskit._qiskiterror import QISKitError
+from qiskit import QuantumRegister
+from qiskit import ClassicalRegister
+from qiskit import QISKitError
 
 
 class TomographyBasis(object):

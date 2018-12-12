@@ -10,14 +10,24 @@
 Quantum tomography circuit generation.
 """
 
-# Needed for functions
 import logging
 import itertools as it
 
-# Import QISKit classes
-import qiskit as qk
-from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
-from qiskit._qiskiterror import QISKitError
+from qiskit import QuantumRegister
+from qiskit import ClassicalRegister
+from qiskit import QuantumCircuit
+from qiskit import QISKitError
+# NOTE: This is a tempory try block to maintain compatibility
+# with both qiskit-terra 0.6 and 0.7 until release of 0.7
+# after release the 0.6 block should be removed
+try:
+    # qiskit-terra 0.7
+    from qiskit.circuit.measure import Measure
+    from qiskit.circuit.reset import Reset
+except:
+    # qiskit-terra 0.6
+    from qiskit import Measure
+    from qiskit import Reset
 
 from .tomographybasis import TomographyBasis
 from .paulibasis import PauliBasis
@@ -252,26 +262,45 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
     num_qubits = len(meas_qubits)
     meas_qubit_registers = set([q[0] for q in meas_qubits])
     # Check qubits being measured are defined in circuit
-    for reg in meas_qubit_registers:
-        if reg not in circuit.get_qregs().values():
-            logger.warning('WARNING: circuit does not contain ' +
-                           'measured QuantumRegister: {}'.format(reg.name))
 
-    prep_qubit_registers = set([q[0] for q in prep_qubits])
-    # Check qubits being measured are defined in circuit
-    for reg in prep_qubit_registers:
-        if reg not in circuit.get_qregs().values():
-            logger.warning('WARNING: circuit does not contain ' +
-                           'prepared QuantumRegister: {}'.format(reg.name))
+    # NOTE: This is a tempory try block to maintain compatibility
+    # with both qiskit-terra 0.6 and 0.7 until release of 0.7
+    # after release the 0.6 block should be removed
+    try:
+        # qiskit-terra 0.7 block
+        for reg in meas_qubit_registers:
+            if reg not in circuit.qregs:
+                logger.warning('WARNING: circuit does not contain ' +
+                               'measured QuantumRegister: {}'.format(reg.name))
+
+        prep_qubit_registers = set([q[0] for q in prep_qubits])
+        # Check qubits being measured are defined in circuit
+        for reg in prep_qubit_registers:
+            if reg not in circuit.qregs:
+                logger.warning('WARNING: circuit does not contain ' +
+                               'prepared QuantumRegister: {}'.format(reg.name))
+    except:
+        # qiskit-terra 0.6 block
+        for reg in meas_qubit_registers:
+            if reg not in circuit.get_qregs().values():
+                logger.warning('WARNING: circuit does not contain ' +
+                               'measured QuantumRegister: {}'.format(reg.name))
+
+        prep_qubit_registers = set([q[0] for q in prep_qubits])
+        # Check qubits being measured are defined in circuit
+        for reg in prep_qubit_registers:
+            if reg not in circuit.get_qregs().values():
+                logger.warning('WARNING: circuit does not contain ' +
+                               'prepared QuantumRegister: {}'.format(reg.name))
 
     # Get combined registers
     qubit_registers = prep_qubit_registers.union(meas_qubit_registers)
 
     # Check if there are already measurements in the circuit
     for op in circuit:
-        if isinstance(op, qk._measure.Measure):
+        if isinstance(op, Measure):
             logger.warning('WARNING: circuit already contains measurements')
-        if isinstance(op, qk._reset.Reset):
+        if isinstance(op, Reset):
             logger.warning('WARNING: circuit contains resets')
 
     # Load built-in circuit functions

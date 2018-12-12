@@ -15,8 +15,7 @@ import itertools as it
 import numpy as np
 from scipy import linalg as la
 
-from qiskit._qiskiterror import QISKitError
-
+from qiskit import QISKitError
 from ..data import marginal_counts, count_keys
 from ..basis import TomographyBasis, default_basis
 
