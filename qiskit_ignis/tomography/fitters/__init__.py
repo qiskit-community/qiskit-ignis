@@ -22,3 +22,4 @@ from .mle_fit import mle_fit
 from .cvx_fit import state_cvx_fit
 from .cvx_fit import process_cvx_fit
 from .cvx_fit import cvx_fit
+from .exact_state_tomography import exact_state_tomography
