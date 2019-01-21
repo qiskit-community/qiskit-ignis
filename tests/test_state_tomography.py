@@ -14,7 +14,7 @@ class TestStateTomography(unittest.TestCase):
         job = qiskit.execute(qst, Aer.get_backend('qasm_simulator'), shots=5000)
         tomo_counts = tomo.tomography_data(job.result(), qst)
         probs, basis_matrix = tomo.fitter_data(tomo_counts)
-        rho = tomo.state_mle_fit(probs, basis_matrix)
+        rho = tomo.state_cvx_fit(probs, basis_matrix)
         return (rho, psi)
 
     def test_bell_2_qubits(self):
