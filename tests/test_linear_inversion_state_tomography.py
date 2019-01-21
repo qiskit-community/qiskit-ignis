@@ -6,7 +6,7 @@ import qiskit
 import numpy
 import itertools
 
-class TestExactStateTomography(unittest.TestCase):
+class TestLinearInversionStateTomography(unittest.TestCase):
 
     #this section is dedicated to generating tomography data as precise as possible
     #(as opposed to the usual tomography data which highly lacks in precision due to small number of trials)
@@ -48,9 +48,9 @@ class TestExactStateTomography(unittest.TestCase):
         qst = tomo.state_tomography_circuits(circuit, qubits)
         job = qiskit.execute(qst, Aer.get_backend('qasm_simulator'), shots=5000)
         tomo_counts = tomo.tomography_data(job.result(), qst)
-        rho = tomo.fitters.exact_state_tomography(tomo_counts)
+        rho = tomo.fitters.linear_inversion_state_tomography(tomo_counts)
         tomo_probs = self.generate_probs(['X', 'Y', 'Z'], psi)
-        rho_probs = tomo.fitters.exact_state_tomography(tomo_probs)
+        rho_probs = tomo.fitters.linear_inversion_state_tomography(tomo_probs)
         return (rho, rho_probs, psi)
 
     def test_bell_2_qubits(self):
@@ -74,7 +74,7 @@ class TestExactStateTomography(unittest.TestCase):
         F_bell = state_fidelity(psi, rho)
         self.assertAlmostEqual(F_bell, 1)
 
-    def test_complex_3_qubit_circuit(self):
+    def test_complex_1_qubit_circuit(self):
         q = QuantumRegister(1)
         circ = QuantumCircuit(q)
         circ.u3(1, 1, 1, q[0])

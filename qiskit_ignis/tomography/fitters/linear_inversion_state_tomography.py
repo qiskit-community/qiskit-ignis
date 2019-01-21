@@ -38,7 +38,8 @@ def get_matrix(v, matrices):
     return matrix
 
 
-def exact_state_tomography(results, ops = 'pauli'):
+def linear_inversion_state_tomography(results, ops ='pauli'):
+    """Performs state tomography for operators that constitute an orthonormal basis"""
     if isinstance(ops, str):
         if ops == 'pauli':
             ops = PauliBasis
