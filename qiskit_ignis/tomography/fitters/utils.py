@@ -15,7 +15,7 @@ import itertools as it
 import numpy as np
 from scipy import linalg as la
 
-from qiskit import QISKitError
+from qiskit import QiskitError
 from ..data import marginal_counts, count_keys
 from ..basis import TomographyBasis, default_basis
 
@@ -72,7 +72,7 @@ def fitter_data(tomo_data,
         measurement = default_basis(meas_basis)
         if isinstance(measurement, TomographyBasis):
             if measurement.measurement is not True:
-                raise QISKitError("Invalid measurement basis")
+                raise QiskitError("Invalid measurement basis")
             measurement = measurement.measurement_matrix
     if callable(prep_basis):
         preparation = prep_basis
@@ -80,7 +80,7 @@ def fitter_data(tomo_data,
         preparation = default_basis(prep_basis)
         if isinstance(preparation, TomographyBasis):
             if preparation.preparation is not True:
-                raise QISKitError("Invalid preparation basis")
+                raise QiskitError("Invalid preparation basis")
             preparation = preparation.preparation_matrix
 
     # If calibration matrix is specified the pseudo-inverse of the

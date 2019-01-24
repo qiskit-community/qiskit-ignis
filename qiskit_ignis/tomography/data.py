@@ -40,22 +40,10 @@ def tomography_data(result, circuits):
 
     # Check if result circuit has only tomogrpahy cregs
     # This allows us to avoid the expensive marginal counts function
-    
-    # NOTE: This is a tempory try block to maintain compatibility
-    # with both qiskit-terra 0.6 and 0.7 until release of 0.7
-    # after release the 0.6 block should be removed
-    try:
-        # qiskit-terra 0.7
-        if len(circuits[0].cregs) == 1:
-            marginalize = False
-        else:
-            marginalize = True
-    except:
-        # qiskit-terra 0.6
-        if len(circuits[0].get_cregs()) == 1:
-            marginalize = False
-        else:
-            marginalize = True
+    if len(circuits[0].cregs) == 1:
+        marginalize = False
+    else:
+        marginalize = True
 
     # Process measurements into expectation values
     data = {}
