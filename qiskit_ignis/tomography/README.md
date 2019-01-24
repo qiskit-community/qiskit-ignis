@@ -15,7 +15,6 @@
   * Quantum state and process tomography reconstruction via semidefinite program convex optimization (SDP)
   * Helper functions for processing count data into fitter data including
     * Calculation of weights assuming Gaussian statistics
-    * Calculation of noisy measurement POVM elements using assignment fidelity calibration data
 
 ### Using
 

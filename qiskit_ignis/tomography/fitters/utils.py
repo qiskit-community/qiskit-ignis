@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 def fitter_data(tomo_data,
                 meas_basis='Pauli',
                 prep_basis='Pauli',
-                calibration_matrix=None,
                 standard_weights=True,
                 beta=0.5):
     """Generate tomography fitter data from a tomography data dictionary.
@@ -43,26 +42,20 @@ def fitter_data(tomo_data,
                        Additional Information (default: 'Pauli')
         prep_matrix_fn (function, optional): A function to return preparation
                        operators. See Additional Information (default: 'Pauli')
-        calibration_matrix (matrix, optional): calibration matrix of noisey
-                            measurement assignment fidelities (default: None)
         standard_weights (bool, optional): Apply weights to basis matrix
                          and data based on count probability (default: True)
-        beta (float): hedging parameter for 0, 1 probabilities (default: 0)
+        beta (float): hedging parameter for 0, 1 probabilities (default: 0.5)
 
     Returns:
-        tuple(data, basis_matrix) where `data` is a vector of the computed
-        expectation values, and `basis_matrix` is a matrix of the preparation
-        and measurement operator.
+        tuple: (data, basis_matrix, weights) where `data` is a vector of the
+        probability values, and `basis_matrix` is a matrix of the preparation
+        and measurement operator, and `weights` is a vector of weights for the
+        given probabilities.
 
     Additional Information
     ----------------------
     standard_weights:
         Weights are calculated from from binomial distribution standard deviation
-
-    calibration_method:
-        If a calibration matrix is provided, the pseudo-inverse of this matrix
-        will be used to update the counts. Note that his count correction is
-        applied before the (optional) standard weights update has been applied.
     """
 
     # Load built-in circuit functions
@@ -83,13 +76,12 @@ def fitter_data(tomo_data,
                 raise QiskitError("Invalid preparation basis")
             preparation = preparation.preparation_matrix
 
-    # If calibration matrix is specified the pseudo-inverse of the
-    # calibration matrix will be applied to the data values.
-    if calibration_matrix is not None:
-        cal_inv = la.pinv(np.array(calibration_matrix))
-
     data = []
     basis_blocks = []
+    if standard_weights:
+        weights = []
+    else:
+        weights = None
 
     # Check if input data is state or process tomography data based
     # on the label tuples
@@ -110,6 +102,12 @@ def fitter_data(tomo_data,
         # Get probabilities
         shots = np.sum(cts)
         probs = np.array(cts) / shots
+        data += list(probs)
+
+        # Compute binomial weights
+        if standard_weights is True:
+            wts = binomial_weights(cts, beta)
+            weights += list(wts)
 
         # Get reconstruction basis operators
         if is_qpt:
@@ -121,22 +119,9 @@ def fitter_data(tomo_data,
         prep_op = _preparation_op(prep_label, preparation)
         meas_ops = _measurement_ops(meas_label, measurement)
         block = _basis_operator_matrix([np.kron(prep_op.T, mop) for mop in meas_ops])
-
-        # Apply calibration pseudo-inverse before weights
-        if calibration_matrix is not None:
-            probs = cal_inv @ probs
-
-        # Apply weights
-        if standard_weights is True:
-            wts = binomial_weights(cts, beta)
-            block = wts[:, None] * block
-            probs = wts * probs
-
-        # Append data
-        data += list(probs)
         basis_blocks.append(block)
 
-    return data, np.vstack(basis_blocks)
+    return data, np.vstack(basis_blocks), weights
 
 
 ###########################################################################
@@ -185,7 +170,7 @@ def binomial_weights(counts, beta=0.5):
     if beta < 0:
         raise ValueError('beta = {} must be non-negative.'.format(beta))
     if beta == 0 and (shots in counts or 0 in counts):
-        beta = 0.50922
+        beta = 0.5
         msg = 'Counts result in probabilities of 0 or 1 in binomial weights calculation. '
         msg += ' Setting hedging parameter beta={} to prevent dividing by zero.'.format(beta)
         logger.warning(msg)
