@@ -11,7 +11,7 @@ TomographyBasis class
 
 from qiskit import QuantumRegister
 from qiskit import ClassicalRegister
-from qiskit import QISKitError
+from qiskit import QiskitError
 
 
 class TomographyBasis(object):
@@ -69,13 +69,13 @@ class TomographyBasis(object):
     def measurement_circuit(self, op, qubit, clbit):
         # Error Checking
         if self.measurement is False:
-            raise QISKitError("{} is not a measurement basis".format(self._name))
+            raise QiskitError("{} is not a measurement basis".format(self._name))
 
         if not (isinstance(qubit, tuple) and isinstance(qubit[0], QuantumRegister)):
-            raise QISKitError('Input must be a qubit in a QuantumRegister')
+            raise QiskitError('Input must be a qubit in a QuantumRegister')
 
         if not (isinstance(clbit, tuple) and isinstance(clbit[0], ClassicalRegister)):
-            raise QISKitError('Input must be a bit in a ClassicalRegister')
+            raise QiskitError('Input must be a bit in a ClassicalRegister')
 
         if op not in self._measurement_labels:
             msg = "Invalid {0} measurement operator label".format(self._name)
@@ -89,10 +89,10 @@ class TomographyBasis(object):
 
         # Error Checking
         if self.preparation is False:
-            raise QISKitError("{} is not a preparation basis".format(self._name))
+            raise QiskitError("{} is not a preparation basis".format(self._name))
 
         if not (isinstance(qubit, tuple) and isinstance(qubit[0], QuantumRegister)):
-            raise QISKitError('Input must be a qubit in a QuantumRegister')
+            raise QiskitError('Input must be a qubit in a QuantumRegister')
 
         if op not in self._preparation_labels:
             msg = "Invalid {0} preparation operator label".format(self._name)
@@ -104,7 +104,7 @@ class TomographyBasis(object):
     def measurement_matrix(self, label, outcome):
 
         if self.measurement is False:
-            raise QISKitError("{} is not a measurement basis".format(self._name))
+            raise QiskitError("{} is not a measurement basis".format(self._name))
 
         # Check input is valid for this basis
         if label not in self._measurement_labels:
@@ -123,7 +123,7 @@ class TomographyBasis(object):
     def preparation_matrix(self, label):
 
         if self.preparation is False:
-            raise QISKitError("{} is not a preparation basis".format(self._name))
+            raise QiskitError("{} is not a preparation basis".format(self._name))
 
         # Check input is valid for this basis
         if label not in self._preparation_labels:
