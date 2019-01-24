@@ -16,18 +16,9 @@ import itertools as it
 from qiskit import QuantumRegister
 from qiskit import ClassicalRegister
 from qiskit import QuantumCircuit
-from qiskit import QISKitError
-# NOTE: This is a tempory try block to maintain compatibility
-# with both qiskit-terra 0.6 and 0.7 until release of 0.7
-# after release the 0.6 block should be removed
-try:
-    # qiskit-terra 0.7
-    from qiskit.circuit.measure import Measure
-    from qiskit.circuit.reset import Reset
-except:
-    # qiskit-terra 0.6
-    from qiskit import Measure
-    from qiskit import Reset
+from qiskit import QiskitError
+from qiskit.circuit.measure import Measure
+from qiskit.circuit.reset import Reset
 
 from .tomographybasis import TomographyBasis
 from .paulibasis import PauliBasis
@@ -258,40 +249,21 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
     else:
         prep_qubits = _format_registers(prepared_qubits)
     if len(prep_qubits) != len(meas_qubits):
-        raise QISKitError("prepared_qubits and measured_qubits are different length.")
+        raise QiskitError("prepared_qubits and measured_qubits are different length.")
     num_qubits = len(meas_qubits)
     meas_qubit_registers = set([q[0] for q in meas_qubits])
     # Check qubits being measured are defined in circuit
+    for reg in meas_qubit_registers:
+        if reg not in circuit.qregs:
+            logger.warning('WARNING: circuit does not contain ' +
+                            'measured QuantumRegister: {}'.format(reg.name))
 
-    # NOTE: This is a tempory try block to maintain compatibility
-    # with both qiskit-terra 0.6 and 0.7 until release of 0.7
-    # after release the 0.6 block should be removed
-    try:
-        # qiskit-terra 0.7 block
-        for reg in meas_qubit_registers:
-            if reg not in circuit.qregs:
-                logger.warning('WARNING: circuit does not contain ' +
-                               'measured QuantumRegister: {}'.format(reg.name))
-
-        prep_qubit_registers = set([q[0] for q in prep_qubits])
-        # Check qubits being measured are defined in circuit
-        for reg in prep_qubit_registers:
-            if reg not in circuit.qregs:
-                logger.warning('WARNING: circuit does not contain ' +
-                               'prepared QuantumRegister: {}'.format(reg.name))
-    except:
-        # qiskit-terra 0.6 block
-        for reg in meas_qubit_registers:
-            if reg not in circuit.get_qregs().values():
-                logger.warning('WARNING: circuit does not contain ' +
-                               'measured QuantumRegister: {}'.format(reg.name))
-
-        prep_qubit_registers = set([q[0] for q in prep_qubits])
-        # Check qubits being measured are defined in circuit
-        for reg in prep_qubit_registers:
-            if reg not in circuit.get_qregs().values():
-                logger.warning('WARNING: circuit does not contain ' +
-                               'prepared QuantumRegister: {}'.format(reg.name))
+    prep_qubit_registers = set([q[0] for q in prep_qubits])
+    # Check qubits being measured are defined in circuit
+    for reg in prep_qubit_registers:
+        if reg not in circuit.qregs:
+            logger.warning('WARNING: circuit does not contain ' +
+                            'prepared QuantumRegister: {}'.format(reg.name))
 
     # Get combined registers
     qubit_registers = prep_qubit_registers.union(meas_qubit_registers)
@@ -310,7 +282,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         measurement = default_basis(meas_basis)
         if isinstance(measurement, TomographyBasis):
             if measurement.measurement is not True:
-                raise QISKitError("Invalid measurement basis")
+                raise QiskitError("Invalid measurement basis")
             measurement = measurement.measurement_circuit
     if callable(prep_basis):
         preparation = prep_basis
@@ -318,7 +290,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         preparation = default_basis(prep_basis)
         if isinstance(preparation, TomographyBasis):
             if preparation.preparation is not True:
-                raise QISKitError("Invalid preparation basis")
+                raise QiskitError("Invalid preparation basis")
             preparation = preparation.preparation_circuit
 
     # Check we have circuit functions defined
