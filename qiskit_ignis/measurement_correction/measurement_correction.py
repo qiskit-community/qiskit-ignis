@@ -163,7 +163,7 @@ def remove_measurement_errors(raw_data, state_labels, cal_matrix, \
             raw_data2 = np.zeros([size_ratio,len(state_labels)])
 
             for i in range(size_ratio):
-                raw_data2[i][:] = raw_data[i*size_ratio:(i+1)*size_ratio]
+                raw_data2[i][:] = raw_data[i*len(state_labels):(i+1)*len(state_labels)]
 
         else:
 
