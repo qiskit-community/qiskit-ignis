@@ -225,6 +225,10 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
 
     arg = bm_r * cvxpy.vec(rho_r) - bm_i * cvxpy.vec(rho_i) - np.array(data)
 
+    #normalie weights?
+    weights = np.array(weights)
+    weights = weights/np.sqrt(sum(weights**2))
+
     # Add weights vector if specified
     if weights is not None:
         arg = cvxpy.diag(weights) * arg
