@@ -225,12 +225,15 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
 
     arg = bm_r * cvxpy.vec(rho_r) - bm_i * cvxpy.vec(rho_i) - np.array(data)
 
-    #normalie weights?
-    weights = np.array(weights)
-    weights = weights/np.sqrt(sum(weights**2))
+
 
     # Add weights vector if specified
     if weights is not None:
+
+        #normalie weights?
+        weights = np.array(weights)
+        weights = weights/np.sqrt(sum(weights**2))
+
         arg = cvxpy.diag(weights) * arg
 
     # SDP objective function
@@ -244,6 +247,7 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
     problem_solved = False
     while not problem_solved:
         kwargs['max_iters'] = iters
+        kwargs['solver'] = 'CVXOPT'
         prob.solve(**kwargs)
         if prob.status in ["optimal_inaccurate", "optimal"]:
             problem_solved = True
