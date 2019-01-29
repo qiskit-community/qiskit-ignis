@@ -35,11 +35,9 @@ class TestLinearInversionStateTomography(unittest.TestCase):
             results[v_string] = self.prob_for(psi, projector)
         return results
 
-    def generate_probs(self, op_names, psi):
-        qubits_num = int(numpy.math.log2(len(psi)))
-        probs = {}
-        for ops in itertools.product(op_names, repeat=qubits_num):
-            probs[ops] = self.measurement_probs(ops, psi)
+    def generate_probs(self, basis_matrix, psi):
+        psi_rho = numpy.kron(numpy.array(psi), numpy.array(psi))
+        probs = basis_matrix @ numpy.array(psi_rho)
         return probs
 
     def run_circuit_and_tomography(self, circuit, qubits):
@@ -48,9 +46,10 @@ class TestLinearInversionStateTomography(unittest.TestCase):
         qst = tomo.state_tomography_circuits(circuit, qubits)
         job = qiskit.execute(qst, Aer.get_backend('qasm_simulator'), shots=5000)
         tomo_counts = tomo.tomography_data(job.result(), qst)
-        rho = tomo.fitters.linear_inversion_state_tomography(tomo_counts)
-        tomo_probs = self.generate_probs(['X', 'Y', 'Z'], psi)
-        rho_probs = tomo.fitters.linear_inversion_state_tomography(tomo_probs)
+        probs, basis_matrix = tomo.fitter_data(tomo_counts)
+        rho = tomo.fitters.linear_inversion_state_tomography(probs, basis_matrix)
+        exact_probs = self.generate_probs(basis_matrix, psi)
+        rho_probs = tomo.fitters.linear_inversion_state_tomography(exact_probs, basis_matrix)
         return (rho, rho_probs, psi)
 
     def test_bell_2_qubits(self):

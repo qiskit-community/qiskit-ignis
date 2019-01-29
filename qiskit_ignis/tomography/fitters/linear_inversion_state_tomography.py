@@ -13,15 +13,26 @@ State tomography fitter based on linear inversion
 import itertools
 import numpy
 
+def linear_inversion_state_tomography(data, basis_matrix):
+    basis_matrix_dg = numpy.conj(basis_matrix).T
+    linear_inversion_matrix = numpy.linalg.inv(basis_matrix_dg @ basis_matrix) @ basis_matrix_dg
+    rho_vector = linear_inversion_matrix @ data
+    n = int(numpy.sqrt(len(rho_vector)))
+    if n ** 2 != len(rho_vector):
+        raise Exception("Wrong shape")
+    rho = numpy.reshape(rho_vector, (n, n))
+    return rho
+
+
 X = numpy.array([[0, 1], [1, 0]])
 Y = numpy.array([[0, -1j], [1j, 0]])
 Z = numpy.array([[1, 0], [0, -1]])
 
 PauliBasis = {'X': X, 'Y': Y, 'Z': Z}
 
-def linear_inversion_state_tomography(results, op_indices ='pauli'):
+def linear_inversion_orthonormal_basis_state_tomography(results, op_indices ='pauli'):
     """
-    Performs state tomography for operators that constitute an orthonormal basis
+    Performs state tomography for measurement operators that constitute an orthonormal basis
 
     Args:
         results (dictionary like): dictionary of tomography results of the form
