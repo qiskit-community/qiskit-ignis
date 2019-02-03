@@ -66,7 +66,9 @@ This module requires *QISKit > 0.5.0*. Install using `pip install qiskit`.
 
 Import from repository root directory with
 
-
+```python
+import tomography as tomo
+```
 
 #### Additional Requirements for SDP reconstruction
 
