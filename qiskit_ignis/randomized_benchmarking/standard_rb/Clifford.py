@@ -10,7 +10,7 @@
 
 import copy
 import numpy as np
-from verification.randomized_benchmarking.standard_rb.BinaryVector import BinaryVector
+from qiskit_ignis.randomized_benchmarking.standard_rb.BinaryVector import BinaryVector
 
 def invert_circuit(circuit):
     """invert the circuit--reverse and invert non self-inverse gates"""
