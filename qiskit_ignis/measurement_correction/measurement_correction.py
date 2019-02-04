@@ -14,7 +14,8 @@ from scipy.optimize import minimize
 import scipy.linalg as la
 import numpy as np
 import qiskit.tools.qcvv.tomography as tomo
-from qiskit import ClassicalRegister, QuantumRegister, QuantumCircuit, QiskitError
+from qiskit import ClassicalRegister, QuantumCircuit, QiskitError
+from tomography.basis.circuits import _format_registers
 
 def measurement_calibration_circuits(qubits):
 
@@ -76,17 +77,18 @@ def measurement_calibration_circuits(qubits):
 
     return cal_circuits, state_labels
 
-def generate_calibration_matrix(results, state_labels):
+def measurement_calibration_matrix(results, state_labels):
 
     """
     Return a measurement calibration matrix from the results of running the
-    measurement calibration circuits
+    circuits returned by `measurement_calibration_circuits`
 
     Args:
         results: the results of running the measurement calibration ciruits
 
-        state_labels: list of calibration state labels. The output matrix will obey
-        this ordering
+        state_labels: list of calibration state labels
+        returned from `measurement_calibration_circuits`. The output matrix will obey
+        this ordering.
 
 
     Returns:
@@ -94,7 +96,12 @@ def generate_calibration_matrix(results, state_labels):
 
 
     Additional Information:
-        Use this matrix in correct_measurement()
+        Use this matrix in `remove_measurement_errors`
+
+        e.g.
+        calcircuits, state_labels = measurement_calibration_circuits(qiskit.QuantumRegister(5))
+        job = qiskit.execute(calcircuits)
+        cal_matrix = meausurement_calibration_matrix(job.results(), state_labels)
     """
 
     cal_matrix = np.zeros([len(state_labels),len(state_labels)],dtype=float)
@@ -107,7 +114,7 @@ def generate_calibration_matrix(results, state_labels):
 
     return cal_matrix.transpose()
 
-def remove_measurement_errors(raw_data, state_labels, cal_matrix, \
+def apply_measurement_calibration(raw_data, state_labels, cal_matrix, \
                               method=1):
 
     """
@@ -130,8 +137,18 @@ def remove_measurement_errors(raw_data, state_labels, cal_matrix, \
     Returns:
         The corrected data in the same form as raw_data
 
-
     Additional Information:
+
+        e.g.
+        calcircuits, state_labels = measurement_calibration_circuits(qiskit.QuantumRegister(5))
+        job = qiskit.execute(calcircuits)
+        cal_matrix = meausurement_calibration_matrix(job.results(), state_labels)
+
+        job2 = qiskit.execute(my_circuits)
+        results2 = job2.results()
+
+        corrected_counts = apply_measurement_calibration(job2.get_counts('circ1'), state_labels, \
+        cal_matrix)
 
     """
 
@@ -216,21 +233,3 @@ def remove_measurement_errors(raw_data, state_labels, cal_matrix, \
 
     return raw_data2
 
-
-def _format_registers(*registers):
-    """
-    Return a list of qubit QuantumRegister tuples.
-    """
-    if not registers:
-        raise Exception('No registers are being measured!')
-    qubits = []
-    for tuple_element in registers:
-        if isinstance(tuple_element, QuantumRegister):
-            for j in range(tuple_element.size):
-                qubits.append((tuple_element, j))
-        else:
-            qubits.append(tuple_element)
-    # Check registers are unique
-    if len(qubits) != len(set(qubits)):
-        raise Exception('Qubits to be measured are not unique!')
-    return qubits

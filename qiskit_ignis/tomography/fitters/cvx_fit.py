@@ -244,10 +244,12 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
     iters = 5000
     max_iters = kwargs.get('max_iters', 20000)
 
+    if 'solver' not in kwargs:
+        kwargs['solver'] = 'CVXOPT'   # make CVXOPT default solver
+
     problem_solved = False
     while not problem_solved:
         kwargs['max_iters'] = iters
-        kwargs['solver'] = 'CVXOPT'
         prob.solve(**kwargs)
         if prob.status in ["optimal_inaccurate", "optimal"]:
             problem_solved = True
