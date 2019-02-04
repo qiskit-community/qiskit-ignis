@@ -9,13 +9,8 @@
 Advanced Clifford operations needed for randomized benchmarking
 """
 
-import os
-import copy
-import random
-import subprocess as sp
 import numpy as np
 import qiskit_ignis.randomized_benchmarking.standard_rb.Clifford as clf
-#import qiskit_ignis.randomized_benchmarking.standard_rb.symplectic as symplectic
 import qiskit
 
 try:
@@ -222,216 +217,33 @@ def load_clifford_table(picklefile='cliffords2.pickle'):
     with open(picklefile, "rb") as pf:
         return pickle.load(pf)
 
-# --------------------------------------------------------
-# Generate random clifford gates
-# using the pre-generated files
-# --------------------------------------------------------
-
-def get_circuits_from_files(cliffs):
-    """get the circuit that makes the symplectic part of tableu of cliffords in list cliffs"""
-    nbits = cliffs[0].size()
-    n2 = nbits*2
-    cin = ""
-
-    for i, _ in enumerate(cliffs):
-        # this calculation of symp is similar to cliff.key() but not the same.
-        #  leaves off pauli frame column and might differ to be compatible with
-        # Sergey's compile code
-        symp_mat = cliffs[i].matrix[:n2, :n2]#.transpose()
-        symp = 0
-        symp_list = symp_mat.reshape(n2*n2).tolist()
-        symp_list.reverse()
-        for bit in symp_list:
-            symp = (symp << 1) | int(bit)
-        cin = cin + str(symp) + '\n'
-
-    #this will fail if the .dat files do not exist
-    cmd = os.path.join(os.path.dirname(__file__), 'src', 'compile') + ' %d'%nbits
-    with sp.Popen(cmd.split(),
-                  stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE) as proc:
-        cout, _ = proc.communicate(cin.encode())
-    cout = cout.decode('ascii') # convert from binary string to string string
-    cout = cout.split('\n')
-    for i, _ in enumerate(cliffs):
-        cliffs[i].circuit = []
-        circ = cout[i]
-        if circ:  # if string is non-empty (could be empty if cliff was the identity)
-            circ = circ[:-1] # strip trailing comma
-            circ = circ.split(',')
-            cliffs[i].circuit_append(circ)
-
-def rand_symplectic_part(symp, nq):
-    """ generate the symplectic part of the random clifford """
-    symp2 = np.zeros([2*nq, 2*nq], dtype=np.uint8)
-    symp3 = np.zeros([2*nq, 2*nq], dtype=np.uint8)
-    # these interchange rows and columns because the random symplectic code
-    # uses a different convention
-    for i in range(nq):
-        symp2[i] = symp[2*i]
-        symp2[i+nq] = symp[2*i+1]
-    for i in range(nq):
-        symp3[:, i] = symp2[:, 2*i]
-        symp3[:, i+nq] = symp2[:, 2*i+1]
-
-    # add on extra column for phases
-    mat = np.zeros([2*nq, 2*nq+1], dtype=np.uint8)
-    mat[0:2*nq, 0:2*nq] = symp3
-    return(mat)
-
-def rand_clifford_using_files(nq):
-    """pick a random 2,3,or 4-qubit Clifford gate using the .dat files"""
-    assert 1 < nq < 5
-    sizes = [24, 11520, 1451520, 47377612800]
-
-    rint = np.random.randint(0, sizes[nq-1], dtype=np.int64)
-    symp = symplectic.symplectic(rint, nq)
-    mat = rand_symplectic_part(symp, nq)
-    cliff = clf.Clifford(nq)
-    cliff.from_matrix(mat)
-    get_circuits_from_files([cliff])
-
-    for i in range(nq):
-        pauli_gates(cliff, i, np.random.randint(0, 4))
-    return cliff
-
-# --------------------------------------------------------
-# Generate random clifford gates "on the fly"
-# using the code in symplectic.py
-# --------------------------------------------------------
-
-def random_clifford_advanced(cliff):
-    """pick a random Clifford gate"""
-    cliff.circuit = []
-    nq = cliff.n
-    # compute size of nq-qubit sympletic group
-    size = 1
-    for i in range(1, nq+1):
-        size = size*(pow(4, i)-1)
-    size = size*pow(2, nq*nq)
-    rint = random.randrange(size)
-    symp = symplectic.symplectic(rint, nq)
-    symp = symp.transpose()  # transpose to make cannonical ordering agree
-                             # with Koenig-Smolin paper used in symplectic.py
-    mat = rand_symplectic_part(symp, nq)
-    for i in range(2*nq):
-        mat[i, 2*nq] = np.random.randint(2)  # random phases
-    cliff.from_matrix(mat)
-    return(cliff)
 
 # --------------------------------------------------------
 # Main function that generates a random clifford
 # --------------------------------------------------------
-def random_clifford(n, on_the_fly=False):
+def random_clifford(n):
     """pick a random Clifford gate
 
     Args:
         n: dimension of the clifford
-        on_the_fly: use the "on the fly method" (this is automatically used for n>4)
 
     Returns:
         Clifford
     """
 
-    if n > 4 or on_the_fly:
-        #use on the fly method
-        cliff2 = clf.Clifford(n)
-        cliff2 = random_clifford_advanced(cliff2)
-        cliff2.decompose()
-        return cliff2
-
-    elif n == 1:
+    if n == 1:
         return clifford1(np.random.randint(0, 24))
     elif n == 2:
         return clifford2(np.random.randint(0, 11520))
-    elif n == 3 or n == 4:
-        return rand_clifford_using_files(n)
-
-# --------------------------------------------------------
-# Invert a random clifford
-# using the pre-generated files
-# --------------------------------------------------------
-
-def find_inverse_clifford_using_files(cliffs):
-    """
-    Find the inverse Clifford
-    """
-    nq = cliffs[0].size()
-    assert 1 < nq < 5
-
-    l = len(cliffs)
-    cliffs2 = copy.deepcopy(cliffs)
-    invs = []
-    for j in range(l):  # invs is a list of fresh cliffords
-        invs = invs + [clf.Clifford(nq)]
-    # find the circuits for the (original) cliffords
-    get_circuits_from_files(cliffs2)  # using cliffs2 to avoid stomping on original circuits in cliffs
-    # we want to run the circuit backwards
-    for j in range(l):
-        inv = invs[j]
-        cliff = cliffs2[j]
-        circuit = cliff.get_circuit()
-        invcircuit = clf.invert_circuit(circuit)
-
-        # actually run it
-        for i, _ in enumerate(invcircuit):
-            split = invcircuit[i].split()
-            q1 = int(split[1])
-            if split[0] == 'r':
-                inv.h(q1)
-                inv.s(q1)
-                inv.h(q1)
-                inv.s(q1)
-            elif split[0] == 'rinv':  # s.z = s^inverse
-                inv.s(q1)
-                inv.z(q1)
-                inv.h(q1)
-                inv.s(q1)
-                inv.z(q1)
-                inv.h(q1)
-            elif split[0] == 'cnot':
-                inv.cnot(q1, int(split[2]))
-            elif split[0] == 'h':
-                inv.h(q1)
-            elif split[0] == 's':
-                inv.s(q1)
-            else:
-                print("error: inverse circuit line is: ", invcircuit[i])
-
-        inv.circuit_append(invcircuit)
-
-        # now read off the phases to do the Pauli part of the inverse
-        cliff.compose_circuit(inv)
-        table = cliff.get_table()
-        for i in range(nq):
-            p0 = table[i]['phase']
-            p1 = table[i+nq]['phase']
-            if p0 == 1 and p1 == 1:
-                inv.circuit_append(['y '+ str(i)])
-                inv.y(i)
-            elif p0 == 1 and p1 == 0:
-                inv.circuit_append(['z '+ str(i)])
-                inv.z(i)
-            elif p0 == 0 and p1 == 1:
-                inv.circuit_append(['x '+ str(i)])
-                inv.x(i)
-    return invs
-
+    else:
+        print ("Error: the number of qubits should be only 1 or 2 \n")
 
 # --------------------------------------------------------
 # Main function that calculates an inverse of a clifford
 # --------------------------------------------------------
-def find_inverse_clifford_circuit(cliff, clifford_table=None, on_the_fly=False):
+def find_inverse_clifford_circuit(cliff, clifford_table=None):
     """Find the inverse of the Clifford, and a circuit to make it"""
     n = cliff.size()
-
-    if n > 4 or on_the_fly:
-        #find the inverse for the "on the fly method"
-        cliff_cpy = copy.deepcopy(cliff)
-        cliff_cpy.decompose()
-        ret = clf.Clifford(cliff_cpy.n)
-        cliff_cpy.circuit = clf.invert_circuit(cliff_cpy.circuit)
-        ret.compose_circuit(cliff_cpy)
-        return ret.get_circuit()
 
     if n in (1, 2):
         invcircuit = clifford_table[cliff.key()].copy()
@@ -447,9 +259,9 @@ def find_inverse_clifford_circuit(cliff, clifford_table=None, on_the_fly=False):
 
         return invcircuit
 
-    cliff.get_matrix()
-    inv = find_inverse_clifford_using_files([cliff])
-    return inv[0].get_circuit()
+    else:
+        print ("Error: the number of qubits should be only 1 or 2 \n")
+
 
 # --------------------------------------------------------
 # Returns the Clifford circuit in the form of a QuantumCircuit object
