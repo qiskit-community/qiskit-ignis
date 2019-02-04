@@ -7,20 +7,18 @@
 
 """
 Test Clifford functions:
-- Generating Clifford tables on 1 and 2 qubits: rb.clifford1_table and rb.clifford2_table
-- Generating a pseudo-random Clifford (using the tables or "on the fly"): rb.random_clifford
-- Inverting a Clifford: rb.find_inverse_clifford_circuit
+- Generating Clifford tables on 1 and 2 qubits: clifford_utils.clifford1_table and clifford_utils.clifford2_table
+- Generating a pseudo-random Clifford (using the tables): clifford_utils.random_clifford
+- Inverting a Clifford: clifford_utils.find_inverse_clifford_circuit
 """
 
-# import config
-import os
 import unittest
 import filecmp
 import random
 import numpy as np
 
 # Import the clifford_utils functions
-import verification.randomized_benchmarking.standard_rb.clifford_utils as clutils
+import qiskit_ignis.randomized_benchmarking.standard_rb.clifford_utils as clutils
 
 class TestClifford(unittest.TestCase):
     """
@@ -31,7 +29,7 @@ class TestClifford(unittest.TestCase):
             setUp and global parameters
         """
         self.number_of_tests = 20  # number of pseudo-random seeds
-        self.max_nq = 10  # maximal number of qubits to check
+        self.max_nq = 2  # maximal number of qubits to check
 
     def test_tables(self):
         """
@@ -53,15 +51,6 @@ class TestClifford(unittest.TestCase):
         test_tables_file.write(str(sorted(clifford2.values())))
         test_tables_file.write("\n")
 
-        # test (to do): generating the tables for 3 and 4 qubits (dat files)
-        # need to verify that the dat files (generated using the C++ code) are the same
-
-        # verify that the dat tables for 3 and 4 qubits exist - otherwise raise an error:
-        for nq in range(3, 5):
-            if not os.path.exists(os.path.join(os.path.dirname(__file__), 'src',
-                                               'qubits_%d_cnots_0.dat'%(nq))):
-                raise ValueError("Please run 'ex %d' to generate the .dat tables"%(nq))
-
         test_tables_file.close()
         self.assertTrue(filecmp.cmp('test_tables_results.txt', 'test_tables_expected.txt'),
                         "Error: tables on 1 and 2 qubits are not the same")
@@ -69,7 +58,6 @@ class TestClifford(unittest.TestCase):
     def test_random_and_inverse(self):
         """
             test: generating a pseudo-random Clifford using tables
-            (either using the tables or "on-the-fly")
             and computing its inverse
         """
         clifford_tables = [[]]*self.max_nq
@@ -77,9 +65,9 @@ class TestClifford(unittest.TestCase):
         clifford_tables[1] = clutils.clifford2_table()
         test_random_file = open('test_random_results.txt', 'w')  # new file with the test results
 
-        # test: generating a pseudo-random Clifford using tables - 1,2,3,4 qubits
+        # test: generating a pseudo-random Clifford using tables - 1&2 qubits
         # and computing its inverse
-        for nq in range(1, 5):
+        for nq in range(1, 1+self.max_nq):
             for i in range(0, self.number_of_tests):
                 my_seed = i
                 np.random.seed(my_seed)
@@ -93,25 +81,6 @@ class TestClifford(unittest.TestCase):
                                        "- %d qubit - seed=%d:\n" %(nq, my_seed))
                 inv_cliff_nq = clutils.find_inverse_clifford_circuit(cliff_nq,
                                                                      clifford_tables[nq-1])
-                test_random_file.write(str(inv_cliff_nq))
-                test_random_file.write("\n")
-                test_random_file.write("-------------------------------------------------------\n")
-
-        # test: generating a pseudo-random Clifford using "on the fly" method -
-        # 1,2,...,max_nq qubits, and computing its inverse
-        for nq in range(1, self.max_nq+1):
-            for i in range(0, self.number_of_tests):
-                my_seed = i
-                np.random.seed(my_seed)
-                random.seed(my_seed)
-                test_random_file.write("test: generating a pseudo-random clifford using "
-                                       "on the fly method - %d qubit - seed=%d:\n" %(nq, my_seed))
-                cliff_nq = clutils.random_clifford(nq, True)
-                test_random_file.write(str(cliff_nq.circuit))
-                test_random_file.write("\n")
-                test_random_file.write("test: inverting a pseudo-random clifford using "
-                                       "on the fly method - %d qubit - seed=%d:\n" %(nq, my_seed))
-                inv_cliff_nq = clutils.find_inverse_clifford_circuit(cliff_nq, None, True)
                 test_random_file.write(str(inv_cliff_nq))
                 test_random_file.write("\n")
                 test_random_file.write("-------------------------------------------------------\n")

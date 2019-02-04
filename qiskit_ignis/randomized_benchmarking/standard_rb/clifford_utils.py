@@ -14,8 +14,8 @@ import copy
 import random
 import subprocess as sp
 import numpy as np
-import verification.randomized_benchmarking.standard_rb.Clifford as clf
-import verification.randomized_benchmarking.standard_rb.symplectic as symplectic
+import qiskit_ignis.randomized_benchmarking.standard_rb.Clifford as clf
+#import qiskit_ignis.randomized_benchmarking.standard_rb.symplectic as symplectic
 import qiskit
 
 try:
