@@ -4,19 +4,19 @@ test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=0:
 ['h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=1:
-['r 0', 'z 0']
+['v 0', 'z 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=1:
-['z 0', 'rinv 0']
+['z 0', 'w 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=2:
-['rinv 0']
+['w 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=2:
-['r 0']
+['v 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=3:
-['rinv 0', 'x 0']
+['w 0', 'x 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=3:
-['x 0', 'r 0']
+['x 0', 'v 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=4:
 ['h 0', 'x 0']
@@ -29,9 +29,9 @@ test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=5:
 ['y 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=6:
-['rinv 0', 'x 0']
+['w 0', 'x 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=6:
-['x 0', 'r 0']
+['x 0', 'v 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=7:
 ['h 0', 'y 0']
@@ -44,44 +44,44 @@ test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=8:
 ['y 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=9:
-['h 0', 'rinv 0', 'z 0']
+['h 0', 'w 0', 'z 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=9:
-['z 0', 'r 0', 'h 0']
+['z 0', 'v 0', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=10:
-['rinv 0', 'z 0']
+['w 0', 'z 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=10:
-['z 0', 'r 0']
+['z 0', 'v 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=11:
-['h 0', 'r 0']
+['h 0', 'v 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=11:
-['rinv 0', 'h 0']
+['w 0', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=12:
-['rinv 0', 'y 0']
+['w 0', 'y 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=12:
-['y 0', 'r 0']
+['y 0', 'v 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=13:
-['h 0', 'r 0', 'x 0']
+['h 0', 'v 0', 'x 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=13:
-['x 0', 'rinv 0', 'h 0']
+['x 0', 'w 0', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=14:
-['rinv 0', 'y 0']
+['w 0', 'y 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=14:
-['y 0', 'r 0']
+['y 0', 'v 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=15:
-['rinv 0']
+['w 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=15:
-['r 0']
+['v 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=16:
-['rinv 0', 'z 0']
+['w 0', 'z 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=16:
-['z 0', 'r 0']
+['z 0', 'v 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=17:
 ['h 0', 'y 0']
@@ -89,9 +89,9 @@ test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=17:
 ['y 0', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=18:
-['rinv 0', 'x 0']
+['w 0', 'x 0']
 test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=18:
-['x 0', 'r 0']
+['x 0', 'v 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 1 qubit - seed=19:
 ['h 0', 'x 0']
@@ -99,102 +99,102 @@ test: inverting a pseudo-random clifford using the tables - 1 qubit - seed=19:
 ['x 0', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=0:
-['h 0', 'rinv 0', 'rinv 1', 'cnot 0 1', 'rinv 0', 'r 1', 'y 1']
+['h 0', 'w 0', 'w 1', 'cx 0 1', 'w 0', 'v 1', 'y 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=0:
-['y 1', 'rinv 1', 'r 0', 'cnot 0 1', 'r 1', 'r 0', 'h 0']
+['y 1', 'w 1', 'v 0', 'cx 0 1', 'v 1', 'v 0', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=1:
-['h 0', 'rinv 0', 'r 1', 'y 0', 'x 1']
+['h 0', 'w 0', 'v 1', 'y 0', 'x 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=1:
-['x 1', 'y 0', 'rinv 1', 'r 0', 'h 0']
+['x 1', 'y 0', 'w 1', 'v 0', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=2:
-['h 0', 'rinv 0', 'rinv 1', 'cnot 0 1', 'cnot 1 0', 'r 0', 'x 1']
+['h 0', 'w 0', 'w 1', 'cx 0 1', 'cx 1 0', 'v 0', 'x 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=2:
-['x 1', 'rinv 0', 'cnot 1 0', 'cnot 0 1', 'r 1', 'r 0', 'h 0']
+['x 1', 'w 0', 'cx 1 0', 'cx 0 1', 'v 1', 'v 0', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=3:
-['rinv 0', 'r 1', 'cnot 0 1', 'cnot 1 0', 'r 0', 'x 0', 'x 1']
+['w 0', 'v 1', 'cx 0 1', 'cx 1 0', 'v 0', 'x 0', 'x 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=3:
-['x 1', 'x 0', 'rinv 0', 'cnot 1 0', 'cnot 0 1', 'rinv 1', 'r 0']
+['x 1', 'x 0', 'w 0', 'cx 1 0', 'cx 0 1', 'w 1', 'v 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=4:
-['rinv 0', 'rinv 1', 'cnot 0 1', 'r 1', 'x 0', 'x 1']
+['w 0', 'w 1', 'cx 0 1', 'v 1', 'x 0', 'x 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=4:
-['x 1', 'x 0', 'rinv 1', 'cnot 0 1', 'r 1', 'r 0']
+['x 1', 'x 0', 'w 1', 'cx 0 1', 'v 1', 'v 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=5:
-['h 0', 'rinv 0', 'cnot 0 1', 'r 0', 'rinv 1', 'y 0']
+['h 0', 'w 0', 'cx 0 1', 'v 0', 'w 1', 'y 0']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=5:
-['y 0', 'r 1', 'rinv 0', 'cnot 0 1', 'r 0', 'h 0']
+['y 0', 'v 1', 'w 0', 'cx 0 1', 'v 0', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=6:
-['h 0', 'r 0', 'cnot 0 1', 'rinv 1', 'z 0', 'x 1']
+['h 0', 'v 0', 'cx 0 1', 'w 1', 'z 0', 'x 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=6:
-['x 1', 'z 0', 'r 1', 'cnot 0 1', 'rinv 0', 'h 0']
+['x 1', 'z 0', 'v 1', 'cx 0 1', 'w 0', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=7:
-['h 1', 'r 1', 'cnot 0 1', 'cnot 1 0', 'r 0', 'rinv 1', 'z 1']
+['h 1', 'v 1', 'cx 0 1', 'cx 1 0', 'v 0', 'w 1', 'z 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=7:
-['z 1', 'r 1', 'rinv 0', 'cnot 1 0', 'cnot 0 1', 'rinv 1', 'h 1']
+['z 1', 'v 1', 'w 0', 'cx 1 0', 'cx 0 1', 'w 1', 'h 1']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=8:
-['h 0', 'h 1', 'rinv 0', 'r 1', 'cnot 0 1', 'y 0']
+['h 0', 'h 1', 'w 0', 'v 1', 'cx 0 1', 'y 0']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=8:
-['y 0', 'cnot 0 1', 'rinv 1', 'r 0', 'h 1', 'h 0']
+['y 0', 'cx 0 1', 'w 1', 'v 0', 'h 1', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=9:
-['h 1', 'r 0', 'r 1', 'cnot 0 1', 'cnot 1 0', 'r 0', 'x 0', 'y 1']
+['h 1', 'v 0', 'v 1', 'cx 0 1', 'cx 1 0', 'v 0', 'x 0', 'y 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=9:
-['y 1', 'x 0', 'rinv 0', 'cnot 1 0', 'cnot 0 1', 'rinv 1', 'rinv 0', 'h 1']
+['y 1', 'x 0', 'w 0', 'cx 1 0', 'cx 0 1', 'w 1', 'w 0', 'h 1']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=10:
-['rinv 0', 'rinv 1', 'cnot 0 1', 'r 0', 'r 1', 'z 0', 'x 1']
+['w 0', 'w 1', 'cx 0 1', 'v 0', 'v 1', 'z 0', 'x 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=10:
-['x 1', 'z 0', 'rinv 1', 'rinv 0', 'cnot 0 1', 'r 1', 'r 0']
+['x 1', 'z 0', 'w 1', 'w 0', 'cx 0 1', 'v 1', 'v 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=11:
-['h 0', 'h 1', 'r 1', 'cnot 0 1', 'cnot 1 0', 'r 1', 'z 0', 'x 1']
+['h 0', 'h 1', 'v 1', 'cx 0 1', 'cx 1 0', 'v 1', 'z 0', 'x 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=11:
-['x 1', 'z 0', 'rinv 1', 'cnot 1 0', 'cnot 0 1', 'rinv 1', 'h 1', 'h 0']
+['x 1', 'z 0', 'w 1', 'cx 1 0', 'cx 0 1', 'w 1', 'h 1', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=12:
-['r 0', 'cnot 0 1', 'cnot 1 0', 'y 0', 'x 1']
+['v 0', 'cx 0 1', 'cx 1 0', 'y 0', 'x 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=12:
-['x 1', 'y 0', 'cnot 1 0', 'cnot 0 1', 'rinv 0']
+['x 1', 'y 0', 'cx 1 0', 'cx 0 1', 'w 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=13:
-['h 1', 'r 1', 'x 0']
+['h 1', 'v 1', 'x 0']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=13:
-['x 0', 'rinv 1', 'h 1']
+['x 0', 'w 1', 'h 1']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=14:
-['h 0', 'r 0', 'r 1', 'cnot 0 1', 'rinv 0', 'r 1', 'y 0', 'x 1']
+['h 0', 'v 0', 'v 1', 'cx 0 1', 'w 0', 'v 1', 'y 0', 'x 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=14:
-['x 1', 'y 0', 'rinv 1', 'r 0', 'cnot 0 1', 'rinv 1', 'rinv 0', 'h 0']
+['x 1', 'y 0', 'w 1', 'v 0', 'cx 0 1', 'w 1', 'w 0', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=15:
-['h 0', 'rinv 0', 'rinv 1', 'cnot 0 1', 'cnot 1 0', 'r 1', 'x 1']
+['h 0', 'w 0', 'w 1', 'cx 0 1', 'cx 1 0', 'v 1', 'x 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=15:
-['x 1', 'rinv 1', 'cnot 1 0', 'cnot 0 1', 'r 1', 'r 0', 'h 0']
+['x 1', 'w 1', 'cx 1 0', 'cx 0 1', 'v 1', 'v 0', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=16:
-['r 1', 'cnot 0 1', 'cnot 1 0', 'r 0', 'rinv 1', 'z 0', 'x 1']
+['v 1', 'cx 0 1', 'cx 1 0', 'v 0', 'w 1', 'z 0', 'x 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=16:
-['x 1', 'z 0', 'r 1', 'rinv 0', 'cnot 1 0', 'cnot 0 1', 'rinv 1']
+['x 1', 'z 0', 'v 1', 'w 0', 'cx 1 0', 'cx 0 1', 'w 1']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=17:
-['h 0', 'h 1', 'r 1', 'cnot 0 1', 'cnot 1 0', 'rinv 0', 'rinv 1', 'y 0', 'y 1']
+['h 0', 'h 1', 'v 1', 'cx 0 1', 'cx 1 0', 'w 0', 'w 1', 'y 0', 'y 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=17:
-['y 1', 'y 0', 'r 1', 'r 0', 'cnot 1 0', 'cnot 0 1', 'rinv 1', 'h 1', 'h 0']
+['y 1', 'y 0', 'v 1', 'v 0', 'cx 1 0', 'cx 0 1', 'w 1', 'h 1', 'h 0']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=18:
-['h 1', 'r 0', 'rinv 1', 'cnot 0 1', 'cnot 1 0', 'rinv 1', 'x 1']
+['h 1', 'v 0', 'w 1', 'cx 0 1', 'cx 1 0', 'w 1', 'x 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=18:
-['x 1', 'r 1', 'cnot 1 0', 'cnot 0 1', 'r 1', 'rinv 0', 'h 1']
+['x 1', 'v 1', 'cx 1 0', 'cx 0 1', 'v 1', 'w 0', 'h 1']
 -------------------------------------------------------
 test: generating a pseudo-random clifford using the tables - 2 qubit - seed=19:
-['h 0', 'h 1', 'r 1', 'cnot 0 1', 'cnot 1 0', 'rinv 0', 'rinv 1', 'x 0', 'y 1']
+['h 0', 'h 1', 'v 1', 'cx 0 1', 'cx 1 0', 'w 0', 'w 1', 'x 0', 'y 1']
 test: inverting a pseudo-random clifford using the tables - 2 qubit - seed=19:
-['y 1', 'x 0', 'r 1', 'r 0', 'cnot 1 0', 'cnot 0 1', 'rinv 1', 'h 1', 'h 0']
+['y 1', 'x 0', 'v 1', 'v 0', 'cx 1 0', 'cx 0 1', 'w 1', 'h 1', 'h 0']
 -------------------------------------------------------
