@@ -55,6 +55,7 @@ def v_gates(cliff, q, v):
         cliff.w(q)
         cliff.circuit_append(['w ' + str(q)])
 
+
 def cx_gates(cliff, ctrl, tgt):
     """does controlled=x gates"""
     cliff.cx(ctrl, tgt)
