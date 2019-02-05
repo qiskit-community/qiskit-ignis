@@ -120,7 +120,7 @@ class Clifford(object):
 # ----------------------------------------------------------------------------------------
 # Quantum gates operations
 # ----------------------------------------------------------------------------------------
-    def cnot(self, con, tar):
+    def cx(self, con, tar):
         """controlled-NOT"""
         self.get_table()
         for i in range(2*self.n):
@@ -131,7 +131,7 @@ class Clifford(object):
             self.table[i]['Z'].setvalue(self.table[i]['Z'][tar] ^ self.table[i]['Z'][con], con)
 
     def s(self, q):
-        """S-gate"""
+        """Phase-gate"""
         self.get_table()
         for i in range(2*self.n):
             self.table[i]['phase'] ^= (self.table[i]['X'][q] and self.table[i]['Z'][q])
@@ -165,12 +165,24 @@ class Clifford(object):
             self.table[i]['X'].setvalue(self.table[i]['Z'][q], q)
             self.table[i]['Z'].setvalue(b, q)
 
-    def r(self, q):
-        """R Gate"""
+    def sdg(self, q):
+        """Inverse Phase Gate, sdg=s.z"""
+        self.s(q)
+        self.z(q)
+
+    def v(self, q):
+        """V Gate, V=HSHS"""
         self.h(q)
         self.s(q)
         self.h(q)
         self.s(q)
+
+    def w(self, q):
+        """W Gate, WV=I"""
+        self.sdg(q)
+        self.h(q)
+        self.sdg(q)
+        self.h(q)
 
 # ----------------------------------------------------------------------------------------
 # Compose a Clifford circuit from basis gates
@@ -181,33 +193,24 @@ class Clifford(object):
         for op in circ:
             split = op.split()
             q1 = int(split[1])
-            if split[0] == 'r':
-                self.h(q1)
-                self.s(q1)
-                self.h(q1)
-                self.s(q1)
-            elif split[0] == 'rinv':  # s.z = s^inverse
-                self.s(q1)
-                self.z(q1)
-                self.h(q1)
-                self.s(q1)
-                self.z(q1)
-                self.h(q1)
+            if split[0] == 'v':
+                self.v(q1)
+            elif split[0] == 'w':
+                self.w(q1)
             elif split[0] == 'x':
                 self.x(q1)
             elif split[0] == 'y':
                 self.y(q1)
             elif split[0] == 'z':
                 self.z(q1)
-            elif split[0] == 'cnot':
-                self.cnot(q1, int(split[2]))
+            elif split[0] == 'cx':
+                self.cx(q1, int(split[2]))
             elif split[0] == 'h':
                 self.h(q1)
             elif split[0] == 's':
                 self.s(q1)
-            elif split[0] == 'sinv':  # s.z = s^inverse
-                self.s(q1)
-                self.z(q1)
+            elif split[0] == 'sdg':
+                self.sdg(q1)
             else:
                 print("error: unknown gate type: ", op)
         self.circuit_append(circ)
