@@ -11,6 +11,7 @@
 import numpy as np
 from qiskit_ignis.randomized_benchmarking.standard_rb.BinaryVector import BinaryVector
 
+
 class Clifford(object):
     """Clifford Tableau Object"""
     def __init__(self, nqubits):
@@ -60,9 +61,11 @@ class Clifford(object):
     def circuit_append(self, gatelist):
         """add to circuit list"""
         self.circuit = self.circuit + gatelist
+
     def circuit_prepend(self, gatelist):
         """add to circuit list -- not used"""
         self.circuit = gatelist + self.circuit
+
     def size(self):
         """report size in number of qubits"""
         return self.n
@@ -214,4 +217,3 @@ class Clifford(object):
             else:
                 print("error: unknown gate type: ", op)
         self.circuit_append(circ)
-

@@ -8,6 +8,7 @@
 """ Binary Vector class
 """
 
+
 class BinaryVector(object):
     """Binary Vector Object"""
     def __init__(self, length):
