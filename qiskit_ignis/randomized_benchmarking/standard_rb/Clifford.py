@@ -34,17 +34,14 @@ class Clifford(object):
         self.cannonical = None
         self.matrix = None
 
-
+# ----------------------------------------------------------------------------------------
+# Clifford properties
+# ----------------------------------------------------------------------------------------
     def get_table(self):
         """return the table representation, updating from matrix if needed"""
         if self.table is None:
             return self.to_table()
         return self.table
-
-    def from_matrix(self, matrix):
-        """set a clifford from a matrix representation"""
-        self.matrix = matrix
-        self.table = None
 
     def set_cannonical(self, cannonical):
         """set internal memory of cannoical order
@@ -52,14 +49,13 @@ class Clifford(object):
         self.cannonical = cannonical
 
     def get_cannonical(self):
-        """get cannoical order, if set -- not used"""
+        """get cannoical order, if set"""
         return self.cannonical
 
     def get_circuit(self):
         """give circuit structure--does not compute the circuit"""
         # if you want to compute the circuit use decompose()
         return self.circuit
-
 
     def circuit_append(self, gatelist):
         """add to circuit list"""
@@ -72,20 +68,20 @@ class Clifford(object):
         return self.n
 
     def print_table(self):
-        """print out the table form of the Clifford -- not used, only for debug"""
+        """print out the table form of the Clifford -- used for debug"""
         table = self.get_table()
         for i in range(2*self.n):
             print(table[i]['X'].m_data, table[i]['Z'].m_data, table[i]['phase'])
         print("--------------------------------------------")
 
     def print_matrix(self):
-        """Print out the matrix form of the Clifford tableu -- not used, only for debug"""
+        """Print out the matrix form of the Clifford tableau -- used for debug"""
         matrix = self.get_matrix()
         print(matrix)
         print("--------------------------------------------")
 
     def get_matrix(self):
-        """Return and set 2n+1 X 2n dimensional matrix for of a Clifford tableu"""
+        """Return and set 2n+1 X 2n dimensional matrix for of a Clifford tableau"""
         self.matrix = np.zeros([2*self.n, 2*self.n+1], dtype=np.uint8, order='F')
         for i in range(2*self.n):
             for j in range(self.n):
@@ -96,7 +92,7 @@ class Clifford(object):
         return self.matrix
 
     def to_table(self):
-        """Return and set tableu in table form -- internal (in get_table)"""
+        """Return and set tableau in table form (used in get_table)"""
         self.table = []
         for i in range(2*self.n):
             pauli = {'X': BinaryVector(self.n), 'Z': BinaryVector(self.n), 'phase': 0}
@@ -176,7 +172,9 @@ class Clifford(object):
         self.h(q)
         self.s(q)
 
-#----------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
+# Compose a Clifford circuit from basis gates
+# ----------------------------------------------------------------------------------------
     def compose_circuit(self, cliff):
         """ compsose circuit """
         circ = cliff.get_circuit()
