@@ -21,7 +21,7 @@ class T1Fitter(BaseCoherenceFitter):
                  num_of_qubits, measured_qubit,
                  fit_p0, fit_bounds):
 
-        BaseCoherenceFitter.__init__(self, 'T1',
+        BaseCoherenceFitter.__init__(self, '$T_1$',
                                      backend_result, shots,
                                      num_of_gates, gate_time,
                                      num_of_qubits, measured_qubit,

@@ -15,8 +15,8 @@ import numpy as np
 import qiskit
 from qiskit.providers.aer.noise.errors.standard_errors import amplitude_damping_error
 from qiskit.providers.aer.noise import NoiseModel
-from basis.t1 import t1_generate_circuits as t1gen
-from fitters.t1fitter import T1Fitter
+from characterization.coherence.basis.t1 import t1_generate_circuits as t1gen
+from characterization.coherence.fitters.t1fitter import T1Fitter
 
 class TestT1(unittest.TestCase):
     """
@@ -29,9 +29,8 @@ class TestT1(unittest.TestCase):
         Then verify that the calculated T1 matches the amplitude damping parameter.
         """
 
-        # 20 numbers ranging from 100 to 1000, logarithmically spaced
+        # 10 numbers ranging from 100 to 1000, logarithmically spaced
         num_of_gates = (np.logspace(2, 3, 10)).astype(int)
-        #num_of_gates = (np.linspace(250, 1000, 15)).astype(int)
         gate_time = 0.11
         num_of_qubits = 4
         qubit = random.randint(0, 3)
@@ -43,6 +42,7 @@ class TestT1(unittest.TestCase):
         error = amplitude_damping_error(gamma)
         noise_model = NoiseModel()
         noise_model.add_all_qubit_quantum_error(error, 'id')
+        # TODO: Include SPAM errors
 
         backend = qiskit.Aer.get_backend('qasm_simulator')
         shots = 300
