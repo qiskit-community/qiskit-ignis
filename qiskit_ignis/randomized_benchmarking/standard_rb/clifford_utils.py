@@ -27,44 +27,38 @@ def pauli_gates(cliff, q, pauli):
     """does pauli gate on qubit q"""
     if pauli == 2:
         cliff.x(q)
-        cliff.circuit_append(['x '+str(q)])
+        cliff.circuit_append(['x ' + str(q)])
     elif pauli == 3:
         cliff.y(q)
-        cliff.circuit_append(['y '+str(q)])
+        cliff.circuit_append(['y ' + str(q)])
     elif pauli == 1:
         cliff.z(q)
-        cliff.circuit_append(['z '+str(q)])
+        cliff.circuit_append(['z ' + str(q)])
+
 
 def h_gates(cliff, q, h):
     """does hadamard gate or not on qubit q"""
     if h == 1:
         cliff.h(q)
-        cliff.circuit_append(['h '+str(q)])
+        cliff.circuit_append(['h ' + str(q)])
 
-def r_gates(cliff, q, r):
-    """does r R-gates on qubit q"""
-    #  rotatation is HSHS = [[0,1],[1,1]] tableu
-    #    takes Z->X->Y->Z
-    #  two R-gates is r2
-    if r == 1:
-        cliff.h(q)
-        cliff.s(q)
-        cliff.h(q)
-        cliff.s(q)
-        cliff.circuit_append(['r '+str(q)])
-    elif r == 2:  # s.z = s^inverse
-        cliff.s(q)
-        cliff.z(q)
-        cliff.h(q)
-        cliff.s(q)
-        cliff.z(q)
-        cliff.h(q)
-        cliff.circuit_append(['rinv '+str(q)])
 
-def cnot_gates(cliff, ctrl, tgt):
-    """does cnot gates"""
-    cliff.cnot(ctrl, tgt)
-    cliff.circuit_append(['cnot ' + str(ctrl) + ' ' + str(tgt)])
+def v_gates(cliff, q, v):
+    """does axis-swap-gates on qubit q"""
+    #  rotation is V=HSHS = [[0,1],[1,1]] tableau
+    #  takes Z->X->Y->Z
+    #  two V-gates is W-gate
+    if v == 1:
+        cliff.v(q)
+        cliff.circuit_append(['v ' + str(q)])
+    elif v == 2:
+        cliff.w(q)
+        cliff.circuit_append(['w ' + str(q)])
+
+def cx_gates(cliff, ctrl, tgt):
+    """does controlled=x gates"""
+    cliff.cx(ctrl, tgt)
+    cliff.circuit_append(['cx ' + str(ctrl) + ' ' + str(tgt)])
 
 
 # --------------------------------------------------------
@@ -92,7 +86,7 @@ def clifford1(idx: int):
 
     h_gates(cliff, 0, h_or_not)
 
-    r_gates(cliff, 0, rotation)  # do the R-gates
+    v_gates(cliff, 0, rotation)  # do the R-gates
 
     pauli_gates(cliff, 0, pauli)
 
@@ -114,74 +108,75 @@ def clifford2(idx: int):
     cliff.set_cannonical(cannon)
 
     pauli = np.mod(cannon, 16)
-    symp = cannon//16
+    symp = cannon // 16
 
     if symp < 36:
         r0 = np.mod(symp, 3)
-        r1 = np.mod(symp//3, 3)
-        h0 = np.mod(symp//9, 2)
-        h1 = np.mod(symp//18, 2)
+        r1 = np.mod(symp // 3, 3)
+        h0 = np.mod(symp // 9, 2)
+        h1 = np.mod(symp // 18, 2)
 
         h_gates(cliff, 0, h0)
         h_gates(cliff, 1, h1)
-        r_gates(cliff, 0, r0)
-        r_gates(cliff, 1, r1)
+        v_gates(cliff, 0, r0)
+        v_gates(cliff, 1, r1)
 
     elif symp < 360:
-        symp = symp-36
+        symp = symp - 36
         r0 = np.mod(symp, 3)
-        r1 = np.mod(symp//3, 3)
-        r2 = np.mod(symp//9, 3)
-        r3 = np.mod(symp//27, 3)
-        h0 = np.mod(symp//81, 2)
-        h1 = np.mod(symp//162, 2)
+        r1 = np.mod(symp // 3, 3)
+        r2 = np.mod(symp // 9, 3)
+        r3 = np.mod(symp // 27, 3)
+        h0 = np.mod(symp // 81, 2)
+        h1 = np.mod(symp // 162, 2)
 
         h_gates(cliff, 0, h0)
         h_gates(cliff, 1, h1)
-        r_gates(cliff, 0, r0)
-        r_gates(cliff, 1, r1)
-        cnot_gates(cliff, 0, 1)
-        r_gates(cliff, 0, r2)
-        r_gates(cliff, 1, r3)
+        v_gates(cliff, 0, r0)
+        v_gates(cliff, 1, r1)
+        cx_gates(cliff, 0, 1)
+        v_gates(cliff, 0, r2)
+        v_gates(cliff, 1, r3)
 
     elif symp < 684:
-        symp = symp-360
+        symp = symp - 360
         r0 = np.mod(symp, 3)
-        r1 = np.mod(symp//3, 3)
-        r2 = np.mod(symp//9, 3)
-        r3 = np.mod(symp//27, 3)
-        h0 = np.mod(symp//81, 2)
-        h1 = np.mod(symp//162, 2)
+        r1 = np.mod(symp // 3, 3)
+        r2 = np.mod(symp // 9, 3)
+        r3 = np.mod(symp // 27, 3)
+        h0 = np.mod(symp // 81, 2)
+        h1 = np.mod(symp // 162, 2)
 
         h_gates(cliff, 0, h0)
         h_gates(cliff, 1, h1)
-        r_gates(cliff, 0, r0)
-        r_gates(cliff, 1, r1)
-        cnot_gates(cliff, 0, 1)
-        cnot_gates(cliff, 1, 0)
-        r_gates(cliff, 0, r2)
-        r_gates(cliff, 1, r3)
+        v_gates(cliff, 0, r0)
+        v_gates(cliff, 1, r1)
+        cx_gates(cliff, 0, 1)
+        cx_gates(cliff, 1, 0)
+        v_gates(cliff, 0, r2)
+        v_gates(cliff, 1, r3)
     else:
-        symp = symp-684
+        symp = symp - 684
         r0 = np.mod(symp, 3)
-        r1 = np.mod(symp//3, 3)
-        h0 = np.mod(symp//9, 2)
-        h1 = np.mod(symp//18, 2)
+        r1 = np.mod(symp // 3, 3)
+        h0 = np.mod(symp // 9, 2)
+        h1 = np.mod(symp // 18, 2)
 
         h_gates(cliff, 0, h0)
         h_gates(cliff, 1, h1)
 
-        cnot_gates(cliff, 0, 1)
-        cnot_gates(cliff, 1, 0)
-        cnot_gates(cliff, 0, 1)
+        cx_gates(cliff, 0, 1)
+        cx_gates(cliff, 1, 0)
+        cx_gates(cliff, 0, 1)
 
-        r_gates(cliff, 0, r0)
-        r_gates(cliff, 1, r1)
+        v_gates(cliff, 0, r0)
+        v_gates(cliff, 1, r1)
 
     pauli_gates(cliff, 0, np.mod(pauli, 4))
-    pauli_gates(cliff, 1, pauli//4)
+    pauli_gates(cliff, 1, pauli // 4)
 
     return cliff
+
 
 # --------------------------------------------------------
 # Create a 1 or 2 Qubit Clifford tables
@@ -194,6 +189,7 @@ def clifford2_table():
         cliffords2[cliff.key()] = cliff.get_circuit()
     return cliffords2
 
+
 def clifford1_table():
     """ Generate a table of all 1 qubit cliffords """
     cliffords1 = {}
@@ -201,6 +197,7 @@ def clifford1_table():
         cliff = clifford1(i)
         cliffords1[cliff.key()] = cliff.get_circuit()
     return cliffords1
+
 
 def pickle_clifford_table(picklefile='cliffords2.pickle', n=2):
     """ code to create pickled versions of the 1 and 2 qubit data tables """
@@ -213,6 +210,7 @@ def pickle_clifford_table(picklefile='cliffords2.pickle', n=2):
 
     with open(picklefile, "wb") as pf:
         pickle.dump(cliffords, pf)
+
 
 def load_clifford_table(picklefile='cliffords2.pickle'):
     """ #code to load any clifford table """
@@ -238,7 +236,8 @@ def random_clifford(n):
     elif n == 2:
         return clifford2(np.random.randint(0, 11520))
     else:
-        print ("Error: the number of qubits should be only 1 or 2 \n")
+        print("Error: the number of qubits should be only 1 or 2 \n")
+
 
 # --------------------------------------------------------
 # Main function that calculates an inverse of a clifford
@@ -251,18 +250,18 @@ def find_inverse_clifford_circuit(cliff, clifford_table=None):
         invcircuit = clifford_table[cliff.key()].copy()
         # we want to run the circuit backwards
         invcircuit.reverse()
-        # replace r by rinv and rinv by r
+        # replace v by w and w by v
         for i, _ in enumerate(invcircuit):
             split = invcircuit[i].split()
-            if split[0] == 'r':
-                invcircuit[i] = 'rinv ' + split[1]
-            elif split[0] == 'rinv':
-                invcircuit[i] = 'r ' + split[1]
+            if split[0] == 'v':
+                invcircuit[i] = 'w ' + split[1]
+            elif split[0] == 'w':
+                invcircuit[i] = 'v ' + split[1]
 
         return invcircuit
 
     else:
-        print ("Error: the number of qubits should be only 1 or 2 \n")
+        print("Error: the number of qubits should be only 1 or 2 \n")
 
 
 # --------------------------------------------------------
@@ -278,16 +277,6 @@ def get_quantum_circuit(cliff):
     for op in circuit:
         split = op.split()
         op_names = [split[0]]
-
-        if op_names == ['cnot']:
-            op_names = ['cx']
-        elif op_names == ['sinv']:
-            op_names = ['sdg']
-        elif op_names == ['r']:
-            op_names = ['h', 's', 'h', 's']
-        elif op_names == ['rinv']:
-            op_names = ['sdg', 'h', 'sdg', 'h']
-
 
         qubits = [qr[int(x)] for x in split[1:]]
         for sub_op in op_names:
