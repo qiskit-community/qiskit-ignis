@@ -20,7 +20,7 @@ except ImportError:
 
 
 # --------------------------------------------------------
-# Add gates to cliffords
+# Add gates to Cliffords
 # --------------------------------------------------------
 
 def pauli_gates(cliff, q, pauli):
@@ -183,7 +183,9 @@ def clifford2(idx: int):
 
     return cliff
 
-
+# --------------------------------------------------------
+# Create a 1 or 2 Qubit Clifford tables
+# --------------------------------------------------------
 def clifford2_table():
     """ Generate a table of all 2 qubit cliffords """
     cliffords2 = {}
