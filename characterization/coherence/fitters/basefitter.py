@@ -48,8 +48,6 @@ class BaseCoherenceFitter:
 
         self.fit_fun = fit_fun
         self.params, self.params_err = self.calc_fit(fit_p0, fit_bounds)
-        self.t1 = self.params[1]
-        self.t1_err = self.params_err[1]
 
 
     def calc_data(self, backend_result, shots, num_of_circuits):
@@ -107,7 +105,7 @@ class BaseCoherenceFitter:
                      marker='.', markersize=9, c='b', linestyle='')
         plt.plot(self.xdata, self.fit_fun(self.xdata, *self.params),
                  c='r', linestyle='--',
-                 label=self.description+': '+str(round(self.t1))+' micro-seconds')
+                 label=self.description+': '+str(round(self.time))+' micro-seconds')
 
         plt.xticks(fontsize=14, rotation=70)
         plt.yticks(fontsize=14)
