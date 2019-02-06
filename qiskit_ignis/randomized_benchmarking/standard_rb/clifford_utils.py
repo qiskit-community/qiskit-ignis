@@ -47,7 +47,7 @@ def v_gates(cliff, q, v):
     """does axis-swap-gates on qubit q"""
     #  rotation is V=HSHS = [[0,1],[1,1]] tableau
     #  takes Z->X->Y->Z
-    #  two V-gates is W-gate
+    #  V is of order 3, and two V-gates is W-gate, so: W=VV and WV=I
     if v == 1:
         cliff.v(q)
         cliff.circuit_append(['v ' + str(q)])
@@ -67,12 +67,13 @@ def cx_gates(cliff, ctrl, tgt):
 # --------------------------------------------------------
 
 def clifford1(idx: int):
-    """Make a single qubit Clifford gate.
+    """
+    Make a single qubit Clifford gate.
 
     Args:
         idx: the index (mod 24) of a single qubit Clifford.
 
-    Return:
+    Returns:
         A single qubit Clifford class object.
     """
 
@@ -95,13 +96,14 @@ def clifford1(idx: int):
 
 
 def clifford2(idx: int):
-    """Make a two-qubit Clifford gate.
+    """
+    Make a 2-qubit Clifford gate.
 
     Args:
         idx: the index (mod 11520) of a two-qubit Clifford.
 
-    Return:
-        A two-qubit Clifford class object.
+    Returns:
+        A 2-qubit Clifford class object.
     """
 
     cannon = idx % 11520
@@ -183,7 +185,15 @@ def clifford2(idx: int):
 # Create a 1 or 2 Qubit Clifford tables
 # --------------------------------------------------------
 def clifford2_table():
-    """ Generate a table of all 2 qubit cliffords """
+    """
+    Generate a table of all 2-qubit Cliffords.
+
+    Args:
+        None.
+
+    Returns:
+        A table of all 2-qubit Clifford objects.
+    """
     cliffords2 = {}
     for i in range(11520):
         cliff = clifford2(i)
@@ -192,7 +202,15 @@ def clifford2_table():
 
 
 def clifford1_table():
-    """ Generate a table of all 1 qubit cliffords """
+    """
+    Generate a table of all 1-qubit Cliffords.
+
+    Args:
+        None.
+
+    Returns:
+        A table of all 1-qubit Clifford objects.
+    """
     cliffords1 = {}
     for i in range(24):
         cliff = clifford1(i)
@@ -201,7 +219,17 @@ def clifford1_table():
 
 
 def pickle_clifford_table(picklefile='cliffords2.pickle', n=2):
-    """ code to create pickled versions of the 1 and 2 qubit data tables """
+    """
+     Create pickled versions of the 1 and 2 qubit Clifford tables.
+
+     Args:
+         picklefile - pickle file name.
+         n - number of qubits.
+
+     Returns:
+         A pickle file with the 1 and 2 qubit Clifford tables.
+     """
+    cliffords = {}
     if n == 1:
         cliffords = clifford1_table()
     elif n == 2:
@@ -214,7 +242,15 @@ def pickle_clifford_table(picklefile='cliffords2.pickle', n=2):
 
 
 def load_clifford_table(picklefile='cliffords2.pickle'):
-    """ #code to load any clifford table """
+    """
+      Load pickled files of the tables of 1 and 2 qubit Clifford tables.
+
+      Args:
+          picklefile - pickle file name.
+
+      Returns:
+          A table of 1 and 2 qubit Clifford objects.
+      """
     with open(picklefile, "rb") as pf:
         return pickle.load(pf)
 
@@ -223,13 +259,14 @@ def load_clifford_table(picklefile='cliffords2.pickle'):
 # Main function that generates a random clifford
 # --------------------------------------------------------
 def random_clifford(n):
-    """pick a random Clifford gate
+    """
+    Pick a random Clifford gate.
 
     Args:
-        n: dimension of the clifford
+        n: dimension of the Clifford.
 
     Returns:
-        Clifford
+        A 1 or 2 qubit Clifford class object.
     """
 
     if n == 1:
@@ -244,7 +281,16 @@ def random_clifford(n):
 # Main function that calculates an inverse of a clifford
 # --------------------------------------------------------
 def find_inverse_clifford_circuit(cliff, clifford_table=None):
-    """Find the inverse of the Clifford, and a circuit to make it"""
+    """
+    Find the inverse of the Clifford, and a circuit to make it.
+
+    Args:
+        cliff: a Clifford object.
+        clifford_table: A table of Clifford objects.
+
+    Returns:
+        A 1 or 2 qubit Clifford class object.
+    """
     n = cliff.size()
 
     if n in (1, 2):
@@ -269,8 +315,15 @@ def find_inverse_clifford_circuit(cliff, clifford_table=None):
 # Returns the Clifford circuit in the form of a QuantumCircuit object
 # --------------------------------------------------------
 def get_quantum_circuit(cliff):
-    """ Returns the Clifford circuit in the form of a QuantumCircuit object """
+    """
+    Returns the Clifford circuit in the form of a QuantumCircuit object.
 
+    Args:
+        cliff: a Clifford object.
+
+    Returns:
+        A QuantumCircuit object.
+    """
     qr = qiskit.QuantumRegister(cliff.n)
     qc = qiskit.QuantumCircuit(qr)
 

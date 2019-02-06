@@ -5,7 +5,8 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
-"""Clifford Operator class
+"""
+    Clifford Operator class
 """
 
 import numpy as np
@@ -39,13 +40,13 @@ class Clifford(object):
 # Clifford properties
 # ----------------------------------------------------------------------------------------
     def get_table(self):
-        """return the table representation, updating from matrix if needed"""
+        """return the table representation, updating from a matrix if needed"""
         if self.table is None:
             return self.to_table()
         return self.table
 
     def set_cannonical(self, cannonical):
-        """set internal memory of cannoical order
+        """set internal memory of cannonical order
         --must be set externally, does not decide for itself"""
         self.cannonical = cannonical
 
@@ -54,8 +55,7 @@ class Clifford(object):
         return self.cannonical
 
     def get_circuit(self):
-        """give circuit structure--does not compute the circuit"""
-        # if you want to compute the circuit use decompose()
+        """give circuit structure -- does not compute the circuit"""
         return self.circuit
 
     def circuit_append(self, gatelist):
@@ -124,7 +124,7 @@ class Clifford(object):
 # Quantum gates operations
 # ----------------------------------------------------------------------------------------
     def cx(self, con, tar):
-        """controlled-NOT"""
+        """Controlled-x gate"""
         self.get_table()
         for i in range(2*self.n):
             self.table[i]['phase'] ^= self.table[i]['X'][con] and\
@@ -169,7 +169,7 @@ class Clifford(object):
             self.table[i]['Z'].setvalue(b, q)
 
     def sdg(self, q):
-        """Inverse Phase Gate, sdg=s.z"""
+        """Inverse phase Gate, sdg=s.z"""
         self.s(q)
         self.z(q)
 
@@ -181,7 +181,7 @@ class Clifford(object):
         self.s(q)
 
     def w(self, q):
-        """W Gate, WV=I"""
+        """W Gate, the inverse of V-gate"""
         self.sdg(q)
         self.h(q)
         self.sdg(q)
