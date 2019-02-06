@@ -14,12 +14,16 @@ from .coherence_utils import pad_id_gates
 
 def t1_generate_circuits(num_of_gates, num_of_qubits, qubit):
     """
-    num_of_gates is a vector of integers in an increasing order.
-    len(num_of_gates) circuits will be generated.
-    In the first circuit the initial X gate will be followed by num_of_gates[0] identity gates.
-    In the second circuit it will be followed by num_of_gates[1] identity gates.
-    And so on.
-    'qubit' is the qubit whose T1 is to be measured.
+    Generates circuit for T1 measurement.
+    Each circuit consists of an X gate, followed by a sequence of identity gates.
+
+    Args:
+       num_of_gates (list of integers):  the number of identity gates in each circuit.
+                                         Must be in an increasing order.
+       num_of_qubits (integer): the number of qubits in the circuit.
+       qubit (integer): index of the qubit whose T1 is to be measured.
+    Returns:
+       A list of QuantumCircuit
     """
 
     qr = qiskit.QuantumRegister(num_of_qubits)
