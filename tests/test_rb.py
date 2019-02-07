@@ -13,7 +13,7 @@ and that it returns the identity
 import unittest
 import random
 import qiskit
-import verification.randomized_benchmarking.standard_rb.randomizedbenchmarking as rb
+import qiskit_ignis.randomized_benchmarking.standard_rb.randomizedbenchmarking as rb
 
 class TestRB(unittest.TestCase):
     """ The test class """
@@ -135,8 +135,8 @@ class TestRB(unittest.TestCase):
         # Load simulator
         backend = qiskit.Aer.get_backend('qasm_simulator')
 
-        # Test up to 6 qubits
-        nq_list = [1, 2, 3, 4, 5, 6]
+        # Test up to 2 qubits
+        nq_list = [1, 2]
 
         for nq in nq_list:
 

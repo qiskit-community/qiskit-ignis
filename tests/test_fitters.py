@@ -15,8 +15,8 @@ import numpy as np
 import qiskit
 from qiskit.providers.aer.noise import NoiseModel
 from qiskit.providers.aer.noise.errors.standard_errors import depolarizing_error
-import verification.randomized_benchmarking.standard_rb.rb_fitters as fitters
-import verification.randomized_benchmarking.standard_rb.randomizedbenchmarking as rb
+import qiskit_ignis.randomized_benchmarking.standard_rb.rb_fitters as fitters
+import qiskit_ignis.randomized_benchmarking.standard_rb.randomizedbenchmarking as rb
 
 class TestFitters(unittest.TestCase):
     """ Test the fitters """
