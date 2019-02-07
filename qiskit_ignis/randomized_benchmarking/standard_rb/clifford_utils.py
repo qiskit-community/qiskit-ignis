@@ -332,6 +332,12 @@ def get_quantum_circuit(cliff):
         split = op.split()
         op_names = [split[0]]
 
+        # temporary correcting the ops name since QuantumCircuit has no attributes 'v' or 'w' yet:
+        if op_names == ['v']:
+            op_names = ['h', 's', 'h', 's']
+        elif op_names == ['w']:
+            op_names = ['sdg', 'h', 'sdg', 'h']
+
         qubits = [qr[int(x)] for x in split[1:]]
         for sub_op in op_names:
             operation = eval('qiskit.QuantumCircuit.' + sub_op)
