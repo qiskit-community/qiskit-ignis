@@ -39,14 +39,24 @@ def rb_fit_fun(x, a, alpha, b):
 
 def calc_raw_data(result, rb_circs, rb_opts, shots):
     """
-    Rerieve probabilities of success from execution results.
-    Assumes that 'result' was executed rb_circs,
-    and that rb_circs is a set of circuits
-    which is an output of randomized_becnhmarking_seq,
-    where randomized_becnhmarking_seq was run
-    with the given rb_opts.
-    Returns a 2-dimensional list, where item (i,j) is the probability to measure the
-    ground state, for seed no. i and vector length rb_opts['length_vector'][j].
+    Retrieve probabilities of success from execution results.
+
+    Args:
+        result: expected rb circuits
+        rb_circs: output rb circuits
+        rb_opts: a dictionary of RB options
+        shots: number of shots
+
+    Returns:
+        A 2-dimensional list, where item (i,j) is the probability to measure the
+        ground state, for seed no. i and vector length rb_opts['length_vector'][j].
+
+    Additional information:
+        Assumes that 'result' was executed rb_circs,
+        and that rb_circs is a set of circuits
+        which is an output of randomized_becnhmarking_seq,
+        where randomized_becnhmarking_seq was run
+        with the given rb_opts.
     """
 
     """
@@ -203,7 +213,8 @@ def plot_coherence(pattern_index, xdata, ydata, fit,
                    xunit, exp_str, qubit_label,
                    fit_function=rb_fit_fun,
                   ):
-    """Plot coherence data.
+    """
+    Plot coherence data.
 
     Args:
         pattern_index, xdata, ydata, fit, fit_function: see documentation of plot_rb_data
