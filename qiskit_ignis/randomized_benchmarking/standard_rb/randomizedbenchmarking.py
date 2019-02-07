@@ -12,8 +12,8 @@ Generates randomized benchmarking sequences
 import os
 import copy
 import numpy as np
-import verification.randomized_benchmarking.standard_rb.Clifford as clf
-import verification.randomized_benchmarking.standard_rb.clifford_utils as clutils
+import qiskit_ignis.randomized_benchmarking.standard_rb.Clifford as clf
+import qiskit_ignis.randomized_benchmarking.standard_rb.clifford_utils as clutils
 import qiskit
 
 def handle_length_multiplier(length_multiplier, len_pattern):
