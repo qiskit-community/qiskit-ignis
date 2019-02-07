@@ -231,6 +231,7 @@ def randomized_benchmarking_seq(rb_opts_dict=None):
                     circ += replace_q_indices(clutils.get_quantum_circuit(inv),
                                               rb_pattern[rb_pattern_index], qr)
 
+                circ.measure(qr, cr)
                 circ.name = 'rb_seed_' + str(seed) + '_length_' + str(length_vector[length_index])
                 circuits.append(circ)
                 length_index += 1
