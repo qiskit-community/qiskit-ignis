@@ -9,7 +9,6 @@
 Generates randomized benchmarking sequences
 """
 
-import os
 import copy
 import numpy as np
 import qiskit_ignis.randomized_benchmarking.standard_rb.Clifford as clf
@@ -17,10 +16,17 @@ import qiskit_ignis.randomized_benchmarking.standard_rb.clifford_utils as clutil
 import qiskit
 
 def handle_length_multiplier(length_multiplier, len_pattern):
-    '''
+    """
     Check validity of length_multiplier.
     In addition, transform it into a vector if it is a constant.
-    '''
+
+    Args:
+        length_multiplier: length of the multiplier
+        len_pattern: length of the RB pattern
+
+    Returns:
+        length_multiplier
+    """
 
     if hasattr(length_multiplier, "__len__"):
         if len(length_multiplier) != len_pattern:
@@ -35,10 +41,16 @@ def handle_length_multiplier(length_multiplier, len_pattern):
 
 
 def check_pattern(pattern, n_qubits):
-    '''
-    Verifies that the input pattern is valid, i.e.,
-    that each qubit appears at most once
-    '''
+    """
+    Verifies that the input pattern is valid, i.e., that each qubit appears at most once
+
+    Args:
+        pattern: RB pattern
+        n_qubits: number of qubits
+
+    Raises:
+        ValueError: if the pattern is not valid
+    """
 
     pattern_flat = []
     for pat in pattern:
@@ -53,10 +65,15 @@ def check_pattern(pattern, n_qubits):
 
 
 def set_defaults_if_needed(rb_opts_dict):
-    '''
-    Set default values to fields of rb_opts_dict
-    and perform validity checks
-    '''
+    """
+    Set default values to fields of rb_opts_dict and perform validity checks
+
+    Args:
+        rb_opts_dict: a dictionary of RB options
+
+    Raises:
+        ValueError: if the dictionary contains invalid fields
+    """
 
     if rb_opts_dict is None:
         rb_opts_dict = {}
@@ -77,9 +94,16 @@ def set_defaults_if_needed(rb_opts_dict):
 
 
 def calc_xdata(length_vector, length_multiplier):
-    '''
+    """
     Calculate the set of sequences lengths
-    '''
+
+    Args:
+        length_vector: vector length
+        length_multiplier: length of the multiplier of the vector length
+
+    Returns:
+        An array of sequences lengths
+    """
 
     xdata = []
     for mult in length_multiplier:
@@ -88,11 +112,16 @@ def calc_xdata(length_vector, length_multiplier):
     return np.array(xdata)
 
 
-def load_tables(max_nrb):
-    '''
+def load_tables(max_nrb=2):
+    """
     Returns the needed Clifford tables
-    max_nrb is the number of qubits for the largest required table
-    '''
+
+    Args:
+        max_nrb: maximal number of qubits for the largest required table
+
+    Returns:
+        A table of Clifford objects
+    """
 
     clifford_tables = [[] for i in range(max_nrb)]
     for rb_num in range(max_nrb):
@@ -121,21 +150,23 @@ def load_tables(max_nrb):
     return clifford_tables
 
 
-#get generic randomized benchmarking sequences
 def randomized_benchmarking_seq(rb_opts_dict=None):
-    """Get a generic randomized benchmarking sequence
-    rb_opts_dict: A dictionary of RB options
-        nseeds: number of seeds
-        length_vector: 'm' length vector of Clifford lengths. Must be in ascending order.
-        RB sequences of increasing length grow on top of the previous sequences.
-        n_qubits: total number of qubits
-        rb_pattern: A list of the form [[i,j],[k],...] which will make
-        simultaneous RB sequences where
-        Qi,Qj are a 2Q RB sequence and Qk is a 1Q sequence, etc.
-        E.g. [[0,3],[2],[1]] would create RB sequences that are 2Q for Q0/Q3, 1Q for Q1+Q2
-        The number of qubits is the sum of the entries. For 'regular' RB the qubit_pattern is just
-        [[0]],[[0,1]]
-        length_multiplier: if this is an array it scales each rb_sequence by the multiplier
+    """
+    Get a generic randomized benchmarking sequence
+
+    Args:
+        rb_opts_dict: A dictionary of RB options
+            nseeds: number of seeds
+            length_vector: 'm' length vector of Clifford lengths. Must be in ascending order.
+            RB sequences of increasing length grow on top of the previous sequences.
+            n_qubits: total number of qubits
+            rb_pattern: A list of the form [[i,j],[k],...] which will make
+            simultaneous RB sequences where
+            Qi,Qj are a 2Q RB sequence and Qk is a 1Q sequence, etc.
+            E.g. [[0,3],[2],[1]] would create RB sequences that are 2Q for Q0/Q3, 1Q for Q1+Q2
+            The number of qubits is the sum of the entries.
+            For 'regular' RB the qubit_pattern is just [[0]],[[0,1]].
+            length_multiplier: if this is an array it scales each rb_sequence by the multiplier
 
     Returns:
         rb_circs: list of circuits for the rb sequences
@@ -200,7 +231,6 @@ def randomized_benchmarking_seq(rb_opts_dict=None):
                     circ += replace_q_indices(clutils.get_quantum_circuit(inv),
                                               rb_pattern[rb_pattern_index], qr)
 
-                circ.measure(qr, cr)
                 circ.name = 'rb_seed_' + str(seed) + '_length_' + str(length_vector[length_index])
                 circuits.append(circ)
                 length_index += 1
@@ -209,14 +239,16 @@ def randomized_benchmarking_seq(rb_opts_dict=None):
 
 
 def replace_q_indices(circuit, q_nums, qr):
-    """Take a circuit that is ordered from 0,1,2 qubits and replace 0 with the qubit
+    """
+    Take a circuit that is ordered from 0,1,2 qubits and replace 0 with the qubit
     label in the first index of q_nums, 1 with the second index...
 
-    circuit: circuit to operate on
-    q_nums: list of qubit indices
+    Args:
+        circuit: circuit to operate on
+        q_nums: list of qubit indices
 
     Returns:
-    updated circuit
+        updated circuit
     """
 
     new_circuit = qiskit.QuantumCircuit(qr)
