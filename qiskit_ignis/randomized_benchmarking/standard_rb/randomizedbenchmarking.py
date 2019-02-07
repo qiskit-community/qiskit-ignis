@@ -115,10 +115,8 @@ def load_tables(max_nrb):
                 clifford_tables[rb_num] = \
                     clutils.load_clifford_table(\
                     picklefile='cliffords%d.pickle'%(rb_num+1))
-        elif rb_num in (2, 3):
-            if not os.path.exists(os.path.join(os.path.dirname(__file__), 'src',
-                                               'qubits_%d_cnots_0.dat'%(rb_num+1))):
-                raise ValueError("Please run 'ex %d' to generate the .dat tables"%(rb_num+1))
+        else:
+            raise ValueError("Error: the number of qubits should be only 1 or 2 \n")
 
     return clifford_tables
 
