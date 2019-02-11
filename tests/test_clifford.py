@@ -37,7 +37,7 @@ class TestClifford(unittest.TestCase):
         """
         test_tables_file = open('test_tables_results.txt', 'w')  # new file with the test results
         test_tables_file.write("test: generating the clifford group table for 1 qubit:\n")
-        clifford1 = clutils.clifford1_table()
+        clifford1 = clutils.clifford1_gates_table()
         test_tables_file.write(str(len(clifford1)))
         test_tables_file.write("\n")
         test_tables_file.write(str(sorted(clifford1.values())))
@@ -45,7 +45,7 @@ class TestClifford(unittest.TestCase):
         test_tables_file.write("-------------------------------------------------------\n")
 
         test_tables_file.write("test: generating the clifford group table for 2 qubits:\n")
-        clifford2 = clutils.clifford2_table()
+        clifford2 = clutils.clifford2_gates_table()
         test_tables_file.write(str(len(clifford2)))
         test_tables_file.write("\n")
         test_tables_file.write(str(sorted(clifford2.values())))
@@ -61,8 +61,8 @@ class TestClifford(unittest.TestCase):
             and computing its inverse
         """
         clifford_tables = [[]]*self.max_nq
-        clifford_tables[0] = clutils.clifford1_table()
-        clifford_tables[1] = clutils.clifford2_table()
+        clifford_tables[0] = clutils.clifford1_gates_table()
+        clifford_tables[1] = clutils.clifford2_gates_table()
         test_random_file = open('test_random_results.txt', 'w')  # new file with the test results
 
         # test: generating a pseudo-random Clifford using tables - 1&2 qubits
@@ -74,13 +74,13 @@ class TestClifford(unittest.TestCase):
                 random.seed(my_seed)
                 test_random_file.write("test: generating a pseudo-random clifford using the tables "
                                        "- %d qubit - seed=%d:\n" %(nq, my_seed))
-                cliff_nq = clutils.random_clifford(nq)
-                test_random_file.write(str(cliff_nq.circuit))
+                cliff_nq = clutils.random_clifford_gates(nq)
+                test_random_file.write(str(cliff_nq))
                 test_random_file.write("\n")
                 test_random_file.write("test: inverting a pseudo-random clifford using the tables "
                                        "- %d qubit - seed=%d:\n" %(nq, my_seed))
-                inv_cliff_nq = clutils.find_inverse_clifford_circuit(cliff_nq,
-                                                                     clifford_tables[nq-1])
+                inv_cliff_nq = clutils.find_inverse_clifford_gates(nq,cliff_nq)
+                                                                     #clifford_tables[nq-1])
                 test_random_file.write(str(inv_cliff_nq))
                 test_random_file.write("\n")
                 test_random_file.write("-------------------------------------------------------\n")
