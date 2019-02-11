@@ -1,0 +1,5 @@
+[MASTER]
+
+disable = invalid-name, import-error, too-many-statements, no-member, too-many-locals, too-many-branches, too-many-arguments, eval-used, too-many-nested-blocks, too-many-public-methods, redefined-builtin, wildcard-import, function-redefined, undefined-variable, unused-wildcard-import, duplicate-code, too-many-instance-attributes, too-few-public-methods, pointless-string-statement
+
+notes = 
