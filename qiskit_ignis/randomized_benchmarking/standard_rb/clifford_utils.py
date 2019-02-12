@@ -22,19 +22,18 @@ except ImportError:
 # ----------------------------------------------------------------------------------------
 # Functions that convert to/from a Clifford object
 # ----------------------------------------------------------------------------------------
-
-def clifford_from_gates(num_qubits, gatelist):
+def compose_gates(cliff, gatelist):
     """
-    Generates a Clifford object from a list of gates.
+    Add gates to a Clifford object from a list of gates.
 
     Args:
-        num_qubits: the number of qubits for the Clifford.
+        cliff: A Clifford class object.
         gatelist: a list of gates.
 
     Returns:
-        A num-qubit Clifford class object.
+        A Clifford class object.
     """
-    cliff = clf.Clifford(num_qubits)
+
     for op in gatelist:
         split = op.split()
         q1 = int(split[1])
@@ -59,6 +58,22 @@ def clifford_from_gates(num_qubits, gatelist):
         else:
             raise ValueError("Unknown gate type: ", op)
     return cliff
+
+
+def clifford_from_gates(num_qubits, gatelist):
+    """
+    Generates a Clifford object from a list of gates.
+
+    Args:
+        num_qubits: the number of qubits for the Clifford.
+        gatelist: a list of gates.
+
+    Returns:
+        A num-qubit Clifford class object.
+    """
+    cliff = clf.Clifford(num_qubits)
+    new_cliff = compose_gates(cliff, gatelist)
+    return new_cliff
 
 
 def clifford_to_index(cliff):
