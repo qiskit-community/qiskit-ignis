@@ -128,7 +128,7 @@ def load_tables(max_nrb=2):
         #load the clifford tables, but only if we're using that particular rb number
         if rb_num == 0:
             #1Q Cliffords, load table programmatically
-            clifford_tables[0] = clutils.clifford1_table()
+            clifford_tables[0] = clutils.clifford1_gates_table()
         elif rb_num == 1:
             #2Q Cliffords
             #Try to load the table in from file. If it doesn't exist then make the file
@@ -145,7 +145,7 @@ def load_tables(max_nrb=2):
                     clutils.load_clifford_table(\
                     picklefile='cliffords%d.pickle'%(rb_num+1))
         else:
-            raise ValueError("Error: the number of qubits should be only 1 or 2 \n")
+            raise ValueError("The number of qubits should be only 1 or 2")
 
     return clifford_tables
 
@@ -207,9 +207,10 @@ def randomized_benchmarking_seq(rb_opts_dict=None):
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
 
                 for _ in range(length_multiplier[rb_pattern_index]):
-                    new_cliff = clutils.random_clifford(rb_q_num)
-                    Cliffs[rb_pattern_index].compose_circuit(new_cliff)
-                    general_circ += replace_q_indices(clutils.get_quantum_circuit(new_cliff),
+
+                    new_cliff_gatelist = clutils.random_clifford_gates(rb_q_num)
+                    Cliffs[rb_pattern_index] = clutils.compose_gates(Cliffs[rb_pattern_index], new_cliff_gatelist)
+                    general_circ += replace_q_indices(clutils.get_quantum_circuit(new_cliff_gatelist, rb_q_num),
                                                       rb_pattern[rb_pattern_index], qr)
                     #add a barrier
                     general_circ.barrier(*[qr[x] for x in rb_pattern[rb_pattern_index]])
@@ -222,15 +223,10 @@ def randomized_benchmarking_seq(rb_opts_dict=None):
                 circ += general_circ
 
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
-                    inv_circuit = clutils.find_inverse_clifford_circuit(Cliffs[rb_pattern_index],
-                                                                        clifford_tables[rb_q_num-1])
-                    inv = clf.Clifford(rb_q_num)
-                    inv.circuit = inv_circuit
-                    # inv is now a Clifford object whose circuit is the correct
-                    # inverse but the tableau is just identity
-                    circ += replace_q_indices(clutils.get_quantum_circuit(inv),
+                    inv_key = clutils.clifford_to_index(Cliffs[rb_pattern_index])
+                    inv_circuit = clutils.find_inverse_clifford_gates(rb_q_num, clifford_tables[rb_q_num-1][inv_key])
+                    circ += replace_q_indices(clutils.get_quantum_circuit(inv_circuit, rb_q_num),
                                               rb_pattern[rb_pattern_index], qr)
-
                 circ.measure(qr, cr)
                 circ.name = 'rb_seed_' + str(seed) + '_length_' + str(length_vector[length_index])
                 circuits.append(circ)
