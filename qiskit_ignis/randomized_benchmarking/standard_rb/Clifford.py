@@ -12,14 +12,21 @@
 import numpy as np
 #from qiskit import QiskitError
 from qiskit.quantum_info import Pauli
-#from qiskit_ignis.randomized_benchmarking.standard_rb.BinaryVector import BinaryVector
 
 
 class Clifford(object):
-    """Clifford Class"""
+
+    """Clifford class"""
 
     def __init__(self, num_qubits=None, table=None, phases=None):
         """Initialize an n-qubit Clifford table."""
+        # Use index for initializing 1 and 2 qubit Cliffords
+        # If index is none initilize to identity.
+
+        # It will be easier for internal functions to use a single np array
+        # for the Clifford table rather than the Pauli class, and we can
+        # convert rows to the Pauli class as needed.
+
         # Initialize internal variables
         self._num_qubits = None
         self._table = None
@@ -46,14 +53,29 @@ class Clifford(object):
         # Initialize from num_qubits only:
         else:
             if num_qubits is not None:
-                num_qubits = 0
-            self._num_qubits = num_qubits
-            # Initialize symplectic table: [[Z(0), X(1)], [Z(1), X(0)]]
-            zeros = np.zeros((num_qubits, num_qubits), dtype=np.bool)
-            ones = np.ones((num_qubits, num_qubits), dtype=np.bool)
-            self._table = np.block([[zeros, ones], [ones, zeros]])
-            # Initialize phases
-            self._phases = np.zeros(2 * num_qubits, dtype=np.int8)
+                #num_qubits = 0 #Shelly - fix - why this is set to 0?
+                self._num_qubits = num_qubits #Shelly - fix - put into the if
+                # Initialize symplectic table: [[Z(0), X(1)], [Z(1), X(0)]]
+                zeros = np.zeros((num_qubits, num_qubits), dtype=np.bool) #Shelly - fix - put into the if
+                ones = np.ones((num_qubits, num_qubits), dtype=np.bool) #Shelly - fix - put into the if
+                self._table = np.block([[zeros, ones], [ones, zeros]]) #Shelly - fix - put into the if
+                # Initialize phases
+                self._phases = np.zeros(2 * num_qubits, dtype=np.int8) #Shelly - fix - put into the if
+
+    def __repr__(self):
+        # TODO: truncate output for large tables
+        output = 'Clifford(phases={},\n'.format(repr(self._phases.tolist()))
+        table_str = '    table=['
+        pad = "".join(len(table_str) * [' '])
+        for j, row in enumerate(self._table):
+            if j > 0:
+                table_str += pad
+            table_str += repr(row.tolist())
+            if j < 2 * self.num_qubits - 1:
+                table_str += ",\n"
+            else:
+                table_str += "])"
+        return output + table_str
 
     # ---------------------------------------------------------------------
     # Data accessors
@@ -66,12 +88,12 @@ class Clifford(object):
 
     @property
     def table(self):
-        """Return the Clifford tableau."""
+        """Return the number of qubits for the Clifford."""
         return self._table
 
     @property
     def phases(self):
-        """Return the phases for the Clifford."""
+        """Return the number of qubits for the Clifford."""
         return self._phases
 
     def __getitem__(self, index):
@@ -138,19 +160,51 @@ class Clifford(object):
 
         # Validation
         if not isinstance(clifford_dict, dict) or \
-                'stabilizers' not in clifford_dict or \
-                'destabilizers' not in clifford_dict:
+           'stabilizers' not in clifford_dict or \
+           'destabilizers' not in clifford_dict:
             raise ValueError("Invalid input Clifford dictionary.")
 
         stabilizers = clifford_dict['stabilizers']
         destabilizers = clifford_dict['destabilizers']
         if len(stabilizers) != len(destabilizers):
             raise ValueError("Invalid Clifford dict: length of stabilizers and destabilizers do not match.")
-        cls._num_qubits = len(stabilizers) #Shelly: added cls
+        num_qubits = len(stabilizers)
+
+        # Helper function
+        def get_row(label):
+            """Return the Pauli object and phase for stabilizer"""
+            if label[0] in ['I', 'X', 'Y', 'Z']:
+                pauli = Pauli.from_label(label)
+                phase = 0
+            elif label[0] == '+':
+                pauli = Pauli.from_label(label[1:])
+                phase = 0
+            elif label[0] == '-':
+                pauli = Pauli.from_label(label[1:])
+                phase = 1
+            return pauli, phase
+
+        # Generate identity Clifford on number of qubits
+        clifford = cls(num_qubits)
+        # Update stabilizers
+        for qubit, label in enumerate(stabilizers):
+            pauli, phase = get_row(label)
+            clifford[num_qubits + qubit] = pauli
+            clifford.phases[num_qubits + qubit] = phase
+        # Update destabilizers
+        for qubit, label in enumerate(destabilizers):
+            pauli, phase = get_row(label)
+            clifford[qubit] = pauli
+            clifford.phases[qubit] = phase
+        return clifford
+
 
     # ---------------------------------------------------------------------
     # Canonical gate operations
     # ---------------------------------------------------------------------
+
+    # NOTE: These might change based on changes to QuantumCircuit API.
+    # They should mimic the circuit API as much as possible.
 
     def x(self, qubit):
         """Apply a Pauli "x" gate to a qubit"""
@@ -198,11 +252,10 @@ class Clifford(object):
         # NOTE: This is convention is probably wrong, check definition of v gate
         #       from randomizedbenchmarking.py (possibly r gate there)
         # TODO: change direct table update if more efficient
-        # Shelly: changed to hshs (instead of shsh)
-        self.h(qubit)
         self.s(qubit)
         self.h(qubit)
         self.s(qubit)
+        self.h(qubit)
 
     def w(self, qubit):
         """Apply w gate v.v"""
@@ -217,7 +270,7 @@ class Clifford(object):
         iz_t, ix_t = qubit_trgt, self.num_qubits + qubit_trgt
         # Compute phase
         tmp = np.logical_xor(self._table[:, ix_t], self._table[:, iz_c])
-        tmp = np.logical_xor(1, tmp) #Shelly: fixed misprint in logical_xor
+        tmp = np.logical_xor(1, tmp) #Shelly: fixed misprint in logical
         tmp = np.logical_and(self._table[:, iz_t], tmp)
         tmp = np.logical_and(self._table[:, ix_c], tmp)
         self._phases ^= tmp
@@ -240,169 +293,3 @@ class Clifford(object):
         self.cx(qubit0, qubit1)
         self.cx(qubit1, qubit0)
         self.cx(qubit0, qubit1)
-
-
-    #    def __init__(self, nqubits):
-#        self.n = nqubits
-#        self.table = []
-#        # initial state = all-zeros
-        # add destabilizers
-#        for i in range(self.n):
-#            pauli = {'X': BinaryVector(self.n), 'Z': BinaryVector(self.n), 'phase': 0}
-#            pauli['X'].setvalue(1, i)
-#            self.table.append(pauli)
-#        # add stabilizers
-#        for i in range(self.n):
-#            pauli = {'X': BinaryVector(self.n), 'Z': BinaryVector(self.n), 'phase': 0}
-#            pauli['Z'].setvalue(1, i)
-#            self.table.append(pauli)
-        # add auxiliary row
-#        pauli = {'X': BinaryVector(self.n), 'Z': BinaryVector(self.n), 'phase': 0}
-#        self.table.append(pauli)
-#        self.circuit = []
-#        self.cannonical = None
-#        self.matrix = None
-
-
-
-# ----------------------------------------------------------------------------------------
-# Clifford properties
-# ----------------------------------------------------------------------------------------
-#    def get_table(self):
-#        """return the table representation, updating from a matrix if needed"""
-#        if self.table is None:
-#            return self.to_table()
-#        return self.table
-
-#    def set_cannonical(self, cannonical):
-#        """set internal memory of cannonical order
-#        --must be set externally, does not decide for itself"""
-#        self.cannonical = cannonical
-
-#    def get_cannonical(self):
-#        """get cannoical order, if set"""
-#        return self.cannonical
-
-#    def get_circuit(self):
-#        """give circuit structure -- does not compute the circuit"""
-#        return self.circuit
-
-#    def circuit_append(self, gatelist):
-#        """add to circuit list"""
-#        self.circuit = self.circuit + gatelist
-
-#    def circuit_prepend(self, gatelist):
-#        """add to circuit list -- not used"""
-#        self.circuit = gatelist + self.circuit
-
-#    def size(self):
-#        """report size in number of qubits"""
-#        return self.n
-
-#    def print_table(self):
-#        """print out the table form of the Clifford -- used for debug"""
-#        table = self.get_table()
-#        for i in range(2*self.n):
-#            print(table[i]['X'].m_data, table[i]['Z'].m_data, table[i]['phase'])
-#        print("--------------------------------------------")
-
-#    def print_matrix(self):
-#        """Print out the matrix form of the Clifford tableau -- used for debug"""
-#        matrix = self.get_matrix()
-#        print(matrix)
-#        print("--------------------------------------------")
-
-#    def get_matrix(self):
-#        """Return and set 2n+1 X 2n dimensional matrix for of a Clifford tableau"""
-#        self.matrix = np.zeros([2*self.n, 2*self.n+1], dtype=np.uint8, order='F')
-#        for i in range(2*self.n):
-#            for j in range(self.n):
-#                self.matrix[i, j] = self.table[i]['X'][j]
-#                self.matrix[i, j+self.n] = self.table[i]['Z'][j]
-#        for i in range(2*self.n):
-#            self.matrix[i, 2*self.n] = self.table[i]['phase']
-#        return self.matrix
-
-#    def to_table(self):
-#        """Return and set tableau in table form (used in get_table)"""
-#        self.table = []
-#        for i in range(2*self.n):
-#            pauli = {'X': BinaryVector(self.n), 'Z': BinaryVector(self.n), 'phase': 0}
-#            for j in range(self.n):
-#                pauli['X'][j] = self.matrix[i, j]
-#                pauli['Z'][j] = self.matrix[i, j+self.n]
-#            pauli['phase'] = self.matrix[i, 2*self.n]
-#            self.table.append(pauli)
-        # append auxiallary row
-#        pauli = {'X': BinaryVector(self.n), 'Z': BinaryVector(self.n), 'phase': 0}
-#        self.table.append(pauli)
-#        self.matrix = None
-#        return self.table
-
-# ----------------------------------------------------------------------------------------
-# Quantum gates operations
-# ----------------------------------------------------------------------------------------
-#    def cx(self, con, tar):
-#        """Controlled-x gate"""
-#        self.get_table()
-#        for i in range(2*self.n):
-#            self.table[i]['phase'] ^= self.table[i]['X'][con] and\
-#                self.table[i]['Z'][tar] and (self.table[i]['X'][tar] ^ self.table[i]['Z'][con] ^ 1)
-#        for i in range(2*self.n):
-#            self.table[i]['X'].setvalue(self.table[i]['X'][tar] ^ self.table[i]['X'][con], tar)
-#            self.table[i]['Z'].setvalue(self.table[i]['Z'][tar] ^ self.table[i]['Z'][con], con)
-
-#    def s(self, q):
-#        """Phase-gate"""
-#        self.get_table()
-#        for i in range(2*self.n):
-#            self.table[i]['phase'] ^= (self.table[i]['X'][q] and self.table[i]['Z'][q])
-#            self.table[i]['Z'].setvalue(self.table[i]['Z'][q] ^ self.table[i]['X'][q], q)
-
-#    def z(self, q):
-#        """Z-Gate"""
-#        self.get_table()
-#        for i in range(2*self.n):
-#            self.table[i]['phase'] ^= self.table[i]['X'][q]
-
-#    def x(self, q):
-#        """X-Gate"""
-#        self.get_table()
-#        for i in range(2*self.n):
-#            self.table[i]['phase'] ^= self.table[i]['Z'][q]
-
-#    def y(self, q):
-#        """Y-Gate"""
-#        self.get_table()
-#        for i in range(2*self.n):
-#            self.table[i]['phase'] ^= (self.table[i]['Z'][q] ^ self.table[i]['X'][q])
-
-#    def h(self, q):
-#        """Hadamard Gate"""
-#        self.get_table()
-#        for i in range(2*self.n):
-#            self.table[i]['phase'] ^= (self.table[i]['X'][q] and self.table[i]['Z'][q])
-            # exchange X and Z
-#            b = self.table[i]['X'][q]
-#            self.table[i]['X'].setvalue(self.table[i]['Z'][q], q)
-#           self.table[i]['Z'].setvalue(b, q)
-
-#    def sdg(self, q):
-#        """Inverse phase Gate, sdg=s.z"""
-#        self.s(q)
-#        self.z(q)
-
-#    def v(self, q):
-#        """V Gate, V=HSHS"""
-#        self.h(q)
-#        self.s(q)
-#        self.h(q)
-#        self.s(q)
-
-#    def w(self, q):
-#        """W Gate, the inverse of V-gate"""
-#        self.sdg(q)
-#        self.h(q)
-#        self.sdg(q)
-#        self.h(q)
-

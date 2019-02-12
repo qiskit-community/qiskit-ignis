@@ -19,22 +19,22 @@ except ImportError:
     import pickle
 
 
-#def clifford_to_index(clifford): #Shelly: instead of key - not sure if needed at all
-#    """Return a big int from the matrix form to use as a key in dictionaries"""
-    # the transpose is so that the phase bits will be the lowest order bits in the key
-#    mat = clifford._table().transpose() #Shelly: get_matrix ==> table
-#    mat = mat.reshape(mat.size)
-#    ret = int(0)
-#    for bit in mat:
-#        ret = (ret << 1) | int(bit)
-#    return ret
-
 # ----------------------------------------------------------------------------------------
-# Compose a Clifford circuit from basis gates
+# Functions that convert to/from a Clifford object
 # ----------------------------------------------------------------------------------------
 
-def clifford_from_gates(cliff, gatelist): ###Shelly: needs to be rewritten...
-    """bla"""
+def clifford_from_gates(num_qubits, gatelist):
+    """
+    Generates a Clifford object from a list of gates.
+
+    Args:
+        num_qubits: the number of qubits for the Clifford.
+        gatelist: a list of gates.
+
+    Returns:
+        A num-qubit Clifford class object.
+    """
+    cliff = clf.Clifford(num_qubits)
     for op in gatelist:
         split = op.split()
         q1 = int(split[1])
@@ -57,45 +57,37 @@ def clifford_from_gates(cliff, gatelist): ###Shelly: needs to be rewritten...
         elif split[0] == 'sdg':
             cliff.sdg(q1)
         else:
-            print("error: unknown gate type: ", op)
-        #self.circuit_append(circ)
-        return cliff
+            raise ValueError("Unknown gate type: ", op)
+    return cliff
 
 
-def compose_clifford_gates(cliff, gatelist): #Shelly:not needed
-    """ compsose circuit """
-    new_cliff = clifford_from_gates(n, gatelist)
-    for op in circ:
-        split = op.split()
-        q1 = int(split[1])
-        if split[0] == 'v':
-            self.v(q1)
-        elif split[0] == 'w':
-            self.w(q1)
-        elif split[0] == 'x':
-            self.x(q1)
-        elif split[0] == 'y':
-            self.y(q1)
-        elif split[0] == 'z':
-            self.z(q1)
-        elif split[0] == 'cx':
-            self.cx(q1, int(split[2]))
-        elif split[0] == 'h':
-            self.h(q1)
-        elif split[0] == 's':
-            self.s(q1)
-        elif split[0] == 'sdg':
-            self.sdg(q1)
-        else:
-            print("error: unknown gate type: ", op)
-        self.circuit_append(circ)
+def clifford_to_index(cliff):
+    """
+    Returns a unique index of the Clifford.
+
+    Args:
+        Cliff: a Clifford object.
+
+    Returns:
+        A unique index (integer).
+    """
+    mat = cliff.table
+    mat = mat.reshape(mat.size)
+    ret = int(0)
+    for bit in mat:
+        ret = (ret << 1) | int(bit)
+    mat = cliff.phases
+    mat = mat.reshape(mat.size)
+    for bit in mat:
+        ret = (ret << 1) | int(bit)
+    return ret
 
 # --------------------------------------------------------
 # Add gates to Cliffords
 # --------------------------------------------------------
 
 def pauli_gates(gatelist, q, pauli):
-    """does pauli gate on qubit q"""
+    """adds a pauli gate on qubit q"""
     if pauli == 2:
         gatelist.append('x ' + str(q))
     elif pauli == 3:
@@ -105,13 +97,13 @@ def pauli_gates(gatelist, q, pauli):
 
 
 def h_gates(gatelist, q, h):
-    """does hadamard gate or not on qubit q"""
+    """adds a hadamard gate or not on qubit q"""
     if h == 1:
         gatelist.append('h ' + str(q))
 
 
 def v_gates(gatelist, q, v):
-    """does axis-swap-gates on qubit q"""
+    """adds an axis-swap-gates on qubit q"""
     #  rotation is V=HSHS = [[0,1],[1,1]] tableau
     #  takes Z->X->Y->Z
     #  V is of order 3, and two V-gates is W-gate, so: W=VV and WV=I
@@ -122,7 +114,7 @@ def v_gates(gatelist, q, v):
 
 
 def cx_gates(gatelist, ctrl, tgt):
-    """does controlled=x gates"""
+    """adds a controlled=x gates"""
     gatelist.append('cx ' + str(ctrl) + ' ' + str(tgt))
 
 
@@ -138,7 +130,7 @@ def clifford1_gates(idx: int):
         idx: the index (mod 24) of a single qubit Clifford.
 
     Returns:
-        A single qubit Clifford class object.
+        A single qubit Clifford gate.
     """
 
     gatelist = []
@@ -147,9 +139,6 @@ def clifford1_gates(idx: int):
     pauli = np.mod(cannonicalorder, 4)
     rotation = np.mod(cannonicalorder // 4, 3)
     h_or_not = np.mod(cannonicalorder // 12, 2)
-
-    #cliff = clf.Clifford(1)
-    #cliff.set_cannonical(cannonicalorder)
 
     h_gates(gatelist, 0, h_or_not)
 
@@ -168,13 +157,11 @@ def clifford2_gates(idx: int):
         idx: the index (mod 11520) of a two-qubit Clifford.
 
     Returns:
-        A 2-qubit Clifford class object.
+        A 2-qubit Clifford gate.
     """
 
     gatelist = []
     cannon = idx % 11520
-    #cliff = clf.Clifford(2)
-    #cliff.set_cannonical(cannon)
 
     pauli = np.mod(cannon, 16)
     symp = cannon // 16
@@ -252,60 +239,62 @@ def clifford2_gates(idx: int):
 # --------------------------------------------------------
 def clifford2_gates_table():
     """
-    Generate a table of all 2-qubit Cliffords.
+    Generate a table of all 2-qubit Clifford gates.
 
     Args:
         None.
 
     Returns:
-        A table of all 2-qubit Clifford objects.
+        A table of all 2-qubit Clifford gates.
     """
     cliffords2 = {}
     for i in range(11520):
         circ = clifford2_gates(i)
-        key=i
-        #key = clifford_to_index(clifford_from_circuit(circ))
+        key=i #Shelly - need to debug it!
+        #key = clifford_to_index(clifford_from_gates(2, circ))
+        #print(i, key)
         cliffords2[key] = circ
     return cliffords2
 
 
 def clifford1_gates_table():
     """
-    Generate a table of all 1-qubit Cliffords.
+    Generate a table of all 1-qubit Clifford gates.
 
     Args:
         None.
 
     Returns:
-        A table of all 1-qubit Clifford objects.
+        A table of all 1-qubit Clifford gates.
     """
     cliffords1 = {}
     for i in range(24):
         circ = clifford1_gates(i)
-        key=i
-        #key = clifford_to_index(clifford_from_circuit(circ))
+        #key=i
+        key = clifford_to_index(clifford_from_gates(1, circ))
+        #print(i, key)
         cliffords1[key] = circ
     return cliffords1
 
 
-def pickle_clifford_table(picklefile='cliffords2.pickle', n=2):
+def pickle_clifford_table(picklefile='cliffords2.pickle', num_qubits=2):
     """
      Create pickled versions of the 1 and 2 qubit Clifford tables.
 
      Args:
          picklefile - pickle file name.
-         n - number of qubits.
+         num_qubits - number of qubits.
 
      Returns:
          A pickle file with the 1 and 2 qubit Clifford tables.
      """
     cliffords = {}
-    if n == 1:
+    if num_qubits == 1:
         cliffords = clifford1_gates_table()
-    elif n == 2:
+    elif num_qubits == 2:
         cliffords = clifford2_gates_table()
     else:
-        print("n>2 not supported for pickle")
+        raise ValueError("number of qubits bigger than is not supported for pickle")
 
     with open(picklefile, "wb") as pf:
         pickle.dump(cliffords, pf)
@@ -319,85 +308,83 @@ def load_clifford_table(picklefile='cliffords2.pickle'):
           picklefile - pickle file name.
 
       Returns:
-          A table of 1 and 2 qubit Clifford objects.
+          A table of 1 and 2 qubit Clifford gates.
       """
     with open(picklefile, "rb") as pf:
         return pickle.load(pf)
 
 
 # --------------------------------------------------------
-# Main function that generates a random clifford
+# Main function that generates a random clifford gate
 # --------------------------------------------------------
-def random_clifford_gates(n):
+def random_clifford_gates(num_qubits):
     """
     Pick a random Clifford gate.
 
     Args:
-        n: dimension of the Clifford.
+        num_qubits: dimension of the Clifford.
 
     Returns:
-        A 1 or 2 qubit Clifford class object.
+        A 1 or 2 qubit Clifford gate.
     """
 
-    if n == 1:
+    if num_qubits == 1:
         return clifford1_gates(np.random.randint(0, 24))
-    elif n == 2:
+    elif num_qubits == 2:
         return clifford2_gates(np.random.randint(0, 11520))
     else:
-        print("Error: the number of qubits should be only 1 or 2 \n")
+        raise ValueError("The number of qubits should be only 1 or 2")
 
 
 # --------------------------------------------------------
-# Main function that calculates an inverse of a clifford
+# Main function that calculates an inverse of a clifford gate
 # --------------------------------------------------------
-def find_inverse_clifford_gates(n, gatelist): #, clifford_table=None):
+def find_inverse_clifford_gates(num_qubits, gatelist):
     """
-    Find the inverse of the Clifford, and a circuit to make it.
+    Find the inverse of a Clifford gate.
 
     Args:
-        cliff: a Clifford object.
-        clifford_table: A table of Clifford objects.
+        num_qubits: the dimension of the Clifford.
+        gatelist: a Clifford gate.
 
     Returns:
-        A 1 or 2 qubit Clifford class object.
+        An inverse Clifford gate.
     """
 
-    if n in (1, 2):
-        invcircuit = gatelist.copy() #clifford_table[cliff.key()].copy()
-        # we want to run the circuit backwards
-        invcircuit.reverse()
+    if num_qubits in (1, 2):
+        inv_gatelist = gatelist.copy()
+        inv_gatelist.reverse()
         # replace v by w and w by v
-        for i, _ in enumerate(invcircuit):
-            split = invcircuit[i].split()
+        for i, _ in enumerate(inv_gatelist):
+            split = inv_gatelist[i].split()
             if split[0] == 'v':
-                invcircuit[i] = 'w ' + split[1]
+                inv_gatelist[i] = 'w ' + split[1]
             elif split[0] == 'w':
-                invcircuit[i] = 'v ' + split[1]
-
-        return invcircuit
+                inv_gatelist[i] = 'v ' + split[1]
+        return inv_gatelist
 
     else:
-        print("Error: the number of qubits should be only 1 or 2 \n")
+        raise ValueError("The number of qubits should be only 1 or 2")
 
 
 # --------------------------------------------------------
 # Returns the Clifford circuit in the form of a QuantumCircuit object
 # --------------------------------------------------------
-def get_quantum_circuit(cliff):
+def get_quantum_circuit(gatelist, num_qubits):
     """
     Returns the Clifford circuit in the form of a QuantumCircuit object.
 
     Args:
-        cliff: a Clifford object.
+        num_qubits: the dimension of the Clifford.
+        gatelist: a Clifford gate.
 
     Returns:
         A QuantumCircuit object.
     """
-    qr = qiskit.QuantumRegister(cliff.n)
+    qr = qiskit.QuantumRegister(num_qubits)
     qc = qiskit.QuantumCircuit(qr)
 
-    circuit = cliff.get_circuit()
-    for op in circuit:
+    for op in gatelist:
         split = op.split()
         op_names = [split[0]]
 
