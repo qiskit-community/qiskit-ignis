@@ -209,9 +209,10 @@ def randomized_benchmarking_seq(rb_opts_dict=None):
                 for _ in range(length_multiplier[rb_pattern_index]):
 
                     new_cliff_gatelist = clutils.random_clifford_gates(rb_q_num)
-                    Cliffs[rb_pattern_index] = clutils.compose_gates(Cliffs[rb_pattern_index], new_cliff_gatelist)
-                    general_circ += replace_q_indices(clutils.get_quantum_circuit(new_cliff_gatelist, rb_q_num),
-                                                      rb_pattern[rb_pattern_index], qr)
+                    Cliffs[rb_pattern_index] = clutils.compose_gates(Cliffs[rb_pattern_index], \
+                                                                     new_cliff_gatelist)
+                    general_circ += replace_q_indices(clutils.get_quantum_circuit(\
+                        new_cliff_gatelist, rb_q_num), rb_pattern[rb_pattern_index], qr)
                     #add a barrier
                     general_circ.barrier(*[qr[x] for x in rb_pattern[rb_pattern_index]])
 
@@ -224,7 +225,8 @@ def randomized_benchmarking_seq(rb_opts_dict=None):
 
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
                     inv_key = clutils.clifford_to_index(Cliffs[rb_pattern_index])
-                    inv_circuit = clutils.find_inverse_clifford_gates(rb_q_num, clifford_tables[rb_q_num-1][inv_key])
+                    inv_circuit = clutils.find_inverse_clifford_gates(\
+                        rb_q_num, clifford_tables[rb_q_num-1][inv_key])
                     circ += replace_q_indices(clutils.get_quantum_circuit(inv_circuit, rb_q_num),
                                               rb_pattern[rb_pattern_index], qr)
 
