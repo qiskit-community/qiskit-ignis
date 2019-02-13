@@ -42,25 +42,30 @@ class Clifford(object):
             self._num_qubits = shape[0] // 2
             # Store phases
             if phases:
-                self._phases = np.array(phases, dtype=np.int8)
+                self._phases = np.array(phases, dtype=np.bool) #Shelly: changed type to bool from int8
                 shape = self._phases.shape
                 if len(shape) != 1 or shape[0] != 2 * self._num_qubits:
                     raise ValueError("Invalid phases")
             else:
                 # Initialize all phases as zero
-                self._phases = np.zeros(2 * self._num_qubits, dtype=np.int8)
+                self._phases = np.zeros(2 * self._num_qubits, dtype=np.bool) #Shelly: changed type to bool from int8
 
         # Initialize from num_qubits only:
         else:
             if num_qubits is not None:
                 #num_qubits = 0 #Shelly - fix - why this is set to 0?
                 self._num_qubits = num_qubits #Shelly - fix - put into the if
-                # Initialize symplectic table: [[Z(0), X(1)], [Z(1), X(0)]]
-                zeros = np.zeros((num_qubits, num_qubits), dtype=np.bool) #Shelly - fix - put into the if
-                ones = np.ones((num_qubits, num_qubits), dtype=np.bool) #Shelly - fix - put into the if
-                self._table = np.block([[zeros, ones], [ones, zeros]]) #Shelly - fix - put into the if
+
+                # Initialize symplectic table: [[Z(0), X(1)], [Z(1), X(0)]] #Shelly - fix - remove this part
+                #zeros = np.zeros((num_qubits, num_qubits), dtype=np.bool) #Shelly - fix - put into the if
+                #ones = np.ones((num_qubits, num_qubits), dtype=np.bool) #Shelly - fix - put into the if
+                #self._table = np.block([[zeros, ones], [ones, zeros]]) #Shelly - fix - put into the if
+
+                # Initialize symplectic table as Identity #Shelly - fix
+                self._table = np.identity(2 * num_qubits, dtype=np.bool) #Shelly - fix
                 # Initialize phases
-                self._phases = np.zeros(2 * num_qubits, dtype=np.int8) #Shelly - fix - put into the if
+                self._phases = np.zeros(2 * num_qubits, dtype=np.bool) #Shelly - fix - put into the if,
+                                                                        #Shelly: changed type to bool from int8
 
     def __repr__(self):
         # TODO: truncate output for large tables
@@ -87,13 +92,13 @@ class Clifford(object):
         return self._num_qubits
 
     @property
-    def table(self):
-        """Return the number of qubits for the Clifford."""
+    def table(self): #Shelly - correct comment
+        """Return the the Clifford table."""
         return self._table
 
     @property
-    def phases(self):
-        """Return the number of qubits for the Clifford."""
+    def phases(self): #Shelly - correct comment
+        """Return the Clifford phases."""
         return self._phases
 
     def __getitem__(self, index):
@@ -265,7 +270,7 @@ class Clifford(object):
 
     def cx(self, qubit_ctrl, qubit_trgt):
         """Apply a Controlled-NOT "cx" gate"""
-        # Helper indicies for stabilizer columns
+        # Helper indices for stabilizer columns
         iz_c, ix_c = qubit_ctrl, self.num_qubits + qubit_ctrl
         iz_t, ix_t = qubit_trgt, self.num_qubits + qubit_trgt
         # Compute phase

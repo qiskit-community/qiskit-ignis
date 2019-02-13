@@ -80,7 +80,7 @@ class TestClifford(unittest.TestCase):
                 test_random_file.write("test: inverting a pseudo-random clifford using the tables "
                                        "- %d qubit - seed=%d:\n" %(nq, my_seed))
                 inv_cliff_nq = clutils.find_inverse_clifford_gates(nq,cliff_nq)
-                                                                     #clifford_tables[nq-1])
+
                 test_random_file.write(str(inv_cliff_nq))
                 test_random_file.write("\n")
                 test_random_file.write("-------------------------------------------------------\n")
