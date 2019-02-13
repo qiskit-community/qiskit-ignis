@@ -76,27 +76,6 @@ def clifford_from_gates(num_qubits, gatelist):
     return new_cliff
 
 
-def clifford_to_index(cliff):
-    """
-    Returns a unique index of the Clifford.
-
-    Args:
-        Cliff: a Clifford object.
-
-    Returns:
-        A unique index (integer).
-    """
-    mat = cliff.table
-    mat = mat.reshape(mat.size)
-    ret = int(0)
-    for bit in mat:
-        ret = (ret << 1) | int(bit)
-    mat = cliff.phases
-    mat = mat.reshape(mat.size)
-    for bit in mat:
-        ret = (ret << 1) | int(bit)
-    return ret
-
 # --------------------------------------------------------
 # Add gates to Cliffords
 # --------------------------------------------------------
@@ -265,7 +244,7 @@ def clifford2_gates_table():
     cliffords2 = {}
     for i in range(11520):
         circ = clifford2_gates(i)
-        key = clifford_to_index(clifford_from_gates(2, circ))
+        key = clifford_from_gates(2, circ).index()
         cliffords2[key] = circ
     return cliffords2
 
@@ -283,7 +262,7 @@ def clifford1_gates_table():
     cliffords1 = {}
     for i in range(24):
         circ = clifford1_gates(i)
-        key = clifford_to_index(clifford_from_gates(1, circ))
+        key = clifford_from_gates(1, circ).index()
         cliffords1[key] = circ
     return cliffords1
 

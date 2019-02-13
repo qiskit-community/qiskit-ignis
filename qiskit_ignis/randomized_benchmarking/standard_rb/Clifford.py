@@ -203,6 +203,27 @@ class Clifford(object):
             clifford.phases[qubit] = phase
         return clifford
 
+    # ---------------------------------------------------------------------
+    # Unique Clifford index
+    # ---------------------------------------------------------------------
+    def index(self):
+        """
+        Returns a unique index for the Clifford.
+
+        Returns:
+            A unique index (integer).
+        """
+        mat = self.table
+        mat = mat.reshape(mat.size)
+        ret = int(0)
+        for bit in mat:
+            ret = (ret << 1) | int(bit)
+        mat = self.phases
+        mat = mat.reshape(mat.size)
+        for bit in mat:
+            ret = (ret << 1) | int(bit)
+        return ret
+
 
     # ---------------------------------------------------------------------
     # Canonical gate operations
