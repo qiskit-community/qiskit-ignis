@@ -64,35 +64,6 @@ def check_pattern(pattern, n_qubits):
         raise ValueError("Invalid pattern. Duplicate qubit index.")
 
 
-def set_defaults_if_needed(rb_opts_dict):
-    """
-    Set default values to fields of rb_opts_dict and perform validity checks
-
-    Args:
-        rb_opts_dict: a dictionary of RB options
-
-    Raises:
-        ValueError: if the dictionary contains invalid fields
-    """
-
-    if rb_opts_dict is None:
-        rb_opts_dict = {}
-
-    rb_opts_dict.setdefault('nseeds', 1)
-    rb_opts_dict.setdefault('length_vector', [1, 10, 20])
-    rb_opts_dict.setdefault('n_qubits', 1)
-    rb_opts_dict.setdefault('rb_pattern', [[0]])
-    check_pattern(rb_opts_dict['rb_pattern'], rb_opts_dict['n_qubits'])
-    rb_opts_dict.setdefault('length_multiplier', 1)
-    rb_opts_dict['length_multiplier'] = handle_length_multiplier(
-        rb_opts_dict['length_multiplier'],
-        len(rb_opts_dict['rb_pattern']))
-
-    valid_keys = ['nseeds', 'length_vector', 'n_qubits', 'rb_pattern', 'length_multiplier']
-    if not set(rb_opts_dict.keys()).issubset(valid_keys):
-        raise ValueError("Input dictionary contains an invalid field")
-
-
 def calc_xdata(length_vector, length_multiplier):
     """
     Calculate the set of sequences lengths
@@ -150,44 +121,39 @@ def load_tables(max_nrb=2):
     return clifford_tables
 
 
-def randomized_benchmarking_seq(rb_opts_dict=None):
+def randomized_benchmarking_seq(nseeds=1,length_vector=[1,10,20],\
+                                n_qubits=1,rb_pattern=[[0]],length_multiplier=1):
     """
     Get a generic randomized benchmarking sequence
 
     Args:
-        rb_opts_dict: A dictionary of RB options
-            nseeds: number of seeds
-            length_vector: 'm' length vector of Clifford lengths. Must be in ascending order.
-            RB sequences of increasing length grow on top of the previous sequences.
-            n_qubits: total number of qubits
-            rb_pattern: A list of the form [[i,j],[k],...] which will make
-            simultaneous RB sequences where
-            Qi,Qj are a 2Q RB sequence and Qk is a 1Q sequence, etc.
-            E.g. [[0,3],[2],[1]] would create RB sequences that are 2Q for Q0/Q3, 1Q for Q1+Q2
-            The number of qubits is the sum of the entries.
-            For 'regular' RB the qubit_pattern is just [[0]],[[0,1]].
-            length_multiplier: if this is an array it scales each rb_sequence by the multiplier
+        nseeds: number of seeds
+        length_vector: 'm' length vector of Clifford lengths. Must be in ascending order.
+        RB sequences of increasing length grow on top of the previous sequences.
+        n_qubits: total number of qubits
+        rb_pattern: A list of the form [[i,j],[k],...] which will make
+        simultaneous RB sequences where
+        Qi,Qj are a 2Q RB sequence and Qk is a 1Q sequence, etc.
+        E.g. [[0,3],[2],[1]] would create RB sequences that are 2Q for Q0/Q3, 1Q for Q1+Q2
+        The number of qubits is the sum of the entries.
+        For 'regular' RB the qubit_pattern is just [[0]],[[0,1]].
+        length_multiplier: if this is an array it scales each rb_sequence by the multiplier
 
     Returns:
-        rb_circs: list of circuits for the rb sequences
+        rb_circs: list of lists of circuits for the rb sequences (separate list for each seed)
         xdata: the Clifford lengths (with multiplier if applicable)
         rb_opts_dict: option dictionary back out with default options appended
     """
 
-    config = copy.deepcopy(rb_opts_dict)
-    set_defaults_if_needed(config)
-
-    rb_pattern = config['rb_pattern']
-    length_vector = config['length_vector']
-    nseeds = config['nseeds']
-    n_qubits = config['n_qubits']
-    length_multiplier = config['length_multiplier']
+    check_pattern(rb_pattern, n_qubits)
+    length_multiplier = handle_length_multiplier(length_multiplier,len(rb_pattern))
 
     xdata = calc_xdata(length_vector, length_multiplier)
+
     pattern_sizes = [len(pat) for pat in rb_pattern]
     clifford_tables = load_tables(np.max(pattern_sizes))
 
-    circuits = []
+    circuits = [[] for e in range(nseeds)]
     #go through for each seed
     for seed in range(nseeds):
 
@@ -224,7 +190,7 @@ def randomized_benchmarking_seq(rb_opts_dict=None):
                 circ += general_circ
 
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
-                    inv_key = clutils.clifford_to_index(Cliffs[rb_pattern_index])
+                    inv_key = Cliffs[rb_pattern_index].index()
                     inv_circuit = clutils.find_inverse_clifford_gates(\
                         rb_q_num, clifford_tables[rb_q_num-1][inv_key])
                     circ += replace_q_indices(clutils.get_quantum_circuit(inv_circuit, rb_q_num),
@@ -232,10 +198,10 @@ def randomized_benchmarking_seq(rb_opts_dict=None):
 
                 circ.measure(qr, cr)
                 circ.name = 'rb_seed_' + str(seed) + '_length_' + str(length_vector[length_index])
-                circuits.append(circ)
+                circuits[seed].append(circ)
                 length_index += 1
 
-    return circuits, xdata, config
+    return circuits, xdata
 
 
 def replace_q_indices(circuit, q_nums, qr):

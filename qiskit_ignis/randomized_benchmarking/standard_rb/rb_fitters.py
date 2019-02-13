@@ -37,13 +37,13 @@ def rb_fit_fun(x, a, alpha, b):
     return a * alpha ** x + b
 
 
-def calc_raw_data(result, rb_circs, rb_opts, shots):
+def calc_raw_data(result_list, rb_circs, rb_opts, shots):
     """
     Retrieve probabilities of success from execution results.
 
     Args:
-        result: expected rb circuits
-        rb_circs: output rb circuits
+        result_list: rb circuits results (list of list for each seed)
+        rb_circs: rb circuits
         rb_opts: a dictionary of RB options
         shots: number of shots
 
@@ -73,12 +73,11 @@ def calc_raw_data(result, rb_circs, rb_opts, shots):
     string_of_0s = string_of_0s.zfill(rb_opts['n_qubits'])
 
     raw_data = []
-    k = 0  # circuit index in rb_circs
     for i in range(rb_opts['nseeds']):
         raw_data.append([])
-        for _ in rb_opts['length_vector']:
-            raw_data[i].append(result.get_counts(rb_circs[k])[string_of_0s] / shots)
-            k += 1
+        for k,_ in enumerate(rb_opts['length_vector']):
+            raw_data[i].append(result_list[i].get_counts(rb_circs[i][k]).get(string_of_0s,0) / shots)
+
 
     return raw_data
 
