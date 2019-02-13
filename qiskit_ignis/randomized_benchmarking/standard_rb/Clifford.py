@@ -42,30 +42,23 @@ class Clifford(object):
             self._num_qubits = shape[0] // 2
             # Store phases
             if phases:
-                self._phases = np.array(phases, dtype=np.bool) #Shelly: changed type to bool from int8
+                self._phases = np.array(phases, dtype=np.bool)
                 shape = self._phases.shape
                 if len(shape) != 1 or shape[0] != 2 * self._num_qubits:
                     raise ValueError("Invalid phases")
             else:
                 # Initialize all phases as zero
-                self._phases = np.zeros(2 * self._num_qubits, dtype=np.bool) #Shelly: changed type to bool from int8
+                self._phases = np.zeros(2 * self._num_qubits, dtype=np.bool)
 
         # Initialize from num_qubits only:
         else:
             if num_qubits is not None:
-                #num_qubits = 0 #Shelly - fix - why this is set to 0?
-                self._num_qubits = num_qubits #Shelly - fix - put into the if
-
-                # Initialize symplectic table: [[Z(0), X(1)], [Z(1), X(0)]] #Shelly - fix - remove this part
-                #zeros = np.zeros((num_qubits, num_qubits), dtype=np.bool) #Shelly - fix - put into the if
-                #ones = np.ones((num_qubits, num_qubits), dtype=np.bool) #Shelly - fix - put into the if
-                #self._table = np.block([[zeros, ones], [ones, zeros]]) #Shelly - fix - put into the if
+                self._num_qubits = num_qubits
 
                 # Initialize symplectic table as Identity #Shelly - fix
-                self._table = np.identity(2 * num_qubits, dtype=np.bool) #Shelly - fix
+                self._table = np.identity(2 * num_qubits, dtype=np.bool)
                 # Initialize phases
-                self._phases = np.zeros(2 * num_qubits, dtype=np.bool) #Shelly - fix - put into the if,
-                                                                        #Shelly: changed type to bool from int8
+                self._phases = np.zeros(2 * num_qubits, dtype=np.bool)
 
     def __repr__(self):
         # TODO: truncate output for large tables
@@ -92,12 +85,12 @@ class Clifford(object):
         return self._num_qubits
 
     @property
-    def table(self): #Shelly - correct comment
+    def table(self):
         """Return the the Clifford table."""
         return self._table
 
     @property
-    def phases(self): #Shelly - correct comment
+    def phases(self):
         """Return the Clifford phases."""
         return self._phases
 
