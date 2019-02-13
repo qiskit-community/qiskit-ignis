@@ -140,7 +140,7 @@ def load_tables(max_nrb=2):
                 #this will save time next run
                 print('Making the n=%d Clifford Table'%(rb_num+1))
                 clutils.pickle_clifford_table(picklefile='cliffords%d.pickle'%(rb_num+1),
-                                              n=(rb_num+1))
+                                              num_qubits=(rb_num+1))
                 clifford_tables[rb_num] = \
                     clutils.load_clifford_table(\
                     picklefile='cliffords%d.pickle'%(rb_num+1))
@@ -227,6 +227,7 @@ def randomized_benchmarking_seq(rb_opts_dict=None):
                     inv_circuit = clutils.find_inverse_clifford_gates(rb_q_num, clifford_tables[rb_q_num-1][inv_key])
                     circ += replace_q_indices(clutils.get_quantum_circuit(inv_circuit, rb_q_num),
                                               rb_pattern[rb_pattern_index], qr)
+
                 circ.measure(qr, cr)
                 circ.name = 'rb_seed_' + str(seed) + '_length_' + str(length_vector[length_index])
                 circuits.append(circ)

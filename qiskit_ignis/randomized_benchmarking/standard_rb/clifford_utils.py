@@ -265,9 +265,7 @@ def clifford2_gates_table():
     cliffords2 = {}
     for i in range(11520):
         circ = clifford2_gates(i)
-        key=i #Shelly - need to debug it!
-        #key = clifford_to_index(clifford_from_gates(2, circ))
-        #print(i, key)
+        key = clifford_to_index(clifford_from_gates(2, circ))
         cliffords2[key] = circ
     return cliffords2
 
@@ -285,9 +283,7 @@ def clifford1_gates_table():
     cliffords1 = {}
     for i in range(24):
         circ = clifford1_gates(i)
-        #key=i
         key = clifford_to_index(clifford_from_gates(1, circ))
-        #print(i, key)
         cliffords1[key] = circ
     return cliffords1
 
