@@ -121,8 +121,8 @@ def load_tables(max_nrb=2):
     return clifford_tables
 
 
-def randomized_benchmarking_seq(nseeds=1,length_vector=[1,10,20],\
-                                n_qubits=1,rb_pattern=[[0]],length_multiplier=1):
+def randomized_benchmarking_seq(nseeds=1, length_vector=[1, 10, 20],\
+                                n_qubits=1, rb_pattern=[[0]], length_multiplier=1):
     """
     Get a generic randomized benchmarking sequence
 
@@ -146,7 +146,7 @@ def randomized_benchmarking_seq(nseeds=1,length_vector=[1,10,20],\
     """
 
     check_pattern(rb_pattern, n_qubits)
-    length_multiplier = handle_length_multiplier(length_multiplier,len(rb_pattern))
+    length_multiplier = handle_length_multiplier(length_multiplier, len(rb_pattern))
 
     xdata = calc_xdata(length_vector, length_multiplier)
 
