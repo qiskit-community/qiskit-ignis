@@ -18,25 +18,6 @@ import qiskit_ignis.randomized_benchmarking.standard_rb.randomizedbenchmarking a
 class TestRB(unittest.TestCase):
     """ The test class """
 
-    @staticmethod
-    def choose_length_vector():
-        '''
-        Randomize a valid field for rb_opts['length_vector']
-        This function returns a vector of length between 1 to 4
-        The first element is between 1 to 3,
-        and every subsequent element is greater than the previous one
-        with difference between 1 to 3.
-        :return: the length vector
-        '''
-
-        res = []
-        last_elem = 0
-        for _ in range(random.randint(1, 4)):
-            new_elem = last_elem + random.randint(1, 3)
-            res.append(new_elem)
-            last_elem = new_elem
-
-        return res
 
     @staticmethod
     def choose_pattern(pattern_type, nq):
@@ -75,21 +56,18 @@ class TestRB(unittest.TestCase):
         return res
 
     @staticmethod
-    def choose_multiplier(len_pattern):
+    def choose_multiplier(mult_opt,len_pattern):
         '''
-        Randomize a valid field for rb_opts['length_multiplier']
-        The result can be either an integer or a vector of integers
-        If it is a vector then its length must be equal to the number of patterns
+        :param multi_opt:
+            0: fixed length
+            1: vector of lengths
         :param len_pattern: number of patterns
         :return: the length multiplier
         '''
-        is_length_multipler_constant = random.randint(0, 1)
-        if is_length_multipler_constant == 0:
-            res = random.randint(1, 3)
+        if mult_opt==0:
+            res = 1
         else:
-            res = []
-            for _ in range(len_pattern):
-                res.append(random.randint(1, 3))
+            res = [i+1 for i in range(len_pattern)]
 
         return res
 
@@ -106,6 +84,10 @@ class TestRB(unittest.TestCase):
                        when executing all the sequences on the ground state
         :param shots: the number of shots in the simulator execution
         '''
+
+        if not hasattr(rb_opts['length_multiplier'], "__len__"):
+            rb_opts['length_multiplier'] = [rb_opts['length_multiplier'] for
+                    i in range(len(rb_opts['rb_pattern']))]
 
         ops = circ.data
         op_index = 0
@@ -142,43 +124,46 @@ class TestRB(unittest.TestCase):
 
             print("Testing %d qubit RB"%nq)
 
-            for pattern_type in range(3):
-                # See documentation of choose_pattern for the meaning of the different pattern types
+            for pattern_type in range(2):
+                for multiplier_type in range(2):
+                    # See documentation of choose_pattern for the meaning of the different pattern types
 
-                rb_opts = {}
-                rb_opts['nseeds'] = random.randint(1, 3)
-                rb_opts['n_qubits'] = nq
+                    rb_opts = {}
+                    rb_opts['nseeds'] = 3
+                    rb_opts['n_qubits'] = nq
 
-                rb_opts['length_vector'] = self.choose_length_vector()
-                rb_opts['rb_pattern'] = self.choose_pattern(pattern_type, nq)
-                if rb_opts['rb_pattern'] is None:   # if the pattern type is not relevant for nq
-                    continue
-                rb_opts['length_multiplier'] = self.choose_multiplier(len(rb_opts['rb_pattern']))
+                    rb_opts['length_vector'] = [1,3,4,7]
+                    rb_opts['rb_pattern'] = self.choose_pattern(pattern_type, nq)
+                    if rb_opts['rb_pattern'] is None:   # if the pattern type is not relevant for nq
+                        continue
+                    rb_opts['length_multiplier'] = \
+                    self.choose_multiplier(multiplier_type, len(rb_opts['rb_pattern']))
 
-                # Generate the sequences
-                try:
-                    rb_circs, _, rb_opts = rb.randomized_benchmarking_seq(rb_opts)
-                except OSError:
-                    print('Skipping tests for ' + str(nq) + ' qubits because tables are missing')
-                    continue
+                    # Generate the sequences
+                    try:
+                        rb_circs, _ = rb.randomized_benchmarking_seq(**rb_opts)
+                    except OSError:
+                        print('Skipping tests for ' + str(nq) + ' qubits because tables are missing')
+                        continue
 
-                # Perform an ideal execution on the generated sequences
-                basis_gates = 'u1,u2,u3,cx' # use U, CX for now
-                shots = 100
-                result = qiskit.execute(rb_circs, backend=backend,
-                                        basis_gates=basis_gates, shots=shots).result()
+                    # Perform an ideal execution on the generated sequences
+                    basis_gates = ['u1','u2','u3','cx'] # use U, CX for now
+                    shots = 100
+                    result = []
+                    for seed in range(rb_opts['nseeds']):
+                        result.append(qiskit.execute(rb_circs[seed], backend=backend,
+                                                basis_gates=basis_gates, shots=shots).result())
 
-                # Verify the generated sequences
-                circ_index = 0
-                for seed in range(rb_opts['nseeds']):
-                    for vec_len in rb_opts['length_vector']:
-                        self.assertEqual(rb_circs[circ_index].name,
-                                         'rb_seed_' + str(seed) + '_length_' + str(vec_len),
-                                         'Error: incorrect circuit name')
-                        self.verify_circuit(rb_circs[circ_index], rb_opts, vec_len, result, shots)
-                        circ_index += 1
+                    # Verify the generated sequences
+                    for seed in range(rb_opts['nseeds']):
+                        for circ_index,vec_len in enumerate(rb_opts['length_vector']):
+                            self.assertEqual(rb_circs[seed][circ_index].name,
+                                             'rb_seed_' + str(seed) + '_length_' + str(vec_len),
+                                             'Error: incorrect circuit name')
+                            self.verify_circuit(rb_circs[seed][circ_index], rb_opts,
+                                                vec_len, result[seed], shots)
 
-                self.assertEqual(circ_index, len(rb_circs), "Error: additional circuits exist")
+                    self.assertEqual(circ_index, len(rb_circs), "Error: additional circuits exist")
 
 
 if __name__ == '__main__':
