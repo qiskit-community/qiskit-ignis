@@ -15,8 +15,9 @@ import numpy as np
 import qiskit
 from qiskit.providers.aer.noise import NoiseModel
 from qiskit.providers.aer.noise.errors.standard_errors import depolarizing_error
-import qiskit_ignis.randomized_benchmarking.standard_rb.rb_fitters as fitters
 import qiskit_ignis.randomized_benchmarking.standard_rb.randomizedbenchmarking as rb
+from qiskit_ignis.randomized_benchmarking.standard_rb.rb_fitters import RBFitter
+
 
 class TestFitters(unittest.TestCase):
     """ Test the fitters """
@@ -90,9 +91,9 @@ class TestFitters(unittest.TestCase):
             # Perform an execution on the generated sequences
             basis_gates = 'u1,u2,u3,cx' # use U, CX for now #Shelly: changed format to fit qiskit current version
             shots = 100
-            result_list = []
+            backend_result = []
             for i in range(rb_opts['nseeds']):
-                result_list.append(qiskit.execute(rb_circs[i], backend=backend, seed=tst_index+1,
+                backend_result.append(qiskit.execute(rb_circs[i], backend=backend, seed=tst_index+1,
                                         basis_gates=basis_gates, shots=shots,
                                         noise_model=noise_model,
                                         backend_options={'seed': tst_index+1}).result())
@@ -101,13 +102,14 @@ class TestFitters(unittest.TestCase):
             self.assertEqual(xdata.tolist(), tst['expected']['xdata'],
                              'Incorrect xdata in test no. ' + str(tst_index))
 
-            # See TODOs for calc_raw_data in rb_fitters.py
-            raw_data = fitters.calc_raw_data(result_list, rb_circs, rb_opts, shots)
+            # RBFitter class
+            rb_fit = RBFitter(backend_result, shots, rb_circs, xdata, rb_opts)
+
+            raw_data = rb_fit.raw_data
             self.assertEqual(raw_data, tst['expected']['raw_data'],
                              'Incorrect raw data in test no. ' + str(tst_index))
 
-            # See TODOs for calc_statistics in rb_fitters.py
-            ydata = fitters.calc_statistics(raw_data)
+            ydata = rb_fit.ydata
             self.assertTrue(all(np.isclose(a, b) for a, b in
                                 zip(ydata['mean'], tst['expected']['mean'])),
                             'Incorrect mean in test no. ' + str(tst_index))
@@ -118,7 +120,7 @@ class TestFitters(unittest.TestCase):
                 self.assertTrue(all(np.isclose(a, b) for a, b in
                                     zip(ydata['std'], tst['expected']['std'])),
                                 'Incorrect std in test no. ' + str(tst_index))
-            fit = fitters.calc_rb_fit(xdata, ydata, rb_opts['rb_pattern'])
+            fit = rb_fit.fit
 
             self.assertTrue(all(np.isclose(a, b) for c, d in
                                 zip(fit, tst['expected']['fit_params'])
