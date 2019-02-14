@@ -29,11 +29,11 @@ class TestT1(unittest.TestCase):
         Then verify that the calculated T1 matches the amplitude damping parameter.
         """
 
-        # 10 numbers ranging from 100 to 1000, logarithmically spaced
+        # 17 numbers ranging from 100 to 1000, logarithmically spaced
         num_of_gates = (np.logspace(2, 3, 10)).astype(int)
         gate_time = 0.11
-        num_of_qubits = 3
-        qubit = random.randint(0, 2)
+        num_of_qubits = 2
+        qubit = random.randint(0, 1)
 
         circs, xdata = t1gen(num_of_gates, gate_time, num_of_qubits, qubit)
 

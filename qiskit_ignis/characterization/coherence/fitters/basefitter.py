@@ -46,8 +46,7 @@ class BaseCoherenceFitter:
     def calc_data(self, backend_result, shots):
         """
         Rerieve probabilities of success from execution results, i.e.,
-        probability to measure a state where all qubits are 0,
-        except for self.qubit, which is 1.
+        probability to measure a state where all qubits are 0.
         Return a dictionary ydata:
         - ydata['mean'] is a list, where item no. j is the probability of success
                         for a circuit that lasts self.xdata[j].
@@ -56,7 +55,6 @@ class BaseCoherenceFitter:
         """
 
         expected_state_list = ['0'] * self.num_of_qubits
-        expected_state_list[self.num_of_qubits - self.qubit - 1] = '1'
         expected_state_str = ''.join(expected_state_list)
 
         ydata = {'mean': [], 'std': []}

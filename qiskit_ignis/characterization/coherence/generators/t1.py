@@ -40,6 +40,7 @@ def t1_generate_circuits_bygates(num_of_gates, gate_time, num_of_qubits, qubit):
         circ.x(qr[qubit])
         circ = pad_id_gates(circ, qr, circ_length)
         circ.barrier(qr[qubit])
+        circ.x(qr[qubit])
         circ.measure(qr[qubit], cr[qubit])
         circuits.append(circ)
 
