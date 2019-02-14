@@ -19,18 +19,6 @@ except ImportError:
     HAS_MATPLOTLIB = False
 
 
-def exp_fit_fun(x, a, tau, c):
-    """Function used to fit the exponential decay."""
-    # pylint: disable=invalid-name
-    return a * np.exp(-x / tau) + c
-
-
-def osc_fit_fun(x, a, tau, f, phi, c):
-    """Function used to fit the decay cosine."""
-    # pylint: disable=invalid-name
-    return a * np.exp(-x / tau) * np.cos(2 * np.pi * f * x + phi) + c
-
-
 def rb_fit_fun(x, a, alpha, b):
     """Function used to fit rb."""
     # pylint: disable=invalid-name
@@ -59,16 +47,6 @@ def calc_raw_data(result_list, rb_circs, rb_opts, shots):
         with the given rb_opts.
     """
 
-    """
-    TODOs:
-    1) For correlated RB, calculate raw_data separately for each group of qubits.
-       Then the raw data will be a 3-dimensional list, where item (i,j,l) is the
-       probability to measure the ground state in the projection of the qubits
-       in group l, for seed no. i and vector length rb_opts['length_vector'][j].
-    2) Add an input parameter old_raw_data. The new raw data, generated in this function,
-       will be appended to the old raw data.
-    """
-
     string_of_0s = ''
     string_of_0s = string_of_0s.zfill(rb_opts['n_qubits'])
 
@@ -77,7 +55,6 @@ def calc_raw_data(result_list, rb_circs, rb_opts, shots):
         raw_data.append([])
         for k,_ in enumerate(rb_opts['length_vector']):
             raw_data[i].append(result_list[i].get_counts(rb_circs[i][k]).get(string_of_0s,0) / shots)
-
 
     return raw_data
 
@@ -94,19 +71,12 @@ def calc_statistics(raw_data):
     Return:
         A dictionary ydata, where
         ydata['mean'] is a numpy_array of length n;
-                      entry j of this array contains the mean probability of success over seeds,
-                      for vector length rb_opts['length_vector'][j].
+                    entry j of this array contains the mean probability of success over seeds,
+                    for vector length rb_opts['length_vector'][j].
         And ydata['std'] is a numpy_array of length n;
-                      entry j of this array contains the std
-                      of the probability of success over seeds,
-                      for vector length rb_opts['length_vector'][j].
-    """
-
-    """
-    TODO:
-       For correlated RB, calculate ydata separately for each group of qubits.
-       Then ydata['mean'] and ydata['std'] will be 3-dimensional lists, where items (j,l)
-       refer to the qubits in group l, for vector length rb_opts['length_vector'][j].
+                    entry j of this array contains the std
+                    of the probability of success over seeds,
+                    for vector length rb_opts['length_vector'][j].
     """
 
     ydata = {'mean': np.mean(raw_data, 0)}
@@ -206,40 +176,3 @@ def plot_rb_data(pattern_index,
 
     if show_plt:
         plt.show()
-
-
-def plot_coherence(pattern_index, xdata, ydata, fit,
-                   xunit, exp_str, qubit_label,
-                   fit_function=rb_fit_fun,
-                  ):
-    """
-    Plot coherence data.
-
-    Args:
-        pattern_index, xdata, ydata, fit, fit_function: see documentation of plot_rb_data
-        xunit: TODO: complete
-        exp_str: TODO: complete
-        qubit_label
-    Raises:
-        ImportError: If matplotlib is not installed.
-    """
-
-    if not HAS_MATPLOTLIB:
-        raise ImportError('The function plot_coherence needs matplotlib. '
-                          'Run "pip install matplotlib" before.')
-
-    plt.errorbar(xdata[pattern_index], ydata['mean'], ydata['std'],
-                 marker='.', markersize=9, c='b', linestyle='')
-    plt.plot(xdata[pattern_index],
-             fit_function(xdata[pattern_index], *fit[pattern_index]['params']),
-             c='r', linestyle='--',
-             label=(exp_str + '= %s %s' % (str(round(fit[pattern_index]['params'][1])), xunit)))
-
-    plt.xticks(fontsize=14, rotation=70)
-    plt.yticks(fontsize=14)
-    plt.xlabel('time [%s]' % (xunit), fontsize=16)
-    plt.ylabel('P(1)', fontsize=16)
-    plt.title(exp_str + ' measurement of Q$_{%s}$' % (str(qubit_label)), fontsize=18)
-    plt.legend(fontsize=12)
-    plt.grid(True)
-    plt.show()
