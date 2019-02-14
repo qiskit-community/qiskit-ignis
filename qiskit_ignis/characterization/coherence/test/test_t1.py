@@ -15,8 +15,8 @@ import numpy as np
 import qiskit
 from qiskit.providers.aer.noise.errors.standard_errors import amplitude_damping_error
 from qiskit.providers.aer.noise import NoiseModel
-from characterization.coherence.generators.t1 import t1_generate_circuits as t1gen
-from characterization.coherence.fitters.t1fitter import T1Fitter
+from qiskit_ignis.characterization.coherence.generators.t1 import t1_generate_circuits_bygates as t1gen
+from qiskit_ignis.characterization.coherence.fitters.t1fitter import T1Fitter
 
 class TestT1(unittest.TestCase):
     """
@@ -35,7 +35,7 @@ class TestT1(unittest.TestCase):
         num_of_qubits = 3
         qubit = random.randint(0, 2)
 
-        circs = t1gen(num_of_gates, num_of_qubits, qubit)
+        circs, xdata = t1gen(num_of_gates, gate_time, num_of_qubits, qubit)
 
         expected_t1 = random.randint(10, 100)
         gamma = 1 - np.exp(-gate_time/expected_t1)
@@ -51,18 +51,18 @@ class TestT1(unittest.TestCase):
 
         initial_t1 = expected_t1 + 20*(-1)**random.randint(0, 1)
         initial_a = 1 + 0.5*(-1)**random.randint(0, 1)
-        initial_b = 0.5*(-1)**random.randint(0, 1)
+        initial_c = 0.5*(-1)**random.randint(0, 1)
 
-        fit = T1Fitter(backend_result, shots, num_of_gates, gate_time, num_of_qubits, qubit,
-                       fit_p0=[initial_a, initial_t1, initial_b],
+        fit = T1Fitter(backend_result, shots, xdata, num_of_qubits, qubit,
+                       fit_p0=[initial_a, initial_t1, initial_c],
                        fit_bounds=([0, expected_t1-30, -1], [2, expected_t1+30, 1]))
+
+        fit.plot_coherence()
 
         self.assertAlmostEqual(fit.time, expected_t1, delta=20,
                                msg='Calculated T1 is inaccurate')
         self.assertTrue(fit.time_err < 30,
                         'Confidence in T1 calculation is too low: ' + str(fit.time_err))
-
-        fit.plot_coherence()
 
 
 if __name__ == '__main__':

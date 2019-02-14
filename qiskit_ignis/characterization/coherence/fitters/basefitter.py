@@ -18,21 +18,14 @@ class BaseCoherenceFitter:
     """
 
     def __init__(self, description,
-                 backend_result, shots,
-                 num_of_gates, gate_time,
+                 backend_result, shots, xdata,
                  num_of_qubits, measured_qubit,
                  fit_fun, fit_p0, fit_bounds):
         """
         Args:
            description: a string describing the fitter's purpose, e.g. 'T1'
            backend_result: result of backend execution (qiskit.Result).
-           num_of_gates is a vector of integers in an increasing order.
-           len(num_of_gates) circuits will be generated.
-           In the first circuit the initial X gate will be followed by
-           num_of_gates[0] identity gates.
-           In the second circuit it will be followed by num_of_gates[1] identity gates.
-           And so on.
-           Each gate lasts gate_time micro-seconds.
+           xdata: a list of times in micro-seconds.
            The circuits have num_of_qubits qubits.
            The index of the qubit whose time is measured is measured_qubit.
            fit_fun, fit_p0, fir_bounds: equivalent to parameters of scipy.curve_fit.
@@ -43,21 +36,21 @@ class BaseCoherenceFitter:
         self.num_of_qubits = num_of_qubits
         self.qubit = measured_qubit
 
-        self.xdata = gate_time * num_of_gates
-        self.ydata = self.calc_data(backend_result, shots, len(num_of_gates))
+        self.xdata = xdata
+        self.ydata = self.calc_data(backend_result, shots)
 
         self.fit_fun = fit_fun
         self.params, self.params_err = self.calc_fit(fit_p0, fit_bounds)
 
 
-    def calc_data(self, backend_result, shots, num_of_circuits):
+    def calc_data(self, backend_result, shots):
         """
         Rerieve probabilities of success from execution results, i.e.,
         probability to measure a state where all qubits are 0,
         except for self.qubit, which is 1.
         Return a dictionary ydata:
         - ydata['mean'] is a list, where item no. j is the probability of success
-                        for a circuit of length self.num_of_gates[j].
+                        for a circuit that lasts self.xdata[j].
         - ydata['std'] is a list, where ydata['std'][j] is the
                        standard deviation of the success.
         """
@@ -67,7 +60,7 @@ class BaseCoherenceFitter:
         expected_state_str = ''.join(expected_state_list)
 
         ydata = {'mean': [], 'std': []}
-        for circ in range(num_of_circuits):
+        for circ, _ in enumerate(self.xdata):
             counts = backend_result.get_counts(circ)
             if expected_state_str in counts:
                 success_prob = counts[expected_state_str] / shots

@@ -16,14 +16,12 @@ class T1Fitter(BaseCoherenceFitter):
     T1 fitter
     """
 
-    def __init__(self, backend_result, shots,
-                 num_of_gates, gate_time,
+    def __init__(self, backend_result, shots, xdata,
                  num_of_qubits, measured_qubit,
                  fit_p0, fit_bounds):
 
         BaseCoherenceFitter.__init__(self, '$T_1$',
-                                     backend_result, shots,
-                                     num_of_gates, gate_time,
+                                     backend_result, shots, xdata,
                                      num_of_qubits, measured_qubit,
                                      BaseCoherenceFitter.exp_fit_fun,
                                      fit_p0, fit_bounds)
