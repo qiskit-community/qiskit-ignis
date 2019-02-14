@@ -147,7 +147,8 @@ class TestRB(unittest.TestCase):
                         continue
 
                     # Perform an ideal execution on the generated sequences
-                    basis_gates = ['u1','u2','u3','cx'] # use U, CX for now
+                    #basis_gates = ['u1','u2','u3','cx'] # use U, CX for now
+                    basis_gates = 'u1, u2, u3, cx' # Shelly: changed format to fit qiskit current version
                     shots = 100
                     result = []
                     for seed in range(rb_opts['nseeds']):
