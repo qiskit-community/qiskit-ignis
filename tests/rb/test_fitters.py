@@ -93,10 +93,11 @@ class TestFitters(unittest.TestCase):
             np.random.seed(tst_index+1)
 
             # Generate the sequences
+            rb_opts = tst['rb_opts'].copy()
             try:
-                rb_circs, xdata, rb_opts = rb.randomized_benchmarking_seq(tst['rb_opts'])
+                rb_circs, xdata = rb.randomized_benchmarking_seq(**rb_opts)
             except OSError:
-                print('Skipping test no. ' + str(i) + ' because tables are missing')
+                print('Skipping test no. ' + str(tst_index) + ' because tables are missing')
                 continue
 
             # Define a noise model
@@ -106,19 +107,21 @@ class TestFitters(unittest.TestCase):
             noise_model.add_all_qubit_quantum_error(depolarizing_error(0.002, 2), 'cx')
 
             # Perform an execution on the generated sequences
-            basis_gates = 'u1,u2,u3,cx' # use U, CX for now
+            basis_gates = ['u1','u2','u3','cx'] # use U, CX for now
             shots = 100
-            result = qiskit.execute(rb_circs, backend=backend, seed=tst_index+1,
-                                    basis_gates=basis_gates, shots=shots,
-                                    noise_model=noise_model,
-                                    backend_options={'seed': tst_index+1}).result()
+            result_list = []
+            for i in range(rb_opts['nseeds']):
+                result_list.append(qiskit.execute(rb_circs[i], backend=backend, seed=tst_index+1,
+                                        basis_gates=basis_gates, shots=shots,
+                                        noise_model=noise_model,
+                                        backend_options={'seed': tst_index+1}).result())
 
             # Test xdata
             self.assertEqual(xdata.tolist(), tst['expected']['xdata'],
                              'Incorrect xdata in test no. ' + str(tst_index))
 
             # See TODOs for calc_raw_data in rb_fitters.py
-            raw_data = fitters.calc_raw_data(result, rb_circs, rb_opts, shots)
+            raw_data = fitters.calc_raw_data(result_list, rb_circs, rb_opts, shots)
             self.assertEqual(raw_data, tst['expected']['raw_data'],
                              'Incorrect raw data in test no. ' + str(tst_index))
 
