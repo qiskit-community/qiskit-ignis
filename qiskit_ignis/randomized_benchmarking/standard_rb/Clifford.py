@@ -55,8 +55,8 @@ class Clifford(object):
             if num_qubits is not None:
                 self._num_qubits = num_qubits
 
-                # Initialize symplectic table as Identity #Shelly - fix
-                self._table = np.identity(2 * num_qubits, dtype=np.bool)
+                # Initialize symplectic table
+                self._table = np.fliplr(np.identity(2 * num_qubits, dtype=np.bool))
                 # Initialize phases
                 self._phases = np.zeros(2 * num_qubits, dtype=np.bool)
 
