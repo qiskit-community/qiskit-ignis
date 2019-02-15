@@ -56,7 +56,9 @@ class Clifford(object):
                 self._num_qubits = num_qubits
 
                 # Initialize symplectic table
-                self._table = np.fliplr(np.identity(2 * num_qubits, dtype=np.bool))
+                zeros = np.zeros((num_qubits, num_qubits), dtype=np.bool)
+                iden = np.eye(num_qubits, dtype=np.bool)
+                self._table = np.block([[zeros, iden], [iden, zeros]])
                 # Initialize phases
                 self._phases = np.zeros(2 * num_qubits, dtype=np.bool)
 
