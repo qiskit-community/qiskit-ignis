@@ -267,14 +267,10 @@ class Clifford(object):
         self.s(qubit)
 
     def v(self, qubit):
-        """Apply v gate h.s.h.s"""
-        # NOTE: This is convention is probably wrong, check definition of v gate
-        #       from randomizedbenchmarking.py (possibly r gate there)
+        """Apply v gate sd.h"""
         # TODO: change direct table update if more efficient
-        self.h(qubit) #Shelly: changed v to hshs (instead of shsh)
-        self.s(qubit)
+        self.sdg(qubit)
         self.h(qubit)
-        self.s(qubit)
 
     def w(self, qubit):
         """Apply w gate v.v"""
