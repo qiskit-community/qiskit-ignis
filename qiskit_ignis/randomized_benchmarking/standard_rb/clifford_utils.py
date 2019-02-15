@@ -380,7 +380,7 @@ def get_quantum_circuit(gatelist, num_qubits):
 
         # temporary correcting the ops name since QuantumCircuit has no attributes 'v' or 'w' yet:
         if op_names == ['v']:
-            op_names = ['h', 's', 'h', 's']
+            op_names = ['sdg', 'h']
         elif op_names == ['w']:
             op_names = ['sdg', 'h', 'sdg', 'h']
 
