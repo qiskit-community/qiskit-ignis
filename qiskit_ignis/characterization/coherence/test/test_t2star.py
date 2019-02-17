@@ -9,17 +9,18 @@
 Test measurement of T2*
 """
 
-import copy
 import unittest
 import random
 import numpy as np
-from matplotlib import pyplot as plt
 import qiskit
-from qiskit.providers.aer.noise.errors.standard_errors import phase_damping_error, mixed_unitary_error
+from qiskit.providers.aer.noise.errors.standard_errors import phase_damping_error
 from qiskit.providers.aer.noise import NoiseModel
-from qiskit_ignis.characterization.coherence.generators.t2star import t2starexp_generate_circuits_bygates as t2expgen
-from qiskit_ignis.characterization.coherence.generators.t2star import t2starosc_generate_circuits_bygates as t2oscgen
-from qiskit_ignis.characterization.coherence.fitters.t2starfitter import T2StarExpFitter, T2StarOscFitter
+from qiskit_ignis.characterization.coherence.generators.t2star import \
+     t2starexp_generate_circuits_bygates as t2expgen
+from qiskit_ignis.characterization.coherence.generators.t2star import \
+     t2starosc_generate_circuits_bygates as t2oscgen
+from qiskit_ignis.characterization.coherence.fitters.t2starfitter import \
+     T2StarExpFitter, T2StarOscFitter
 
 class TestT2Star(unittest.TestCase):
     """
@@ -69,7 +70,7 @@ class TestT2Star(unittest.TestCase):
         self.assertAlmostEqual(fit.time, expected_t2, delta=20,
                                msg='Calculated T2 is inaccurate')
         self.assertTrue(fit.time_err < 30,
-                       'Confidence in T2 calculation is too low: ' + str(fit.time_err))
+                        'Confidence in T2 calculation is too low: ' + str(fit.time_err))
 
 
         # Estimate T2* via an oscilliator function
@@ -94,7 +95,7 @@ class TestT2Star(unittest.TestCase):
         self.assertAlmostEqual(fit.time, expected_t2, delta=20,
                                msg='Calculated T2 is inaccurate')
         self.assertTrue(fit.time_err < 30,
-                       'Confidence in T2 calculation is too low: ' + str(fit.time_err))
+                        'Confidence in T2 calculation is too low: ' + str(fit.time_err))
 
 
         # TODO: add SPAM
