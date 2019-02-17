@@ -32,18 +32,20 @@ class BaseCoherenceFitter:
         """
 
         self.description = description
+        self.backend_result = backend_result
+        self.shots = shots
 
         self.num_of_qubits = num_of_qubits
         self.qubit = measured_qubit
 
         self.xdata = xdata
-        self.ydata = self.calc_data(backend_result, shots)
+        self.ydata = self.calc_data()
 
         self.fit_fun = fit_fun
         self.params, self.params_err = self.calc_fit(fit_p0, fit_bounds)
 
 
-    def calc_data(self, backend_result, shots):
+    def calc_data(self):
         """
         Rerieve probabilities of success from execution results, i.e.,
         probability to measure a state where all qubits are 0.
@@ -59,13 +61,13 @@ class BaseCoherenceFitter:
 
         ydata = {'mean': [], 'std': []}
         for circ, _ in enumerate(self.xdata):
-            counts = backend_result.get_counts(circ)
+            counts = self.backend_result.get_counts(circ)
             if expected_state_str in counts:
-                success_prob = counts[expected_state_str] / shots
+                success_prob = counts[expected_state_str] / self.shots
             else:
                 success_prob = 0
             ydata['mean'].append(success_prob)
-            ydata['std'].append(np.sqrt(success_prob * (1-success_prob) / shots))
+            ydata['std'].append(np.sqrt(success_prob * (1-success_prob) / self.shots))
 
         return ydata
 
