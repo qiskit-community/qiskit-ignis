@@ -277,8 +277,8 @@ class Clifford(object):
     def w(self, qubit):
         """Apply w gate v.v"""
         # TODO: change direct table update if more efficient
-        self.v(qubit)
-        self.v(qubit)
+        self.h(qubit)
+        self.s(qubit)
 
     def cx(self, qubit_ctrl, qubit_trgt):
         """Apply a Controlled-NOT "cx" gate"""

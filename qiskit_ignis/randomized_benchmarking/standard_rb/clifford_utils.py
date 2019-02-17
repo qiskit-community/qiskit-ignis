@@ -382,7 +382,7 @@ def get_quantum_circuit(gatelist, num_qubits):
         if op_names == ['v']:
             op_names = ['sdg', 'h']
         elif op_names == ['w']:
-            op_names = ['sdg', 'h', 'sdg', 'h']
+            op_names = ['h', 's']
 
         qubits = [qr[int(x)] for x in split[1:]]
         for sub_op in op_names:
