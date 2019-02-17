@@ -15,7 +15,8 @@ import numpy as np
 import qiskit
 from qiskit.providers.aer.noise.errors.standard_errors import amplitude_damping_error
 from qiskit.providers.aer.noise import NoiseModel
-from qiskit_ignis.characterization.coherence.generators.t1 import t1_generate_circuits_bygates as t1gen
+from qiskit_ignis.characterization.coherence.generators.t1 import \
+     t1_generate_circuits_bygates as t1gen
 from qiskit_ignis.characterization.coherence.fitters.t1fitter import T1Fitter
 
 class TestT1(unittest.TestCase):
