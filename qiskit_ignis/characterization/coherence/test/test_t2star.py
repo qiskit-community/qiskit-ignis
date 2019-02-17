@@ -65,8 +65,6 @@ class TestT2Star(unittest.TestCase):
                               fit_p0=[initial_a, initial_t2, initial_c],
                               fit_bounds=([-0.5, expected_t2-30, -0.5], [1.5, expected_t2+30, 1.5]))
 
-        fit.plot_coherence()
-
         self.assertAlmostEqual(fit.time, expected_t2, delta=20,
                                msg='Calculated T2 is inaccurate')
         self.assertTrue(fit.time_err < 30,
@@ -89,8 +87,6 @@ class TestT2Star(unittest.TestCase):
                               fit_p0=[initial_a, initial_t2, initial_f, initial_phi, initial_c],
                               fit_bounds=([-0.5, expected_t2-30, omega-0.02, -np.pi/10, -0.5],
                                           [1.5, expected_t2+30, omega+0.02, np.pi/10, 1.5]))
-
-        fit.plot_coherence()
 
         self.assertAlmostEqual(fit.time, expected_t2, delta=20,
                                msg='Calculated T2 is inaccurate')

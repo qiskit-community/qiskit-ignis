@@ -58,8 +58,6 @@ class TestT1(unittest.TestCase):
                        fit_p0=[initial_a, initial_t1, initial_c],
                        fit_bounds=([0, expected_t1-30, -1], [2, expected_t1+30, 1]))
 
-        fit.plot_coherence()
-
         self.assertAlmostEqual(fit.time, expected_t1, delta=20,
                                msg='Calculated T1 is inaccurate')
         self.assertTrue(fit.time_err < 30,
