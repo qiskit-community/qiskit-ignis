@@ -177,9 +177,16 @@ class RBFitter:
 
         self._fit = []
         for patt_ind, (lens, qubits) in enumerate(zip(self._cliff_lengths, self._rb_pattern)):
+            # if at least one of the std values is zero, then sigma is replaced by None
+            if not self._ydata[patt_ind]['std'] is None:
+                sigma = self._ydata[patt_ind]['std'].copy()
+                if (len(sigma)-np.count_nonzero(sigma) > 0):
+                    sigma = None
+            else:
+                sigma = None
             params, pcov = curve_fit(self._rb_fit_fun, lens,
                                      self._ydata[patt_ind]['mean'],
-                                     sigma=self._ydata[patt_ind]['std'],
+                                     sigma=sigma,
                                      p0=(1.0, 0.95, 0.0), bounds=([-2, 0, -2], [2, 1, 2]))
             alpha = params[1]  # exponent
             params_err = np.sqrt(np.diag(pcov))

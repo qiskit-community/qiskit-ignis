@@ -10,12 +10,7 @@ Test the fitters
 """
 
 import unittest
-import random
 import numpy as np
-import qiskit
-from qiskit.providers.aer.noise import NoiseModel
-from qiskit.providers.aer.noise.errors.standard_errors import depolarizing_error
-import qiskit_ignis.randomized_benchmarking.standard_rb.randomizedbenchmarking as rb
 from qiskit_ignis.randomized_benchmarking.standard_rb.rb_fitters import RBFitter
 
 
