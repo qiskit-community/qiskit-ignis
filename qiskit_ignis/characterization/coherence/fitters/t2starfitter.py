@@ -24,11 +24,11 @@ class T2StarExpFitter(BaseCoherenceFitter):
         BaseCoherenceFitter.__init__(self, '$T_2^*$ exp',
                                      backend_result, shots, xdata,
                                      num_of_qubits, measured_qubit,
-                                     BaseCoherenceFitter.exp_fit_fun,
+                                     BaseCoherenceFitter._exp_fit_fun,
                                      fit_p0, fit_bounds)
 
-        self.time = self.params[1]
-        self.time_err = self.params_err[1]
+        self._time = self.params[1]
+        self._time_err = self.params_err[1]
 
 
 class T2StarOscFitter(BaseCoherenceFitter):
@@ -43,15 +43,15 @@ class T2StarOscFitter(BaseCoherenceFitter):
         BaseCoherenceFitter.__init__(self, '$T_2^*$',
                                      backend_result, shots, xdata,
                                      num_of_qubits, measured_qubit,
-                                     T2StarOscFitter.osc_fit_fun,
+                                     T2StarOscFitter._osc_fit_fun,
                                      fit_p0, fit_bounds)
 
-        self.time = self.params[1]
-        self.time_err = self.params_err[1]
+        self._time = self.params[1]
+        self._time_err = self.params_err[1]
 
 
     @staticmethod
-    def osc_fit_fun(x, a, tau, f, phi, c):
+    def _osc_fit_fun(x, a, tau, f, phi, c):
         """
         Function used to fit the decay cosine
         """
