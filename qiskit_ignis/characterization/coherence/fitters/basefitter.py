@@ -18,80 +18,160 @@ class BaseCoherenceFitter:
     """
 
     def __init__(self, description,
-                 backend_result, shots,
-                 num_of_gates, gate_time,
+                 backend_result, shots, xdata,
                  num_of_qubits, measured_qubit,
                  fit_fun, fit_p0, fit_bounds):
         """
         Args:
            description: a string describing the fitter's purpose, e.g. 'T1'
            backend_result: result of backend execution (qiskit.Result).
-           num_of_gates is a vector of integers in an increasing order.
-           len(num_of_gates) circuits will be generated.
-           In the first circuit the initial X gate will be followed by
-           num_of_gates[0] identity gates.
-           In the second circuit it will be followed by num_of_gates[1] identity gates.
-           And so on.
-           Each gate lasts gate_time micro-seconds.
+           xdata: a list of times in micro-seconds.
            The circuits have num_of_qubits qubits.
            The index of the qubit whose time is measured is measured_qubit.
            fit_fun, fit_p0, fir_bounds: equivalent to parameters of scipy.curve_fit.
         """
 
-        self.description = description
+        self._description = description
+        self._backend_result = backend_result
+        self._shots = shots
 
-        self.num_of_qubits = num_of_qubits
-        self.qubit = measured_qubit
+        self._num_of_qubits = num_of_qubits
+        self._qubit = measured_qubit
 
-        self.xdata = gate_time * num_of_gates
-        self.ydata = self.calc_data(backend_result, shots, len(num_of_gates))
+        self._xdata = xdata
+        self._calc_data()  # computes self._ydata
 
-        self.fit_fun = fit_fun
-        self.params, self.params_err = self.calc_fit(fit_p0, fit_bounds)
+        self._fit_fun = fit_fun
+        self._calc_fit(fit_p0, fit_bounds)  # computes self._params and self._params_err
 
 
-    def calc_data(self, backend_result, shots, num_of_circuits):
+    @property
+    def description(self):
         """
-        Rerieve probabilities of success from execution results, i.e.,
-        probability to measure a state where all qubits are 0,
-        except for self.qubit, which is 1.
-        Return a dictionary ydata:
+        Return the fitter's purpose, e.g. 'T1'
+        """
+        return self._description
+
+    @property
+    def backend_result(self):
+        """
+        Return the execution results (qiskit.Result)
+        """
+        return self._backend_result
+
+    @property
+    def shots(self):
+        """
+        Return the number of shots in the execution
+        """
+        return self._shots
+
+    @property
+    def num_of_qubits(self):
+        """
+        Return the number of qubits in the circuits
+        """
+        return self._num_of_qubits
+
+    @property
+    def measured_qubit(self):
+        """
+        Return the index of the qubit whose characteristic time is measured
+        """
+        return self._qubit
+
+    @property
+    def xdata(self):
+        """
+        Return the data points on the x-axis (a list of floats)
+        """
+        return self._xdata
+
+    @property
+    def ydata(self):
+        """
+        Return the data points on the y-axis
+        In the form of a dictionary ydata:
         - ydata['mean'] is a list, where item no. j is the probability of success
-                        for a circuit of length self.num_of_gates[j].
+                        for a circuit that lasts xdata[j].
         - ydata['std'] is a list, where ydata['std'][j] is the
                        standard deviation of the success.
         """
+        return self._ydata
 
-        expected_state_list = ['0'] * self.num_of_qubits
-        expected_state_list[self.num_of_qubits - self.qubit - 1] = '1'
+    @property
+    def fit_fun(self):
+        """
+        Return the function used in the fit, e.g. BaseCoherenceFitter._exp_fit_fun
+        """
+        return self._fit_fun
+
+    @property
+    def params(self):
+        """
+        Return the fit function parameters that were calculated by curve_fit
+        """
+        return self._params
+
+    @property
+    def params_err(self):
+        """
+        Return the error of the fit function parameters
+        """
+        return self._params_err
+
+    @property
+    def time(self):
+        """
+        Return the characteristic time
+        """
+        return self._time
+
+    @property
+    def time_err(self):
+        """
+        Return the error of the characteristic time
+        """
+        return self._time_err
+
+
+    def _calc_data(self):
+        """
+        Rerieve probabilities of success from execution results, i.e.,
+        probability to measure a state where all qubits are 0.
+        Computes a dictionary self._ydata:
+        - self._ydata['mean'] is a list, where item no. j is the probability of success
+                            for a circuit that lasts self._xdata[j].
+        - self._ydata['std'] is a list, where ydata['std'][j] is the
+                             standard deviation of the success.
+        """
+
+        expected_state_list = ['0'] * self._num_of_qubits
         expected_state_str = ''.join(expected_state_list)
 
-        ydata = {'mean': [], 'std': []}
-        for circ in range(num_of_circuits):
-            counts = backend_result.get_counts(circ)
+        self._ydata = {'mean': [], 'std': []}
+        for circ, _ in enumerate(self._xdata):
+            counts = self._backend_result.get_counts(circ)
             if expected_state_str in counts:
-                success_prob = counts[expected_state_str] / shots
+                success_prob = counts[expected_state_str] / self._shots
             else:
                 success_prob = 0
-            ydata['mean'].append(success_prob)
-            ydata['std'].append(np.sqrt(success_prob * (1-success_prob) / shots))
-
-        return ydata
+            self._ydata['mean'].append(success_prob)
+            self._ydata['std'].append(np.sqrt(success_prob * (1-success_prob) / self._shots))
 
 
-    def calc_fit(self, p0, bounds):
+    def _calc_fit(self, p0, bounds):
         """
         Fit the curve.
-        Returns:
-        - fit - same as the first returned value of curve_fit.
-        - ferr - error for each parameter.
+        Computes self._params and self._params_err:
+        - self._params - same as the first returned value of curve_fit.
+        - self._params_err - error for each parameter.
         """
 
-        fit, fcov = curve_fit(self.fit_fun, self.xdata,
-                              self.ydata['mean'], sigma=self.ydata['std'],
-                              p0=p0, bounds=bounds)
-        ferr = np.sqrt(np.diag(fcov))
-        return fit, ferr
+        self._params, fcov = curve_fit(self._fit_fun, self._xdata,
+                                       self._ydata['mean'], sigma=self._ydata['std'],
+                                       p0=p0, bounds=bounds)
+        self._params_err = np.sqrt(np.diag(fcov))
 
 
     def plot_coherence(self):
@@ -101,24 +181,24 @@ class BaseCoherenceFitter:
 
         from matplotlib import pyplot as plt
 
-        plt.errorbar(self.xdata, self.ydata['mean'], self.ydata['std'],
+        plt.errorbar(self._xdata, self._ydata['mean'], self._ydata['std'],
                      marker='.', markersize=9, c='b', linestyle='')
-        plt.plot(self.xdata, self.fit_fun(self.xdata, *self.params),
+        plt.plot(self._xdata, self._fit_fun(self._xdata, *self._params),
                  c='r', linestyle='--',
-                 label=self.description+': '+str(round(self.time))+' micro-seconds')
+                 label=self._description+': '+str(round(self._time))+' micro-seconds')
 
         plt.xticks(fontsize=14, rotation=70)
         plt.yticks(fontsize=14)
         plt.xlabel('time [micro-seconds]', fontsize=16)
         plt.ylabel('Probability of success', fontsize=16)
-        plt.title(self.description + ' for qubit ' + str(self.qubit), fontsize=18)
+        plt.title(self._description + ' for qubit ' + str(self._qubit), fontsize=18)
         plt.legend(fontsize=12)
         plt.grid(True)
         plt.show()
 
 
     @staticmethod
-    def exp_fit_fun(x, a, tau, c):
+    def _exp_fit_fun(x, a, tau, c):
         """
         Function used to fit the exponential decay
         """
