@@ -1,0 +1,2 @@
+cvxpy>=1.0.15
+qiskit-aer>=0.1.1
