@@ -185,7 +185,7 @@ class BaseCoherenceFitter:
                      marker='.', markersize=9, c='b', linestyle='')
         plt.plot(self._xdata, self._fit_fun(self._xdata, *self._params),
                  c='r', linestyle='--',
-                 label=self._description+': '+str(round(self._time))+' micro-seconds')
+                 label=self._description+': '+str(np.around(self._time,1))+' micro-seconds')
 
         plt.xticks(fontsize=14, rotation=70)
         plt.yticks(fontsize=14)
