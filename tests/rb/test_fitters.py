@@ -9,6 +9,7 @@
 Test the fitters
 """
 
+import os
 import unittest
 import numpy as np
 from qiskit_ignis.randomized_benchmarking.standard_rb.rb_fitters import RBFitter
@@ -29,7 +30,8 @@ class TestFitters(unittest.TestCase):
                   'rb_pattern': [[0,1], [2]],
                   'shots': 1024
                   },
-             'results_file': 'test_fitter_results_1.pkl',
+             'results_file': os.path.join(os.path.dirname(__file__),
+                                          'test_fitter_results_1.pkl'),
              'expected':
                  {'ydata': [{'mean': np.array([0.96367187, 0.73457031,
                                                0.58066406, 0.4828125 , 0.41035156,
@@ -55,7 +57,8 @@ class TestFitters(unittest.TestCase):
                   'rb_pattern': [[0]],
                   'shots': 1024
                   },
-             'results_file': 'test_fitter_results_2.pkl',
+             'results_file': os.path.join(os.path.dirname(__file__),
+                                          'test_fitter_results_2.pkl'),
              'expected':
                  {'ydata': [{'mean': np.array([0.99199219, 0.93867188,
                                             0.87871094, 0.83945313, 0.79335937,
