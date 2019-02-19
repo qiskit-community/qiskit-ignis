@@ -16,15 +16,14 @@ import qiskit
 from qiskit.providers.aer.noise.errors.standard_errors import phase_damping_error
 from qiskit.providers.aer.noise.errors.standard_errors import amplitude_damping_error
 from qiskit.providers.aer.noise import NoiseModel
-from qiskit_ignis.characterization.coherence.circuits import \
-     t2star
-
 from qiskit_ignis.characterization.coherence.fitters.t2starfitter import \
      T2StarExpFitter, T2StarOscFitter
 
-from qiskit_ignis.characterization.coherence.circuits import \
-     t1
+from qiskit_ignis.characterization.coherence import circuits
+
 from qiskit_ignis.characterization.coherence.fitters.t1fitter import T1Fitter
+from qiskit_ignis.characterization.coherence.fitters.t2fitter import T2Fitter
+
 
 class TestT2Star(unittest.TestCase):
     """
@@ -58,7 +57,7 @@ class TestT2Star(unittest.TestCase):
 
         # Estimating T2* via an exponential function
 
-        circs, xdata, _ = t2star(num_of_gates, gate_time, num_of_qubits, qubit)
+        circs, xdata, _ = circuits.t2star(num_of_gates, gate_time, num_of_qubits, qubit)
         backend_result = qiskit.execute(circs, backend,
                                         shots=shots,
                                         backend_options={'max_parallel_experiments': 0},
@@ -83,7 +82,7 @@ class TestT2Star(unittest.TestCase):
 
         # Estimate T2* via an oscilliator function
 
-        circs_osc, xdata, omega = t2star(num_of_gates, gate_time, num_of_qubits, qubit, 5)
+        circs_osc, xdata, omega = circuits.t2star(num_of_gates, gate_time, num_of_qubits, qubit, 5)
 
         backend_result = qiskit.execute(circs_osc, backend,
                                         shots=shots,
@@ -128,7 +127,7 @@ class TestT1(unittest.TestCase):
         num_of_qubits = 2
         qubit = 0
 
-        circs, xdata = t1(num_of_gates, gate_time, num_of_qubits, qubit)
+        circs, xdata = circuits.t1(num_of_gates, gate_time, num_of_qubits, qubit)
 
         expected_t1 = 10
         gamma = 1 - np.exp(-gate_time/expected_t1)
@@ -152,11 +151,62 @@ class TestT1(unittest.TestCase):
                        fit_p0=[initial_a, initial_t1, initial_c],
                        fit_bounds=([0, 0, -1], [2, expected_t1*1.2, 1]))
 
+        print(fit.time)
+        print(fit.time_err)
+
         self.assertAlmostEqual(fit.time, expected_t1, delta=20,
                                msg='Calculated T1 is inaccurate')
         self.assertTrue(fit.time_err < 30,
                         'Confidence in T1 calculation is too low: ' + str(fit.time_err))
 
+class TestT2(unittest.TestCase):
+    """
+    Test measurement of T2
+    """
+
+    def test_t2(self):
+        """
+        Run the simulator with dephasing noise.
+        Then verify that the calculated T2 matches the dephasing parameter.
+        """
+
+        # 25 numbers ranging from 1 to 200, linearly spaced
+        num_of_gates = (np.linspace(1, 300, 35)).astype(int)
+        gate_time = 0.11
+        num_of_qubits = 2
+        qubit = 0
+
+        circs, xdata = circuits.t2(num_of_gates, gate_time, num_of_qubits, qubit)
+
+        expected_t2 = 20
+        gamma = 1 - np.exp(-2*gate_time/expected_t2)
+        error = phase_damping_error(gamma)
+        noise_model = NoiseModel()
+        noise_model.add_all_qubit_quantum_error(error, 'id')
+        # TODO: Include SPAM errors
+
+        backend = qiskit.Aer.get_backend('qasm_simulator')
+        shots = 300
+        backend_result = qiskit.execute(circs, backend,
+                                        shots=shots,
+                                        backend_options={'max_parallel_experiments': 0},
+                                        noise_model=noise_model).result()
+
+        initial_t2 = expected_t2
+        initial_a = 1
+        initial_c = 0.5*(-1)
+
+        fit = T2Fitter(backend_result, shots, xdata, num_of_qubits, qubit,
+                       fit_p0=[initial_a, initial_t2, initial_c],
+                       fit_bounds=([0, 0, -1], [2, expected_t2*1.2, 1]))
+
+        print(fit.time)
+        print(fit.time_err)
+
+        self.assertAlmostEqual(fit.time, expected_t2, delta=4,
+                               msg='Calculated T2 is inaccurate')
+        self.assertTrue(fit.time_err < 5,
+                        'Confidence in T2 calculation is too low: ' + str(fit.time_err))
 
 
 
