@@ -20,7 +20,7 @@ class BaseCoherenceFitter:
     def __init__(self, description,
                  backend_result, shots, xdata,
                  num_of_qubits, measured_qubit,
-                 fit_fun, fit_p0, fit_bounds):
+                 fit_fun, fit_p0, fit_bounds, expected_state = '0'):
         """
         Args:
            description: a string describing the fitter's purpose, e.g. 'T1'
@@ -29,11 +29,13 @@ class BaseCoherenceFitter:
            The circuits have num_of_qubits qubits.
            The index of the qubit whose time is measured is measured_qubit.
            fit_fun, fit_p0, fir_bounds: equivalent to parameters of scipy.curve_fit.
+           expected_state: is the circuit supposed to end up in '0' or '1'?
         """
 
         self._description = description
         self._backend_result = backend_result
         self._shots = shots
+        self._expected_state = expected_state
 
         self._num_of_qubits = num_of_qubits
         self._qubit = measured_qubit
@@ -146,18 +148,18 @@ class BaseCoherenceFitter:
                              standard deviation of the success.
         """
 
-        expected_state_list = ['0'] * self._num_of_qubits
+        expected_state_list = [self._expected_state] * self._num_of_qubits
         expected_state_str = ''.join(expected_state_list)
 
         self._ydata = {'mean': [], 'std': []}
         for circ, _ in enumerate(self._xdata):
             counts = self._backend_result.get_counts(circ)
-            if expected_state_str in counts:
-                success_prob = counts[expected_state_str] / self._shots
-            else:
-                success_prob = 0
+            success_prob = counts.get(expected_state_str,0) / self._shots
             self._ydata['mean'].append(success_prob)
             self._ydata['std'].append(np.sqrt(success_prob * (1-success_prob) / self._shots))
+            #problem for the fitter if one of the std points is exactly zero
+            if self._ydata['std'][-1]==0:
+                self._ydata['std'][-1]=1e-4
 
 
     def _calc_fit(self, p0, bounds):
@@ -174,9 +176,11 @@ class BaseCoherenceFitter:
         self._params_err = np.sqrt(np.diag(fcov))
 
 
-    def plot_coherence(self):
+    def plot_coherence(self, show_plot=True):
         """
         Plot coherence data.
+
+        return the axes object
         """
 
         from matplotlib import pyplot as plt
@@ -194,7 +198,10 @@ class BaseCoherenceFitter:
         plt.title(self._description + ' for qubit ' + str(self._qubit), fontsize=18)
         plt.legend(fontsize=12)
         plt.grid(True)
-        plt.show()
+        if show_plot:
+            plt.show()
+
+        return plt.gca()
 
 
     @staticmethod
