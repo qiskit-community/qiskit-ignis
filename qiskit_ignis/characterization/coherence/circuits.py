@@ -42,7 +42,6 @@ def t1(num_of_gates, gate_time, num_of_qubits, qubit):
         circ.x(qr[qubit])
         circ = pad_id_gates(circ, qr, circ_length)
         circ.barrier(qr[qubit])
-        circ.x(qr[qubit])
         circ.measure(qr[qubit], cr[qubit])
         circuits.append(circ)
 
@@ -91,11 +90,10 @@ def t2star(num_of_gates, gate_time, num_of_qubits, qubit, nosc=0):
 
 def t2(num_of_gates, gate_time, num_of_qubits, qubit):
     """
-    TO DO...NEED TO GET ECHO ANGLE RIGHT
     Generates circuit for T2 (echo) measurement.
-    Each circuit consists of a Hadamard gate, followed by a sequence of identity gates,
-    an X gate, a sequence of identity gates and
-    an additional Hadamard gate.
+    Each circuit consists of a Y90 gate, followed by a sequence of identity gates,
+    an Y gate, a sequence of identity gates and
+    an additional Y90 gate.
 
     Args:
        num_of_gates (list of integers):  the number of identity gates in each circuit.
@@ -110,7 +108,7 @@ def t2(num_of_gates, gate_time, num_of_qubits, qubit):
        xdata: the delay times (TOTAL delay time)
     """
 
-    xdata = gate_time * num_of_gates
+    xdata = gate_time * num_of_gates * 2.0
 
     qr = qiskit.QuantumRegister(num_of_qubits)
     cr = qiskit.ClassicalRegister(num_of_qubits)
@@ -121,13 +119,13 @@ def t2(num_of_gates, gate_time, num_of_qubits, qubit):
     for circ_index, circ_length in enumerate(num_of_gates):
         circ = qiskit.QuantumCircuit(qr, cr)
         circ.name = 'circuit_' + str(circ_index)
-        circ.h(qr[qubit])
+        circ.u2(0.0,0.0,qr[qubit])
         circ = pad_id_gates(circ, qr, circ_length)
         circ.barrier(qr[qubit])
-        circ.x(qr[qubit])
+        circ.y(qr[qubit])
         circ = pad_id_gates(circ, qr, circ_length)
         circ.barrier(qr[qubit])
-        circ.h(qr[qubit])
+        circ.u2(0.0,0.0,qr[qubit])
         circ.measure(qr[qubit], cr[qubit])
         circuits.append(circ)
 
