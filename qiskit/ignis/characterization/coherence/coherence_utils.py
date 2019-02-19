@@ -11,6 +11,7 @@ import numpy as np
 Utilities for circuits generation
 """
 
+
 def pad_id_gates(circuit, qr, num_of_id_gates):
     """
     A function for padding a circuit with identity gates.
@@ -30,6 +31,7 @@ def pad_id_gates(circuit, qr, num_of_id_gates):
         circuit.iden(qr)
 
     return circuit
+
 
 def time_to_ngates(times, gate_time):
     """

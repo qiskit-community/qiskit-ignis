@@ -31,11 +31,12 @@ def state_mle_fit(data, basis_matrix, weights=None):
                                (default: None).
 
     Returns:
-        The fitted matrix rho that minimizes ||basis_matrix * vec(rho) - data||_2.
+        The fitted matrix rho that minimizes
+        ||basis_matrix * vec(rho) - data||_2.
 
     Additional Information:
-        This function is a wrapper for `mle_fit`. See `tomography.fitters.mle_fit`
-        documentation for additional information.
+        This function is a wrapper for `mle_fit`. See
+        `tomography.fitters.mle_fit` documentation for additional information.
     """
     return mle_fit(data, basis_matrix, weights=weights, PSD=True, trace=1)
 
@@ -44,8 +45,8 @@ def process_mle_fit(data, basis_matrix, weights=None):
     """
     Reconstruct a process (Choi) matrix using MLE least-squares fitting.
 
-    Note: due to limitations of the fitting method the returned Choi-matrix will
-          be completely-positive, but not necessarily trace preserving.
+    Note: due to limitations of the fitting method the returned Choi-matrix
+          will be completely-positive, but not necessarily trace preserving.
 
     Args:
         data (vector like): vector of expectation values
@@ -58,14 +59,15 @@ def process_mle_fit(data, basis_matrix, weights=None):
                                (default: None).
 
     Returns:
-        The fitted Choi-matrix that minimizes ||basis_matrix * vec(choi) - data||_2.
+        The fitted Choi-matrix that minimizes
+        ||basis_matrix * vec(choi) - data||_2.
 
     Additional Information:
         Due to limitations of the fitting method the returned Choi-matrix will
         be completely-positive, but not necessarily trace preserving.
 
-        This function is a wrapper for `mle_fit`. See `tomography.fitters.mle_fit`
-        documentation for additional information.
+        This function is a wrapper for `mle_fit`. See
+        `tomography.fitters.mle_fit` documentation for additional information.
     """
     # Calculate trace of Choi-matrix from projector length
     rows, cols = np.shape(basis_matrix)
@@ -94,7 +96,8 @@ def mle_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
                                (default: None).
 
     Returns:
-        The fitted matrix rho that minimizes ||basis_matrix * vec(rho) - data||_2.
+        The fitted matrix rho that minimizes
+        ||basis_matrix * vec(rho) - data||_2.
 
     Additional Information:
 
@@ -125,8 +128,8 @@ def mle_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
             rho = trace * rho / trace(rho)
 
     References:
-        [1] J Smolin, JM Gambetta, G Smith, Phys. Rev. Lett. 108, 070502 (2012).
-            Open access: arXiv:1106.5458 [quant-ph].
+        [1] J Smolin, JM Gambetta, G Smith, Phys. Rev. Lett. 108, 070502
+            (2012). Open access: arXiv:1106.5458 [quant-ph].
     """
 
     # We are solving the least squares fit: minimize ||a * x - b ||_2

@@ -285,7 +285,8 @@ def pickle_clifford_table(picklefile='cliffords2.pickle', num_qubits=2):
     elif num_qubits == 2:
         cliffords = clifford2_gates_table()
     else:
-        raise ValueError("number of qubits bigger than is not supported for pickle")
+        raise ValueError(
+            "number of qubits bigger than is not supported for pickle")
 
     with open(picklefile, "wb") as pf:
         pickle.dump(cliffords, pf)
@@ -379,7 +380,8 @@ def get_quantum_circuit(gatelist, num_qubits):
         split = op.split()
         op_names = [split[0]]
 
-        # temporary correcting the ops name since QuantumCircuit has no attributes 'v' or 'w' yet:
+        # temporary correcting the ops name since QuantumCircuit has no
+        # attributes 'v' or 'w' yet:
         if op_names == ['v']:
             op_names = ['sdg', 'h']
         elif op_names == ['w']:

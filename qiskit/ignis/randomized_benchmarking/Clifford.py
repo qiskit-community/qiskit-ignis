@@ -10,7 +10,6 @@
 """
 
 import numpy as np
-#from qiskit import QiskitError
 from qiskit.quantum_info import Pauli
 
 
@@ -141,7 +140,8 @@ class Clifford(object):
 
     def as_dict(self):
         """Return dictionary (JSON) represenation of Clifford object"""
-        phase_coeffs = ['', '-']  # Modify later if we want to include i and -i.
+        # Modify later if we want to include i and -i.
+        phase_coeffs = ['', '-']
         stabilizers = []
         for qubit in range(self.num_qubits):
             label = self.stabilizer(qubit).to_label()
@@ -167,7 +167,9 @@ class Clifford(object):
         stabilizers = clifford_dict['stabilizers']
         destabilizers = clifford_dict['destabilizers']
         if len(stabilizers) != len(destabilizers):
-            raise ValueError("Invalid Clifford dict: length of stabilizers and destabilizers do not match.")
+            raise ValueError(
+                "Invalid Clifford dict: length of stabilizers and "
+                "destabilizers do not match.")
         num_qubits = len(stabilizers)
 
         # Helper function
@@ -219,14 +221,12 @@ class Clifford(object):
             ret = (ret << 1) | int(bit)
         return ret
 
-
     # ---------------------------------------------------------------------
     # Canonical gate operations
     # ---------------------------------------------------------------------
 
     # NOTE: These might change based on changes to QuantumCircuit API.
     # They should mimic the circuit API as much as possible.
-
     def x(self, qubit):
         """Apply a Pauli "x" gate to a qubit"""
         iz = qubit
@@ -287,7 +287,7 @@ class Clifford(object):
         iz_t, ix_t = qubit_trgt, self.num_qubits + qubit_trgt
         # Compute phase
         tmp = np.logical_xor(self._table[:, ix_t], self._table[:, iz_c])
-        tmp = np.logical_xor(1, tmp) #Shelly: fixed misprint in logical
+        tmp = np.logical_xor(1, tmp)  # Shelly: fixed misprint in logical
         tmp = np.logical_and(self._table[:, iz_t], tmp)
         tmp = np.logical_and(self._table[:, ix_c], tmp)
         self._phases ^= tmp

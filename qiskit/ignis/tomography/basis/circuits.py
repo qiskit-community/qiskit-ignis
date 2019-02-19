@@ -153,10 +153,10 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         prep_labels (None, str, tuple, list(tuple)): The preparation operator
             labels. If None no preparations will be appended. See additional
             information for details (Default: None).
-        meas_circuit_fn (None, str, function): The measurement circuit function.
-            See additional information for details (Default: None).
-        prep_circuit_fn (None, str, function): The preparation circuit function.
-            See additional information for details (Default: None).
+        meas_circuit_fn (None, str, function): The measurement circuit
+            function. See additional information for details (Default: None).
+        prep_circuit_fn (None, str, function): The preparation circuit
+            function. See additional information for details (Default: None).
 
     Returns:
         A list of QuantumCircuit objects containing the original circuit
@@ -178,9 +178,10 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
 
         If a str argument is used then it is not necessary to specify the
         corresponding meas_circuit_fn or prep_circuit_fn as the defaults will
-        be used for the corresponding basis. However, when using a tuple or list
-        value these functions must be manually specified using either a str
-        for the build in bases, or a function (See below for documentation.)
+        be used for the corresponding basis. However, when using a tuple or
+        list value these functions must be manually specified using either a
+        str for the build in bases, or a function (See below for
+        documentation.)
 
         Specifying a tuple can be used to only measure certain operators.
         For example if we specify meas_labels=('Z', ) the resulting circuits
@@ -193,8 +194,8 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         return the corresponding QuantumCircuit objects.
 
         Specifying a list of tuples will override an automatic generation. This
-        can be for partial tomography. For example for a 2-qubit state tomography
-        experiment we might only specify correlated measurements eg:
+        can be for partial tomography. For example for a 2-qubit state
+        tomography experiment we might only specify correlated measurements eg:
             meas_labels=[('X','X'), ('Y','Y'), ('Z','Z')]
 
         Custom Measurement Circuit Funtion
@@ -232,8 +233,9 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         See the built-in function `pauli_measurement_circuit` for an example.
         The built-in Pauli preparation function `pauli_preparation_circuit`
         may be invoked using the prep_circuit_fn='Pauli'.
-        The built-in SIC-POVM preparation function `sicpovm_preparation_circuit`
-        may be invoked using the prep_circuit_fn='SIC'.
+        The built-in SIC-POVM preparation function
+        `sicpovm_preparation_circuit` may be invoked using the
+        prep_circuit_fn='SIC'.
     """
 
     # Check for different prepared qubits
@@ -241,29 +243,32 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         prepared_qubits = measured_qubits
     # Check input circuit for measurements and measured qubits
     if isinstance(measured_qubits, list):
-        meas_qubits = _format_registers(*measured_qubits)  # Unroll list of registers
+        # Unroll list of registers
+        meas_qubits = _format_registers(*measured_qubits)
     else:
         meas_qubits = _format_registers(measured_qubits)
     if isinstance(prepared_qubits, list):
-        prep_qubits = _format_registers(*prepared_qubits)  # Unroll list of registers
+        # Unroll list of registers
+        prep_qubits = _format_registers(*prepared_qubits)
     else:
         prep_qubits = _format_registers(prepared_qubits)
     if len(prep_qubits) != len(meas_qubits):
-        raise QiskitError("prepared_qubits and measured_qubits are different length.")
+        raise QiskitError(
+            "prepared_qubits and measured_qubits are different length.")
     num_qubits = len(meas_qubits)
     meas_qubit_registers = set([q[0] for q in meas_qubits])
     # Check qubits being measured are defined in circuit
     for reg in meas_qubit_registers:
         if reg not in circuit.qregs:
             logger.warning('WARNING: circuit does not contain ' +
-                            'measured QuantumRegister: {}'.format(reg.name))
+                           'measured QuantumRegister: {}'.format(reg.name))
 
     prep_qubit_registers = set([q[0] for q in prep_qubits])
     # Check qubits being measured are defined in circuit
     for reg in prep_qubit_registers:
         if reg not in circuit.qregs:
             logger.warning('WARNING: circuit does not contain ' +
-                            'prepared QuantumRegister: {}'.format(reg.name))
+                           'prepared QuantumRegister: {}'.format(reg.name))
 
     # Get combined registers
     qubit_registers = prep_qubit_registers.union(meas_qubit_registers)
@@ -309,7 +314,6 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
     meas_labels = _generate_labels(meas_labels, num_qubits)
     prep_labels = _generate_labels(prep_labels, num_qubits)
 
-    #
     # Note if the input circuit already has classical registers defined
     # the returned circuits add a new classical register for the tomography
     # measurments which will be inserted as the first classical register in
@@ -393,7 +397,8 @@ def _default_preparation_labels(basis):
 # Helper functions
 ###########################################################################
 
-def tomography_circuit_tuples(measured_qubits, meas_labels='Pauli', prep_labels=None):
+def tomography_circuit_tuples(measured_qubits, meas_labels='Pauli',
+                              prep_labels=None):
     """
     Return list of tomography circuit label tuples.
     """
@@ -419,7 +424,8 @@ def _generate_labels(labels, measured_qubits):
         labels = _operator_tuples(labels, measured_qubits)
     if isinstance(labels, list):
         return labels
-    raise ValueError('Invalid labels specification: must be None, list, string, or tuple')
+    raise ValueError(
+        'Invalid labels specification: must be None, list, string, or tuple')
 
 
 def _format_registers(*registers):
