@@ -146,7 +146,7 @@ class TestT1(unittest.TestCase):
 
         initial_t1 = expected_t1
         initial_a = 1
-        initial_c = 0.5*(-1)
+        initial_c = 0
 
         fit = T1Fitter(backend_result, shots, xdata, num_of_qubits, qubit,
                        fit_p0=[initial_a, initial_t1, initial_c],
