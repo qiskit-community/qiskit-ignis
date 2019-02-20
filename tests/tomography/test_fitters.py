@@ -1,5 +1,5 @@
 import unittest
-import qiskit_ignis.tomography.fitters as fitters
+import qiskit.ignis.tomography.fitters as fitters
 import numpy
 
 class TestFitters(unittest.TestCase):

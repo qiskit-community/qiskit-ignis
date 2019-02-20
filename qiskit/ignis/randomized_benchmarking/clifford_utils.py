@@ -10,7 +10,7 @@ Advanced Clifford operations needed for randomized benchmarking
 """
 
 import numpy as np
-import qiskit_ignis.randomized_benchmarking.standard_rb.Clifford as clf
+from qiskit.ignis.randomized_benchmarking import Clifford
 import qiskit
 
 try:
@@ -71,7 +71,7 @@ def clifford_from_gates(num_qubits, gatelist):
     Returns:
         A num-qubit Clifford class object.
     """
-    cliff = clf.Clifford(num_qubits)
+    cliff = Clifford(num_qubits)
     new_cliff = compose_gates(cliff, gatelist)
     return new_cliff
 

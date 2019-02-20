@@ -10,19 +10,20 @@ Test coherence measurements
 """
 
 import unittest
-import random
 import numpy as np
 import qiskit
-from qiskit.providers.aer.noise.errors.standard_errors import phase_damping_error
-from qiskit.providers.aer.noise.errors.standard_errors import amplitude_damping_error
+from qiskit.providers.aer.noise.errors.standard_errors import \
+                                    phase_damping_error
+from qiskit.providers.aer.noise.errors.standard_errors import \
+                                     amplitude_damping_error
 from qiskit.providers.aer.noise import NoiseModel
-from qiskit_ignis.characterization.coherence.fitters.t2starfitter import \
-     T2StarExpFitter, T2StarOscFitter
 
-from qiskit_ignis.characterization.coherence import circuits
+from qiskit.ignis.characterization.coherence import \
+     T2StarExpFitter, T2StarOscFitter, T1Fitter, T2Fitter
 
-from qiskit_ignis.characterization.coherence.fitters.t1fitter import T1Fitter
-from qiskit_ignis.characterization.coherence.fitters.t2fitter import T2Fitter
+from qiskit.ignis.characterization.coherence import t1_circuits, \
+                                t2_circuits, t2star_circuits
+
 
 
 class TestT2Star(unittest.TestCase):
@@ -57,7 +58,7 @@ class TestT2Star(unittest.TestCase):
 
         # Estimating T2* via an exponential function
 
-        circs, xdata, _ = circuits.t2star(num_of_gates, gate_time, num_of_qubits, qubit)
+        circs, xdata, _ = t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubit)
         backend_result = qiskit.execute(circs, backend,
                                         shots=shots,
                                         backend_options={'max_parallel_experiments': 0},
@@ -82,7 +83,7 @@ class TestT2Star(unittest.TestCase):
 
         # Estimate T2* via an oscilliator function
 
-        circs_osc, xdata, omega = circuits.t2star(num_of_gates, gate_time, num_of_qubits, qubit, 5)
+        circs_osc, xdata, omega = t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubit, 5)
 
         backend_result = qiskit.execute(circs_osc, backend,
                                         shots=shots,
@@ -127,7 +128,7 @@ class TestT1(unittest.TestCase):
         num_of_qubits = 2
         qubit = 0
 
-        circs, xdata = circuits.t1(num_of_gates, gate_time, num_of_qubits, qubit)
+        circs, xdata = t1_circuits(num_of_gates, gate_time, num_of_qubits, qubit)
 
         expected_t1 = 10
         gamma = 1 - np.exp(-gate_time/expected_t1)
@@ -176,7 +177,7 @@ class TestT2(unittest.TestCase):
         num_of_qubits = 2
         qubit = 0
 
-        circs, xdata = circuits.t2(num_of_gates, gate_time, num_of_qubits, qubit)
+        circs, xdata = t2_circuits(num_of_gates, gate_time, num_of_qubits, qubit)
 
         expected_t2 = 20
         gamma = 1 - np.exp(-2*gate_time/expected_t2)

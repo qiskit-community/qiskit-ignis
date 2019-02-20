@@ -20,7 +20,7 @@ import tempfile
 import numpy as np
 
 # Import the clifford_utils functions
-import qiskit_ignis.randomized_benchmarking.standard_rb.clifford_utils as clutils
+from  qiskit.ignis.randomized_benchmarking import clifford_utils as clutils
 
 class TestClifford(unittest.TestCase):
     """

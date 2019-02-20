@@ -7,9 +7,12 @@
 
 
 """
-Coherence module
+Measurement correction module
 """
 
 # Measurement correction functions
-from .circuits import t1_circuits, t2_circuits, t2star_circuits
-from .fitters import T1Fitter, T2Fitter, T2StarExpFitter, T2StarOscFitter
+from .Clifford import Clifford
+from .circuits import randomized_benchmarking_seq
+from .fitters import RBFitter
+
+

@@ -13,7 +13,7 @@ import numpy as np
 import qiskit
 from .coherence_utils import pad_id_gates
 
-def t1(num_of_gates, gate_time, num_of_qubits, qubit):
+def t1_circuits(num_of_gates, gate_time, num_of_qubits, qubit):
     """
     Generates circuit for T1 measurement.
     Each circuit consists of an X gate, followed by a sequence of identity gates.
@@ -47,7 +47,7 @@ def t1(num_of_gates, gate_time, num_of_qubits, qubit):
 
     return circuits, xdata
 
-def t2star(num_of_gates, gate_time, num_of_qubits, qubit, nosc=0):
+def t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubit, nosc=0):
     """
     Generates circuit for T2* measurement.
     Each circuit consists of a Hadamard gate, followed by a sequence of identity gates,
@@ -88,7 +88,7 @@ def t2star(num_of_gates, gate_time, num_of_qubits, qubit, nosc=0):
 
     return circuits, xdata, osc_freq
 
-def t2(num_of_gates, gate_time, num_of_qubits, qubit):
+def t2_circuits(num_of_gates, gate_time, num_of_qubits, qubit):
     """
     Generates circuit for T2 (echo) measurement.
     Each circuit consists of a Y90 gate, followed by a sequence of identity gates,
