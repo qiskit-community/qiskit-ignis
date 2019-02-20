@@ -14,7 +14,7 @@ from qiskit import ClassicalRegister
 from qiskit import QiskitError
 
 
-class TomographyBasis(object):
+class TomographyBasis:
     """
     Tomography basis class.
     """
@@ -44,29 +44,35 @@ class TomographyBasis(object):
 
     @property
     def name(self):
+        """The name of the tomography basis."""
         return self._name
 
     @property
     def measurement(self):
+        """The measurement of the tomography basis."""
         return self._measurement
 
     @property
     def preparation(self):
+        """The preparation of the tomography basis."""
         return self._preparation
 
     @property
     def measurement_labels(self):
+        """The measurement labels of the tomography basis."""
         if self.measurement is True:
             return self._measurement_labels
         return None
 
     @property
     def preparation_labels(self):
+        """The preparation labels of the tomography basis."""
         if self.preparation is True:
             return self._preparation_labels
         return None
 
     def measurement_circuit(self, op, qubit, clbit):
+        """Return the measurement circuits."""
         # Error Checking
         if self.measurement is False:
             raise QiskitError(
@@ -89,7 +95,7 @@ class TomographyBasis(object):
         return self._measurement_circuit(op, qubit, clbit)
 
     def preparation_circuit(self, op, qubit):
-
+        """Return the preparation circuits."""
         # Error Checking
         if self.preparation is False:
             raise QiskitError("{} is not a preparation basis".format(
@@ -107,7 +113,7 @@ class TomographyBasis(object):
         return self._preparation_circuit(op, qubit)
 
     def measurement_matrix(self, label, outcome):
-
+        """Return the measurement matrix."""
         if self.measurement is False:
             raise QiskitError("{} is not a measurement basis".format(
                 self._name))
@@ -127,6 +133,7 @@ class TomographyBasis(object):
         return self._measurement_matrix(label, outcome)
 
     def preparation_matrix(self, label):
+        """Return the preparation matrix."""
 
         if self.preparation is False:
             raise QiskitError("{} is not a preparation basis".format(

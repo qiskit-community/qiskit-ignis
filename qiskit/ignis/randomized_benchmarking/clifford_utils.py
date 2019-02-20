@@ -10,8 +10,9 @@ Advanced Clifford operations needed for randomized benchmarking
 """
 
 import numpy as np
-from qiskit.ignis.randomized_benchmarking import Clifford
 import qiskit
+
+from qiskit.ignis.randomized_benchmarking import Clifford
 
 try:
     import cPickle as pickle
@@ -322,10 +323,9 @@ def random_clifford_gates(num_qubits):
 
     if num_qubits == 1:
         return clifford1_gates(np.random.randint(0, 24))
-    elif num_qubits == 2:
+    if num_qubits == 2:
         return clifford2_gates(np.random.randint(0, 11520))
-    else:
-        raise ValueError("The number of qubits should be only 1 or 2")
+    raise ValueError("The number of qubits should be only 1 or 2")
 
 
 # --------------------------------------------------------
@@ -354,9 +354,7 @@ def find_inverse_clifford_gates(num_qubits, gatelist):
             elif split[0] == 'w':
                 inv_gatelist[i] = 'v ' + split[1]
         return inv_gatelist
-
-    else:
-        raise ValueError("The number of qubits should be only 1 or 2")
+    raise ValueError("The number of qubits should be only 1 or 2")
 
 
 # --------------------------------------------------------

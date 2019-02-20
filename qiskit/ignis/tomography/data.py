@@ -115,8 +115,7 @@ def marginal_counts(counts, meas_qubits=True, pad_zeros=False):
         def helper(x, y):
             if y in qs:
                 return key[qs.index(y)] + x
-            else:
-                return '\\d' + x
+            return '\\d' + x
         rgx.append(reduce(helper, range(num_qubits), ''))
 
     # Build the return list
@@ -131,12 +130,11 @@ def marginal_counts(counts, meas_qubits=True, pad_zeros=False):
     # Return as counts dict on measured qubits only
     if pad_zeros is True:
         return dict(zip(meas_keys, meas_counts))
-    else:
-        ret = {}
-        for key, val in zip(meas_keys, meas_counts):
-            if val != 0:
-                ret[key] = val
-        return ret
+    ret = {}
+    for key, val in zip(meas_keys, meas_counts):
+        if val != 0:
+            ret[key] = val
+    return ret
 
 
 def count_keys(num_qubits):

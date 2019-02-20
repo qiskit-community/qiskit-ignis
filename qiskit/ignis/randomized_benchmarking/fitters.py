@@ -26,7 +26,7 @@ class RBFitter:
     """
 
     def __init__(self, backend_result, cliff_lengths, shots=1024,
-                 rb_pattern=[[0]]):
+                 rb_pattern=None):
         """
         Args:
             backend_result: list of results (qiskit.Result).
@@ -34,10 +34,15 @@ class RBFitter:
                 number of patterns, j is the number of cliffords lengths
             rb_pattern: the pattern for the rb sequences.
         """
+        if rb_pattern is None:
+            rb_pattern = [[0]]
 
         self._shots = shots
         self._cliff_lengths = cliff_lengths
         self._rb_pattern = rb_pattern
+        self._raw_data = []
+        self._ydata = []
+        self._fit = []
 
         self._result_list = []
         self.add_data(backend_result)
@@ -83,7 +88,7 @@ class RBFitter:
         if new_backend_result is None:
             return
 
-        for result_ind, result in enumerate(new_backend_result):
+        for result in new_backend_result:
             if not len(result.results) == len(self._cliff_lengths[0]):
                 raise ValueError(
                     "The number of clifford lengths must match the number of "
@@ -131,7 +136,7 @@ class RBFitter:
                         self._result_list[i].get_counts(k),
                         self._rb_pattern[patt_ind])
                     self._raw_data[-1][i].append(
-                            counts_subspace.get(string_of_0s, 0) / self._shots)
+                        counts_subspace.get(string_of_0s, 0) / self._shots)
 
     def _calc_statistics(self):
         """
@@ -182,7 +187,7 @@ class RBFitter:
             # by None
             if not self._ydata[patt_ind]['std'] is None:
                 sigma = self._ydata[patt_ind]['std'].copy()
-                if (len(sigma)-np.count_nonzero(sigma) > 0):
+                if len(sigma) - np.count_nonzero(sigma) > 0:
                     sigma = None
             else:
                 sigma = None

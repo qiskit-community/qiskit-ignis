@@ -16,7 +16,7 @@ from scipy import sparse as sps
 # Check if CVXPY package is installed
 try:
     import cvxpy
-except Exception:
+except ImportError:
     cvxpy = None
 
 
@@ -63,7 +63,7 @@ def process_cvx_fit(data, basis_matrix, weights=None, **kwargs):
         `tomography.fitters.cvx_fit` documentation for additional information.
     """
     # Calculate trace
-    rows, cols = np.shape(basis_matrix)
+    _, cols = np.shape(basis_matrix)
     dim = int(np.sqrt(np.sqrt(cols)))
     if dim ** 4 != cols:
         raise ValueError("Input data does not correspond to a process matrix.")

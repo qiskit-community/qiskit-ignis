@@ -70,7 +70,7 @@ def process_mle_fit(data, basis_matrix, weights=None):
         `tomography.fitters.mle_fit` documentation for additional information.
     """
     # Calculate trace of Choi-matrix from projector length
-    rows, cols = np.shape(basis_matrix)
+    _, cols = np.shape(basis_matrix)
     dim = int(np.sqrt(np.sqrt(cols)))
     if dim ** 4 != cols:
         raise ValueError("Input data does not correspond to a process matrix.")
@@ -147,7 +147,7 @@ def mle_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
         b = w * b
 
     # Perform least squares fit using Scipy.linalg lstsq function
-    rho_fit, residues, rank, s = lstsq(a, b)
+    rho_fit, _, _, _ = lstsq(a, b)
 
     # Reshape fit to a density matrix
     size = len(rho_fit)

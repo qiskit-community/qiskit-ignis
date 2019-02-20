@@ -5,11 +5,9 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
-import numpy as np
+"""Utilities for circuits generation."""
 
-"""
-Utilities for circuits generation
-"""
+import numpy as np
 
 
 def pad_id_gates(circuit, qr, num_of_id_gates):
