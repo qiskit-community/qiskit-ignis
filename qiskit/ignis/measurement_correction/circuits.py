@@ -15,6 +15,7 @@ import qiskit.tools.qcvv.tomography as tomo
 from qiskit import ClassicalRegister, QuantumCircuit
 from qiskit.ignis.tomography.basis.circuits import _format_registers
 
+
 def measurement_calibration(qubits):
 
     """
@@ -37,8 +38,8 @@ def measurement_calibration(qubits):
         A list of calibration state labels
 
     Additional Information:
-        The returned circuits are named cal_XXX where XXX is the basis state, e.g.,
-        cal_1001
+        The returned circuits are named cal_XXX where XXX is the basis state,
+        e.g., cal_1001
 
         Pass the results of these circuits to "generate_calibration_matrix()"
     """
@@ -49,31 +50,29 @@ def measurement_calibration(qubits):
     else:
         qubits = _format_registers(qubits)
 
-    qubit_registers = set([q[0] for q in qubits])
+    qubit_registers = set(q[0] for q in qubits)
 
     cal_circuits = []
     nqubits = len(qubits)
 
-    #create classical bit registers
+    # create classical bit registers
     clbits = ClassicalRegister(nqubits)
 
-    #labels for 2**n qubit states
+    # labels for 2**n qubit states
     state_labels = tomo.count_keys(nqubits)
 
     for basis_state in state_labels:
-        qc_circuit = QuantumCircuit(*qubit_registers, clbits, name='cal_%s'%basis_state)
+        qc_circuit = QuantumCircuit(*qubit_registers, clbits,
+                                    name='cal_%s' % basis_state)
         for qind, _ in enumerate(basis_state):
             if int(basis_state[nqubits-qind-1]):
-                #the index labeling of the label is backwards with
-                #the list
+                # the index labeling of the label is backwards with
+                # the list
                 qc_circuit.x(qubits[qind])
 
-            #add measurements
-            qc_circuit.measure(qubits[qind],clbits[qind])
+            # add measurements
+            qc_circuit.measure(qubits[qind], clbits[qind])
 
         cal_circuits.append(qc_circuit)
 
     return cal_circuits, state_labels
-
-
-

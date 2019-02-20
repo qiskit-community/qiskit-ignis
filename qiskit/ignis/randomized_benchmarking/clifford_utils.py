@@ -161,7 +161,7 @@ def clifford2_gates(idx: int):
     pauli = np.mod(cannon, 16)
     symp = cannon // 16
 
-    if symp < 36: #1-qubit Cliffords Class
+    if symp < 36:  # 1-qubit Cliffords Class
         r0 = np.mod(symp, 3)
         r1 = np.mod(symp // 3, 3)
         h0 = np.mod(symp // 9, 2)
@@ -172,7 +172,7 @@ def clifford2_gates(idx: int):
         v_gates(gatelist, 0, r0)
         v_gates(gatelist, 1, r1)
 
-    elif symp < 360: #CNOT-like Class
+    elif symp < 360:  # CNOT-like Class
         symp = symp - 36
         r0 = np.mod(symp, 3)
         r1 = np.mod(symp // 3, 3)
@@ -189,7 +189,7 @@ def clifford2_gates(idx: int):
         v_gates(gatelist, 0, r2)
         v_gates(gatelist, 1, r3)
 
-    elif symp < 684: #iSWAP-like Class
+    elif symp < 684:  # iSWAP-like Class
         symp = symp - 360
         r0 = np.mod(symp, 3)
         r1 = np.mod(symp // 3, 3)
@@ -207,7 +207,7 @@ def clifford2_gates(idx: int):
         v_gates(gatelist, 0, r2)
         v_gates(gatelist, 1, r3)
 
-    else: #SWAP Class
+    else:  # SWAP Class
         symp = symp - 684
         r0 = np.mod(symp, 3)
         r1 = np.mod(symp // 3, 3)

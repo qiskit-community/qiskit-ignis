@@ -302,7 +302,6 @@ class T2StarOscFitter(BaseCoherenceFitter):
         self._time = self.params[1]
         self._time_err = self.params_err[1]
 
-
     @staticmethod
     def _osc_fit_fun(x, a, tau, f, phi, c):
         """
@@ -310,4 +309,3 @@ class T2StarOscFitter(BaseCoherenceFitter):
         """
 
         return a * np.exp(-x / tau) * np.cos(2 * np.pi * f * x + phi) + c
-
