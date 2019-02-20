@@ -6,10 +6,4 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 
-"""
-Coherence module
-"""
 
-# Measurement correction functions
-from .circuits import t1_circuits, t2_circuits, t2star_circuits
-from .fitters import T1Fitter, T2Fitter, T2StarExpFitter, T2StarOscFitter

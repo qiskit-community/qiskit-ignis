@@ -6,7 +6,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-Base class for fitters of characteristic times
+Fitters of characteristic times
 """
 
 from scipy.optimize import curve_fit
@@ -211,3 +211,99 @@ class BaseCoherenceFitter:
         """
 
         return a * np.exp(-x / tau) + c
+
+
+class T1Fitter(BaseCoherenceFitter):
+    """
+    T1 fitter
+    """
+
+    def __init__(self, backend_result, shots, xdata,
+                 num_of_qubits, measured_qubit,
+                 fit_p0, fit_bounds):
+
+        BaseCoherenceFitter.__init__(self, '$T_1$',
+                                     backend_result, shots, xdata,
+                                     num_of_qubits, measured_qubit,
+                                     BaseCoherenceFitter._exp_fit_fun,
+                                     fit_p0, fit_bounds, expected_state='1')
+
+        self._time = self.params[1]
+        self._time_err = self.params_err[1]
+
+    def plot_coherence(self):
+
+        ax = BaseCoherenceFitter.plot_coherence(self, show_plot=False)
+        ax.set_ylabel("Excited State Population")
+
+
+class T2Fitter(BaseCoherenceFitter):
+    """
+    T2 fitter
+    """
+
+    def __init__(self, backend_result, shots, xdata,
+                 num_of_qubits, measured_qubit,
+                 fit_p0, fit_bounds):
+
+        BaseCoherenceFitter.__init__(self, '$T_2$',
+                                     backend_result, shots, xdata,
+                                     num_of_qubits, measured_qubit,
+                                     BaseCoherenceFitter._exp_fit_fun,
+                                     fit_p0, fit_bounds, expected_state='0')
+
+        self._time = self.params[1]
+        self._time_err = self.params_err[1]
+
+    def plot_coherence(self):
+
+        ax = BaseCoherenceFitter.plot_coherence(self, show_plot=False)
+        ax.set_ylabel("Ground State Population")
+
+
+class T2StarExpFitter(BaseCoherenceFitter):
+    """
+    T2* fitter
+    """
+
+    def __init__(self, backend_result, shots, xdata,
+                 num_of_qubits, measured_qubit,
+                 fit_p0, fit_bounds):
+
+        BaseCoherenceFitter.__init__(self, '$T_2^*$ exp',
+                                     backend_result, shots, xdata,
+                                     num_of_qubits, measured_qubit,
+                                     BaseCoherenceFitter._exp_fit_fun,
+                                     fit_p0, fit_bounds)
+
+        self._time = self.params[1]
+        self._time_err = self.params_err[1]
+
+
+class T2StarOscFitter(BaseCoherenceFitter):
+    """
+    T2* fitter
+    """
+
+    def __init__(self, backend_result, shots, xdata,
+                 num_of_qubits, measured_qubit,
+                 fit_p0, fit_bounds):
+
+        BaseCoherenceFitter.__init__(self, '$T_2^*$',
+                                     backend_result, shots, xdata,
+                                     num_of_qubits, measured_qubit,
+                                     T2StarOscFitter._osc_fit_fun,
+                                     fit_p0, fit_bounds)
+
+        self._time = self.params[1]
+        self._time_err = self.params_err[1]
+
+
+    @staticmethod
+    def _osc_fit_fun(x, a, tau, f, phi, c):
+        """
+        Function used to fit the decay cosine
+        """
+
+        return a * np.exp(-x / tau) * np.cos(2 * np.pi * f * x + phi) + c
+

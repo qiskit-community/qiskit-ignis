@@ -12,7 +12,7 @@ Test the fitters
 import os
 import unittest
 import numpy as np
-from qiskit_ignis.randomized_benchmarking.standard_rb.rb_fitters import RBFitter
+from qiskit.ignis.randomized_benchmarking import RBFitter
 
 
 class TestFitters(unittest.TestCase):
