@@ -10,7 +10,7 @@ Advanced Clifford operations needed for randomized benchmarking
 """
 
 import numpy as np
-import qiskit_ignis.randomized_benchmarking.standard_rb.Clifford as clf
+from qiskit.ignis.randomized_benchmarking import Clifford
 import qiskit
 
 try:
@@ -71,7 +71,7 @@ def clifford_from_gates(num_qubits, gatelist):
     Returns:
         A num-qubit Clifford class object.
     """
-    cliff = clf.Clifford(num_qubits)
+    cliff = Clifford(num_qubits)
     new_cliff = compose_gates(cliff, gatelist)
     return new_cliff
 
@@ -160,7 +160,7 @@ def clifford2_gates(idx: int):
     pauli = np.mod(cannon, 16)
     symp = cannon // 16
 
-    if symp < 36:
+    if symp < 36: #1-qubit Cliffords Class
         r0 = np.mod(symp, 3)
         r1 = np.mod(symp // 3, 3)
         h0 = np.mod(symp // 9, 2)
@@ -171,7 +171,7 @@ def clifford2_gates(idx: int):
         v_gates(gatelist, 0, r0)
         v_gates(gatelist, 1, r1)
 
-    elif symp < 360:
+    elif symp < 360: #CNOT-like Class
         symp = symp - 36
         r0 = np.mod(symp, 3)
         r1 = np.mod(symp // 3, 3)
@@ -188,7 +188,7 @@ def clifford2_gates(idx: int):
         v_gates(gatelist, 0, r2)
         v_gates(gatelist, 1, r3)
 
-    elif symp < 684:
+    elif symp < 684: #iSWAP-like Class
         symp = symp - 360
         r0 = np.mod(symp, 3)
         r1 = np.mod(symp // 3, 3)
@@ -205,7 +205,8 @@ def clifford2_gates(idx: int):
         cx_gates(gatelist, 1, 0)
         v_gates(gatelist, 0, r2)
         v_gates(gatelist, 1, r3)
-    else:
+
+    else: #SWAP Class
         symp = symp - 684
         r0 = np.mod(symp, 3)
         r1 = np.mod(symp // 3, 3)
@@ -215,12 +216,12 @@ def clifford2_gates(idx: int):
         h_gates(gatelist, 0, h0)
         h_gates(gatelist, 1, h1)
 
+        v_gates(gatelist, 0, r0)
+        v_gates(gatelist, 1, r1)
+
         cx_gates(gatelist, 0, 1)
         cx_gates(gatelist, 1, 0)
         cx_gates(gatelist, 0, 1)
-
-        v_gates(gatelist, 0, r0)
-        v_gates(gatelist, 1, r1)
 
     pauli_gates(gatelist, 0, np.mod(pauli, 4))
     pauli_gates(gatelist, 1, pauli // 4)

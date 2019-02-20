@@ -13,7 +13,7 @@ and that it returns the identity
 import unittest
 import random
 import qiskit
-import qiskit_ignis.randomized_benchmarking.standard_rb.randomizedbenchmarking as rb
+import qiskit.ignis.randomized_benchmarking as rb
 
 class TestRB(unittest.TestCase):
     """ The test class """
