@@ -11,7 +11,6 @@ Measurement correction module
 """
 
 # Measurement correction functions
-from .measurement_correction import measurement_calibration_circuits
-from .measurement_correction import measurement_calibration_matrix
-from .measurement_correction import apply_measurement_calibration
+from .circuits import measurement_calibration
+from .fitters import MeasurementFitter
 
