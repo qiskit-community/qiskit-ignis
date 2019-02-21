@@ -32,4 +32,4 @@ from .data import combine_counts      # TODO: move to qiskit.tools
 from .data import expectation_counts  # TODO: move to qiskit.tools
 
 # TODO: move to qiskit.quantum_info
-from .fitters import make_positive_semidefinite  # TODO: move to qiskit.quantum_info
+from .fitters import make_positive_semidefinite

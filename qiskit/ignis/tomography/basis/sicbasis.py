@@ -67,18 +67,19 @@ def sicpovm_preparation_matrix(label):
             'S3' : [[1, exp(-pi * 2j / 3) * sqrt(2)],
                      [exp(pi * 2j / 3) * sqrt(2), 2]] / 3
     """
-
+    res = np.array([])
     # Return matrix for allowed label
     if label == 'S0':
-        return np.array([[1, 0], [0, 0]], dtype=complex)
+        res = np.array([[1, 0], [0, 0]], dtype=complex)
     if label == 'S1':
-        return np.array([[1, np.sqrt(2)], [np.sqrt(2), 2]], dtype=complex) / 3
+        res = np.array([[1, np.sqrt(2)], [np.sqrt(2), 2]], dtype=complex) / 3
     if label == 'S2':
-        return np.array([[1, np.exp(np.pi * 2j / 3) * np.sqrt(2)],
-                         [np.exp(-np.pi * 2j / 3) * np.sqrt(2), 2]]) / 3
+        res = np.array([[1, np.exp(np.pi * 2j / 3) * np.sqrt(2)],
+                        [np.exp(-np.pi * 2j / 3) * np.sqrt(2), 2]]) / 3
     if label == 'S3':
-        return np.array([[1, np.exp(-np.pi * 2j / 3) * np.sqrt(2)],
-                         [np.exp(np.pi * 2j / 3) * np.sqrt(2), 2]]) / 3
+        res = np.array([[1, np.exp(-np.pi * 2j / 3) * np.sqrt(2)],
+                        [np.exp(np.pi * 2j / 3) * np.sqrt(2), 2]]) / 3
+    return res
 
 
 ###########################################################################
