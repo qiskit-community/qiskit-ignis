@@ -163,7 +163,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     if length_vector is None:
         length_vector = [1, 10, 20]
 
-    #calculate n_qubits from the pattern
+    # calculate n_qubits from the pattern
     n_qubits = 0
     for pattern in rb_pattern:
         n_qubits += len(pattern)
