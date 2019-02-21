@@ -12,6 +12,7 @@ Fitters of characteristic times
 from scipy.optimize import curve_fit
 import numpy as np
 
+
 class BaseCoherenceFitter:
     """
     Base class for fitters of characteristic times
@@ -20,7 +21,7 @@ class BaseCoherenceFitter:
     def __init__(self, description,
                  backend_result, shots, xdata,
                  num_of_qubits, measured_qubit,
-                 fit_fun, fit_p0, fit_bounds, expected_state = '0'):
+                 fit_fun, fit_p0, fit_bounds, expected_state='0'):
         """
         Args:
            description: a string describing the fitter's purpose, e.g. 'T1'
@@ -28,7 +29,8 @@ class BaseCoherenceFitter:
            xdata: a list of times in micro-seconds.
            The circuits have num_of_qubits qubits.
            The index of the qubit whose time is measured is measured_qubit.
-           fit_fun, fit_p0, fir_bounds: equivalent to parameters of scipy.curve_fit.
+           fit_fun, fit_p0, fir_bounds: equivalent to parameters of
+                                        scipy.curve_fit.
            expected_state: is the circuit supposed to end up in '0' or '1'?
         """
 
@@ -44,8 +46,8 @@ class BaseCoherenceFitter:
         self._calc_data()  # computes self._ydata
 
         self._fit_fun = fit_fun
-        self._calc_fit(fit_p0, fit_bounds)  # computes self._params and self._params_err
-
+        # computes self._params and self._params_err
+        self._calc_fit(fit_p0, fit_bounds)
 
     @property
     def description(self):
@@ -94,8 +96,8 @@ class BaseCoherenceFitter:
         """
         Return the data points on the y-axis
         In the form of a dictionary ydata:
-        - ydata['mean'] is a list, where item no. j is the probability of success
-                        for a circuit that lasts xdata[j].
+        - ydata['mean'] is a list, where item no. j is the probability of
+                        success for a circuit that lasts xdata[j].
         - ydata['std'] is a list, where ydata['std'][j] is the
                        standard deviation of the success.
         """
@@ -104,7 +106,8 @@ class BaseCoherenceFitter:
     @property
     def fit_fun(self):
         """
-        Return the function used in the fit, e.g. BaseCoherenceFitter._exp_fit_fun
+        Return the function used in the fit,
+        e.g. BaseCoherenceFitter._exp_fit_fun
         """
         return self._fit_fun
 
@@ -136,14 +139,13 @@ class BaseCoherenceFitter:
         """
         return self._time_err
 
-
     def _calc_data(self):
         """
         Rerieve probabilities of success from execution results, i.e.,
         probability to measure a state where all qubits are 0.
         Computes a dictionary self._ydata:
-        - self._ydata['mean'] is a list, where item no. j is the probability of success
-                            for a circuit that lasts self._xdata[j].
+        - self._ydata['mean'] is a list, where item no. j is the probability of
+                            success for a circuit that lasts self._xdata[j].
         - self._ydata['std'] is a list, where ydata['std'][j] is the
                              standard deviation of the success.
         """
@@ -154,13 +156,13 @@ class BaseCoherenceFitter:
         self._ydata = {'mean': [], 'std': []}
         for circ, _ in enumerate(self._xdata):
             counts = self._backend_result.get_counts(circ)
-            success_prob = counts.get(expected_state_str,0) / self._shots
+            success_prob = counts.get(expected_state_str, 0) / self._shots
             self._ydata['mean'].append(success_prob)
-            self._ydata['std'].append(np.sqrt(success_prob * (1-success_prob) / self._shots))
-            #problem for the fitter if one of the std points is exactly zero
-            if self._ydata['std'][-1]==0:
-                self._ydata['std'][-1]=1e-4
-
+            self._ydata['std'].append(
+                np.sqrt(success_prob * (1-success_prob) / self._shots))
+            # problem for the fitter if one of the std points is exactly zero
+            if self._ydata['std'][-1] == 0:
+                self._ydata['std'][-1] = 1e-4
 
     def _calc_fit(self, p0, bounds):
         """
@@ -171,10 +173,10 @@ class BaseCoherenceFitter:
         """
 
         self._params, fcov = curve_fit(self._fit_fun, self._xdata,
-                                       self._ydata['mean'], sigma=self._ydata['std'],
+                                       self._ydata['mean'],
+                                       sigma=self._ydata['std'],
                                        p0=p0, bounds=bounds)
         self._params_err = np.sqrt(np.diag(fcov))
-
 
     def plot_coherence(self, show_plot=True):
         """
@@ -187,22 +189,24 @@ class BaseCoherenceFitter:
 
         plt.errorbar(self._xdata, self._ydata['mean'], self._ydata['std'],
                      marker='.', markersize=9, c='b', linestyle='')
+        label = self._description + ': ' + str(
+            np.around(self._time, 1)) + ' micro-seconds'
         plt.plot(self._xdata, self._fit_fun(self._xdata, *self._params),
                  c='r', linestyle='--',
-                 label=self._description+': '+str(np.around(self._time,1))+' micro-seconds')
+                 label=label)
 
         plt.xticks(fontsize=14, rotation=70)
         plt.yticks(fontsize=14)
         plt.xlabel('time [micro-seconds]', fontsize=16)
         plt.ylabel('Probability of success', fontsize=16)
-        plt.title(self._description + ' for qubit ' + str(self._qubit), fontsize=18)
+        plt.title(self._description + ' for qubit ' + str(self._qubit),
+                  fontsize=18)
         plt.legend(fontsize=12)
         plt.grid(True)
         if show_plot:
             plt.show()
 
         return plt.gca()
-
 
     @staticmethod
     def _exp_fit_fun(x, a, tau, c):
@@ -298,7 +302,6 @@ class T2StarOscFitter(BaseCoherenceFitter):
         self._time = self.params[1]
         self._time_err = self.params_err[1]
 
-
     @staticmethod
     def _osc_fit_fun(x, a, tau, f, phi, c):
         """
@@ -306,4 +309,3 @@ class T2StarOscFitter(BaseCoherenceFitter):
         """
 
         return a * np.exp(-x / tau) * np.cos(2 * np.pi * f * x + phi) + c
-

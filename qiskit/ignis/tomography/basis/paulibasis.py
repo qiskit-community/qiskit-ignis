@@ -91,9 +91,8 @@ def pauli_preparation_matrix(label):
         label (str): single-qubit Pauli eigenstate operator label.
 
     Returns:
-        A Numpy array for the Pauli eigenstate.
-        Allowed inputs and corresponding returned matrices are:
-
+        numpy.array: A Numpy array for the Pauli eigenstate. Allowed inputs
+            and corresponding returned matrices are:
             'Xp' : [[1, 1], [1, 1]] / sqrt(2)
             'Xm' : [[1, -1], [1, -1]] / sqrt(2)
             'Yp' : [[1, -1j], [1j, 1]] / sqrt(2)
@@ -101,20 +100,21 @@ def pauli_preparation_matrix(label):
             'Zp' : [[1, 0], [0, 0]]
             'Zm' : [[0, 0], [0, 1]]
     """
-
+    res = np.array([])
     # Return matrix for allowed label
     if label == 'Xp':
-        return np.array([[0.5, 0.5], [0.5, 0.5]], dtype=complex)
+        res = np.array([[0.5, 0.5], [0.5, 0.5]], dtype=complex)
     if label == 'Xm':
-        return np.array([[0.5, -0.5], [-0.5, 0.5]], dtype=complex)
+        res = np.array([[0.5, -0.5], [-0.5, 0.5]], dtype=complex)
     if label == 'Yp':
-        return np.array([[0.5, -0.5j], [0.5j, 0.5]], dtype=complex)
+        res = np.array([[0.5, -0.5j], [0.5j, 0.5]], dtype=complex)
     if label == 'Ym':
-        return np.array([[0.5, 0.5j], [-0.5j, 0.5]], dtype=complex)
+        res = np.array([[0.5, 0.5j], [-0.5j, 0.5]], dtype=complex)
     if label == 'Zp':
-        return np.array([[1, 0], [0, 0]], dtype=complex)
+        res = np.array([[1, 0], [0, 0]], dtype=complex)
     if label == 'Zm':
-        return np.array([[0, 0], [0, 1]], dtype=complex)
+        res = np.array([[0, 0], [0, 1]], dtype=complex)
+    return res
 
 
 def pauli_measurement_matrix(label, outcome):
@@ -126,8 +126,8 @@ def pauli_measurement_matrix(label, outcome):
         outcome (int): measurement outcome.
 
     Returns:
-        A Numpy array for measurement outcome operator.
-        Allowed inputs and corresponding returned matrices are:
+        numpy.array: A Numpy array for measurement outcome operator.
+            Allowed inputs and corresponding returned matrices are:
 
             'X', 0 : [[1, 1], [1, 1]] / sqrt(2)
             'X', 1 : [[1, -1], [1, -1]] / sqrt(2)
@@ -136,23 +136,24 @@ def pauli_measurement_matrix(label, outcome):
             'Z', 0 : [[1, 0], [0, 0]]
             'Z', 1 : [[0, 0], [0, 1]]
     """
-
+    res = np.array([])
     # Return matrix
     if label == 'X':
         if outcome in ['0', 0]:
-            return pauli_preparation_matrix('Xp')
+            res = pauli_preparation_matrix('Xp')
         if outcome in ['1', 1]:
-            return pauli_preparation_matrix('Xm')
+            res = pauli_preparation_matrix('Xm')
     if label == 'Y':
         if outcome in ['0', 0]:
-            return pauli_preparation_matrix('Yp')
+            res = pauli_preparation_matrix('Yp')
         if outcome in ['1', 1]:
-            return pauli_preparation_matrix('Ym')
+            res = pauli_preparation_matrix('Ym')
     if label == 'Z':
         if outcome in ['0', 0]:
-            return pauli_preparation_matrix('Zp')
+            res = pauli_preparation_matrix('Zp')
         if outcome in ['1', 1]:
-            return pauli_preparation_matrix('Zm')
+            res = pauli_preparation_matrix('Zm')
+    return res
 
 
 ###########################################################################

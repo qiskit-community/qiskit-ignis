@@ -1,3 +1,4 @@
+import collections
 import unittest
 import qiskit.ignis.tomography.fitters as fitters
 import numpy
@@ -27,7 +28,10 @@ class TestFitters(unittest.TestCase):
             self.assertAlmostEqual(numpy.trace(rho), trace_value, places = 3)
 
     def test_fitter_data(self):
-        data = {('X',): {'0': 5000}, ('Y',): {'0': 2508, '1': 2492}, ('Z',): {'0': 2490, '1': 2510}}
+        data = collections.OrderedDict()
+        data[('X',)] = {'0': 5000}
+        data[('Y',)] = {'0': 2508, '1': 2492}
+        data[('Z',)] = {'0': 2490, '1': 2510}
         p, A, weights = fitters.fitter_data(data)
         self.assertMatricesAlmostEqual(self.A, A)
         n = 5000

@@ -13,7 +13,8 @@ Quantum tomography fitter functions
 # Import fitter utility functions
 from .utils import fitter_data
 from .utils import binomial_weights
-from .utils import make_positive_semidefinite  # TODO: move to qiskit.quantum_info
+# TODO: move to qiskit.quantum_info
+from .utils import make_positive_semidefinite
 
 # Import Fitter Functions
 from .mle_fit import state_mle_fit

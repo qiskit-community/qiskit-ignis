@@ -5,11 +5,10 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
+"""Utilities for circuits generation."""
+
 import numpy as np
 
-"""
-Utilities for circuits generation
-"""
 
 def pad_id_gates(circuit, qr, num_of_id_gates):
     """
@@ -30,6 +29,7 @@ def pad_id_gates(circuit, qr, num_of_id_gates):
         circuit.iden(qr)
 
     return circuit
+
 
 def time_to_ngates(times, gate_time):
     """
