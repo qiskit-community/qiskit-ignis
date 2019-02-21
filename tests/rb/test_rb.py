@@ -13,7 +13,7 @@ and that it returns the identity
 import unittest
 import random
 import qiskit
-import qiskit_ignis.randomized_benchmarking.standard_rb.randomizedbenchmarking as rb
+import qiskit.ignis.randomized_benchmarking as rb
 
 class TestRB(unittest.TestCase):
     """ The test class """
@@ -71,13 +71,14 @@ class TestRB(unittest.TestCase):
 
         return res
 
-    def verify_circuit(self, circ, rb_opts, vec_len, result, shots):
+    def verify_circuit(self, circ, nq, rb_opts, vec_len, result, shots):
         '''
         For a single sequence, verifies that it meets the requirements:
         - Executing it on the ground state ends up in the ground state
         - It has the correct number of Cliffords
         - It fulfills the pattern, as specified by rb_patterns and length_multiplier
         :param circ: the sequence to check
+        :param nq: number of qubits
         :param rb_opts: the specification that generated the set of sequences which includes circ
         :param vec_len: the expected length vector of circ (one of rb_opts['length_vector']
         :param result: the output of the simulator
@@ -107,9 +108,9 @@ class TestRB(unittest.TestCase):
 
         # check if the ground state returns
         self.assertEqual(result.
-                         get_counts(circ)['{0:b}'.format(0).zfill(rb_opts['n_qubits'])], shots,
+                         get_counts(circ)['{0:b}'.format(0).zfill(nq)], shots,
                          "Error: %d qubit RB does not return the \
-                         ground state back to the ground state" % rb_opts['n_qubits'])
+                         ground state back to the ground state" % nq)
 
     def test_rb(self):
         """ Main function of the test """
@@ -130,8 +131,6 @@ class TestRB(unittest.TestCase):
 
                     rb_opts = {}
                     rb_opts['nseeds'] = 3
-                    rb_opts['n_qubits'] = nq
-
                     rb_opts['length_vector'] = [1,3,4,7]
                     rb_opts['rb_pattern'] = self.choose_pattern(pattern_type, nq)
                     if rb_opts['rb_pattern'] is None:   # if the pattern type is not relevant for nq
@@ -161,7 +160,7 @@ class TestRB(unittest.TestCase):
                             self.assertEqual(rb_circs[seed][circ_index].name,
                                              'rb_seed_' + str(seed) + '_length_' + str(vec_len),
                                              'Error: incorrect circuit name')
-                            self.verify_circuit(rb_circs[seed][circ_index], rb_opts,
+                            self.verify_circuit(rb_circs[seed][circ_index], nq, rb_opts,
                                                 vec_len, result[seed], shots)
 
                     self.assertEqual(circ_index, len(rb_circs), "Error: additional circuits exist")

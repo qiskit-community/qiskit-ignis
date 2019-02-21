@@ -1,7 +1,7 @@
 import unittest
 from qiskit import QuantumRegister, QuantumCircuit, ClassicalRegister, Aer
 from qiskit.quantum_info import state_fidelity
-import qiskit_ignis.tomography as tomo
+import qiskit.ignis.tomography as tomo
 import qiskit
 import numpy
 

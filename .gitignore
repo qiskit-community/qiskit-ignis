@@ -1,5 +1,44 @@
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+.hypothesis/
+test/python/*.log
+test/python/*.pdf
+test/python/*.prof
+.stestr/
+
+# dotenv
+.env
+
+# virtualenv
+.venv
+venv/
+ENV/
 
 *.pyc
 
 *-checkpoint.ipynb
 .vscode/settings.json
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
