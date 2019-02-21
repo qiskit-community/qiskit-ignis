@@ -39,12 +39,11 @@ class TestT2Star(unittest.TestCase):
 
         # Setting parameters
 
-        # 25 numbers ranging from 100 to 1000, linearly spaced
         num_of_gates = num_of_gates = np.append((np.linspace(10, 150, 30)).astype(int),
                                                 (np.linspace(160,450,20)).astype(int))
         gate_time = 0.1
         num_of_qubits = 1
-        qubit = 0
+        qubits = [0]
 
         expected_t2 = 10
         p = 1 - np.exp(-2*gate_time/expected_t2)
@@ -58,7 +57,7 @@ class TestT2Star(unittest.TestCase):
 
         # Estimating T2* via an exponential function
 
-        circs, xdata, _ = t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubit)
+        circs, xdata, _ = t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubits)
         backend_result = qiskit.execute(circs, backend,
                                         shots=shots,
                                         backend_options={'max_parallel_experiments': 0},
@@ -68,22 +67,22 @@ class TestT2Star(unittest.TestCase):
         initial_a = 0.5
         initial_c = 0.5
 
-        fit = T2StarExpFitter(backend_result, shots, xdata, num_of_qubits, qubit,
+        fit = T2StarExpFitter(backend_result, shots, xdata, qubits,
                               fit_p0=[initial_a, initial_t2, initial_c],
                               fit_bounds=([-0.5, 0, -0.5], [1.5, expected_t2*1.2, 1.5]))
 
         print(fit.time)
         print(fit.time_err)
 
-        self.assertAlmostEqual(fit.time, expected_t2, delta=2,
+        self.assertAlmostEqual(fit.time[0], expected_t2, delta=2,
                                msg='Calculated T2 is inaccurate')
-        self.assertTrue(fit.time_err < 2,
+        self.assertTrue(fit.time_err[0] < 2,
                         'Confidence in T2 calculation is too low: ' + str(fit.time_err))
 
 
         # Estimate T2* via an oscilliator function
 
-        circs_osc, xdata, omega = t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubit, 5)
+        circs_osc, xdata, omega = t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubits, 5)
 
         backend_result = qiskit.execute(circs_osc, backend,
                                         shots=shots,
@@ -95,7 +94,7 @@ class TestT2Star(unittest.TestCase):
         initial_f = omega
         initial_phi = 0
 
-        fit = T2StarOscFitter(backend_result, shots, xdata, num_of_qubits, qubit,
+        fit = T2StarOscFitter(backend_result, shots, xdata, qubits,
                               fit_p0=[initial_a, initial_t2, initial_f, initial_phi, initial_c],
                               fit_bounds=([-0.5, 0, omega-0.02, -np.pi, -0.5],
                                           [1.5, expected_t2*1.2, omega+0.02, np.pi, 1.5]))
@@ -103,9 +102,9 @@ class TestT2Star(unittest.TestCase):
         print(fit.time)
         print(fit.time_err)
 
-        self.assertAlmostEqual(fit.time, expected_t2, delta=2,
+        self.assertAlmostEqual(fit.time[0], expected_t2, delta=2,
                                msg='Calculated T2 is inaccurate')
-        self.assertTrue(fit.time_err < 2,
+        self.assertTrue(fit.time_err[0] < 2,
                         'Confidence in T2 calculation is too low: ' + str(fit.time_err))
 
 
@@ -155,7 +154,7 @@ class TestT1(unittest.TestCase):
         print(fit.time)
         print(fit.time_err)
 
-        self.assertAlmostEqual(fit.time[0], expected_t1, delta=20,
+        self.assertAlmostEqual(fit.time[0], expected_t1, delta=2,
                                msg='Calculated T1 is inaccurate')
         self.assertTrue(fit.time_err[0] < 30,
                         'Confidence in T1 calculation is too low: ' + str(fit.time_err))
@@ -171,13 +170,13 @@ class TestT2(unittest.TestCase):
         Then verify that the calculated T2 matches the dephasing parameter.
         """
 
-        # 25 numbers ranging from 1 to 200, linearly spaced
+        # 35 numbers ranging from 1 to 300, linearly spaced
         num_of_gates = (np.linspace(1, 300, 35)).astype(int)
         gate_time = 0.11
         num_of_qubits = 2
-        qubit = 0
+        qubits = [0]
 
-        circs, xdata = t2_circuits(num_of_gates, gate_time, num_of_qubits, qubit)
+        circs, xdata = t2_circuits(num_of_gates, gate_time, num_of_qubits, qubits)
 
         expected_t2 = 20
         gamma = 1 - np.exp(-2*gate_time/expected_t2)
@@ -197,16 +196,16 @@ class TestT2(unittest.TestCase):
         initial_a = 1
         initial_c = 0.5*(-1)
 
-        fit = T2Fitter(backend_result, shots, xdata, num_of_qubits, qubit,
+        fit = T2Fitter(backend_result, shots, xdata, qubits,
                        fit_p0=[initial_a, initial_t2, initial_c],
                        fit_bounds=([0, 0, -1], [2, expected_t2*1.2, 1]))
 
         print(fit.time)
         print(fit.time_err)
 
-        self.assertAlmostEqual(fit.time, expected_t2, delta=4,
+        self.assertAlmostEqual(fit.time[0], expected_t2, delta=4,
                                msg='Calculated T2 is inaccurate')
-        self.assertTrue(fit.time_err < 5,
+        self.assertTrue(fit.time_err[0] < 5,
                         'Confidence in T2 calculation is too low: ' + str(fit.time_err))
 
 
