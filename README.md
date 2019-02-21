@@ -49,7 +49,7 @@ qobj = qiskit.compile(meas_calibs, backend=backend, shots=1000)
 job = backend.run(qobj, noise_model=noise_model)
 cal_results = job.result()
 
-#make a calibration matrix
+# Make a calibration matrix
 MeasCal = meas_corr.MeasurementFitter(cal_results,state_labels)
 
 # Make a 3Q GHZ state
@@ -62,17 +62,20 @@ ghz.measure(qr[2],cr[0])
 ghz.measure(qr[3],cr[1])
 ghz.measure(qr[4],cr[2])
 
-qobj = qiskit.compile([ghz], backend=backend, shots=5000)
+qobj = qiskit.compile([ghz], backend=backend, shots=1000)
 job = backend.run(qobj, noise_model=noise_model)
 results = job.result()
 
 # Results without correction
-print(results.get_counts(0))
+print("Results without correction:", results.get_counts(0))
 
 # Results with correction
-print(MeasCal.calibrate(results.get_counts(0), method=1))
+print("Results with correction:", MeasCal.calibrate(results.get_counts(0), method=1))
 ```
-
+```
+Results without correction: {'000': 220, '001': 79, '010': 67, '011': 62, '100': 87, '101': 67, '110': 57, '111': 361}
+Results with correction: {'000': 520.2870508054327, '011': 3.940910098254591e-13, '101': 0.3251956072435034, '111': 479.3877535873258}
+```
 ## Contribution guidelines
 
 If you'd like to contribute to Qiskit Ignis, please take a look at our
