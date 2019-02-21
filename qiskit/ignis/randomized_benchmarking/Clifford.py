@@ -5,6 +5,10 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
+# NOTE(mtreinish): Needed to avoid error on logical_xor where pylint thinks it
+# doesn't have a return.
+# pylint: disable=assignment-from-no-return
+
 """
     Clifford Operator class
 """
