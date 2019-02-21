@@ -26,7 +26,51 @@ $ python
 ```
 
 ```python
-...
+# Import Qiskit classes
+import qiskit 
+from qiskit import QuantumRegister, QuantumCircuit, ClassicalRegister, Aer
+from qiskit.providers.aer import noise # import AER noise model
+# Measurement correction functions
+import qiskit.ignis.measurement_correction as meas_corr
+
+# Generate a noise model for the qubits
+noise_model = noise.NoiseModel()
+for qi in range(5):
+    read_err = noise.errors.readout_error.ReadoutError([[0.75, 0.25],[0.1,0.9]])
+    noise_model.add_readout_error(read_err,[qi])
+
+# Generate the calibration circuits
+qr = qiskit.QuantumRegister(5)
+meas_calibs, state_labels = meas_corr.measurement_calibration([qr[2],qr[3],qr[4]])
+
+# Run the calibration circuits
+backend = qiskit.Aer.get_backend('qasm_simulator')
+qobj = qiskit.compile(meas_calibs, backend=backend, shots=1000)
+job = backend.run(qobj, noise_model=noise_model)
+cal_results = job.result()
+
+#make a calibration matrix
+MeasCal = meas_corr.MeasurementFitter(cal_results,state_labels)
+
+# Make a 3Q GHZ state
+cr = ClassicalRegister(3)
+ghz = QuantumCircuit(qr, cr)
+ghz.h(qr[2])
+ghz.cx(qr[2], qr[3])
+ghz.cx(qr[3], qr[4])
+ghz.measure(qr[2],cr[0])
+ghz.measure(qr[3],cr[1])
+ghz.measure(qr[4],cr[2])
+
+qobj = qiskit.compile([ghz], backend=backend, shots=5000)
+job = backend.run(qobj, noise_model=noise_model)
+results = job.result()
+
+# Results without correction
+print(results.get_counts(0))
+
+# Results with correction
+print(MeasCal.calibrate(results.get_counts(0), method=1))
 ```
 
 ## Contribution guidelines
