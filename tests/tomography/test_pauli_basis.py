@@ -1,19 +1,34 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright 2019, IBM.
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
+# pylint: disable=missing-docstring
+
 import unittest
-import qiskit.ignis.tomography.basis.paulibasis as paulibasis
+
 import numpy
 
+import qiskit.ignis.tomography.basis.paulibasis as paulibasis
+
+
 class TestPauliBasis(unittest.TestCase):
-    X = numpy.array([[0,1],[1,0]])
+    X = numpy.array([[0, 1], [1, 0]])
     Y = numpy.array([[0, -1j], [1j, 0]])
     Z = numpy.array([[1, 0], [0, -1]])
 
-    def assertMatricesAlmostEqual(self, lhs, rhs, places = None):
-        self.assertEqual(lhs.shape, rhs.shape, "Marix shapes differ: {} vs {}".format(lhs, rhs))
+    def assertMatricesAlmostEqual(self, lhs, rhs, places=None):
+        self.assertEqual(lhs.shape, rhs.shape,
+                         "Marix shapes differ: {} vs {}".format(lhs, rhs))
         n, m = lhs.shape
         for x in range(n):
             for y in range(m):
-                self.assertAlmostEqual(lhs[x,y], rhs[x,y], places = places, msg="Matrices {} and {} differ on ({}, {})".format(lhs, rhs, x, y))
-
+                self.assertAlmostEqual(
+                    lhs[x, y], rhs[x, y], places=places,
+                    msg="Matrices {} and {} differ on ({}, {})".format(
+                        lhs, rhs, x, y))
 
     def test_measurement_matrices(self):
         X0 = paulibasis.pauli_measurement_matrix("X", 0)
