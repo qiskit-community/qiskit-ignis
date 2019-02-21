@@ -94,7 +94,7 @@ def fitter_data(tomo_data,
         ctkeys = count_keys(len(label[1]))
     else:
         ctkeys = count_keys(len(label))
-    for label, cts in sorted(tomo_data.items()):
+    for label, cts in tomo_data.items():
 
         # Convert counts dict to numpy array
         if isinstance(cts, dict):
