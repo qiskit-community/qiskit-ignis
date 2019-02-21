@@ -100,7 +100,7 @@ def pauli_preparation_matrix(label):
             'Zp' : [[1, 0], [0, 0]]
             'Zm' : [[0, 0], [0, 1]]
     """
-    res = np.array()
+    res = np.array([])
     # Return matrix for allowed label
     if label == 'Xp':
         res = np.array([[0.5, 0.5], [0.5, 0.5]], dtype=complex)
@@ -136,7 +136,7 @@ def pauli_measurement_matrix(label, outcome):
             'Z', 0 : [[1, 0], [0, 0]]
             'Z', 1 : [[0, 0], [0, 1]]
     """
-    res = np.array()
+    res = np.array([])
     # Return matrix
     if label == 'X':
         if outcome in ['0', 0]:
