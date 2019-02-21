@@ -132,7 +132,7 @@ def load_tables(max_nrb=2):
 
 
 def randomized_benchmarking_seq(nseeds=1, length_vector=None,
-                                n_qubits=1, rb_pattern=None,
+                                rb_pattern=None,
                                 length_multiplier=1):
     """
     Get a generic randomized benchmarking sequence
@@ -142,7 +142,6 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         length_vector: 'm' length vector of Clifford lengths. Must be in
         ascending order. RB sequences of increasing length grow on top of the
         previous sequences.
-        n_qubits: total number of qubits
         rb_pattern: A list of the form [[i,j],[k],...] which will make
         simultaneous RB sequences where
         Qi,Qj are a 2Q RB sequence and Qk is a 1Q sequence, etc.
@@ -163,6 +162,11 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         rb_pattern = [[0]]
     if length_vector is None:
         length_vector = [1, 10, 20]
+
+    #calculate n_qubits from the pattern
+    n_qubits = 0
+    for pattern in rb_pattern:
+        n_qubits += len(pattern)
 
     check_pattern(rb_pattern, n_qubits)
     length_multiplier = handle_length_multiplier(length_multiplier,
