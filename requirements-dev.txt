@@ -1,3 +1,2 @@
-numpy>=>=1.13,<1.16
 cvxpy>=1.0.15
 qiskit-aer>=0.1.1
