@@ -126,9 +126,9 @@ class TestT1(unittest.TestCase):
         num_of_gates = (np.linspace(1, 200, 25)).astype(int)
         gate_time = 0.11
         num_of_qubits = 2
-        qubit = 0
+        qubits = [0]
 
-        circs, xdata = t1_circuits(num_of_gates, gate_time, num_of_qubits, qubit)
+        circs, xdata = t1_circuits(num_of_gates, gate_time, num_of_qubits, qubits)
 
         expected_t1 = 10
         gamma = 1 - np.exp(-gate_time/expected_t1)
@@ -148,16 +148,16 @@ class TestT1(unittest.TestCase):
         initial_a = 1
         initial_c = 0
 
-        fit = T1Fitter(backend_result, shots, xdata, num_of_qubits, qubit,
+        fit = T1Fitter(backend_result, shots, xdata, qubits,
                        fit_p0=[initial_a, initial_t1, initial_c],
                        fit_bounds=([0, 0, -1], [2, expected_t1*1.2, 1]))
 
         print(fit.time)
         print(fit.time_err)
 
-        self.assertAlmostEqual(fit.time, expected_t1, delta=20,
+        self.assertAlmostEqual(fit.time[0], expected_t1, delta=20,
                                msg='Calculated T1 is inaccurate')
-        self.assertTrue(fit.time_err < 30,
+        self.assertTrue(fit.time_err[0] < 30,
                         'Confidence in T1 calculation is too low: ' + str(fit.time_err))
 
 class TestT2(unittest.TestCase):

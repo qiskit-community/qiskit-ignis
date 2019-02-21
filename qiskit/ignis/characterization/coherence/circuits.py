@@ -13,7 +13,7 @@ import numpy as np
 import qiskit
 from .coherence_utils import pad_id_gates
 
-def t1_circuits(num_of_gates, gate_time, qubits):
+def t1_circuits(num_of_gates, gate_time, num_of_qubits, qubits):
     """
     Generates circuit for T1 measurement.
     Each circuit consists of an X gate, followed by a sequence of identity gates.
@@ -30,7 +30,7 @@ def t1_circuits(num_of_gates, gate_time, qubits):
 
     xdata = gate_time * num_of_gates
 
-    qr = qiskit.QuantumRegister(max(qubits)+1)
+    qr = qiskit.QuantumRegister(num_of_qubits)
     cr = qiskit.ClassicalRegister(len(qubits))
 
     circuits = []
