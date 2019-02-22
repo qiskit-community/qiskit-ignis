@@ -193,6 +193,34 @@ class TestRB(unittest.TestCase):
                     self.assertEqual(circ_index, len(rb_circs),
                                      "Error: additional circuits exist")
 
+    def test_rb_utils(self):
+
+        """ Test some of the utility calculations, e.g.
+        coherence limit"""
+
+        t1 = 100.
+        t2 = 100.
+        gate2Q = 0.5
+        gate1Q = 0.1
+        twoq_coherence_err = rb.rb_utils.coherence_limit(2, [t1, t1],
+                                                         [t2, t2], gate2Q)
+
+        oneq_coherence_err = rb.rb_utils.coherence_limit(1, [t1],
+                                                         [t2], gate1Q)
+
+        self.assertAlmostEqual(oneq_coherence_err, 0.00049975, 6,
+                               "Error: 1Q Coherence Limit")
+
+        self.assertAlmostEqual(twoq_coherence_err, 0.00597, 5,
+                               "Error: 2Q Coherence Limit")
+
+        twoq_epc = rb.rb_utils.twoQ_clifford_error([5.2, 5.2, 1.5],
+                                                   [0, 1, -1],
+                                                   [0.001, 0.0015, 0.02])
+
+        self.assertAlmostEqual(twoq_epc, 0.0446283, 6,
+                               "Error: 2Q EPC Calculation")
+
 
 if __name__ == '__main__':
     unittest.main()
