@@ -14,3 +14,5 @@ Measurement correction module
 from .Clifford import Clifford
 from .circuits import randomized_benchmarking_seq
 from .fitters import RBFitter
+from . import clifford_utils
+from . import rb_utils
