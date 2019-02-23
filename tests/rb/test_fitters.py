@@ -15,7 +15,7 @@ import unittest
 
 import numpy as np
 
-from qiskit.ignis.randomized_benchmarking import RBFitter
+from qiskit.ignis.verification.randomized_benchmarking import RBFitter
 
 
 class TestFitters(unittest.TestCase):

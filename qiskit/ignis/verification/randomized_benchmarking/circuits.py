@@ -16,8 +16,8 @@ import copy
 import numpy as np
 import qiskit
 
-from qiskit.ignis.randomized_benchmarking import Clifford
-from qiskit.ignis.randomized_benchmarking import clifford_utils as clutils
+from . import Clifford
+from . import clifford_utils as clutils
 
 
 def handle_length_multiplier(length_multiplier, len_pattern):
