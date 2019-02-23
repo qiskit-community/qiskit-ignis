@@ -30,8 +30,8 @@ $ python
 import qiskit 
 from qiskit import QuantumRegister, QuantumCircuit, ClassicalRegister, Aer
 from qiskit.providers.aer import noise # import AER noise model
-# Measurement correction functions
-import qiskit.ignis.measurement_correction as meas_corr
+# Measurement error mitigation functions
+import qiskit.ignis.error_mitigation.measurement as meas_cal
 
 # Generate a noise model for the qubits
 noise_model = noise.NoiseModel()
@@ -39,9 +39,10 @@ for qi in range(5):
     read_err = noise.errors.readout_error.ReadoutError([[0.75, 0.25],[0.1,0.9]])
     noise_model.add_readout_error(read_err,[qi])
 
-# Generate the calibration circuits
+# Generate the measurement calibration circuits
+# for running measurement error mitigation
 qr = qiskit.QuantumRegister(5)
-meas_calibs, state_labels = meas_corr.measurement_calibration([qr[2],qr[3],qr[4]])
+meas_calibs, state_labels = meas_cal.measurement_calibration(qubit_list=[2,3,4], qr=qr)
 
 # Run the calibration circuits
 backend = qiskit.Aer.get_backend('qasm_simulator')
@@ -50,7 +51,7 @@ job = backend.run(qobj, noise_model=noise_model)
 cal_results = job.result()
 
 # Make a calibration matrix
-MeasCal = meas_corr.MeasurementFitter(cal_results,state_labels)
+MeasCal = meas_cal.MeasurementFitter(cal_results,state_labels)
 
 # Make a 3Q GHZ state
 cr = ClassicalRegister(3)
@@ -66,15 +67,15 @@ qobj = qiskit.compile([ghz], backend=backend, shots=1000)
 job = backend.run(qobj, noise_model=noise_model)
 results = job.result()
 
-# Results without correction
-print("Results without correction:", results.get_counts(0))
+# Results without mitigation
+print("Results without mitigation:", results.get_counts(0))
 
-# Results with correction
-print("Results with correction:", MeasCal.calibrate(results.get_counts(0), method=1))
+# Results with mitigation
+print("Results with mitigation:", MeasCal.calibrate(results.get_counts(0), method=1))
 ```
 ```
-Results without correction: {'000': 220, '001': 79, '010': 67, '011': 62, '100': 87, '101': 67, '110': 57, '111': 361}
-Results with correction: {'000': 520.2870508054327, '011': 3.940910098254591e-13, '101': 0.3251956072435034, '111': 479.3877535873258}
+Results without mitigation: {'000': 220, '001': 79, '010': 67, '011': 62, '100': 87, '101': 67, '110': 57, '111': 361}
+Results with mitigation: {'000': 520.2870508054327, '011': 3.940910098254591e-13, '101': 0.3251956072435034, '111': 479.3877535873258}
 ```
 ## Contribution guidelines
 
