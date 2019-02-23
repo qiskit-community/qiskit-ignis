@@ -6,7 +6,7 @@
 # the LICENSE.txt file in the root directory of this source tree.
 
 """
-Test of measurement correction:
+Test of measurement calibration:
 1) Preparation of all 2 ** n basis states, generating the calibration circuits
 (without noise), computing the calibration matrices,
 and validating that they equal
@@ -14,7 +14,7 @@ to the identity matrices
 2) Generating ideal (equally distributed) results, computing
     the calibration output
 (withut noise), and validating that it is equally distributed
-3) Testing the the measurement correction with noise, verifying
+3) Testing the the measurement calibration with noise, verifying
     that it is close in the
 L1-norm to the expected (equally distributed) result
 """
@@ -22,12 +22,12 @@ L1-norm to the expected (equally distributed) result
 import unittest
 import qiskit
 import numpy as np
-import qiskit.ignis.measurement_correction as meas_corr
+import qiskit.ignis.error_mitigation.measurement as meas_cal
 from qiskit import QuantumCircuit, ClassicalRegister
 from qiskit.providers.aer import noise
 
 
-class TestMeasCorr(unittest.TestCase):
+class TestMeasCal(unittest.TestCase):
     """ The test class """
 
     def setUp(self):
@@ -56,14 +56,13 @@ class TestMeasCorr(unittest.TestCase):
                 expression of
                 pattern_type equals 1
         """
-        qr = qiskit.QuantumRegister(nq)
         qubits = []
         weight = 0
         for i in range(nq):
             pattern_bit = pattern_type & 1
             pattern_type = pattern_type >> 1
             if (pattern_bit == 1):
-                qubits.append(qr[i])
+                qubits.append(i)
                 weight += 1
         return qubits, weight
 
@@ -94,19 +93,20 @@ class TestMeasCorr(unittest.TestCase):
             results_list[place] = shots_per_state
         return results_dict, results_list
 
-    def test_ideal_meas_corr(self):
+    def test_ideal_meas_cal(self):
         """
             Test ideal execution, without noise
         """
         for nq in self.nq_list:
-            print("Testing %d qubit measurement correction" % nq)
+            print("Testing %d qubit measurement calibration" % nq)
 
             for pattern_type in range(1, 2 ** nq):
                 # Generate the quantum register according to the pattern
                 qubits, weight = self.choose_calibration(nq, pattern_type)
                 # Generate the calibration circuits
                 meas_calibs, state_labels = \
-                    meas_corr.measurement_calibration(qubits)
+                    meas_cal.measurement_calibration(qubit_list=qubits,
+                                                     circlabel='test')
 
                 # Perform an ideal execution on the generated circuits
                 backend = qiskit.Aer.get_backend('qasm_simulator')
@@ -116,8 +116,9 @@ class TestMeasCorr(unittest.TestCase):
                 cal_results = job.result()
 
                 # Make a calibration matrix
-                MeasCal = meas_corr.MeasurementFitter(cal_results,
-                                                      state_labels)
+                MeasCal = meas_cal.MeasurementFitter(cal_results,
+                                                     state_labels,
+                                                     circlabel='test')
 
                 # Assert that the calibration matrix is equal to identity
                 IdentityMatrix = np.identity(2 ** weight)
@@ -155,11 +156,11 @@ class TestMeasCorr(unittest.TestCase):
                                      'Error: calibration output (dict format) \
                                      is not the equal (method 0)')
 
-    def test_meas_corr_with_noise(self):
+    def test_meas_cal_with_noise(self):
         """
             Test an execution with a noise model
         """
-        print("Testing measurement correction with noise")
+        print("Testing measurement calibration with noise")
 
         # Generate a noise model for the qubits
         noise_model = noise.NoiseModel()
@@ -176,8 +177,8 @@ class TestMeasCorr(unittest.TestCase):
                     qr = qiskit.QuantumRegister(5)
                     # Generate the calibration circuits
                     meas_calibs, state_labels = \
-                        meas_corr.measurement_calibration([qr[q1],
-                                                           qr[q2], qr[q3]])
+                        meas_cal.measurement_calibration(
+                                qubit_list=[1, 2, 3], qr=qr)
 
                     # Run the calibration circuits
                     backend = qiskit.Aer.get_backend('qasm_simulator')
@@ -187,8 +188,8 @@ class TestMeasCorr(unittest.TestCase):
                     cal_results = job.result()
 
                     # Make a calibration matrix
-                    MeasCal = meas_corr.MeasurementFitter(cal_results,
-                                                          state_labels)
+                    MeasCal = meas_cal.MeasurementFitter(cal_results,
+                                                         state_labels)
 
                     # Make a 3Q GHZ state
                     cr = ClassicalRegister(3)
@@ -208,7 +209,7 @@ class TestMeasCorr(unittest.TestCase):
                     # Predicted equally distributed results
                     predicted_results = [self.shots/2, 0, 0, 0, 0, 0, 0,
                                          self.shots/2]
-                    # Output results with correction using methods 0 and 1
+                    # Output results with calibration using methods 0 and 1
                     output_results_0 = \
                         MeasCal.calibrate(results.get_counts(0), method=0)
                     output_results_1 = \

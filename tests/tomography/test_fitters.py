@@ -12,7 +12,7 @@ import unittest
 
 import numpy
 
-import qiskit.ignis.tomography.fitters as fitters
+import qiskit.ignis.verification.tomography.fitters as fitters
 
 
 class TestFitters(unittest.TestCase):

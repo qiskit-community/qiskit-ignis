@@ -15,7 +15,7 @@ and that it returns the identity
 import unittest
 import random
 import qiskit
-import qiskit.ignis.randomized_benchmarking as rb
+import qiskit.ignis.verification.randomized_benchmarking as rb
 
 
 class TestRB(unittest.TestCase):

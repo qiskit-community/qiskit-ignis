@@ -12,7 +12,7 @@ Advanced Clifford operations needed for randomized benchmarking
 import numpy as np
 import qiskit
 
-from qiskit.ignis.randomized_benchmarking import Clifford
+from . import Clifford
 
 try:
     import cPickle as pickle

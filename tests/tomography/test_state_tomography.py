@@ -14,7 +14,7 @@ import qiskit
 from qiskit import QuantumRegister, QuantumCircuit, Aer
 from qiskit.quantum_info import state_fidelity
 
-import qiskit.ignis.tomography as tomo
+import qiskit.ignis.verification.tomography as tomo
 
 
 def run_circuit_and_tomography(circuit, qubits):

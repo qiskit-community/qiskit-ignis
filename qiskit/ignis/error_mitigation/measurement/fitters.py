@@ -17,11 +17,17 @@ import scipy.linalg as la
 import numpy as np
 from qiskit import QiskitError
 
+try:
+    from matplotlib import pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
+
 
 class MeasurementFitter():
     """Measurement correction fitter"""
 
-    def __init__(self, results, state_labels):
+    def __init__(self, results, state_labels, circlabel=''):
 
         """
         Initialize a measurement calibration matrix from the results of running
@@ -39,6 +45,7 @@ class MeasurementFitter():
         self._results = results
         self._state_labels = state_labels
         self._cal_matrix = None
+        self._circlabel = circlabel
 
         if self._results is not None:
             self._build_calibration_matrix()
@@ -52,6 +59,56 @@ class MeasurementFitter():
     def cal_matrix(self, new_cal_matrix):
         """Set cal_matrix."""
         self._cal_matrix = new_cal_matrix
+
+    def readout_fidelity(self, label_list=None):
+        """
+        Based on the results output the readout fidelity which is the
+        trace of the calibration matrix
+
+        Args:
+            label_list: If none returns the average assignment fidelity
+            of a single state. Otherwise it returns the assignment fidelity
+            to be in any one of these states averaged over the second index.
+
+        Returns:
+            readout fidelity (assignment fidelity)
+
+
+        Additional Information:
+            The on-diagonal elements of the calibration matrix are the
+            probabilities of measuring state 'x' given preparation of state
+            'x' and so the trace is the average assignment fidelity
+        """
+
+        if self._cal_matrix is None:
+            raise QiskitError("Cal matrix has not been set")
+
+        fidelity_label_list = []
+        if label_list is None:
+            fidelity_label_list = [[i] for i in range(len(self._cal_matrix))]
+        else:
+            for fid_sublist in label_list:
+                fidelity_label_list.append([])
+                for fid_statelabl in fid_sublist:
+                    for label_idx, label in enumerate(self._state_labels):
+                        if fid_statelabl == label:
+                            fidelity_label_list[-1].append(label_idx)
+                            continue
+
+        # fidelity_label_list is a 2D list of indices in the
+        # cal_matrix, we find the assignment fidelity of each
+        # row and average over the list
+        assign_fid_list = []
+
+        for fid_label_sublist in fidelity_label_list:
+            assign_fid_list.append(0)
+            for state_idx_i in fid_label_sublist:
+                for state_idx_j in fid_label_sublist:
+                    assign_fid_list[-1] += self._cal_matrix[state_idx_i,
+                                                            state_idx_j]
+            assign_fid_list[-1] /= len(fid_label_sublist)
+
+        return np.mean(assign_fid_list)
 
     def _build_calibration_matrix(self):
 
@@ -78,7 +135,8 @@ class MeasurementFitter():
             [len(self._state_labels), len(self._state_labels)], dtype=float)
 
         for stateidx, state in enumerate(self._state_labels):
-            state_cnts = self._results.get_counts('cal_%s' % state)
+            state_cnts = self._results.get_counts('%scal_%s' %
+                                                  (self._circlabel, state))
             shots = sum(state_cnts.values())
             for stateidx2, state2 in enumerate(self._state_labels):
                 cal_matrix[stateidx, stateidx2] = state_cnts.get(
@@ -188,3 +246,29 @@ class MeasurementFitter():
         else:
             raw_data2 = raw_data2[0]
         return raw_data2
+
+    def plot_calibration(self, ax=None, show_plot=True):
+        """
+        Plot the calibration matrix (2D color grid plot)
+
+        Args:
+            show_plot (bool): call plt.show()
+
+        """
+
+        if self._cal_matrix is None:
+            raise QiskitError("Cal matrix has not been set")
+
+        if not HAS_MATPLOTLIB:
+            raise ImportError('The function plot_rb_data needs matplotlib. '
+                              'Run "pip install matplotlib" before.')
+
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+
+        axim = ax.matshow(self._cal_matrix, cmap=plt.cm.binary, clim=[0, 1])
+        ax.figure.colorbar(axim)
+
+        if show_plot:
+            plt.show()
