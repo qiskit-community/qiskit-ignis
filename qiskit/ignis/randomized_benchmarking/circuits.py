@@ -46,7 +46,7 @@ def handle_length_multiplier(length_multiplier, len_pattern):
     return length_multiplier
 
 
-def check_pattern(pattern, n_qubits):
+def check_pattern(pattern):
     """
     Verifies that the input pattern is valid
     i.e., that each qubit appears at most once
@@ -57,19 +57,20 @@ def check_pattern(pattern, n_qubits):
 
     Raises:
         ValueError: if the pattern is not valid
+
+    Return:
+        nqubits, maxqubit
     """
 
     pattern_flat = []
     for pat in pattern:
         pattern_flat.extend(pat)
 
-    if np.max(pattern_flat) >= n_qubits:
-        print("Invalid pattern. Qubit index in the pattern exceeds the number "
-              "of qubits.")
-
     _, uni_counts = np.unique(np.array(pattern_flat), return_counts=True)
     if (uni_counts > 1).any():
         raise ValueError("Invalid pattern. Duplicate qubit index.")
+
+    return len(pattern_flat), np.max(pattern_flat)
 
 
 def calc_xdata(length_vector, length_multiplier):
@@ -163,12 +164,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     if length_vector is None:
         length_vector = [1, 10, 20]
 
-    # calculate n_qubits from the pattern
-    n_qubits = 0
-    for pattern in rb_pattern:
-        n_qubits += len(pattern)
-
-    check_pattern(rb_pattern, n_qubits)
+    _, n_q_max = check_pattern(rb_pattern)
     length_multiplier = handle_length_multiplier(length_multiplier,
                                                  len(rb_pattern))
 
@@ -180,8 +176,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     circuits = [[] for e in range(nseeds)]
     # go through for each seed
     for seed in range(nseeds):
-        qr = qiskit.QuantumRegister(n_qubits, 'qr')
-        cr = qiskit.ClassicalRegister(n_qubits, 'cr')
+        qr = qiskit.QuantumRegister(n_q_max+1, 'qr')
+        cr = qiskit.ClassicalRegister(n_q_max+1, 'cr')
         general_circ = qiskit.QuantumCircuit(qr, cr)
 
         # make Clifford sequences for each of the separate sequences in
@@ -226,7 +222,10 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                         clutils.get_quantum_circuit(inv_circuit, rb_q_num),
                         rb_pattern[rb_pattern_index], qr)
 
+                # add measurement
+                # q->c is 1 to 1
                 circ.measure(qr, cr)
+
                 circ.name = 'rb_seed_' + str(
                     seed) + '_length_' + str(length_vector[length_index])
                 circuits[seed].append(circ)
