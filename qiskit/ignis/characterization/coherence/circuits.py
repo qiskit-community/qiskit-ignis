@@ -13,16 +13,20 @@ import numpy as np
 import qiskit
 from .coherence_utils import pad_id_gates
 
-def t1_circuits(num_of_gates, gate_time, num_of_qubits, qubits):
+
+def t1_circuits(num_of_gates, gate_time, qubits):
     """
     Generates circuit for T1 measurement.
-    Each circuit consists of an X gate, followed by a sequence of identity gates.
+    Each circuit consists of an X gate, followed by a sequence of identity
+    gates.
 
     Args:
-       num_of_gates (list of integers):  the number of identity gates in each circuit.
-                                         Must be in an increasing order.
+       num_of_gates (list of integers): the number of identity gates in each
+                                        circuit. Must be in an increasing
+                                        order.
        gate_time (float): time in micro-seconds of running a single gate.
        qubits (list of integers): indices of the qubits whose T1 are to be measured.
+
     Returns:
        A list of QuantumCircuit
        xdata: a list of delay times in seconds
@@ -30,7 +34,7 @@ def t1_circuits(num_of_gates, gate_time, num_of_qubits, qubits):
 
     xdata = gate_time * num_of_gates
 
-    qr = qiskit.QuantumRegister(num_of_qubits)
+    qr = qiskit.QuantumRegister(max(qubits)+1)
     cr = qiskit.ClassicalRegister(len(qubits))
 
     circuits = []
@@ -50,12 +54,14 @@ def t1_circuits(num_of_gates, gate_time, num_of_qubits, qubits):
 def t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubits, nosc=0):
     """
     Generates circuit for T2* measurement.
-    Each circuit consists of a Hadamard gate, followed by a sequence of identity gates,
-    a phase gate (with a linear phase), and an additional Hadamard gate.
+    Each circuit consists of a Hadamard gate, followed by a sequence of
+    identity gates, a phase gate (with a linear phase), and an additional
+    Hadamard gate.
 
     Args:
-       num_of_gates (list of integers):  the number of identity gates in each circuit.
-                                         Must be in an increasing order.
+       num_of_gates (list of integers): the number of identity gates in each
+                                        circuit. Must be in an increasing
+                                        order.
        gate_time (float): time in micro-seconds of running a single gate.
        num_of_qubits (integer): the number of qubits in the circuit.
        qubits (list of integers): indices of the qubits whose T2* are to be measured.
@@ -89,6 +95,7 @@ def t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubits, nosc=0):
 
     return circuits, xdata, osc_freq
 
+
 def t2_circuits(num_of_gates, gate_time, num_of_qubits, qubits):
     """
     Generates circuit for T2 (echo) measurement.
@@ -97,10 +104,11 @@ def t2_circuits(num_of_gates, gate_time, num_of_qubits, qubits):
     an additional Y90 gate.
 
     Args:
-       num_of_gates (list of integers):  the number of identity gates in each circuit.
-                                         Must be in an increasing order.
-                                         This is the number of gates between the H and echo
-                                         (i.e. total length is twice)
+       num_of_gates (list of integers): the number of identity gates in each
+                                        circuit. Must be in an increasing
+                                        order. This is the number of gates
+                                        between the H and echo (i.e. total
+                                        length is twice)
        gate_time (float): time in micro-seconds of running a single gate.
        num_of_qubits (integer): the number of qubits in the circuit.
        qubits (list of integers): indices of the qubits whose T2 are to be measured.

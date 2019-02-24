@@ -16,7 +16,7 @@ from scipy import sparse as sps
 # Check if CVXPY package is installed
 try:
     import cvxpy
-except:
+except ImportError:
     cvxpy = None
 
 
@@ -32,11 +32,12 @@ def state_cvx_fit(data, basis_matrix, weights=None, **kwargs):
         **kwargs (optional): kwargs for cvxpy solver.
 
     Returns:
-        The fitted matrix rho that minimizes ||basis_matrix * vec(rho) - data||_2.
+        The fitted matrix rho that minimizes
+        ||basis_matrix * vec(rho) - data||_2.
 
     Additional Information:
-        This function is a wrapper for `cvx_fit`. See `tomography.fitters.cvx_fit`
-        documentation for additional information.
+        This function is a wrapper for `cvx_fit`. See
+        `tomography.fitters.cvx_fit` documentation for additional information.
     """
     return cvx_fit(data, basis_matrix, weights=weights,
                    PSD=True, trace=1, **kwargs)
@@ -54,24 +55,25 @@ def process_cvx_fit(data, basis_matrix, weights=None, **kwargs):
         **kwargs (optional): kwargs for cvxpy solver.
 
     Returns:
-        The fitted choi-matrix that minimizes ||basis_matrix * vec(choi) - data||_2.
+        The fitted choi-matrix that minimizes
+        ||basis_matrix * vec(choi) - data||_2.
 
     Additional Information:
-        This function is a wrapper for `cvx_fit`. See `tomography.fitters.cvx_fit`
-        documentation for additional information.
+        This function is a wrapper for `cvx_fit`. See
+        `tomography.fitters.cvx_fit` documentation for additional information.
     """
     # Calculate trace
-    rows, cols = np.shape(basis_matrix)
+    _, cols = np.shape(basis_matrix)
     dim = int(np.sqrt(np.sqrt(cols)))
     if dim ** 4 != cols:
         raise ValueError("Input data does not correspond to a process matrix.")
     return cvx_fit(data, basis_matrix, weights=weights,
                    PSD=True, trace=dim, trace_preserving=True, **kwargs)
 
-
 ###########################################################################
 # CVXPY Fitter
 ###########################################################################
+
 
 def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
             trace_preserving=False, **kwargs):
@@ -93,7 +95,8 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
         **kwargs (optional): kwargs for cvxpy solver.
 
     Returns:
-        The fitted matrix rho that minimizes ||basis_matrix * vec(rho) - data||_2.
+        The fitted matrix rho that minimizes
+        ||basis_matrix * vec(rho) - data||_2.
 
     Additional Information:
 
@@ -104,7 +107,8 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
             minimize: ||a * x - b ||_2
             subject to: x >> 0 (PSD, optional)
                         trace(x) = t (trace, optional)
-                        partial_trace(x) = identity (trace_preserving, optional)
+                        partial_trace(x) = identity (trace_preserving,
+                                                     optional)
 
         where:
             a is the matrix of measurement operators a[i] = vec(M_i).H
@@ -114,31 +118,31 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
 
         PSD constraint
         --------------
-        The PSD keyword constrains the fitted matrix to be postive-semidefinite,
-        which makes the optimization problem a SDP. If PSD=False the fitted
-        matrix will still be constrained to be Hermitian, but not PSD. In this
-        case the optimization problem becomes a SOCP.
+        The PSD keyword constrains the fitted matrix to be
+        postive-semidefinite, which makes the optimization problem a SDP. If
+        PSD=False the fitted matrix will still be constrained to be Hermitian,
+        but not PSD. In this case the optimization problem becomes a SOCP.
 
         Trace constraint
         ----------------
-        The trace keyword constrains the trace of the fitted matrix. If trace=None
-        there will be no trace constraint on the fitted matrix. This constraint
-        should not be used for process tomography and the trace preserving
-        constraint should be used instead.
+        The trace keyword constrains the trace of the fitted matrix. If
+        trace=None there will be no trace constraint on the fitted matrix.
+        This constraint should not be used for process tomography and the
+        trace preserving constraint should be used instead.
 
         Trace preserving (TP) constraint
         --------------------------------
         The trace_preserving keyword constrains the fitted matrix to be TP.
         This should only be used for process tomography, not state tomography.
         Note that the TP constraint implicitly enforces the trace of the fitted
-        matrix to be equal to the square-root of the matrix dimension. If a trace
-        constraint is also specified that differs from this value the fit will
-        likely fail.
+        matrix to be equal to the square-root of the matrix dimension. If a
+        trace constraint is also specified that differs from this value the fit
+        will likely fail.
 
         CVXPY Solvers:
         -------
-        Various solvers can be called in CVXPY using the `solver` keyword argument.
-        Solvers included in CVXPY are:
+        Various solvers can be called in CVXPY using the `solver` keyword
+        argument. Solvers included in CVXPY are:
             'CVXOPT': SDP and SOCP (default solver)
             'SCS'   : SDP and SOCP
             'ECOS'  : SOCP only
@@ -225,12 +229,10 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
 
     arg = bm_r * cvxpy.vec(rho_r) - bm_i * cvxpy.vec(rho_i) - np.array(data)
 
-
-
     # Add weights vector if specified
     if weights is not None:
 
-        #normalie weights?
+        # normalie weights?
         weights = np.array(weights)
         weights = weights/np.sqrt(sum(weights**2))
 
@@ -258,14 +260,16 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
             if iters < max_iters:
                 iters *= 2
             else:
-                raise RuntimeError("CVX fit failed, probably not enough iterations for the solver")
+                raise RuntimeError(
+                    "CVX fit failed, probably not enough iterations for the "
+                    "solver")
         elif prob.status in ["infeasible", "unbounded"]:
-            raise RuntimeError("CVX fit failed, problem status {} which should not happen".format(prob.status))
+            raise RuntimeError(
+                "CVX fit failed, problem status {} which should not "
+                "happen".format(prob.status))
         else:
             raise RuntimeError("CVX fit failed, reason unknown")
-
     rho_fit = rho_r.value + 1j * rho_i.value
-
     return rho_fit
 
 

@@ -55,7 +55,8 @@ def fitter_data(tomo_data,
     Additional Information
     ----------------------
     standard_weights:
-        Weights are calculated from from binomial distribution standard deviation
+        Weights are calculated from from binomial distribution standard
+        deviation
     """
 
     # Load built-in circuit functions
@@ -118,7 +119,8 @@ def fitter_data(tomo_data,
             meas_label = label
         prep_op = _preparation_op(prep_label, preparation)
         meas_ops = _measurement_ops(meas_label, measurement)
-        block = _basis_operator_matrix([np.kron(prep_op.T, mop) for mop in meas_ops])
+        block = _basis_operator_matrix(
+            [np.kron(prep_op.T, mop) for mop in meas_ops])
         basis_blocks.append(block)
 
     return data, np.vstack(basis_blocks), weights
@@ -171,8 +173,9 @@ def binomial_weights(counts, beta=0.5):
         raise ValueError('beta = {} must be non-negative.'.format(beta))
     if beta == 0 and (shots in counts or 0 in counts):
         beta = 0.5
-        msg = 'Counts result in probabilities of 0 or 1 in binomial weights calculation. '
-        msg += ' Setting hedging parameter beta={} to prevent dividing by zero.'.format(beta)
+        msg = ("Counts result in probabilities of 0 or 1 in binomial weights "
+               "calculation. Setting hedging parameter beta={} to prevent "
+               "dividing by zero.".format(beta))
         logger.warning(msg)
 
     K = len(counts)  # Number of possible outcomes.
@@ -200,8 +203,8 @@ def make_positive_semidefinite(mat, epsilon=0):
         The input matrix rescaled to have non-negative eigenvalues.
 
     References:
-        [1] J Smolin, JM Gambetta, G Smith, Phys. Rev. Lett. 108, 070502 (2012).
-            Open access: arXiv:1106.5458 [quant-ph].
+        [1] J Smolin, JM Gambetta, G Smith, Phys. Rev. Lett. 108, 070502
+            (2012). Open access: arXiv:1106.5458 [quant-ph].
     """
 
     if epsilon < 0:
@@ -300,8 +303,8 @@ def _measurement_ops(label, meas_matrix_fn):
                             tomography circuit.
         meas_matrix_fn (function): a function that returns the matrix
                         corresponding to a single qubit measurement label
-                        for a given outcome. The functions should have signature
-                            meas_matrix_fn(str, int) -> np.array
+                        for a given outcome. The functions should have
+                        signature meas_matrix_fn(str, int) -> np.array
 
     Returns:
         A list of Numpy array for the multi-qubit measurement operators

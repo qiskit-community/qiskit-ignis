@@ -5,9 +5,13 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
+# TODO(mtreinish): Remove these disables when implementation is finished
+# pylint: disable=unused-argument,unnecessary-pass
+
 """
 RB Helper functions
 """
+
 
 def count_gates(qobj, basis, qubits):
 
@@ -24,9 +28,9 @@ def count_gates(qobj, basis, qubits):
             n: number of circuits
             m: number of gates in basis
     """
-
-    #TO DO
+    # TO DO
     pass
+
 
 def gates_per_clifford(qobj_list, clifford_length, basis, qubits):
 
@@ -44,12 +48,12 @@ def gates_per_clifford(qobj_list, clifford_length, basis, qubits):
         list of number of gates per clifford (same order as basis)
     """
 
-    #TO DO
-
+    # TO DO
     pass
 
 
-def coherence_limit(nQ=2, T1_list=[100.,100.], T2_list=[100.,100.], gatelen=0.1):
+def coherence_limit(nQ=2, T1_list=None, T2_list=None,
+                    gatelen=0.1):
 
     """
     The error per gate (1-average_gate_fidelity) given by the T1,T2 limit
@@ -64,18 +68,15 @@ def coherence_limit(nQ=2, T1_list=[100.,100.], T2_list=[100.,100.], gatelen=0.1)
         coherence limited error per gate
     """
 
+    if T1_list is None:
+        T1_list = [100., 100.]
+    if T2_list is None:
+        T2_list = [100., 100.]
 
-    if nQ==1:
-
-        ###
+    if nQ == 1:
         pass
-
-    elif nQ==2:
-
-        ###
+    elif nQ == 2:
         pass
-
     else:
         raise ValueError('Not a valid number of qubits')
-
     return 0.0

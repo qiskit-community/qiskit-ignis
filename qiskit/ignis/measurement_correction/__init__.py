@@ -13,4 +13,3 @@ Measurement correction module
 # Measurement correction functions
 from .circuits import measurement_calibration
 from .fitters import MeasurementFitter
-

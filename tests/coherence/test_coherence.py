@@ -5,6 +5,8 @@
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
 
+# pylint: disable=no-name-in-module
+
 """
 Test coherence measurements
 """
@@ -25,7 +27,6 @@ from qiskit.ignis.characterization.coherence import t1_circuits, \
                                 t2_circuits, t2star_circuits
 
 
-
 class TestT2Star(unittest.TestCase):
     """
     Test measurement of T2*
@@ -34,13 +35,15 @@ class TestT2Star(unittest.TestCase):
     def test_t2star(self):
         """
         Run the simulator with phase damping noise.
-        Then verify that the calculated T2star matches the phase damping parameter.
+        Then verify that the calculated T2star matches the phase damping
+        parameter.
         """
 
         # Setting parameters
 
-        num_of_gates = num_of_gates = np.append((np.linspace(10, 150, 30)).astype(int),
-                                                (np.linspace(160,450,20)).astype(int))
+        num_of_gates = num_of_gates = np.append(
+            (np.linspace(10, 150, 30)).astype(int),
+            (np.linspace(160, 450, 20)).astype(int))
         gate_time = 0.1
         num_of_qubits = 1
         qubits = [0]
@@ -53,41 +56,40 @@ class TestT2Star(unittest.TestCase):
 
         backend = qiskit.Aer.get_backend('qasm_simulator')
         shots = 300
-
-
+        
         # Estimating T2* via an exponential function
-
-        circs, xdata, _ = t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubits)
-        backend_result = qiskit.execute(circs, backend,
-                                        shots=shots,
-                                        backend_options={'max_parallel_experiments': 0},
-                                        noise_model=noise_model).result()
+        circs, xdata, _ = t2star_circuits(num_of_gates, gate_time,
+                                          num_of_qubits, qubits)
+        backend_result = qiskit.execute(
+            circs, backend, shots=shots,
+            backend_options={'max_parallel_experiments': 0},
+            noise_model=noise_model).result()
 
         initial_t2 = expected_t2
         initial_a = 0.5
         initial_c = 0.5
 
-        fit = T2StarExpFitter(backend_result, shots, xdata, qubits,
+        fit = T2StarExpFitter(backend_result, shots, xdata,
+                              qubits,
                               fit_p0=[initial_a, initial_t2, initial_c],
-                              fit_bounds=([-0.5, 0, -0.5], [1.5, expected_t2*1.2, 1.5]))
-
-        print(fit.time)
-        print(fit.time_err)
+                              fit_bounds=([-0.5, 0, -0.5],
+                                          [1.5, expected_t2*1.2, 1.5]))
 
         self.assertAlmostEqual(fit.time[0], expected_t2, delta=2,
                                msg='Calculated T2 is inaccurate')
-        self.assertTrue(fit.time_err[0] < 2,
-                        'Confidence in T2 calculation is too low: ' + str(fit.time_err))
-
+        self.assertTrue(
+            fit.time_err[0] < 2,
+            'Confidence in T2 calculation is too low: ' + str(fit.time_err))
 
         # Estimate T2* via an oscilliator function
+        circs_osc, xdata, omega = t2star_circuits(num_of_gates, gate_time,
+                                                  num_of_qubits, qubits, 5)
 
-        circs_osc, xdata, omega = t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubits, 5)
-
-        backend_result = qiskit.execute(circs_osc, backend,
-                                        shots=shots,
-                                        backend_options={'max_parallel_experiments': 0},
-                                        noise_model=noise_model).result()
+        backend_result = qiskit.execute(
+            circs_osc, backend,
+            shots=shots,
+            backend_options={'max_parallel_experiments': 0},
+            noise_model=noise_model).result()
 
         initial_a = 0.5
         initial_c = 0.5
@@ -95,20 +97,20 @@ class TestT2Star(unittest.TestCase):
         initial_phi = 0
 
         fit = T2StarOscFitter(backend_result, shots, xdata, qubits,
-                              fit_p0=[initial_a, initial_t2, initial_f, initial_phi, initial_c],
+                              fit_p0=[initial_a, initial_t2, initial_f,
+                                      initial_phi, initial_c],
                               fit_bounds=([-0.5, 0, omega-0.02, -np.pi, -0.5],
-                                          [1.5, expected_t2*1.2, omega+0.02, np.pi, 1.5]))
-
-        print(fit.time)
-        print(fit.time_err)
-
+                                          [1.5, expected_t2*1.2, omega+0.02,
+                                           np.pi, 1.5]))
+        
         self.assertAlmostEqual(fit.time[0], expected_t2, delta=2,
                                msg='Calculated T2 is inaccurate')
-        self.assertTrue(fit.time_err[0] < 2,
-                        'Confidence in T2 calculation is too low: ' + str(fit.time_err))
-
+        self.assertTrue(
+            fit.time_err[0] < 2,
+            'Confidence in T2 calculation is too low: ' + str(fit.time_err))
 
         # TODO: add SPAM
+
 
 class TestT1(unittest.TestCase):
     """
@@ -118,7 +120,8 @@ class TestT1(unittest.TestCase):
     def test_t1(self):
         """
         Run the simulator with amplitude damping noise.
-        Then verify that the calculated T1 matches the amplitude damping parameter.
+        Then verify that the calculated T1 matches the amplitude damping
+        parameter.
         """
 
         # 25 numbers ranging from 1 to 200, linearly spaced
@@ -127,7 +130,7 @@ class TestT1(unittest.TestCase):
         num_of_qubits = 2
         qubits = [0]
 
-        circs, xdata = t1_circuits(num_of_gates, gate_time, num_of_qubits, qubits)
+        circs, xdata = t1_circuits(num_of_gates, gate_time, qubits)
 
         expected_t1 = 10
         gamma = 1 - np.exp(-gate_time/expected_t1)
@@ -138,10 +141,11 @@ class TestT1(unittest.TestCase):
 
         backend = qiskit.Aer.get_backend('qasm_simulator')
         shots = 300
-        backend_result = qiskit.execute(circs, backend,
-                                        shots=shots,
-                                        backend_options={'max_parallel_experiments': 0},
-                                        noise_model=noise_model).result()
+        backend_result = qiskit.execute(
+            circs, backend,
+            shots=shots,
+            backend_options={'max_parallel_experiments': 0},
+            noise_model=noise_model).result()
 
         initial_t1 = expected_t1
         initial_a = 1
@@ -151,13 +155,12 @@ class TestT1(unittest.TestCase):
                        fit_p0=[initial_a, initial_t1, initial_c],
                        fit_bounds=([0, 0, -1], [2, expected_t1*1.2, 1]))
 
-        print(fit.time)
-        print(fit.time_err)
-
         self.assertAlmostEqual(fit.time[0], expected_t1, delta=2,
                                msg='Calculated T1 is inaccurate')
-        self.assertTrue(fit.time_err[0] < 30,
-                        'Confidence in T1 calculation is too low: ' + str(fit.time_err))
+        self.assertTrue(
+            fit.time_err[0] < 30,
+            'Confidence in T1 calculation is too low: ' + str(fit.time_err))
+
 
 class TestT2(unittest.TestCase):
     """
@@ -176,7 +179,8 @@ class TestT2(unittest.TestCase):
         num_of_qubits = 2
         qubits = [0]
 
-        circs, xdata = t2_circuits(num_of_gates, gate_time, num_of_qubits, qubits)
+        circs, xdata = t2_circuits(num_of_gates, gate_time, num_of_qubits,
+                                   qubits)
 
         expected_t2 = 20
         gamma = 1 - np.exp(-2*gate_time/expected_t2)
@@ -187,10 +191,11 @@ class TestT2(unittest.TestCase):
 
         backend = qiskit.Aer.get_backend('qasm_simulator')
         shots = 300
-        backend_result = qiskit.execute(circs, backend,
-                                        shots=shots,
-                                        backend_options={'max_parallel_experiments': 0},
-                                        noise_model=noise_model).result()
+        backend_result = qiskit.execute(
+            circs, backend,
+            shots=shots,
+            backend_options={'max_parallel_experiments': 0},
+            noise_model=noise_model).result()
 
         initial_t2 = expected_t2
         initial_a = 1
@@ -200,14 +205,11 @@ class TestT2(unittest.TestCase):
                        fit_p0=[initial_a, initial_t2, initial_c],
                        fit_bounds=([0, 0, -1], [2, expected_t2*1.2, 1]))
 
-        print(fit.time)
-        print(fit.time_err)
-
         self.assertAlmostEqual(fit.time[0], expected_t2, delta=4,
                                msg='Calculated T2 is inaccurate')
-        self.assertTrue(fit.time_err[0] < 5,
-                        'Confidence in T2 calculation is too low: ' + str(fit.time_err))
-
+        self.assertTrue(
+            fit.time_err[0] < 5,
+            'Confidence in T2 calculation is too low: ' + str(fit.time_err))
 
 
 if __name__ == '__main__':

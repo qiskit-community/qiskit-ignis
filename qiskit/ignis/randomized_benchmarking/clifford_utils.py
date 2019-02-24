@@ -10,8 +10,9 @@ Advanced Clifford operations needed for randomized benchmarking
 """
 
 import numpy as np
-from qiskit.ignis.randomized_benchmarking import Clifford
 import qiskit
+
+from qiskit.ignis.randomized_benchmarking import Clifford
 
 try:
     import cPickle as pickle
@@ -160,7 +161,7 @@ def clifford2_gates(idx: int):
     pauli = np.mod(cannon, 16)
     symp = cannon // 16
 
-    if symp < 36: #1-qubit Cliffords Class
+    if symp < 36:  # 1-qubit Cliffords Class
         r0 = np.mod(symp, 3)
         r1 = np.mod(symp // 3, 3)
         h0 = np.mod(symp // 9, 2)
@@ -171,7 +172,7 @@ def clifford2_gates(idx: int):
         v_gates(gatelist, 0, r0)
         v_gates(gatelist, 1, r1)
 
-    elif symp < 360: #CNOT-like Class
+    elif symp < 360:  # CNOT-like Class
         symp = symp - 36
         r0 = np.mod(symp, 3)
         r1 = np.mod(symp // 3, 3)
@@ -188,7 +189,7 @@ def clifford2_gates(idx: int):
         v_gates(gatelist, 0, r2)
         v_gates(gatelist, 1, r3)
 
-    elif symp < 684: #iSWAP-like Class
+    elif symp < 684:  # iSWAP-like Class
         symp = symp - 360
         r0 = np.mod(symp, 3)
         r1 = np.mod(symp // 3, 3)
@@ -206,7 +207,7 @@ def clifford2_gates(idx: int):
         v_gates(gatelist, 0, r2)
         v_gates(gatelist, 1, r3)
 
-    else: #SWAP Class
+    else:  # SWAP Class
         symp = symp - 684
         r0 = np.mod(symp, 3)
         r1 = np.mod(symp // 3, 3)
@@ -285,7 +286,8 @@ def pickle_clifford_table(picklefile='cliffords2.pickle', num_qubits=2):
     elif num_qubits == 2:
         cliffords = clifford2_gates_table()
     else:
-        raise ValueError("number of qubits bigger than is not supported for pickle")
+        raise ValueError(
+            "number of qubits bigger than is not supported for pickle")
 
     with open(picklefile, "wb") as pf:
         pickle.dump(cliffords, pf)
@@ -321,10 +323,9 @@ def random_clifford_gates(num_qubits):
 
     if num_qubits == 1:
         return clifford1_gates(np.random.randint(0, 24))
-    elif num_qubits == 2:
+    if num_qubits == 2:
         return clifford2_gates(np.random.randint(0, 11520))
-    else:
-        raise ValueError("The number of qubits should be only 1 or 2")
+    raise ValueError("The number of qubits should be only 1 or 2")
 
 
 # --------------------------------------------------------
@@ -353,9 +354,7 @@ def find_inverse_clifford_gates(num_qubits, gatelist):
             elif split[0] == 'w':
                 inv_gatelist[i] = 'v ' + split[1]
         return inv_gatelist
-
-    else:
-        raise ValueError("The number of qubits should be only 1 or 2")
+    raise ValueError("The number of qubits should be only 1 or 2")
 
 
 # --------------------------------------------------------
@@ -379,7 +378,8 @@ def get_quantum_circuit(gatelist, num_qubits):
         split = op.split()
         op_names = [split[0]]
 
-        # temporary correcting the ops name since QuantumCircuit has no attributes 'v' or 'w' yet:
+        # temporary correcting the ops name since QuantumCircuit has no
+        # attributes 'v' or 'w' yet:
         if op_names == ['v']:
             op_names = ['sdg', 'h']
         elif op_names == ['w']:
