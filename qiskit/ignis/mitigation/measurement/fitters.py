@@ -33,12 +33,12 @@ class MeasurementFitter():
         the circuits returned by `measurement_calibration_circuits`
 
         Args:
-            results: the results of running the measurement calibration c
-                ciruits. If this is None the user will set a call matrix later
+            results: the results of running the measurement calibration
+            ciruits. If this is None the user will set a call matrix later
 
             state_labels: list of calibration state labels
-                returned from `measurement_calibration_circuits`. The output matrix
-                will obey this ordering.
+            returned from `measurement_calibration_circuits`. The output matrix
+            will obey this ordering.
         """
 
         self._results = results
