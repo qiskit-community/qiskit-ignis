@@ -17,12 +17,17 @@ import scipy.linalg as la
 import numpy as np
 from qiskit import QiskitError
 
+try:
+    from matplotlib import pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
+
 
 class MeasurementFitter():
     """Measurement correction fitter"""
 
-    def __init__(self, results, state_labels):
-
+    def __init__(self, results, state_labels, circlabel=''):
         """
         Initialize a measurement calibration matrix from the results of running
         the circuits returned by `measurement_calibration_circuits`
@@ -39,6 +44,7 @@ class MeasurementFitter():
         self._results = results
         self._state_labels = state_labels
         self._cal_matrix = None
+        self._circlabel = circlabel
 
         if self._results is not None:
             self._build_calibration_matrix()
@@ -53,32 +59,71 @@ class MeasurementFitter():
         """Set cal_matrix."""
         self._cal_matrix = new_cal_matrix
 
-    def _build_calibration_matrix(self):
-
+    def readout_fidelity(self, label_list=None):
         """
-        Build the a measurement calibration matrix from the results of running
-        the circuits returned by `measurement_calibration_circuits`
+        Based on the results output the readout fidelity which is the
+        trace of the calibration matrix
 
-        Creates a 2**n x 2**n matrix that can be used to correct measurement
-        errors
+        Args:
+            label_list: If none returns the average assignment fidelity
+            of a single state. Otherwise it returns the assignment fidelity
+            to be in any one of these states averaged over the second index.
+
+        Returns:
+            readout fidelity (assignment fidelity)
 
 
         Additional Information:
-            Use this matrix in `remove_measurement_errors`
+            The on-diagonal elements of the calibration matrix are the
+            probabilities of measuring state 'x' given preparation of state
+            'x' and so the trace is the average assignment fidelity
+        """
 
-            e.g.
-            calcircuits, state_labels = measurement_calibration_circuits(
-                qiskit.QuantumRegister(5))
-            job = qiskit.execute(calcircuits)
-            cal_matrix = meausurement_calibration_matrix(job.results(),
-                                                         state_labels)
+        if self._cal_matrix is None:
+            raise QiskitError("Cal matrix has not been set")
+
+        fidelity_label_list = []
+        if label_list is None:
+            fidelity_label_list = [[i] for i in range(len(self._cal_matrix))]
+        else:
+            for fid_sublist in label_list:
+                fidelity_label_list.append([])
+                for fid_statelabl in fid_sublist:
+                    for label_idx, label in enumerate(self._state_labels):
+                        if fid_statelabl == label:
+                            fidelity_label_list[-1].append(label_idx)
+                            continue
+
+        # fidelity_label_list is a 2D list of indices in the
+        # cal_matrix, we find the assignment fidelity of each
+        # row and average over the list
+        assign_fid_list = []
+
+        for fid_label_sublist in fidelity_label_list:
+            assign_fid_list.append(0)
+            for state_idx_i in fid_label_sublist:
+                for state_idx_j in fid_label_sublist:
+                    assign_fid_list[-1] += self._cal_matrix[state_idx_i,
+                                                            state_idx_j]
+            assign_fid_list[-1] /= len(fid_label_sublist)
+
+        return np.mean(assign_fid_list)
+
+    def _build_calibration_matrix(self):
+        """
+        Build the measurement calibration matrix from the results of running
+        the circuits returned by `measurement_calibration`
+
+        Creates a 2**n x 2**n matrix that can be used to correct measurement
+        errors
         """
 
         cal_matrix = np.zeros(
             [len(self._state_labels), len(self._state_labels)], dtype=float)
 
         for stateidx, state in enumerate(self._state_labels):
-            state_cnts = self._results.get_counts('cal_%s' % state)
+            state_cnts = self._results.get_counts('%scal_%s' %
+                                                  (self._circlabel, state))
             shots = sum(state_cnts.values())
             for stateidx2, state2 in enumerate(self._state_labels):
                 cal_matrix[stateidx, stateidx2] = state_cnts.get(
@@ -86,21 +131,20 @@ class MeasurementFitter():
 
         self._cal_matrix = cal_matrix.transpose()
 
-    def calibrate(self, raw_data, method=1):
-
+    def apply(self, raw_data, method='least_squares'):
         """
         Apply the calibration matrix to results
 
         Args:
             raw_data: The data to be corrected. Can be in a number of forms.
-            Form1: a counts dictionary from results.get_counts
-            Form2: a list of counts of length==len(state_labels)
-            Form3: a list of counts of length==M*len(state_labels) where M is
-                   an integer (e.g. for use with the tomography data)
+                Form1: a counts dictionary from results.get_counts
+                Form2: a list of counts of length==len(state_labels)
+                Form3: a list of counts of length==M*len(state_labels) where M
+                    is an integer (e.g. for use with the tomography data)
 
-            method: 0: pseudo-inverse, 1: least-squares constrained to have
-                    physical probabilities
-
+            method (str): fitting method. If None, then least_squares is used.
+                'pseudo_inverse': direct inversion of the A matrix
+                'least_squares': constrained to have physical probabilities
 
         Returns:
             The corrected data in the same form as raw_data
@@ -108,17 +152,17 @@ class MeasurementFitter():
         Additional Information:
 
             e.g.
-            calcircuits, state_labels = measurement_calibration_circuits(
+            calcircuits, state_labels = measurement_calibration(
                 qiskit.QuantumRegister(5))
             job = qiskit.execute(calcircuits)
-            cal_matrix = meausurement_calibration_matrix(job.results(),
-                                                         state_labels)
+            meas_fitter = MeasurementFitter(job.results(),
+                                            state_labels)
 
             job2 = qiskit.execute(my_circuits)
-            results2 = job2.results()
+            result2 = job2.results()
 
-            corrected_counts = apply_measurement_calibration(
-                job2.get_counts('circ1'), state_labels, cal_matrix)
+            error_mitigated_counts = meas_fitter.apply(
+                result2.get_counts('circ1'))
 
         """
         # check forms of raw_data
@@ -155,11 +199,11 @@ class MeasurementFitter():
         # Apply the correction
         for data_idx, _ in enumerate(raw_data2):
 
-            if method == 0:
+            if method == 'pseudo_inverse':
                 raw_data2[data_idx] = np.dot(
                     la.pinv(self._cal_matrix), raw_data2[data_idx])
 
-            elif method == 1:
+            elif method == 'least_squares':
                 nshots = sum(raw_data2[data_idx])
 
                 def fun(x):
@@ -172,6 +216,9 @@ class MeasurementFitter():
                 res = minimize(fun, x0, method='SLSQP',
                                constraints=cons, bounds=bnds, tol=1e-6)
                 raw_data2[data_idx] = res.x
+
+            else:
+                raise QiskitError("Unrecognized method.")
 
         if data_format == 2:
             # flatten back out the list
@@ -188,3 +235,29 @@ class MeasurementFitter():
         else:
             raw_data2 = raw_data2[0]
         return raw_data2
+
+    def plot_calibration(self, ax=None, show_plot=True):
+        """
+        Plot the calibration matrix (2D color grid plot)
+
+        Args:
+            show_plot (bool): call plt.show()
+
+        """
+
+        if self._cal_matrix is None:
+            raise QiskitError("Cal matrix has not been set")
+
+        if not HAS_MATPLOTLIB:
+            raise ImportError('The function plot_rb_data needs matplotlib. '
+                              'Run "pip install matplotlib" before.')
+
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+
+        axim = ax.matshow(self._cal_matrix, cmap=plt.cm.binary, clim=[0, 1])
+        ax.figure.colorbar(axim)
+
+        if show_plot:
+            plt.show()

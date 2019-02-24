@@ -207,12 +207,15 @@ class RBFitter:
             self._fit.append({'params': params, 'params_err': params_err,
                               'epc': epc, 'epc_err': epc_err})
 
-    def plot_rb_data(self, pattern_index=0, ax=None, show_plt=True):
+    def plot_rb_data(self, pattern_index=0, ax=None,
+                     add_label=True, show_plt=True):
         """
         Plot randomized benchmarking data of a single pattern.
 
         Args:
+            pattern_index: which RB pattern to plot
             ax (Axes or None): plot axis (if passed in).
+            add_label (bool): Add an EPC label
             show_plt (bool): display the plot.
 
         Raises:
@@ -248,8 +251,21 @@ class RBFitter:
         ax.tick_params(labelsize=14)
 
         ax.set_xlabel('Clifford Length', fontsize=16)
-        ax.set_ylabel('Z', fontsize=16)
+        ax.set_ylabel('Ground State Population', fontsize=16)
         ax.grid(True)
+
+        if add_label:
+            bbox_props = dict(boxstyle="round,pad=0.3",
+                              fc="white", ec="black", lw=2)
+
+            ax.text(0.6, 0.9,
+                    "alpha: %.3f(%.1e) EPC: %.3e(%.1e)" %
+                    (self._fit[pattern_index]['params'][1],
+                     self._fit[pattern_index]['params_err'][1],
+                     self._fit[pattern_index]['epc'],
+                     self._fit[pattern_index]['epc_err']),
+                    ha="center", va="center", size=14,
+                    bbox=bbox_props, transform=ax.transAxes)
 
         if show_plt:
             plt.show()

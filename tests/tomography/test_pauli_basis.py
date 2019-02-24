@@ -11,7 +11,7 @@ import unittest
 
 import numpy
 
-import qiskit.ignis.tomography.basis.paulibasis as paulibasis
+import qiskit.ignis.verification.tomography.basis.paulibasis as paulibasis
 
 
 class TestPauliBasis(unittest.TestCase):
