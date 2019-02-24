@@ -20,10 +20,10 @@ L1-norm to the expected (equally distributed) result
 """
 
 import unittest
-import qiskit
 import numpy as np
+import qiskit
 import qiskit.ignis.error_mitigation.measurement as meas_cal
-from qiskit import QuantumCircuit, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, Aer
 from qiskit.providers.aer import noise
 
 
@@ -63,7 +63,7 @@ class TestMeasCal(unittest.TestCase):
         for i in range(nq):
             pattern_bit = pattern_type & 1
             pattern_type = pattern_type >> 1
-            if (pattern_bit == 1):
+            if pattern_bit == 1:
                 qubits.append(i)
                 weight += 1
         return qubits, weight
@@ -111,7 +111,7 @@ class TestMeasCal(unittest.TestCase):
                                                      circlabel='test')
 
                 # Perform an ideal execution on the generated circuits
-                backend = qiskit.Aer.get_backend('qasm_simulator')
+                backend = Aer.get_backend('qasm_simulator')
                 qobj = qiskit.compile(meas_calibs, backend=backend,
                                       shots=self.shots)
                 job = backend.run(qobj)
@@ -147,7 +147,7 @@ class TestMeasCal(unittest.TestCase):
                 # Assert that the results are equally distributed
                 self.assertListEqual(results_list, results_list_0.tolist())
                 self.assertListEqual(results_list,
-                    np.round(results_list_1).tolist())
+                                     np.round(results_list_1).tolist())
                 self.assertDictEqual(results_dict, results_dict_0)
                 round_results = {}
                 for key, val in results_dict_1.items():
@@ -176,10 +176,10 @@ class TestMeasCal(unittest.TestCase):
                     # Generate the calibration circuits
                     meas_calibs, state_labels = \
                         meas_cal.measurement_calibration(
-                                qubit_list=[1, 2, 3], qr=qr)
+                            qubit_list=[1, 2, 3], qr=qr)
 
                     # Run the calibration circuits
-                    backend = qiskit.Aer.get_backend('qasm_simulator')
+                    backend = Aer.get_backend('qasm_simulator')
                     qobj = qiskit.compile(meas_calibs, backend=backend,
                                           shots=self.shots)
                     job = backend.run(qobj, noise_model=noise_model)
@@ -213,9 +213,9 @@ class TestMeasCal(unittest.TestCase):
 
                     # Results with calibration using different fitter methods
                     output_results_0 = MeasCal.apply(
-                            results.get_counts(0), method='pseudo_inverse')
+                        results.get_counts(0), method='pseudo_inverse')
                     output_results_1 = MeasCal.apply(
-                            results.get_counts(0), method='least_squares')
+                        results.get_counts(0), method='least_squares')
 
                     # Asserting the corrected result is close to ideal expected
                     # TODO: replace the entire block below with these
@@ -232,11 +232,11 @@ class TestMeasCal(unittest.TestCase):
                     output_results_0_array = np.asarray(counts_0)
                     output_results_1_array = np.asarray(counts_1)
 
-                    self.assertTrue(np.linalg.norm(predicted_results -
-                                    output_results_0_array, 1) <
+                    self.assertTrue(np.linalg.norm(
+                        predicted_results - output_results_0_array, 1) <
                                     self.shots/2)
-                    self.assertTrue(np.linalg.norm(predicted_results -
-                                    output_results_1_array, 1) <
+                    self.assertTrue(np.linalg.norm(
+                        predicted_results - output_results_1_array, 1) <
                                     self.shots/2)
 
 
