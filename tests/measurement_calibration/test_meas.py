@@ -133,10 +133,10 @@ class TestMeasCal(unittest.TestCase):
 
                 # Apply the calibration matrix to results
                 # in list and dict forms using different methods
-                results_dict_1 = MeasCal.calibrate(results_dict, method='least_squares')
-                results_dict_0 = MeasCal.calibrate(results_dict, method='pseudo_inverse')
-                results_list_1 = MeasCal.calibrate(results_list, method='least_squares')
-                results_list_0 = MeasCal.calibrate(results_list, method='pseudo_inverse')
+                results_dict_1 = MeasCal.apply(results_dict, method='least_squares')
+                results_dict_0 = MeasCal.apply(results_dict, method='pseudo_inverse')
+                results_list_1 = MeasCal.apply(results_list, method='least_squares')
+                results_list_0 = MeasCal.apply(results_list, method='pseudo_inverse')
 
                 # Assert that the results are equally distributed
                 self.assertListEqual(results_list, results_list_0.tolist())
@@ -201,9 +201,9 @@ class TestMeasCal(unittest.TestCase):
                     predicted_results = [self.shots/2, 0, 0, 0, 0, 0, 0, self.shots/2]
 
                     # Output results with calibration using different fitter methods
-                    output_results_0 = MeasCal.calibrate(
+                    output_results_0 = MeasCal.apply(
                             results.get_counts(0), method='pseudo_inverse')
-                    output_results_1 = MeasCal.calibrate(
+                    output_results_1 = MeasCal.apply(
                             results.get_counts(0), method='pseudo_inverse')
                     output_result_0_array = np.asarray(list(output_results_0.values()))
                     output_result_1_array = np.asarray(list(output_results_1.values()))

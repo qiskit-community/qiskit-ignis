@@ -131,7 +131,7 @@ class MeasurementFitter():
 
         self._cal_matrix = cal_matrix.transpose()
 
-    def calibrate(self, raw_data, method='least_squares'):
+    def apply(self, raw_data, method='least_squares'):
         """
         Apply the calibration matrix to results
 
@@ -161,7 +161,7 @@ class MeasurementFitter():
             job2 = qiskit.execute(my_circuits)
             result2 = job2.results()
 
-            error_mitigated_counts = meas_fitter.calibrate(
+            error_mitigated_counts = meas_fitter.apply(
                 result2.get_counts('circ1'))
 
         """
