@@ -133,7 +133,7 @@ def t2_circuits(num_of_gates, gate_time, qubits):
             circ = pad_id_gates(circ, qr, circ_length)
             circ.barrier(qr[qubit])
             circ.u2(0.0, 0.0, qr[qubit])
-            circ.measure(qr[qubit], cr[qubit])
+            circ.measure(qr[qubit], cr[qind])
         circuits.append(circ)
 
     return circuits, xdata
