@@ -135,14 +135,19 @@ class TestMeasCal(unittest.TestCase):
 
                 # Apply the calibration matrix to results
                 # in list and dict forms using different methods
-                results_dict_1 = MeasCal.apply(results_dict, method='least_squares')
-                results_dict_0 = MeasCal.apply(results_dict, method='pseudo_inverse')
-                results_list_1 = MeasCal.apply(results_list, method='least_squares')
-                results_list_0 = MeasCal.apply(results_list, method='pseudo_inverse')
+                results_dict_1 = MeasCal.apply(results_dict,
+                                               method='least_squares')
+                results_dict_0 = MeasCal.apply(results_dict,
+                                               method='pseudo_inverse')
+                results_list_1 = MeasCal.apply(results_list,
+                                               method='least_squares')
+                results_list_0 = MeasCal.apply(results_list,
+                                               method='pseudo_inverse')
 
                 # Assert that the results are equally distributed
                 self.assertListEqual(results_list, results_list_0.tolist())
-                self.assertListEqual(results_list, np.round(results_list_1).tolist())
+                self.assertListEqual(results_list,
+                    np.round(results_list_1).tolist())
                 self.assertDictEqual(results_dict, results_dict_0)
                 round_results = {}
                 for key, val in results_dict_1.items():
@@ -201,21 +206,27 @@ class TestMeasCal(unittest.TestCase):
 
                     # Predicted equally distributed results
                     # TODO: after terra 0.8, just use the dictionary
-                    # predicted_results = {'000': self.shots/2, '111': self.shots/2}
-                    predicted_results = [self.shots/2, 0, 0, 0, 0, 0, 0, self.shots/2]
+                    # predicted_results = {'000': self.shots/2,
+                    #                      '111': self.shots/2}
+                    predicted_results = [self.shots/2, 0, 0, 0, 0, 0, 0,
+                                         self.shots/2]
 
-                    # Output results with calibration using different fitter methods
+                    # Results with calibration using different fitter methods
                     output_results_0 = MeasCal.apply(
                             results.get_counts(0), method='pseudo_inverse')
                     output_results_1 = MeasCal.apply(
                             results.get_counts(0), method='least_squares')
 
-                    # Asserting that the corrected result is close to ideal expected
-                    # TODO: replace the entire block below with these lines after terra 0.8
+                    # Asserting the corrected result is close to ideal expected
+                    # TODO: replace the entire block below with these
+                    # lines after terra 0.8
                     # delta = 0.1 * self.shots
-                    # self.assertDictAlmostEqual(output_results_0, predicted_results, delta=delta)
-                    # self.assertDictAlmostEqual(output_results_1, predicted_results, delta=delta)
-                    a = ['000', '001', '010', '011', '100', '101', '110', '111']
+                    # self.assertDictAlmostEqual(output_results_0,
+                    #   predicted_results, delta=delta)
+                    # self.assertDictAlmostEqual(output_results_1,
+                    #   predicted_results, delta=delta)
+                    a = ['000', '001', '010', '011', '100', '101', '110',
+                         '111']
                     counts_0 = [output_results_0.get(key, 0) for key in a]
                     counts_1 = [output_results_1.get(key, 0) for key in a]
                     output_results_0_array = np.asarray(counts_0)
