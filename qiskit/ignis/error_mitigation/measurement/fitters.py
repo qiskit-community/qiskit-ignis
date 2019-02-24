@@ -28,7 +28,6 @@ class MeasurementFitter():
     """Measurement correction fitter"""
 
     def __init__(self, results, state_labels, circlabel=''):
-
         """
         Initialize a measurement calibration matrix from the results of running
         the circuits returned by `measurement_calibration_circuits`
@@ -111,24 +110,12 @@ class MeasurementFitter():
         return np.mean(assign_fid_list)
 
     def _build_calibration_matrix(self):
-
         """
-        Build the a measurement calibration matrix from the results of running
-        the circuits returned by `measurement_calibration_circuits`
+        Build the measurement calibration matrix from the results of running
+        the circuits returned by `measurement_calibration`
 
         Creates a 2**n x 2**n matrix that can be used to correct measurement
         errors
-
-
-        Additional Information:
-            Use this matrix in `remove_measurement_errors`
-
-            e.g.
-            calcircuits, state_labels = measurement_calibration_circuits(
-                qiskit.QuantumRegister(5))
-            job = qiskit.execute(calcircuits)
-            cal_matrix = meausurement_calibration_matrix(job.results(),
-                                                         state_labels)
         """
 
         cal_matrix = np.zeros(
@@ -144,21 +131,20 @@ class MeasurementFitter():
 
         self._cal_matrix = cal_matrix.transpose()
 
-    def calibrate(self, raw_data, method=1):
-
+    def calibrate(self, raw_data, method='least_squares'):
         """
         Apply the calibration matrix to results
 
         Args:
             raw_data: The data to be corrected. Can be in a number of forms.
-            Form1: a counts dictionary from results.get_counts
-            Form2: a list of counts of length==len(state_labels)
-            Form3: a list of counts of length==M*len(state_labels) where M is
-                   an integer (e.g. for use with the tomography data)
+                Form1: a counts dictionary from results.get_counts
+                Form2: a list of counts of length==len(state_labels)
+                Form3: a list of counts of length==M*len(state_labels) where M
+                    is an integer (e.g. for use with the tomography data)
 
-            method: 0: pseudo-inverse, 1: least-squares constrained to have
-                    physical probabilities
-
+            method (str): fitting method. If None, then least_squares is used.
+                'pseudo_inverse': direct inversion of the A matrix
+                'least_squares': constrained to have physical probabilities
 
         Returns:
             The corrected data in the same form as raw_data
@@ -166,17 +152,17 @@ class MeasurementFitter():
         Additional Information:
 
             e.g.
-            calcircuits, state_labels = measurement_calibration_circuits(
+            calcircuits, state_labels = measurement_calibration(
                 qiskit.QuantumRegister(5))
             job = qiskit.execute(calcircuits)
-            cal_matrix = meausurement_calibration_matrix(job.results(),
-                                                         state_labels)
+            meas_fitter = MeasurementFitter(job.results(),
+                                            state_labels)
 
             job2 = qiskit.execute(my_circuits)
-            results2 = job2.results()
+            result2 = job2.results()
 
-            corrected_counts = apply_measurement_calibration(
-                job2.get_counts('circ1'), state_labels, cal_matrix)
+            error_mitigated_counts = meas_fitter.calibrate(
+                result2.get_counts('circ1'))
 
         """
         # check forms of raw_data
@@ -213,11 +199,11 @@ class MeasurementFitter():
         # Apply the correction
         for data_idx, _ in enumerate(raw_data2):
 
-            if method == 0:
+            if method == 'pseudo_inverse':
                 raw_data2[data_idx] = np.dot(
                     la.pinv(self._cal_matrix), raw_data2[data_idx])
 
-            elif method == 1:
+            elif method == 'least_squares':
                 nshots = sum(raw_data2[data_idx])
 
                 def fun(x):
@@ -230,6 +216,9 @@ class MeasurementFitter():
                 res = minimize(fun, x0, method='SLSQP',
                                constraints=cons, bounds=bnds, tol=1e-6)
                 raw_data2[data_idx] = res.x
+
+            else:
+                raise QiskitError("Unrecognized method.")
 
         if data_format == 2:
             # flatten back out the list

@@ -46,7 +46,7 @@ def measurement_calibration(qubit_list=None, qr=None, cr=None, circlabel=''):
         where XXX is the basis state,
         e.g., cal_1001
 
-        Pass the results of these circuits to "generate_calibration_matrix()"
+        Pass the results of these circuits to "MeasurementFitter" constructor.
     """
 
     if qubit_list is None and qr is None:
