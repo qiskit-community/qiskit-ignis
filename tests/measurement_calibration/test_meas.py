@@ -198,32 +198,24 @@ class TestMeasCal(unittest.TestCase):
                     results = job.result()
 
                     # Predicted equally distributed results
-                    predicted_results = [self.shots/2, 0, 0, 0, 0, 0, 0,
-                                         self.shots/2]
+                    predicted_results = [self.shots/2, 0, 0, 0, 0, 0, 0, self.shots/2]
+
                     # Output results with calibration using different fitter methods
-                    output_results_0 = \
-                        MeasCal.calibrate(results.get_counts(0), method='pseudo_inverse')
-                    output_results_1 = \
-                        MeasCal.calibrate(results.get_counts(0), method='least_squares')
-                    output_resuls_0_array = \
-                        np.asarray(list(output_results_0.values()))
-                    output_resuls_1_array = \
-                        np.asarray(list(output_results_1.values()))
+                    output_results_0 = MeasCal.calibrate(
+                            results.get_counts(0), method='pseudo_inverse')
+                    output_results_1 = MeasCal.calibrate(
+                            results.get_counts(0), method='pseudo_inverse')
+                    output_result_0_array = np.asarray(list(output_results_0.values()))
+                    output_result_1_array = np.asarray(list(output_results_1.values()))
 
                     # Asserting that the output result
                     # is close in the L1-norm to the predicted result
                     self.assertTrue(np.linalg.norm(predicted_results -
-                                    output_resuls_0_array,
-                                    1) < self.shots/2,
-                                    'Error: The output results are too \
-                                    far from the predicted \
-                                    results (method "pseudo_inverse")')
+                                    output_result_0_array, 1) <
+                                    self.shots/2)
                     self.assertTrue(np.linalg.norm(predicted_results -
-                                    output_resuls_1_array, 1) <
-                                    self.shots/2,
-                                    'Error: The output results are too \
-                                    far from the predicted \
-                                    results (method "least_squares")')
+                                    output_result_1_array, 1) <
+                                    self.shots/2)
 
 
 if __name__ == '__main__':
