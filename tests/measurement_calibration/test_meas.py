@@ -25,10 +25,11 @@ import numpy as np
 import qiskit.ignis.error_mitigation.measurement as meas_cal
 from qiskit import QuantumCircuit, ClassicalRegister
 from qiskit.providers.aer import noise
-from qiskit.test import QiskitTestCase
 
 
-class TestMeasCal(QiskitTestCase):
+class TestMeasCal(unittest.TestCase):
+    # TODO: after terra 0.8, derive test case like this
+    # class TestMeasCal(QiskitTestCase):
     """ The test class """
 
     def setUp(self):
@@ -199,7 +200,9 @@ class TestMeasCal(QiskitTestCase):
                     results = job.result()
 
                     # Predicted equally distributed results
-                    predicted_results = {'000': self.shots/2, '111': self.shots/2}
+                    # TODO: after terra 0.8, just use the dictionary
+                    # predicted_results = {'000': self.shots/2, '111': self.shots/2}
+                    predicted_results = [self.shots/2, 0, 0, 0, 0, 0, 0, self.shots/2]
 
                     # Output results with calibration using different fitter methods
                     output_results_0 = MeasCal.apply(
@@ -207,11 +210,23 @@ class TestMeasCal(QiskitTestCase):
                     output_results_1 = MeasCal.apply(
                             results.get_counts(0), method='least_squares')
 
-                    # Asserting that the output result
-                    # is close in the L1-norm to the predicted result
-                    delta = 0.1 * self.shots
-                    self.assertDictAlmostEqual(output_results_0, predicted_results, delta=delta)
-                    self.assertDictAlmostEqual(output_results_1, predicted_results, delta=delta)
+                    # Asserting that the corrected result is close to ideal expected
+                    # TODO: replace the entire block below with these lines after terra 0.8
+                    # delta = 0.1 * self.shots
+                    # self.assertDictAlmostEqual(output_results_0, predicted_results, delta=delta)
+                    # self.assertDictAlmostEqual(output_results_1, predicted_results, delta=delta)
+                    a = ['000', '001', '010', '011', '100', '101', '110', '111']
+                    counts_0 = [output_results_0.get(key, 0) for key in a]
+                    counts_1 = [output_results_1.get(key, 0) for key in a]
+                    output_results_0_array = np.asarray(counts_0)
+                    output_results_1_array = np.asarray(counts_1)
+
+                    self.assertTrue(np.linalg.norm(predicted_results -
+                                    output_results_0_array, 1) <
+                                    self.shots/2)
+                    self.assertTrue(np.linalg.norm(predicted_results -
+                                    output_results_1_array, 1) <
+                                    self.shots/2)
 
 
 if __name__ == '__main__':
