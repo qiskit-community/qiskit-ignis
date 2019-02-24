@@ -45,7 +45,6 @@ class TestT2Star(unittest.TestCase):
             (np.linspace(10, 150, 30)).astype(int),
             (np.linspace(160, 450, 20)).astype(int))
         gate_time = 0.1
-        num_of_qubits = 1
         qubits = [0]
 
         expected_t2 = 10
@@ -59,7 +58,7 @@ class TestT2Star(unittest.TestCase):
     
         # Estimating T2* via an exponential function
         circs, xdata, _ = t2star_circuits(num_of_gates, gate_time,
-                                          num_of_qubits, qubits)
+                                          qubits)
         backend_result = qiskit.execute(
             circs, backend, shots=shots,
             backend_options={'max_parallel_experiments': 0},
@@ -83,7 +82,7 @@ class TestT2Star(unittest.TestCase):
 
         # Estimate T2* via an oscilliator function
         circs_osc, xdata, omega = t2star_circuits(num_of_gates, gate_time,
-                                                  num_of_qubits, qubits, 5)
+                                                  qubits, 5)
 
         backend_result = qiskit.execute(
             circs_osc, backend,
@@ -175,11 +174,9 @@ class TestT2(unittest.TestCase):
         # 35 numbers ranging from 1 to 300, linearly spaced
         num_of_gates = (np.linspace(1, 300, 35)).astype(int)
         gate_time = 0.11
-        num_of_qubits = 2
         qubits = [0]
 
-        circs, xdata = t2_circuits(num_of_gates, gate_time, num_of_qubits,
-                                   qubits)
+        circs, xdata = t2_circuits(num_of_gates, gate_time, qubits)
 
         expected_t2 = 20
         gamma = 1 - np.exp(-2*gate_time/expected_t2)

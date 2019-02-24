@@ -51,7 +51,7 @@ def t1_circuits(num_of_gates, gate_time, qubits):
 
     return circuits, xdata
 
-def t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubits, nosc=0):
+def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
     """
     Generates circuit for T2* measurement.
     Each circuit consists of a Hadamard gate, followed by a sequence of
@@ -63,7 +63,6 @@ def t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubits, nosc=0):
                                         circuit. Must be in an increasing
                                         order.
        gate_time (float): time in micro-seconds of running a single gate.
-       num_of_qubits (integer): the number of qubits in the circuit.
        qubits (list of integers): indices of the qubits whose T2* are to be measured.
        nosc: number of oscillations to induce using the phase gate
     Returns:
@@ -74,7 +73,7 @@ def t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubits, nosc=0):
 
     xdata = gate_time * num_of_gates
 
-    qr = qiskit.QuantumRegister(num_of_qubits)
+    qr = qiskit.QuantumRegister(max(qubits)+1)
     cr = qiskit.ClassicalRegister(len(qubits))
 
     osc_freq = nosc/xdata[-1]
@@ -96,7 +95,7 @@ def t2star_circuits(num_of_gates, gate_time, num_of_qubits, qubits, nosc=0):
     return circuits, xdata, osc_freq
 
 
-def t2_circuits(num_of_gates, gate_time, num_of_qubits, qubits):
+def t2_circuits(num_of_gates, gate_time, qubits):
     """
     Generates circuit for T2 (echo) measurement.
     Each circuit consists of a Y90 gate, followed by a sequence of identity gates,
@@ -110,7 +109,6 @@ def t2_circuits(num_of_gates, gate_time, num_of_qubits, qubits):
                                         between the H and echo (i.e. total
                                         length is twice)
        gate_time (float): time in micro-seconds of running a single gate.
-       num_of_qubits (integer): the number of qubits in the circuit.
        qubits (list of integers): indices of the qubits whose T2 are to be measured.
     Returns:
        A list of QuantumCircuit
@@ -119,7 +117,7 @@ def t2_circuits(num_of_gates, gate_time, num_of_qubits, qubits):
 
     xdata = gate_time * num_of_gates * 2.0
 
-    qr = qiskit.QuantumRegister(num_of_qubits)
+    qr = qiskit.QuantumRegister(max(qubits)+1)
     cr = qiskit.ClassicalRegister(len(qubits))
 
     circuits = []
