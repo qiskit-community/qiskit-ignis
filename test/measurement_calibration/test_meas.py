@@ -27,6 +27,7 @@ from qiskit.providers.aer import noise
 from qiskit.ignis.mitigation.measurement import MeasurementFitter
 from qiskit.ignis.mitigation.measurement import measurement_calibration
 
+
 class TestMeasCal(unittest.TestCase):
     # TODO: after terra 0.8, derive test case like this
     # class TestMeasCal(QiskitTestCase):
@@ -106,9 +107,8 @@ class TestMeasCal(unittest.TestCase):
                 # Generate the quantum register according to the pattern
                 qubits, weight = self.choose_calibration(nq, pattern_type)
                 # Generate the calibration circuits
-                meas_calibs, state_labels = \
-                    measurement_calibration(qubit_list=qubits,
-                                                     circlabel='test')
+                meas_calibs, state_labels = measurement_calibration(qubit_list=qubits,
+                                                                    circlabel='test')
 
                 # Perform an ideal execution on the generated circuits
                 backend = Aer.get_backend('qasm_simulator')
@@ -135,13 +135,13 @@ class TestMeasCal(unittest.TestCase):
                 # Apply the calibration matrix to results
                 # in list and dict forms using different methods
                 results_dict_1 = meas_cal.apply(results_dict,
-                                               method='least_squares')
+                                                method='least_squares')
                 results_dict_0 = meas_cal.apply(results_dict,
-                                               method='pseudo_inverse')
+                                                method='pseudo_inverse')
                 results_list_1 = meas_cal.apply(results_list,
-                                               method='least_squares')
+                                                method='least_squares')
                 results_list_0 = meas_cal.apply(results_list,
-                                               method='pseudo_inverse')
+                                                method='pseudo_inverse')
 
                 # Assert that the results are equally distributed
                 self.assertListEqual(results_list, results_list_0.tolist())
