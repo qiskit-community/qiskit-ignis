@@ -25,9 +25,10 @@ import numpy as np
 import qiskit.ignis.error_mitigation.measurement as meas_cal
 from qiskit import QuantumCircuit, ClassicalRegister
 from qiskit.providers.aer import noise
+from qiskit.test import QiskitTestCase
 
 
-class TestMeasCal(unittest.TestCase):
+class TestMeasCal(QiskitTestCase):
     """ The test class """
 
     def setUp(self):
@@ -198,24 +199,19 @@ class TestMeasCal(unittest.TestCase):
                     results = job.result()
 
                     # Predicted equally distributed results
-                    predicted_results = [self.shots/2, 0, 0, 0, 0, 0, 0, self.shots/2]
+                    predicted_results = {'000': self.shots/2, '111': self.shots/2}
 
                     # Output results with calibration using different fitter methods
                     output_results_0 = MeasCal.apply(
                             results.get_counts(0), method='pseudo_inverse')
                     output_results_1 = MeasCal.apply(
-                            results.get_counts(0), method='pseudo_inverse')
-                    output_result_0_array = np.asarray(list(output_results_0.values()))
-                    output_result_1_array = np.asarray(list(output_results_1.values()))
+                            results.get_counts(0), method='least_squares')
 
                     # Asserting that the output result
                     # is close in the L1-norm to the predicted result
-                    self.assertTrue(np.linalg.norm(predicted_results -
-                                    output_result_0_array, 1) <
-                                    self.shots/2)
-                    self.assertTrue(np.linalg.norm(predicted_results -
-                                    output_result_1_array, 1) <
-                                    self.shots/2)
+                    delta = 0.1 * self.shots
+                    self.assertDictAlmostEqual(output_results_0, predicted_results, delta=delta)
+                    self.assertDictAlmostEqual(output_results_1, predicted_results, delta=delta)
 
 
 if __name__ == '__main__':
