@@ -15,9 +15,7 @@ import unittest
 import numpy as np
 import qiskit
 from qiskit.providers.aer.noise.errors.standard_errors import \
-                                    phase_damping_error
-from qiskit.providers.aer.noise.errors.standard_errors import \
-                                     amplitude_damping_error
+                                     thermal_relaxation_error
 from qiskit.providers.aer.noise import NoiseModel
 
 from qiskit.ignis.characterization.coherence import \
@@ -34,8 +32,8 @@ class TestT2Star(unittest.TestCase):
 
     def test_t2star(self):
         """
-        Run the simulator with phase damping noise.
-        Then verify that the calculated T2star matches the phase damping
+        Run the simulator with thermal relaxation noise.
+        Then verify that the calculated T2star matches the t2
         parameter.
         """
 
@@ -48,8 +46,7 @@ class TestT2Star(unittest.TestCase):
         qubits = [0]
 
         expected_t2 = 10
-        p = 1 - np.exp(-2*gate_time/expected_t2)
-        error = phase_damping_error(p)
+        error = thermal_relaxation_error(np.inf, expected_t2, gate_time, 0.5)
         noise_model = NoiseModel()
         noise_model.add_all_qubit_quantum_error(error, 'id')
 
@@ -118,8 +115,8 @@ class TestT1(unittest.TestCase):
 
     def test_t1(self):
         """
-        Run the simulator with amplitude damping noise.
-        Then verify that the calculated T1 matches the amplitude damping
+        Run the simulator with thermal relaxatoin noise.
+        Then verify that the calculated T1 matches the t1
         parameter.
         """
 
@@ -131,8 +128,7 @@ class TestT1(unittest.TestCase):
         circs, xdata = t1_circuits(num_of_gates, gate_time, qubits)
 
         expected_t1 = 10
-        gamma = 1 - np.exp(-gate_time/expected_t1)
-        error = amplitude_damping_error(gamma)
+        error = thermal_relaxation_error(expected_t1, 2*expected_t1, gate_time)
         noise_model = NoiseModel()
         noise_model.add_all_qubit_quantum_error(error, 'id')
         # TODO: Include SPAM errors
@@ -167,8 +163,8 @@ class TestT2(unittest.TestCase):
 
     def test_t2(self):
         """
-        Run the simulator with dephasing noise.
-        Then verify that the calculated T2 matches the dephasing parameter.
+        Run the simulator with thermal relaxation noise.
+        Then verify that the calculated T2 matches the t2 parameter.
         """
 
         # 35 numbers ranging from 1 to 300, linearly spaced
@@ -179,8 +175,7 @@ class TestT2(unittest.TestCase):
         circs, xdata = t2_circuits(num_of_gates, gate_time, qubits)
 
         expected_t2 = 20
-        gamma = 1 - np.exp(-2*gate_time/expected_t2)
-        error = phase_damping_error(gamma)
+        error = thermal_relaxation_error(np.inf, expected_t2, gate_time, 0.5)
         noise_model = NoiseModel()
         noise_model.add_all_qubit_quantum_error(error, 'id')
         # TODO: Include SPAM errors
