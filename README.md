@@ -27,31 +27,33 @@ $ python
 
 ```python
 # Import Qiskit classes
-import qiskit 
-from qiskit import QuantumRegister, QuantumCircuit, ClassicalRegister, Aer
+import qiskit
+from qiskit import QuantumRegister, QuantumCircuit, ClassicalRegister
 from qiskit.providers.aer import noise # import AER noise model
+
 # Measurement error mitigation functions
-import qiskit.ignis.error_mitigation.measurement as meas_cal
+from qiskit.ignis.error_mitigation.measurement import (measurement_calibration,
+                                                       MeasurementFitter)
 
 # Generate a noise model for the qubits
 noise_model = noise.NoiseModel()
 for qi in range(5):
-    read_err = noise.errors.readout_error.ReadoutError([[0.75, 0.25],[0.1,0.9]])
-    noise_model.add_readout_error(read_err,[qi])
+    read_err = noise.errors.readout_error.ReadoutError([[0.75, 0.25],[0.1, 0.9]])
+    noise_model.add_readout_error(read_err, [qi])
 
 # Generate the measurement calibration circuits
 # for running measurement error mitigation
-qr = qiskit.QuantumRegister(5)
-meas_calibs, state_labels = meas_cal.measurement_calibration(qubit_list=[2,3,4], qr=qr)
+qr = QuantumRegister(5)
+meas_cals, state_labels = measurement_calibration(qubit_list=[2,3,4], qr=qr)
 
 # Run the calibration circuits
 backend = qiskit.Aer.get_backend('qasm_simulator')
-qobj = qiskit.compile(meas_calibs, backend=backend, shots=1000)
+qobj = qiskit.compile(meas_cals, backend=backend, shots=1000)
 job = backend.run(qobj, noise_model=noise_model)
 cal_results = job.result()
 
 # Make a calibration matrix
-MeasCal = meas_cal.MeasurementFitter(cal_results,state_labels)
+meas_fitter = MeasurementFitter(cal_results, state_labels)
 
 # Make a 3Q GHZ state
 cr = ClassicalRegister(3)
@@ -63,20 +65,25 @@ ghz.measure(qr[2],cr[0])
 ghz.measure(qr[3],cr[1])
 ghz.measure(qr[4],cr[2])
 
-qobj = qiskit.compile([ghz], backend=backend, shots=1000)
+qobj = qiskit.compile(ghz, backend=backend, shots=1000)
 job = backend.run(qobj, noise_model=noise_model)
 results = job.result()
 
 # Results without mitigation
-print("Results without mitigation:", results.get_counts(0))
+raw_counts = results.get_counts()
+print("Results without mitigation:", raw_counts)
 
 # Results with mitigation
-print("Results with mitigation:", MeasCal.calibrate(results.get_counts(0), method=1))
+mitigated_counts = meas_fitter.calibrate(raw_counts)
+print("Results with mitigation:", mitigated_counts)
 ```
+
 ```
-Results without mitigation: {'000': 220, '001': 79, '010': 67, '011': 62, '100': 87, '101': 67, '110': 57, '111': 361}
-Results with mitigation: {'000': 520.2870508054327, '011': 3.940910098254591e-13, '101': 0.3251956072435034, '111': 479.3877535873258}
+Results without mitigation: {'000': 181, '001': 83, '010': 59, '011': 65, '100': 101, '101': 48, '110': 72, '111': 391}
+
+Results with mitigation: {'000': 420.866934, '001': 2.1002, '011': 1.30314, '100': 53.0165, '110': 13.1834, '111': 509.5296}
 ```
+
 ## Contribution guidelines
 
 If you'd like to contribute to Qiskit Ignis, please take a look at our
