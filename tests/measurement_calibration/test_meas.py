@@ -132,29 +132,20 @@ class TestMeasCal(unittest.TestCase):
                     self.generate_ideal_results(state_labels, weight)
 
                 # Apply the calibration matrix to results
-                # in list and dict forms and using methods 0 and 1
-                results_dict_1 = MeasCal.calibrate(results_dict, method=1)
-                results_dict_0 = MeasCal.calibrate(results_dict, method=0)
-                results_list_1 = MeasCal.calibrate(results_list, method=1)
-                results_list_0 = MeasCal.calibrate(results_list, method=0)
+                # in list and dict forms using different methods
+                results_dict_1 = MeasCal.calibrate(results_dict, method='least_squares')
+                results_dict_0 = MeasCal.calibrate(results_dict, method='pseudo_inverse')
+                results_list_1 = MeasCal.calibrate(results_list, method='least_squares')
+                results_list_0 = MeasCal.calibrate(results_list, method='pseudo_inverse')
 
                 # Assert that the results are equally distributed
-                self.assertListEqual(results_list, results_list_0.tolist(),
-                                     'Error: calibration output (list format) \
-                                     is not the equal (method 0)')
-                self.assertListEqual(results_list,
-                                     np.round(results_list_1).tolist(),
-                                     'Error: calibration output (list format) \
-                                     is not the equal (method 1)')
-                self.assertDictEqual(results_dict, results_dict_0,
-                                     'Error: calibration output (dict format) \
-                                     is not the equal (method 0)')
+                self.assertListEqual(results_list, results_list_0.tolist())
+                self.assertListEqual(results_list, np.round(results_list_1).tolist())
+                self.assertDictEqual(results_dict, results_dict_0)
                 round_results = {}
                 for key, val in results_dict_1.items():
                     round_results[key] = np.round(val)
-                self.assertDictEqual(results_dict, round_results,
-                                     'Error: calibration output (dict format) \
-                                     is not the equal (method 0)')
+                self.assertDictEqual(results_dict, round_results)
 
     def test_meas_cal_with_noise(self):
         """
@@ -209,11 +200,11 @@ class TestMeasCal(unittest.TestCase):
                     # Predicted equally distributed results
                     predicted_results = [self.shots/2, 0, 0, 0, 0, 0, 0,
                                          self.shots/2]
-                    # Output results with calibration using methods 0 and 1
+                    # Output results with calibration using different fitter methods
                     output_results_0 = \
-                        MeasCal.calibrate(results.get_counts(0), method=0)
+                        MeasCal.calibrate(results.get_counts(0), method='pseudo_inverse')
                     output_results_1 = \
-                        MeasCal.calibrate(results.get_counts(0), method=0)
+                        MeasCal.calibrate(results.get_counts(0), method='least_squares')
                     output_resuls_0_array = \
                         np.asarray(list(output_results_0.values()))
                     output_resuls_1_array = \
@@ -226,13 +217,13 @@ class TestMeasCal(unittest.TestCase):
                                     1) < self.shots/2,
                                     'Error: The output results are too \
                                     far from the predicted \
-                                    results (method 0)')
+                                    results (method "pseudo_inverse")')
                     self.assertTrue(np.linalg.norm(predicted_results -
                                     output_resuls_1_array, 1) <
                                     self.shots/2,
                                     'Error: The output results are too \
                                     far from the predicted \
-                                    results (method 1)')
+                                    results (method "least_squares")')
 
 
 if __name__ == '__main__':
