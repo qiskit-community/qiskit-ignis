@@ -42,10 +42,11 @@ def t1_circuits(num_of_gates, gate_time, qubits):
     for circ_index, circ_length in enumerate(num_of_gates):
         circ = qiskit.QuantumCircuit(qr, cr)
         circ.name = 'circuit_' + str(circ_index)
-        for qind, qubit in enumerate(qubits):
+        for _, qubit in enumerate(qubits):
             circ.x(qr[qubit])
-            circ = pad_id_gates(circ, qr, circ_length)
-            circ.barrier(qr[qubit])
+            circ = pad_id_gates(circ, qr, qubit, circ_length)
+        circ.barrier(qr)
+        for qind, qubit in enumerate(qubits):
             circ.measure(qr[qubit], cr[qind])
         circuits.append(circ)
 
@@ -85,10 +86,11 @@ def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
         circ.name = 'circuit_' + str(circ_index)
         for qind, qubit in enumerate(qubits):
             circ.h(qr[qubit])
-            circ = pad_id_gates(circ, qr, circ_length)
-            circ.barrier(qr[qubit])
+            circ = pad_id_gates(circ, qr, qubit, circ_length)
             circ.u1(2*np.pi*osc_freq*xdata[circ_index], qr[qubit])
             circ.h(qr[qubit])
+        circ.barrier(qr)
+        for qind, qubit in enumerate(qubits):
             circ.measure(qr[qubit], cr[qind])
         circuits.append(circ)
 
@@ -127,12 +129,12 @@ def t2_circuits(num_of_gates, gate_time, qubits):
         circ.name = 'circuit_' + str(circ_index)
         for qind, qubit in enumerate(qubits):
             circ.u2(0.0, 0.0, qr[qubit])
-            circ = pad_id_gates(circ, qr, circ_length)
-            circ.barrier(qr[qubit])
+            circ = pad_id_gates(circ, qr, qubit, circ_length)
             circ.y(qr[qubit])
-            circ = pad_id_gates(circ, qr, circ_length)
-            circ.barrier(qr[qubit])
+            circ = pad_id_gates(circ, qr, qubit, circ_length)
             circ.u2(0.0, 0.0, qr[qubit])
+        circ.barrier(qr)
+        for qind, qubit in enumerate(qubits):
             circ.measure(qr[qubit], cr[qind])
         circuits.append(circ)
 
