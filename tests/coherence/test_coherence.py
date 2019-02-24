@@ -56,7 +56,7 @@ class TestT2Star(unittest.TestCase):
 
         backend = qiskit.Aer.get_backend('qasm_simulator')
         shots = 300
-        
+    
         # Estimating T2* via an exponential function
         circs, xdata, _ = t2star_circuits(num_of_gates, gate_time,
                                           num_of_qubits, qubits)
@@ -102,7 +102,7 @@ class TestT2Star(unittest.TestCase):
                               fit_bounds=([-0.5, 0, omega-0.02, -np.pi, -0.5],
                                           [1.5, expected_t2*1.2, omega+0.02,
                                            np.pi, 1.5]))
-        
+
         self.assertAlmostEqual(fit.time[0], expected_t2, delta=2,
                                msg='Calculated T2 is inaccurate')
         self.assertTrue(
@@ -127,7 +127,6 @@ class TestT1(unittest.TestCase):
         # 25 numbers ranging from 1 to 200, linearly spaced
         num_of_gates = (np.linspace(1, 200, 25)).astype(int)
         gate_time = 0.11
-        num_of_qubits = 2
         qubits = [0]
 
         circs, xdata = t1_circuits(num_of_gates, gate_time, qubits)
