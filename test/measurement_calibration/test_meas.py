@@ -211,9 +211,9 @@ class TestMeasCal(unittest.TestCase):
 
                     # Results with calibration using different fitter methods
                     output_results_0 = meas_cal.apply(
-                        results.get_counts(0), method='pseudo_inverse')
+                        results, method='pseudo_inverse')
                     output_results_1 = meas_cal.apply(
-                        results.get_counts(0), method='least_squares')
+                        results, method='least_squares')
 
                     # Asserting the corrected result is close to ideal expected
                     # TODO: replace the entire block below with these
@@ -225,8 +225,10 @@ class TestMeasCal(unittest.TestCase):
                     #   predicted_results, delta=delta)
                     a = ['000', '001', '010', '011', '100', '101', '110',
                          '111']
-                    counts_0 = [output_results_0.get(key, 0) for key in a]
-                    counts_1 = [output_results_1.get(key, 0) for key in a]
+                    output_counts_0 = output_results_0.get_counts(0)
+                    output_counts_1 = output_results_1.get_counts(0)
+                    counts_0 = [output_counts_0.get(key, 0) for key in a]
+                    counts_1 = [output_counts_1.get(key, 0) for key in a]
                     output_results_0_array = np.asarray(counts_0)
                     output_results_1_array = np.asarray(counts_1)
 
