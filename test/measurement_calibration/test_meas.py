@@ -22,9 +22,10 @@ L1-norm to the expected (equally distributed) result
 import unittest
 import numpy as np
 import qiskit
-import qiskit.ignis.error_mitigation.measurement as meas_cal
 from qiskit import QuantumCircuit, ClassicalRegister, Aer
 from qiskit.providers.aer import noise
+from qiskit.ignis.mitigation.measurement import MeasurementFitter
+from qiskit.ignis.mitigation.measurement import measurement_calibration
 
 
 class TestMeasCal(unittest.TestCase):
@@ -107,8 +108,8 @@ class TestMeasCal(unittest.TestCase):
                 qubits, weight = self.choose_calibration(nq, pattern_type)
                 # Generate the calibration circuits
                 meas_calibs, state_labels = \
-                    meas_cal.measurement_calibration(qubit_list=qubits,
-                                                     circlabel='test')
+                    measurement_calibration(qubit_list=qubits,
+                                            circlabel='test')
 
                 # Perform an ideal execution on the generated circuits
                 backend = Aer.get_backend('qasm_simulator')
@@ -118,13 +119,12 @@ class TestMeasCal(unittest.TestCase):
                 cal_results = job.result()
 
                 # Make a calibration matrix
-                MeasCal = meas_cal.MeasurementFitter(cal_results,
-                                                     state_labels,
-                                                     circlabel='test')
+                meas_cal = MeasurementFitter(cal_results, state_labels,
+                                             circlabel='test')
 
                 # Assert that the calibration matrix is equal to identity
                 IdentityMatrix = np.identity(2 ** weight)
-                self.assertListEqual(MeasCal.cal_matrix.tolist(),
+                self.assertListEqual(meas_cal.cal_matrix.tolist(),
                                      IdentityMatrix.tolist(),
                                      'Error: the calibration matrix is \
                                      not equal to identity')
@@ -135,14 +135,14 @@ class TestMeasCal(unittest.TestCase):
 
                 # Apply the calibration matrix to results
                 # in list and dict forms using different methods
-                results_dict_1 = MeasCal.apply(results_dict,
-                                               method='least_squares')
-                results_dict_0 = MeasCal.apply(results_dict,
-                                               method='pseudo_inverse')
-                results_list_1 = MeasCal.apply(results_list,
-                                               method='least_squares')
-                results_list_0 = MeasCal.apply(results_list,
-                                               method='pseudo_inverse')
+                results_dict_1 = meas_cal.apply(results_dict,
+                                                method='least_squares')
+                results_dict_0 = meas_cal.apply(results_dict,
+                                                method='pseudo_inverse')
+                results_list_1 = meas_cal.apply(results_list,
+                                                method='least_squares')
+                results_list_0 = meas_cal.apply(results_list,
+                                                method='pseudo_inverse')
 
                 # Assert that the results are equally distributed
                 self.assertListEqual(results_list, results_list_0.tolist())
@@ -175,8 +175,7 @@ class TestMeasCal(unittest.TestCase):
                     qr = qiskit.QuantumRegister(5)
                     # Generate the calibration circuits
                     meas_calibs, state_labels = \
-                        meas_cal.measurement_calibration(
-                            qubit_list=[1, 2, 3], qr=qr)
+                        measurement_calibration(qubit_list=[1, 2, 3], qr=qr)
 
                     # Run the calibration circuits
                     backend = Aer.get_backend('qasm_simulator')
@@ -186,8 +185,7 @@ class TestMeasCal(unittest.TestCase):
                     cal_results = job.result()
 
                     # Make a calibration matrix
-                    MeasCal = meas_cal.MeasurementFitter(cal_results,
-                                                         state_labels)
+                    meas_cal = MeasurementFitter(cal_results, state_labels)
 
                     # Make a 3Q GHZ state
                     cr = ClassicalRegister(3)
@@ -212,9 +210,9 @@ class TestMeasCal(unittest.TestCase):
                                          self.shots/2]
 
                     # Results with calibration using different fitter methods
-                    output_results_0 = MeasCal.apply(
+                    output_results_0 = meas_cal.apply(
                         results.get_counts(0), method='pseudo_inverse')
-                    output_results_1 = MeasCal.apply(
+                    output_results_1 = meas_cal.apply(
                         results.get_counts(0), method='least_squares')
 
                     # Asserting the corrected result is close to ideal expected
