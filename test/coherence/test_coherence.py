@@ -167,12 +167,13 @@ class TestT2(unittest.TestCase):
         Then verify that the calculated T2 matches the t2 parameter.
         """
 
-        # 35 numbers ranging from 1 to 300, linearly spaced
-        num_of_gates = (np.linspace(1, 300, 35)).astype(int)
+        num_of_gates = (np.linspace(1, 30, 30)).astype(int)
         gate_time = 0.11
         qubits = [0]
+        n_echos = 5
+        alt_phase_echo = True
 
-        circs, xdata = t2_circuits(num_of_gates, gate_time, qubits)
+        circs, xdata = t2_circuits(num_of_gates, gate_time, qubits, n_echos, alt_phase_echo)
 
         expected_t2 = 20
         error = thermal_relaxation_error(np.inf, expected_t2, gate_time, 0.5)
