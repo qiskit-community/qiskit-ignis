@@ -258,6 +258,10 @@ class MeasurementFitter():
 
         axim = ax.matshow(self._cal_matrix, cmap=plt.cm.binary, clim=[0, 1])
         ax.figure.colorbar(axim)
+        ax.set_xticks(np.arange(len(self._state_labels)))
+        ax.set_yticks(np.arange(len(self._state_labels)))
+        ax.set_xticklabels(self._state_labels)
+        ax.set_yticklabels(self._state_labels)
 
         if show_plot:
             plt.show()
