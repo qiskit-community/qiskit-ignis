@@ -52,7 +52,7 @@ class TestT2Star(unittest.TestCase):
 
         backend = qiskit.Aer.get_backend('qasm_simulator')
         shots = 300
-    
+
         # Estimating T2* via an exponential function
         circs, xdata, _ = t2star_circuits(num_of_gates, gate_time,
                                           qubits)

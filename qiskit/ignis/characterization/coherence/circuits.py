@@ -53,6 +53,7 @@ def t1_circuits(num_of_gates, gate_time, qubits):
 
     return circuits, xdata
 
+
 def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
     """
     Generates circuit for T2* measurement.
@@ -65,7 +66,8 @@ def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
                                         circuit. Must be in an increasing
                                         order.
        gate_time (float): time in micro-seconds of running a single gate.
-       qubits (list of integers): indices of the qubits whose T2* are to be measured.
+       qubits (list of integers): indices of the qubits
+       whose T2* are to be measured.
        nosc: number of oscillations to induce using the phase gate
     Returns:
        A list of QuantumCircuit
@@ -101,8 +103,8 @@ def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
 def t2_circuits(num_of_gates, gate_time, qubits):
     """
     Generates circuit for T2 (echo) measurement.
-    Each circuit consists of a Y90 gate, followed by a sequence of identity gates,
-    a Y gate, a sequence of identity gates and
+    Each circuit consists of a Y90 gate, followed by a sequence of
+    identity gates, a Y gate, a sequence of identity gates and
     an additional Y90 gate.
 
     Args:
@@ -112,7 +114,8 @@ def t2_circuits(num_of_gates, gate_time, qubits):
                                         between the H and echo (i.e. total
                                         length is twice)
        gate_time (float): time in micro-seconds of running a single gate.
-       qubits (list of integers): indices of the qubits whose T2 are to be measured.
+       qubits (list of integers): indices of the qubits whose
+       T2 are to be measured.
     Returns:
        A list of QuantumCircuit
        xdata: the delay times (TOTAL delay time)

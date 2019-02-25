@@ -158,7 +158,8 @@ class BaseCoherenceFitter:
         """
         Fit the curve.
         Computes self._params and self._params_err:
-        - self._params[i] - same as the first returned value of curve_fit, for qubit i.
+        - self._params[i] - same as the first returned value of curve_fit,
+        for qubit i.
         - self._params_err[i] - error for each parameter, for qubit i.
         """
         self._params = []
@@ -271,7 +272,8 @@ class T2Fitter(BaseCoherenceFitter):
 
     def plot_coherence(self, qind, ax=None):
 
-        ax = BaseCoherenceFitter.plot_coherence(self, qind, ax, show_plot=False)
+        ax = BaseCoherenceFitter.plot_coherence(self, qind,
+                                                ax, show_plot=False)
         ax.set_ylabel("Ground State Population")
 
         return ax
@@ -299,7 +301,8 @@ class T2StarExpFitter(BaseCoherenceFitter):
 
     def plot_coherence(self, qind, ax=None):
 
-        ax = BaseCoherenceFitter.plot_coherence(self, qind, ax, show_plot=False)
+        ax = BaseCoherenceFitter.plot_coherence(self, qind,
+                                                ax, show_plot=False)
         ax.set_ylabel("Ground State Population")
 
         return ax
@@ -327,7 +330,8 @@ class T2StarOscFitter(BaseCoherenceFitter):
 
     def plot_coherence(self, qind, ax=None):
 
-        ax = BaseCoherenceFitter.plot_coherence(self, qind, ax, show_plot=False)
+        ax = BaseCoherenceFitter.plot_coherence(self, qind,
+                                                ax, show_plot=False)
         ax.set_ylabel("Ground State Population")
 
         return ax
