@@ -19,7 +19,7 @@ from qiskit.providers.aer.noise.errors.standard_errors import \
 from qiskit.providers.aer.noise import NoiseModel
 
 from qiskit.ignis.characterization.coherence import \
-     T2StarExpFitter, T2StarOscFitter, T1Fitter, T2Fitter
+     T2StarFitter, T1Fitter, T2Fitter
 
 from qiskit.ignis.characterization.coherence import t1_circuits, \
                                 t2_circuits, t2star_circuits
@@ -65,11 +65,11 @@ class TestT2Star(unittest.TestCase):
         initial_a = 0.5
         initial_c = 0.5
 
-        fit = T2StarExpFitter(backend_result, xdata,
-                              qubits,
-                              fit_p0=[initial_a, initial_t2, initial_c],
-                              fit_bounds=([-0.5, 0, -0.5],
-                                          [1.5, expected_t2*1.2, 1.5]))
+        fit = T2Fitter(backend_result, xdata,
+                       qubits,
+                       fit_p0=[initial_a, initial_t2, initial_c],
+                       fit_bounds=([-0.5, 0, -0.5],
+                                   [1.5, expected_t2*1.2, 1.5]))
 
         self.assertAlmostEqual(fit.time[0], expected_t2, delta=2,
                                msg='Calculated T2 is inaccurate')
@@ -92,12 +92,12 @@ class TestT2Star(unittest.TestCase):
         initial_f = omega
         initial_phi = 0
 
-        fit = T2StarOscFitter(backend_result, xdata, qubits,
-                              fit_p0=[initial_a, initial_t2, initial_f,
-                                      initial_phi, initial_c],
-                              fit_bounds=([-0.5, 0, omega-0.02, -np.pi, -0.5],
-                                          [1.5, expected_t2*1.2, omega+0.02,
-                                           np.pi, 1.5]))
+        fit = T2StarFitter(backend_result, xdata, qubits,
+                           fit_p0=[initial_a, initial_t2, initial_f,
+                                   initial_phi, initial_c],
+                           fit_bounds=([-0.5, 0, omega-0.02, -np.pi, -0.5],
+                                       [1.5, expected_t2*1.2, omega+0.02,
+                                        np.pi, 1.5]))
 
         self.assertAlmostEqual(fit.time[0], expected_t2, delta=2,
                                msg='Calculated T2 is inaccurate')

@@ -273,36 +273,7 @@ class T2Fitter(BaseCoherenceFitter):
         return ax
 
 
-class T2StarExpFitter(BaseCoherenceFitter):
-    """
-    T2* fitter
-    """
-
-    def __init__(self, backend_result, xdata,
-                 qubits, fit_p0, fit_bounds):
-
-        BaseCoherenceFitter.__init__(self, '$T_2^*$ exp',
-                                     backend_result,
-                                     xdata, qubits,
-                                     BaseCoherenceFitter._exp_fit_fun,
-                                     fit_p0, fit_bounds, expected_state='0')
-
-        self._time = []
-        self._time_err = []
-        for qind, _ in enumerate(qubits):
-            self._time.append(self._params[qind][1])
-            self._time_err.append(self._params_err[qind][1])
-
-    def plot_coherence(self, qind, ax=None):
-
-        ax = BaseCoherenceFitter.plot_coherence(self, qind,
-                                                ax, show_plot=False)
-        ax.set_ylabel("Ground State Population")
-
-        return ax
-
-
-class T2StarOscFitter(BaseCoherenceFitter):
+class T2StarFitter(BaseCoherenceFitter):
     """
     T2* fitter
     """
@@ -313,7 +284,7 @@ class T2StarOscFitter(BaseCoherenceFitter):
         BaseCoherenceFitter.__init__(self, '$T_2^*$',
                                      backend_result,
                                      xdata, qubits,
-                                     T2StarOscFitter._osc_fit_fun,
+                                     T2StarFitter._osc_fit_fun,
                                      fit_p0, fit_bounds, expected_state='0')
 
         self._time = []
