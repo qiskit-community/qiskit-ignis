@@ -20,7 +20,7 @@ class BaseCoherenceFitter:
     """
 
     def __init__(self, description,
-                 backend_result, shots, xdata,
+                 backend_result, xdata,
                  qubits, fit_fun, fit_p0,
                  fit_bounds, expected_state='0'):
         """
@@ -36,7 +36,6 @@ class BaseCoherenceFitter:
 
         self._description = description
         self._backend_result = backend_result
-        self._shots = shots
         self._expected_state = expected_state
         self._qubits = qubits
 
@@ -60,13 +59,6 @@ class BaseCoherenceFitter:
         Return the execution results (qiskit.Result)
         """
         return self._backend_result
-
-    @property
-    def shots(self):
-        """
-        Return the number of shots in the execution
-        """
-        return self._shots
 
     @property
     def measured_qubit(self):
@@ -138,6 +130,8 @@ class BaseCoherenceFitter:
         Computes a list of dictionaries, see documentation of property ydata.
         """
 
+        shots = sum(self._backend_result.get_counts(0).values())
+
         self._ydata = []
         for qind, _ in enumerate(self._qubits):
             self._ydata.append({'mean': [], 'std': []})
@@ -145,10 +139,10 @@ class BaseCoherenceFitter:
                 counts = self._backend_result.get_counts(circ)
                 counts_subspace = marginal_counts(counts, [qind])
                 success_prob = \
-                    counts_subspace.get(self._expected_state, 0) / self._shots
+                    counts_subspace.get(self._expected_state, 0) / shots
                 self._ydata[-1]['mean'].append(success_prob)
                 self._ydata[-1]['std'].append(
-                        np.sqrt(success_prob * (1-success_prob) / self._shots))
+                        np.sqrt(success_prob * (1-success_prob) / shots))
                 # problem for the fitter if one of the std points is
                 # exactly zero
                 if self._ydata[-1]['std'][-1] == 0:
@@ -225,12 +219,12 @@ class T1Fitter(BaseCoherenceFitter):
     T1 fitter
     """
 
-    def __init__(self, backend_result, shots, xdata,
+    def __init__(self, backend_result, xdata,
                  qubits,
                  fit_p0, fit_bounds):
 
         BaseCoherenceFitter.__init__(self, '$T_1$',
-                                     backend_result, shots, xdata,
+                                     backend_result, xdata,
                                      qubits,
                                      BaseCoherenceFitter._exp_fit_fun,
                                      fit_p0, fit_bounds, expected_state='1')
@@ -255,11 +249,11 @@ class T2Fitter(BaseCoherenceFitter):
     T2 fitter
     """
 
-    def __init__(self, backend_result, shots, xdata,
+    def __init__(self, backend_result, xdata,
                  qubits, fit_p0, fit_bounds):
 
         BaseCoherenceFitter.__init__(self, '$T_2$',
-                                     backend_result, shots,
+                                     backend_result,
                                      xdata, qubits,
                                      BaseCoherenceFitter._exp_fit_fun,
                                      fit_p0, fit_bounds, expected_state='0')
@@ -284,11 +278,11 @@ class T2StarExpFitter(BaseCoherenceFitter):
     T2* fitter
     """
 
-    def __init__(self, backend_result, shots, xdata,
+    def __init__(self, backend_result, xdata,
                  qubits, fit_p0, fit_bounds):
 
         BaseCoherenceFitter.__init__(self, '$T_2^*$ exp',
-                                     backend_result, shots,
+                                     backend_result,
                                      xdata, qubits,
                                      BaseCoherenceFitter._exp_fit_fun,
                                      fit_p0, fit_bounds, expected_state='0')
@@ -313,11 +307,11 @@ class T2StarOscFitter(BaseCoherenceFitter):
     T2* fitter
     """
 
-    def __init__(self, backend_result, shots, xdata,
+    def __init__(self, backend_result, xdata,
                  qubits, fit_p0, fit_bounds):
 
         BaseCoherenceFitter.__init__(self, '$T_2^*$',
-                                     backend_result, shots,
+                                     backend_result,
                                      xdata, qubits,
                                      T2StarOscFitter._osc_fit_fun,
                                      fit_p0, fit_bounds, expected_state='0')

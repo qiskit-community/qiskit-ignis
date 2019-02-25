@@ -65,7 +65,7 @@ class TestT2Star(unittest.TestCase):
         initial_a = 0.5
         initial_c = 0.5
 
-        fit = T2StarExpFitter(backend_result, shots, xdata,
+        fit = T2StarExpFitter(backend_result, xdata,
                               qubits,
                               fit_p0=[initial_a, initial_t2, initial_c],
                               fit_bounds=([-0.5, 0, -0.5],
@@ -92,7 +92,7 @@ class TestT2Star(unittest.TestCase):
         initial_f = omega
         initial_phi = 0
 
-        fit = T2StarOscFitter(backend_result, shots, xdata, qubits,
+        fit = T2StarOscFitter(backend_result, xdata, qubits,
                               fit_p0=[initial_a, initial_t2, initial_f,
                                       initial_phi, initial_c],
                               fit_bounds=([-0.5, 0, omega-0.02, -np.pi, -0.5],
@@ -145,7 +145,7 @@ class TestT1(unittest.TestCase):
         initial_a = 1
         initial_c = 0
 
-        fit = T1Fitter(backend_result, shots, xdata, qubits,
+        fit = T1Fitter(backend_result, xdata, qubits,
                        fit_p0=[initial_a, initial_t1, initial_c],
                        fit_bounds=([0, 0, -1], [2, expected_t1*1.2, 1]))
 
@@ -192,7 +192,7 @@ class TestT2(unittest.TestCase):
         initial_a = 1
         initial_c = 0.5*(-1)
 
-        fit = T2Fitter(backend_result, shots, xdata, qubits,
+        fit = T2Fitter(backend_result, xdata, qubits,
                        fit_p0=[initial_a, initial_t2, initial_c],
                        fit_bounds=([0, 0, -1], [2, expected_t2*1.2, 1]))
 
