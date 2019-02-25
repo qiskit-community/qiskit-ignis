@@ -1,11 +1,9 @@
+# Changelog
 
-*********
-Changelog
-*********
 
 All notable changes to this project will be documented in this file.
 
-The format is based on `Keep a Changelog`_.
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
   **Types of changes:**
 
@@ -17,26 +15,21 @@ The format is based on `Keep a Changelog`_.
   - **Security**: in case of vulnerabilities.
 
 
-`UNRELEASED`_
-=============
+## [UNRELEASED]
 
-Added
------
+### Added
 
+### Changed
 
-Changed
--------
+### Removed
 
 
-Deprecated
-----------
+## [0.1.0] - 2019-TBD
+
+### Added
+
+- Initial public release.
 
 
-Fixed
------
-
-
-Removed
--------
-
-
+[UNRELEASED]: TBD
+[0.1.0]: TBD
