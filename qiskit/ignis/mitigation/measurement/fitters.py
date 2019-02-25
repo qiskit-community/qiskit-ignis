@@ -15,7 +15,9 @@ Measurement correction fitters.
 from scipy.optimize import minimize
 import scipy.linalg as la
 import numpy as np
+import qiskit
 from qiskit import QiskitError
+from copy import deepcopy
 
 try:
     from matplotlib import pyplot as plt
@@ -141,6 +143,7 @@ class MeasurementFitter():
                 Form2: a list of counts of length==len(state_labels)
                 Form3: a list of counts of length==M*len(state_labels) where M
                     is an integer (e.g. for use with the tomography data)
+                Form4: a qiskit Result
 
             method (str): fitting method. If None, then least_squares is used.
                 'pseudo_inverse': direct inversion of the A matrix
@@ -192,6 +195,21 @@ class MeasurementFitter():
             else:
                 raise QiskitError("Data list is not an integer multiple "
                                   "of the number of calibrated states")
+
+        elif isinstance(raw_data, qiskit.result.result.Result):
+
+            # extract out all the counts, re-call the function with the
+            # counts and push back into the new result
+            new_result = deepcopy(raw_data)
+
+            for resultidx, result in enumerate(raw_data.results):
+                new_counts = self.apply(
+                        raw_data.get_counts(resultidx), method=method)
+                new_result.results[resultidx].data.counts = \
+                    new_result.results[resultidx]. \
+                    data.counts.from_dict(new_counts.copy())
+
+            return new_result
 
         else:
             raise QiskitError("Unrecognized type for raw_data.")
