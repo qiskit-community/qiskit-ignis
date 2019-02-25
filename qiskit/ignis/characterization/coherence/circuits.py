@@ -100,28 +100,37 @@ def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
     return circuits, xdata, osc_freq
 
 
-def t2_circuits(num_of_gates, gate_time, qubits):
+def t2_circuits(num_of_gates, gate_time, qubits, n_echos=1, phase_alt_echo=False):
     """
-    Generates circuit for T2 (echo) measurement.
-    Each circuit consists of a Y90 gate, followed by a sequence of
-    identity gates, a Y gate, a sequence of identity gates and
-    an additional Y90 gate.
+    Generates circuit for T2 (echo) measurement, by a CPMG sequence.
+    Each circuit consists of:
+    - A Y90 gate.
+    - n_echos repetitions of:
+                  a sequence of identity gates followed by a Y gate,
+                  and optionally (if phase_alt_echo is True):
+                  another sequence of identity gates followed by an X gate.
+    - One more sequence of identity gates.
 
     Args:
-       num_of_gates (list of integers): the number of identity gates in each
-                                        circuit. Must be in an increasing
-                                        order. This is the number of gates
-                                        between the H and echo (i.e. total
-                                        length is twice)
+       num_of_gates (list of integers):
+          Each element of the list corresponds to a circuit.
+          num_of_gates[i] is the number of identity gates in each
+          sequence of identity gates in circuit no. i.
+          Must be in an increasing order.
        gate_time (float): time in micro-seconds of running a single gate.
        qubits (list of integers): indices of the qubits whose
        T2 are to be measured.
+       n_echos (integer): number of repetitions. Must be an odd number.
+       phase_alt_echo (bool): if True then include X gates.
     Returns:
        A list of QuantumCircuit
-       xdata: the delay times (TOTAL delay time)
+       xdata: the delay times
     """
 
-    xdata = gate_time * num_of_gates * 2.0
+    if n_echos % 2 == 0:
+        raise ValueError('Number of echos must be odd')
+
+    xdata = gate_time * num_of_gates * (1 + n_echos * (1 + int(phase_alt_echo)))
 
     qr = qiskit.QuantumRegister(max(qubits)+1)
     cr = qiskit.ClassicalRegister(len(qubits))
@@ -132,14 +141,18 @@ def t2_circuits(num_of_gates, gate_time, qubits):
         circ = qiskit.QuantumCircuit(qr, cr)
         circ.name = 'circuit_' + str(circ_index)
         for qind, qubit in enumerate(qubits):
-            circ.u2(0.0, 0.0, qr[qubit])
-            circ = pad_id_gates(circ, qr, qubit, circ_length)
-            circ.y(qr[qubit])
-            circ = pad_id_gates(circ, qr, qubit, circ_length)
-            circ.u2(0.0, 0.0, qr[qubit])
+            circ.u2(0.0, 0.0, qr[qubit])  # Y90
+            for _ in range(n_echos):  # repeat
+                circ = pad_id_gates(circ, qr, qubit, circ_length)  # ids
+                circ.y(qr[qubit])  # Y
+                if phase_alt_echo:  # optionally
+                    circ = pad_id_gates(circ, qr, qubit, circ_length)  # ids
+                    circ.x(qr[qubit])  # X
+            circ = pad_id_gates(circ, qr, qubit, circ_length)  # ids
+            circ.u2(0.0, 0.0, qr[qubit])  # Y90
         circ.barrier(qr)
         for qind, qubit in enumerate(qubits):
-            circ.measure(qr[qubit], cr[qind])
+            circ.measure(qr[qubit], cr[qind])  # measure
         circuits.append(circ)
 
     return circuits, xdata
