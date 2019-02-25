@@ -10,24 +10,26 @@
 import numpy as np
 
 
-def pad_id_gates(circuit, qr, num_of_id_gates):
+def pad_id_gates(circuit, qr, qubit, num_of_id_gates):
     """
-    A function for padding a circuit with identity gates.
+    A function for padding a circuit with single-qubit identity gates.
 
     Args:
        circuit: the quantum circuit that the gates should be appended to
-       qr: the qubit register that the gates should be added to
+       qr: the qubit register where the gates should be added
+       qubit: index of qubit where the gates should be added
        num_of_id_gates: the number of identity gates to add
 
     Returns:
        circuit: The original circuit object, but with identity
-                gates added to the qubit register qr
+                gates added to the qubit register qr at qubit 'qubit'
     """
 
     for _ in range(num_of_id_gates):
-        circuit.barrier(qr)
-        circuit.iden(qr)
+        circuit.barrier(qr[qubit])
+        circuit.iden(qr[qubit])
 
+    circuit.barrier(qr[qubit])
     return circuit
 
 
