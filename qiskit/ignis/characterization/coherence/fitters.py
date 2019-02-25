@@ -11,6 +11,7 @@ Fitters of characteristic times
 
 from scipy.optimize import curve_fit
 import numpy as np
+from qiskit.tools.qcvv.tomography import marginal_counts
 
 
 class BaseCoherenceFitter:
@@ -20,17 +21,16 @@ class BaseCoherenceFitter:
 
     def __init__(self, description,
                  backend_result, shots, xdata,
-                 num_of_qubits, measured_qubit,
-                 fit_fun, fit_p0, fit_bounds, expected_state='0'):
+                 qubits, fit_fun, fit_p0,
+                 fit_bounds, expected_state='0'):
         """
         Args:
            description: a string describing the fitter's purpose, e.g. 'T1'
            backend_result: result of backend execution (qiskit.Result).
            xdata: a list of times in micro-seconds.
-           The circuits have num_of_qubits qubits.
-           The index of the qubit whose time is measured is measured_qubit.
-           fit_fun, fit_p0, fir_bounds: equivalent to parameters of
-                                        scipy.curve_fit.
+           qubits: the qubits for which we measured coherence
+           fit_fun, fit_p0, fit_bounds: equivalent to parameters of
+           scipy.curve_fit.
            expected_state: is the circuit supposed to end up in '0' or '1'?
         """
 
@@ -38,9 +38,7 @@ class BaseCoherenceFitter:
         self._backend_result = backend_result
         self._shots = shots
         self._expected_state = expected_state
-
-        self._num_of_qubits = num_of_qubits
-        self._qubit = measured_qubit
+        self._qubits = qubits
 
         self._xdata = xdata
         self._calc_data()  # computes self._ydata
@@ -71,13 +69,6 @@ class BaseCoherenceFitter:
         return self._shots
 
     @property
-    def num_of_qubits(self):
-        """
-        Return the number of qubits in the circuits
-        """
-        return self._num_of_qubits
-
-    @property
     def measured_qubit(self):
         """
         Return the index of the qubit whose characteristic time is measured
@@ -95,11 +86,12 @@ class BaseCoherenceFitter:
     def ydata(self):
         """
         Return the data points on the y-axis
-        In the form of a dictionary ydata:
-        - ydata['mean'] is a list, where item no. j is the probability of
-                        success for a circuit that lasts xdata[j].
-        - ydata['std'] is a list, where ydata['std'][j] is the
-                       standard deviation of the success.
+        In the form of a list of dictionaries:
+        - ydata[i]['mean'] is a list, where item
+            no. j is the probability of success
+            of qubit i for a circuit that lasts xdata[j].
+        - ydata[i]['std'] is a list, where ydata['std'][j] is the
+            standard deviation of the success of qubit i.
         """
         return self._ydata
 
@@ -143,70 +135,81 @@ class BaseCoherenceFitter:
         """
         Rerieve probabilities of success from execution results, i.e.,
         probability to measure a state where all qubits are 0.
-        Computes a dictionary self._ydata:
-        - self._ydata['mean'] is a list, where item no. j is the probability of
-                            success for a circuit that lasts self._xdata[j].
-        - self._ydata['std'] is a list, where ydata['std'][j] is the
-                             standard deviation of the success.
+        Computes a list of dictionaries, see documentation of property ydata.
         """
 
-        expected_state_list = [self._expected_state] * self._num_of_qubits
-        expected_state_str = ''.join(expected_state_list)
-
-        self._ydata = {'mean': [], 'std': []}
-        for circ, _ in enumerate(self._xdata):
-            counts = self._backend_result.get_counts(circ)
-            success_prob = counts.get(expected_state_str, 0) / self._shots
-            self._ydata['mean'].append(success_prob)
-            self._ydata['std'].append(
-                np.sqrt(success_prob * (1-success_prob) / self._shots))
-            # problem for the fitter if one of the std points is exactly zero
-            if self._ydata['std'][-1] == 0:
-                self._ydata['std'][-1] = 1e-4
+        self._ydata = []
+        for qind, _ in enumerate(self._qubits):
+            self._ydata.append({'mean': [], 'std': []})
+            for circ, _ in enumerate(self._xdata):
+                counts = self._backend_result.get_counts(circ)
+                counts_subspace = marginal_counts(counts, [qind])
+                success_prob = \
+                    counts_subspace.get(self._expected_state, 0) / self._shots
+                self._ydata[-1]['mean'].append(success_prob)
+                self._ydata[-1]['std'].append(
+                        np.sqrt(success_prob * (1-success_prob) / self._shots))
+                # problem for the fitter if one of the std points is
+                # exactly zero
+                if self._ydata[-1]['std'][-1] == 0:
+                    self._ydata[-1]['std'][-1] = 1e-4
 
     def _calc_fit(self, p0, bounds):
         """
         Fit the curve.
         Computes self._params and self._params_err:
-        - self._params - same as the first returned value of curve_fit.
-        - self._params_err - error for each parameter.
+        - self._params[i] - same as the first returned value of curve_fit,
+        for qubit i.
+        - self._params_err[i] - error for each parameter, for qubit i.
         """
+        self._params = []
+        self._params_err = []
+        for qind, _ in enumerate(self._qubits):
+            tmp_params, fcov = curve_fit(self._fit_fun, self._xdata,
+                                         self._ydata[qind]['mean'],
+                                         sigma=self._ydata[qind]['std'],
+                                         p0=p0, bounds=bounds)
+            self._params.append(tmp_params.copy())
+            self._params_err.append(np.sqrt(np.diag(fcov)))
 
-        self._params, fcov = curve_fit(self._fit_fun, self._xdata,
-                                       self._ydata['mean'],
-                                       sigma=self._ydata['std'],
-                                       p0=p0, bounds=bounds)
-        self._params_err = np.sqrt(np.diag(fcov))
-
-    def plot_coherence(self, show_plot=True):
+    def plot_coherence(self, qind, ax=None, show_plot=True):
         """
         Plot coherence data.
+
+        Args:
+            qind: qubit index to plot
+            ax: plot axes
+            show_plot: call plt.show()
 
         return the axes object
         """
 
         from matplotlib import pyplot as plt
 
-        plt.errorbar(self._xdata, self._ydata['mean'], self._ydata['std'],
-                     marker='.', markersize=9, c='b', linestyle='')
-        label = self._description + ': ' + str(
-            np.around(self._time, 1)) + ' micro-seconds'
-        plt.plot(self._xdata, self._fit_fun(self._xdata, *self._params),
-                 c='r', linestyle='--',
-                 label=label)
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
 
-        plt.xticks(fontsize=14, rotation=70)
-        plt.yticks(fontsize=14)
-        plt.xlabel('time [micro-seconds]', fontsize=16)
-        plt.ylabel('Probability of success', fontsize=16)
-        plt.title(self._description + ' for qubit ' + str(self._qubit),
-                  fontsize=18)
-        plt.legend(fontsize=12)
-        plt.grid(True)
+        ax.errorbar(self._xdata, self._ydata[qind]['mean'],
+                    self._ydata[qind]['std'],
+                    marker='.', markersize=9, c='b', linestyle='')
+        ax.plot(self._xdata, self._fit_fun(self._xdata, *self._params[qind]),
+                c='r', linestyle='--',
+                label=self._description + ': ' +
+                str(np.around(self._time[qind], 1)) + ' micro-seconds')
+
+        ax.tick_params(axis='x', labelsize=14, labelrotation=70)
+        ax.tick_params(axis='y', labelsize=14)
+        ax.set_xlabel('time [micro-seconds]', fontsize=16)
+        ax.set_ylabel('Probability of success', fontsize=16)
+        ax.set_title(self._description + ' for qubit ' +
+                     str(self._qubits[qind]), fontsize=18)
+        ax.legend(fontsize=12)
+        ax.grid(True)
         if show_plot:
             plt.show()
 
-        return plt.gca()
+        return ax
 
     @staticmethod
     def _exp_fit_fun(x, a, tau, c):
@@ -223,22 +226,28 @@ class T1Fitter(BaseCoherenceFitter):
     """
 
     def __init__(self, backend_result, shots, xdata,
-                 num_of_qubits, measured_qubit,
+                 qubits,
                  fit_p0, fit_bounds):
 
         BaseCoherenceFitter.__init__(self, '$T_1$',
                                      backend_result, shots, xdata,
-                                     num_of_qubits, measured_qubit,
+                                     qubits,
                                      BaseCoherenceFitter._exp_fit_fun,
                                      fit_p0, fit_bounds, expected_state='1')
 
-        self._time = self.params[1]
-        self._time_err = self.params_err[1]
+        self._time = []
+        self._time_err = []
+        for qind, _ in enumerate(qubits):
+            self._time.append(self.params[qind][1])
+            self._time_err.append(self.params_err[qind][1])
 
-    def plot_coherence(self):
+    def plot_coherence(self, qind, ax=None):
 
-        ax = BaseCoherenceFitter.plot_coherence(self, show_plot=False)
+        ax = BaseCoherenceFitter.plot_coherence(self, qind, ax,
+                                                show_plot=False)
         ax.set_ylabel("Excited State Population")
+
+        return ax
 
 
 class T2Fitter(BaseCoherenceFitter):
@@ -247,22 +256,27 @@ class T2Fitter(BaseCoherenceFitter):
     """
 
     def __init__(self, backend_result, shots, xdata,
-                 num_of_qubits, measured_qubit,
-                 fit_p0, fit_bounds):
+                 qubits, fit_p0, fit_bounds):
 
         BaseCoherenceFitter.__init__(self, '$T_2$',
-                                     backend_result, shots, xdata,
-                                     num_of_qubits, measured_qubit,
+                                     backend_result, shots,
+                                     xdata, qubits,
                                      BaseCoherenceFitter._exp_fit_fun,
                                      fit_p0, fit_bounds, expected_state='0')
 
-        self._time = self.params[1]
-        self._time_err = self.params_err[1]
+        self._time = []
+        self._time_err = []
+        for qind, _ in enumerate(qubits):
+            self._time.append(self._params[qind][1])
+            self._time_err.append(self._params_err[qind][1])
 
-    def plot_coherence(self):
+    def plot_coherence(self, qind, ax=None):
 
-        ax = BaseCoherenceFitter.plot_coherence(self, show_plot=False)
+        ax = BaseCoherenceFitter.plot_coherence(self, qind,
+                                                ax, show_plot=False)
         ax.set_ylabel("Ground State Population")
+
+        return ax
 
 
 class T2StarExpFitter(BaseCoherenceFitter):
@@ -271,17 +285,27 @@ class T2StarExpFitter(BaseCoherenceFitter):
     """
 
     def __init__(self, backend_result, shots, xdata,
-                 num_of_qubits, measured_qubit,
-                 fit_p0, fit_bounds):
+                 qubits, fit_p0, fit_bounds):
 
         BaseCoherenceFitter.__init__(self, '$T_2^*$ exp',
-                                     backend_result, shots, xdata,
-                                     num_of_qubits, measured_qubit,
+                                     backend_result, shots,
+                                     xdata, qubits,
                                      BaseCoherenceFitter._exp_fit_fun,
-                                     fit_p0, fit_bounds)
+                                     fit_p0, fit_bounds, expected_state='0')
 
-        self._time = self.params[1]
-        self._time_err = self.params_err[1]
+        self._time = []
+        self._time_err = []
+        for qind, _ in enumerate(qubits):
+            self._time.append(self._params[qind][1])
+            self._time_err.append(self._params_err[qind][1])
+
+    def plot_coherence(self, qind, ax=None):
+
+        ax = BaseCoherenceFitter.plot_coherence(self, qind,
+                                                ax, show_plot=False)
+        ax.set_ylabel("Ground State Population")
+
+        return ax
 
 
 class T2StarOscFitter(BaseCoherenceFitter):
@@ -290,17 +314,27 @@ class T2StarOscFitter(BaseCoherenceFitter):
     """
 
     def __init__(self, backend_result, shots, xdata,
-                 num_of_qubits, measured_qubit,
-                 fit_p0, fit_bounds):
+                 qubits, fit_p0, fit_bounds):
 
         BaseCoherenceFitter.__init__(self, '$T_2^*$',
-                                     backend_result, shots, xdata,
-                                     num_of_qubits, measured_qubit,
+                                     backend_result, shots,
+                                     xdata, qubits,
                                      T2StarOscFitter._osc_fit_fun,
-                                     fit_p0, fit_bounds)
+                                     fit_p0, fit_bounds, expected_state='0')
 
-        self._time = self.params[1]
-        self._time_err = self.params_err[1]
+        self._time = []
+        self._time_err = []
+        for qind, _ in enumerate(qubits):
+            self._time.append(self._params[qind][1])
+            self._time_err.append(self._params_err[qind][1])
+
+    def plot_coherence(self, qind, ax=None):
+
+        ax = BaseCoherenceFitter.plot_coherence(self, qind,
+                                                ax, show_plot=False)
+        ax.set_ylabel("Ground State Population")
+
+        return ax
 
     @staticmethod
     def _osc_fit_fun(x, a, tau, f, phi, c):
