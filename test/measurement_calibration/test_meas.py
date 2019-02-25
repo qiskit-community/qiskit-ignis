@@ -108,7 +108,8 @@ class TestMeasCal(unittest.TestCase):
                 qubits, weight = self.choose_calibration(nq, pattern_type)
                 # Generate the calibration circuits
                 meas_calibs, state_labels = \
-                    measurement_calibration(qubit_list=qubits, circlabel='test')
+                    measurement_calibration(qubit_list=qubits, 
+                                            circlabel='test')
 
                 # Perform an ideal execution on the generated circuits
                 backend = Aer.get_backend('qasm_simulator')
