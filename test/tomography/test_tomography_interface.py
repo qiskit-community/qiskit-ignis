@@ -1,10 +1,19 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright 2019, IBM.
+#
+# This source code is licensed under the Apache License, Version 2.0 found in
+# the LICENSE.txt file in the root directory of this source tree.
+
+# pylint: disable=missing-docstring
+
 import unittest
+import numpy
 import qiskit.ignis.verification.tomography as tomo
 from qiskit import Aer, QuantumCircuit, QuantumRegister
 from qiskit.quantum_info import state_fidelity
 from qiskit.tools.qi.qi import outer
 import qiskit
-import numpy
 
 
 class TestTomographyInterface(unittest.TestCase):
