@@ -9,9 +9,11 @@ import numpy
 
 class TestTomographyInterface(unittest.TestCase):
     def assertListAlmostEqual(self, lhs, rhs, places=None):
-        self.assertEqual(len(lhs), len(rhs), msg="List lengths differ: {} != {}".format(len(lhs), len(rhs)))
+        self.assertEqual(len(lhs), len(rhs),
+            msg="List lengths differ: {} != {}".format(len(lhs), len(rhs)))
         for i in range(len(lhs)):
-            if isinstance(lhs[i], numpy.ndarray) and isinstance(rhs[i], numpy.ndarray):
+            if isinstance(lhs[i], numpy.ndarray) and \
+                    isinstance(rhs[i], numpy.ndarray):
                 self.assertMatricesAlmostEqual(lhs[i], rhs[i], places=places)
             else:
                 self.assertAlmostEqual(lhs[i], rhs[i], places=places)
@@ -25,7 +27,8 @@ class TestTomographyInterface(unittest.TestCase):
 
         job = qiskit.execute(bell, Aer.get_backend('statevector_simulator'))
         psi = job.result().get_statevector(bell)
-        rho = tomo.perform_state_tomography(bell, q3, ideal=False, fidelity=False)
+        rho = tomo.perform_state_tomography(bell, q3,
+                                            ideal=False, fidelity=False)
 
         f_bell = state_fidelity(psi, rho)
         self.assertAlmostEqual(f_bell, 1, places=1)
@@ -58,7 +61,8 @@ class TestTomographyInterface(unittest.TestCase):
         job = qiskit.execute(circ, Aer.get_backend('unitary_simulator'))
         ideal_unitary = job.result().get_unitary(circ)
         choi_ideal = outer(ideal_unitary.ravel(order='F'))
-        choi = tomo.perform_process_tomography(circ, q, ideal=False, fidelity=False)
+        choi = tomo.perform_process_tomography(circ, q,
+                                               ideal=False, fidelity=False)
 
         fidelity = state_fidelity(choi / 4, choi_ideal / 4)
         self.assertAlmostEqual(fidelity, 1, places=1)
