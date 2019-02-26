@@ -9,9 +9,11 @@ import numpy
 
 class TestTomographyInterface(unittest.TestCase):
     def assertListAlmostEqual(self, lhs, rhs, places=None):
-        self.assertEqual(len(lhs), len(rhs),
-            msg="List lengths differ: {} != {}".format(len(lhs), len(rhs)))
-        for i in range(len(lhs)):
+        n = len(lhs)
+        m = len(rhs)
+        self.assertEqual(n, m,
+                         msg="List lengths differ: {} != {}".format(n, m))
+        for i in range(n):
             if isinstance(lhs[i], numpy.ndarray) and \
                     isinstance(rhs[i], numpy.ndarray):
                 self.assertMatricesAlmostEqual(lhs[i], rhs[i], places=places)
