@@ -100,37 +100,39 @@ def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
     return circuits, xdata, osc_freq
 
 
-def t2_circuits(num_of_gates, gate_time, qubits, n_echos=1, phase_alt_echo=False):
+def t2_circuits(num_of_gates, gate_time, qubits, n_echos=1,
+                phase_alt_echo=False):
     """
     Generates circuit for T2 (echo) measurement, by a CPMG sequence.
     Each circuit consists of:
-    - A Y90 gate.
-    - n_echos repetitions of:
-                  a sequence of identity gates followed by a Y gate,
-                  and optionally (if phase_alt_echo is True):
-                  another sequence of identity gates followed by an X gate.
-    - One more sequence of identity gates.
+    - Y90-t-Y-[t-t-X/Y]^m-t-Y90
+    - n_echos = n+1
+    - if phase_alt_echo the X/Y alternate, if phase_alt_echo=False the
+    pulses are always Y
+
+    Standard T2 echo is n_echos=1
 
     Args:
        num_of_gates (list of integers):
           Each element of the list corresponds to a circuit.
-          num_of_gates[i] is the number of identity gates in each
-          sequence of identity gates in circuit no. i.
+          num_of_gates[i] is the number of identity gates in each section
+          "t" of the pulse sequeence in circuit no. i.
           Must be in an increasing order.
        gate_time (float): time in micro-seconds of running a single gate.
        qubits (list of integers): indices of the qubits whose
        T2 are to be measured.
-       n_echos (integer): number of repetitions. Must be an odd number.
-       phase_alt_echo (bool): if True then include X gates.
+       n_echos (integer): number of echo gates (X or Y).
+       phase_alt_echo (bool): if True then alternate the echo between
+       X and Y.
     Returns:
        A list of QuantumCircuit
        xdata: the delay times
     """
 
-    if n_echos % 2 == 0:
-        raise ValueError('Number of echos must be odd')
+    if n_echos < 1:
+        raise ValueError('Must be at least one echo')
 
-    xdata = gate_time * num_of_gates * (1 + n_echos * (1 + int(phase_alt_echo)))
+    xdata = 2 * gate_time * num_of_gates * n_echos
 
     qr = qiskit.QuantumRegister(max(qubits)+1)
     cr = qiskit.ClassicalRegister(len(qubits))
@@ -141,13 +143,19 @@ def t2_circuits(num_of_gates, gate_time, qubits, n_echos=1, phase_alt_echo=False
         circ = qiskit.QuantumCircuit(qr, cr)
         circ.name = 'circuit_' + str(circ_index)
         for qind, qubit in enumerate(qubits):
+
+            # First Y90 and Y echo
             circ.u2(0.0, 0.0, qr[qubit])  # Y90
-            for _ in range(n_echos):  # repeat
-                circ = pad_id_gates(circ, qr, qubit, circ_length)  # ids
-                circ.y(qr[qubit])  # Y
-                if phase_alt_echo:  # optionally
-                    circ = pad_id_gates(circ, qr, qubit, circ_length)  # ids
+            circ = pad_id_gates(circ, qr, qubit, circ_length)  # ids
+            circ.y(qr[qubit])
+
+            for echoid in range(n_echos-1):  # repeat
+                circ = pad_id_gates(circ, qr, qubit, 2*circ_length)  # ids
+                if phase_alt_echo and (not echoid % 2):  # optionally
                     circ.x(qr[qubit])  # X
+                else:
+                    circ.y(qr[qubit])
+
             circ = pad_id_gates(circ, qr, qubit, circ_length)  # ids
             circ.u2(0.0, 0.0, qr[qubit])  # Y90
         circ.barrier(qr)

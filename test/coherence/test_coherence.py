@@ -173,7 +173,8 @@ class TestT2(unittest.TestCase):
         n_echos = 5
         alt_phase_echo = True
 
-        circs, xdata = t2_circuits(num_of_gates, gate_time, qubits, n_echos, alt_phase_echo)
+        circs, xdata = t2_circuits(num_of_gates, gate_time, qubits,
+                                   n_echos, alt_phase_echo)
 
         expected_t2 = 20
         error = thermal_relaxation_error(np.inf, expected_t2, gate_time, 0.5)
