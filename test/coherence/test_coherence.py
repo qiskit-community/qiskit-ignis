@@ -198,7 +198,7 @@ class TestT2(unittest.TestCase):
                        fit_p0=[initial_a, initial_t2, initial_c],
                        fit_bounds=([0, 0, -1], [2, expected_t2*1.2, 1]))
 
-        self.assertAlmostEqual(fit.time[0], expected_t2, delta=4,
+        self.assertAlmostEqual(fit.time[0], expected_t2, delta=5,
                                msg='Calculated T2 is inaccurate')
         self.assertTrue(
             fit.time_err[0] < 5,

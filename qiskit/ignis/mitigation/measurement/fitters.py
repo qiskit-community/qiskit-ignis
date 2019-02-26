@@ -207,7 +207,7 @@ class MeasurementFitter():
                         raw_data.get_counts(resultidx), method=method)
                 new_result.results[resultidx].data.counts = \
                     new_result.results[resultidx]. \
-                    data.counts.from_dict(new_counts.copy())
+                    data.counts.from_dict(new_counts)
 
             return new_result
 
