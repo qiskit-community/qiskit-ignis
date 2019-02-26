@@ -1,5 +1,5 @@
 import unittest
-import qiskit_ignis.tomography as tomo
+import qiskit.ignis.verification.tomography as tomo
 from qiskit import Aer, QuantumCircuit, QuantumRegister
 from qiskit.quantum_info import state_fidelity
 from qiskit.tools.qi.qi import outer
@@ -58,7 +58,7 @@ class TestTomographyInterface(unittest.TestCase):
         job = qiskit.execute(circ, Aer.get_backend('unitary_simulator'))
         ideal_unitary = job.result().get_unitary(circ)
         choi_ideal = outer(ideal_unitary.ravel(order='F'))
-        choi = tomo.perform_process_tomography(circ, q)
+        choi = tomo.perform_process_tomography(circ, q, ideal=False, fidelity=False)
 
         fidelity = state_fidelity(choi / 4, choi_ideal / 4)
         self.assertAlmostEqual(fidelity, 1, places=1)
