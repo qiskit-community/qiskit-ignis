@@ -4,7 +4,7 @@ from qiskit.quantum_info import state_fidelity
 from qiskit.tools.qi.qi import outer
 from .basis.circuits import state_tomography_circuits, process_tomography_circuits
 from .data import tomography_data
-from qiskit_ignis.tomography.fitters import fitter_data, state_cvx_fit, process_cvx_fit, state_mle_fit, process_mle_fit
+from qiskit.ignis.verification.tomography.fitters import fitter_data, state_cvx_fit, process_cvx_fit, state_mle_fit, process_mle_fit
 
 
 def perform_state_tomography(circuit, measured_qubits,

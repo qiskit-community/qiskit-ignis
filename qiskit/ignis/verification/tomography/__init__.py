@@ -33,3 +33,6 @@ from .data import expectation_counts  # TODO: move to qiskit.tools
 
 # TODO: move to qiskit.quantum_info
 from .fitters import make_positive_semidefinite
+
+from .interface import perform_state_tomography
+from .interface import perform_process_tomography
