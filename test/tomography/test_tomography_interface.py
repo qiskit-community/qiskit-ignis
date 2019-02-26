@@ -6,14 +6,15 @@ from qiskit.tools.qi.qi import outer
 import qiskit
 import numpy
 
+
 class TestTomographyInterface(unittest.TestCase):
-    def assertListAlmostEqual(self, lhs, rhs, places = None):
-        self.assertEqual(len(lhs), len(rhs), msg = "List lengths differ: {} != {}".format(len(lhs), len(rhs)))
+    def assertListAlmostEqual(self, lhs, rhs, places=None):
+        self.assertEqual(len(lhs), len(rhs), msg="List lengths differ: {} != {}".format(len(lhs), len(rhs)))
         for i in range(len(lhs)):
             if isinstance(lhs[i], numpy.ndarray) and isinstance(rhs[i], numpy.ndarray):
-                self.assertMatricesAlmostEqual(lhs[i], rhs[i], places = places)
+                self.assertMatricesAlmostEqual(lhs[i], rhs[i], places=places)
             else:
-                self.assertAlmostEqual(lhs[i], rhs[i], places = places)
+                self.assertAlmostEqual(lhs[i], rhs[i], places=places)
 
     def test_basic_state_tomography(self):
         q3 = QuantumRegister(3)
@@ -26,8 +27,8 @@ class TestTomographyInterface(unittest.TestCase):
         psi = job.result().get_statevector(bell)
         rho = tomo.perform_state_tomography(bell, q3, ideal=False, fidelity=False)
 
-        F_bell = state_fidelity(psi, rho)
-        self.assertAlmostEqual(F_bell, 1, places=1)
+        f_bell = state_fidelity(psi, rho)
+        self.assertAlmostEqual(f_bell, 1, places=1)
 
     def test_state_tomography_ideal_data(self):
         q3 = QuantumRegister(3)
@@ -44,10 +45,9 @@ class TestTomographyInterface(unittest.TestCase):
         ideal_psi = tomography_results['ideal_psi']
         fidelity = tomography_results['fidelity']
 
-        F_bell = state_fidelity(psi, rho)
-        self.assertEqual(F_bell, fidelity)
+        f_bell = state_fidelity(psi, rho)
+        self.assertEqual(f_bell, fidelity)
         self.assertListAlmostEqual(psi, ideal_psi)
-
 
     def test_basic_process_tomography(self):
         q = QuantumRegister(2)
@@ -62,6 +62,7 @@ class TestTomographyInterface(unittest.TestCase):
 
         fidelity = state_fidelity(choi / 4, choi_ideal / 4)
         self.assertAlmostEqual(fidelity, 1, places=1)
+
 
 if __name__ == '__main__':
     unittest.main()
