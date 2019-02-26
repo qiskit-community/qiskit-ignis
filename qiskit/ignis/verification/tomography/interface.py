@@ -4,15 +4,16 @@ from qiskit.quantum_info import state_fidelity
 from qiskit.tools.qi.qi import outer
 from .basis.circuits import state_tomography_circuits, process_tomography_circuits
 from .data import tomography_data
-from qiskit.ignis.verification.tomography.fitters import fitter_data, state_cvx_fit, process_cvx_fit, state_mle_fit, process_mle_fit
+from qiskit.ignis.verification.tomography.fitters import fitter_data, state_cvx_fit, process_cvx_fit, state_mle_fit, \
+    process_mle_fit
 
 
 def perform_state_tomography(circuit, measured_qubits,
-                             backend = None,
-                             fitter = 'cvx',
-                             ideal = True,
-                             fidelity = True,
-                             shots = 5000,
+                             backend=None,
+                             fitter='cvx',
+                             ideal=True,
+                             fidelity=True,
+                             shots=5000,
                              ):
     if backend is None:
         backend = Aer.get_backend('qasm_simulator')
@@ -43,12 +44,13 @@ def perform_state_tomography(circuit, measured_qubits,
 
     return result
 
+
 def perform_process_tomography(circuit, measured_qubits,
-                             backend = None,
-                             fitter = 'cvx',
-                             ideal = True,
-                             fidelity = True,
-                             shots = 4000,):
+                               backend=None,
+                               fitter='cvx',
+                               ideal=True,
+                               fidelity=True,
+                               shots=4000, ):
     if backend is None:
         backend = Aer.get_backend('qasm_simulator')
     tomography_circuits = process_tomography_circuits(circuit, measured_qubits)
@@ -75,7 +77,6 @@ def perform_process_tomography(circuit, measured_qubits,
         result['ideal_choi'] = ideal_choi
         if fidelity == True:
             n = len(measured_qubits)
-            fidelity_value = state_fidelity(ideal_choi / 2**n, choi / 2**n)
+            fidelity_value = state_fidelity(ideal_choi / 2 ** n, choi / 2 ** n)
             result['fidelity'] = fidelity_value
     return result
-
