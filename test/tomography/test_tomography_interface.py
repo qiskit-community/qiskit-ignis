@@ -1,33 +1,19 @@
-# -*- coding: utf-8 -*-
-#
-# Copyright 2019, IBM.
-#
-# This source code is licensed under the Apache License, Version 2.0 found in
-# the LICENSE.txt file in the root directory of this source tree.
-
-# pylint: disable=missing-docstring
-
 import unittest
-import numpy
-import qiskit.ignis.verification.tomography as tomo
+import qiskit_ignis.tomography as tomo
 from qiskit import Aer, QuantumCircuit, QuantumRegister
 from qiskit.quantum_info import state_fidelity
 from qiskit.tools.qi.qi import outer
 import qiskit
-
+import numpy
 
 class TestTomographyInterface(unittest.TestCase):
-    def assertListAlmostEqual(self, lhs, rhs, places=None):
-        n = len(lhs)
-        m = len(rhs)
-        self.assertEqual(n, m,
-                         msg="List lengths differ: {} != {}".format(n, m))
-        for i in range(n):
-            if isinstance(lhs[i], numpy.ndarray) and \
-                    isinstance(rhs[i], numpy.ndarray):
-                self.assertMatricesAlmostEqual(lhs[i], rhs[i], places=places)
+    def assertListAlmostEqual(self, lhs, rhs, places = None):
+        self.assertEqual(len(lhs), len(rhs), msg = "List lengths differ: {} != {}".format(len(lhs), len(rhs)))
+        for i in range(len(lhs)):
+            if isinstance(lhs[i], numpy.ndarray) and isinstance(rhs[i], numpy.ndarray):
+                self.assertMatricesAlmostEqual(lhs[i], rhs[i], places = places)
             else:
-                self.assertAlmostEqual(lhs[i], rhs[i], places=places)
+                self.assertAlmostEqual(lhs[i], rhs[i], places = places)
 
     def test_basic_state_tomography(self):
         q3 = QuantumRegister(3)
@@ -38,11 +24,10 @@ class TestTomographyInterface(unittest.TestCase):
 
         job = qiskit.execute(bell, Aer.get_backend('statevector_simulator'))
         psi = job.result().get_statevector(bell)
-        rho = tomo.perform_state_tomography(bell, q3,
-                                            ideal=False, fidelity=False)
+        rho = tomo.perform_state_tomography(bell, q3, ideal=False, fidelity=False)
 
-        f_bell = state_fidelity(psi, rho)
-        self.assertAlmostEqual(f_bell, 1, places=1)
+        F_bell = state_fidelity(psi, rho)
+        self.assertAlmostEqual(F_bell, 1, places=1)
 
     def test_state_tomography_ideal_data(self):
         q3 = QuantumRegister(3)
@@ -59,9 +44,10 @@ class TestTomographyInterface(unittest.TestCase):
         ideal_psi = tomography_results['ideal_psi']
         fidelity = tomography_results['fidelity']
 
-        f_bell = state_fidelity(psi, rho)
-        self.assertEqual(f_bell, fidelity)
+        F_bell = state_fidelity(psi, rho)
+        self.assertEqual(F_bell, fidelity)
         self.assertListAlmostEqual(psi, ideal_psi)
+
 
     def test_basic_process_tomography(self):
         q = QuantumRegister(2)
@@ -72,12 +58,10 @@ class TestTomographyInterface(unittest.TestCase):
         job = qiskit.execute(circ, Aer.get_backend('unitary_simulator'))
         ideal_unitary = job.result().get_unitary(circ)
         choi_ideal = outer(ideal_unitary.ravel(order='F'))
-        choi = tomo.perform_process_tomography(circ, q,
-                                               ideal=False, fidelity=False)
+        choi = tomo.perform_process_tomography(circ, q)
 
         fidelity = state_fidelity(choi / 4, choi_ideal / 4)
         self.assertAlmostEqual(fidelity, 1, places=1)
-
 
 if __name__ == '__main__':
     unittest.main()
