@@ -15,7 +15,9 @@ import unittest
 import numpy as np
 import qiskit
 from qiskit.providers.aer.noise.errors.standard_errors import \
-                                     thermal_relaxation_error
+                                     thermal_relaxation_error, \
+                                     coherent_unitary_error
+
 from qiskit.providers.aer.noise import NoiseModel
 
 from qiskit.ignis.characterization.coherence import \
@@ -23,6 +25,8 @@ from qiskit.ignis.characterization.coherence import \
 
 from qiskit.ignis.characterization.coherence import t1_circuits, \
                                 t2_circuits, t2star_circuits
+
+from qiskit.ignis.characterization.hamiltonian import zz_circuits, ZZFitter
 
 
 class TestT2Star(unittest.TestCase):
@@ -204,6 +208,58 @@ class TestT2(unittest.TestCase):
         self.assertTrue(
             fit.time_err(qid=0) < 5,
             'Confidence in T2 calculation is too low: ' + str(fit.time_err))
+
+
+class TestZZ(unittest.TestCase):
+    """
+    Test measurement of ZZ
+    """
+
+    def test_zz(self):
+        """
+        Run the simulator with unitary noise.
+        Then verify that the calculated ZZ matches the zz parameter.
+        """
+
+        num_of_gates = np.arange(0, 100, 4)
+        gate_time = 0.1
+        qubits = [0]
+        spectators = [1]
+
+        # Generate experiments
+        circs, xdata, osc_freq = zz_circuits(num_of_gates,
+                                             gate_time, qubits,
+                                             spectators, nosc=2)
+
+        # Set the simulator with ZZ
+        zz_expected = 0.1
+        zz_unitary = np.eye(4, dtype=complex)
+        zz_unitary[3, 3] = np.exp(1j*2*np.pi*zz_expected*gate_time)
+        error = coherent_unitary_error(zz_unitary)
+        noise_model = NoiseModel()
+        noise_model.add_nonlocal_quantum_error(error, 'id', [0], [0, 1])
+
+        # Run the simulator
+        backend = qiskit.Aer.get_backend('qasm_simulator')
+        shots = 300
+        # For demonstration purposes split the execution into two jobs
+        backend_result = qiskit.execute(circs, backend,
+                                        shots=shots,
+                                        noise_model=noise_model).result()
+
+        initial_a = 1
+        initial_c = 0
+        initial_f = osc_freq
+        initial_phi = -np.pi/20
+
+        fit = ZZFitter(backend_result, xdata, qubits, spectators,
+                       fit_p0=[initial_a, initial_f,
+                               initial_phi, initial_c],
+                       fit_bounds=([-0.5, 0, -np.pi, -0.5],
+                                   [1.5, 2*osc_freq, np.pi, 1.5]))
+
+        self.assertAlmostEqual(abs(fit.ZZ_rate()[0]), zz_expected, delta=0.02,
+                               msg='Calculated ZZ is inaccurate')
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ Circuit generation for coherence experiments
 
 import numpy as np
 import qiskit
-from .coherence_utils import pad_id_gates
+from ..characterization_utils import pad_id_gates
 
 
 def t1_circuits(num_of_gates, gate_time, qubits):
