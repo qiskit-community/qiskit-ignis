@@ -247,10 +247,10 @@ class TestZZ(unittest.TestCase):
                                         shots=shots,
                                         noise_model=noise_model).result()
 
-        initial_a = 1
-        initial_c = 0
+        initial_a = 0.5
+        initial_c = 0.5
         initial_f = osc_freq
-        initial_phi = -np.pi/20
+        initial_phi = 0.0
 
         fit = ZZFitter(backend_result, xdata, qubits, spectators,
                        fit_p0=[initial_a, initial_f,
