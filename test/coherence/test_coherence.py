@@ -70,7 +70,7 @@ class TestT2Star(unittest.TestCase):
                        fit_p0=[initial_a, initial_t2, initial_c],
                        fit_bounds=([-0.5, 0, -0.5],
                                    [1.5, expected_t2*1.2, 1.5]),
-                                   circbasename='t2star')
+                       circbasename='t2star')
 
         self.assertAlmostEqual(fit.time(qid=0), expected_t2, delta=2,
                                msg='Calculated T2 is inaccurate')
