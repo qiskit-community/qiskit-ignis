@@ -9,8 +9,6 @@
 Fitters of characteristic times
 """
 
-import numpy as np
-from qiskit.tools.qcvv.tomography import marginal_counts
 from .. import BaseCoherenceFitter
 
 
@@ -35,10 +33,10 @@ class T1Fitter(BaseCoherenceFitter):
                                      circuit_names, expected_state='1',
                                      time_index=1)
 
-    def plot(self, qind, ax=None):
+    def plot(self, qind, series='0', ax=None, show_plot=False):
 
-        ax = BaseCoherenceFitter.plot(self, qind, '0', ax,
-                                      show_plot=False)
+        ax = BaseCoherenceFitter.plot(self, qind, series, ax,
+                                      show_plot)
         ax.set_ylabel("Excited State Population")
 
         return ax
@@ -64,10 +62,10 @@ class T2Fitter(BaseCoherenceFitter):
                                      circuit_names, expected_state='0',
                                      time_index=1)
 
-    def plot(self, qind, ax=None):
+    def plot(self, qind, series='0', ax=None, show_plot=False):
 
-        ax = BaseCoherenceFitter.plot(self, qind, '0',
-                                      ax, show_plot=False)
+        ax = BaseCoherenceFitter.plot(self, qind, series,
+                                      ax, show_plot)
         ax.set_ylabel("Ground State Population")
 
         return ax
@@ -93,10 +91,10 @@ class T2StarFitter(BaseCoherenceFitter):
                                      circuit_names, expected_state='0',
                                      time_index=1)
 
-    def plot(self, qind, ax=None):
+    def plot(self, qind, series='0', ax=None, show_plot=False):
 
-        ax = BaseCoherenceFitter.plot(self, qind, '0',
-                                      ax, show_plot=False)
+        ax = BaseCoherenceFitter.plot(self, qind, series,
+                                      ax, show_plot)
         ax.set_ylabel("Ground State Population")
 
         return ax
