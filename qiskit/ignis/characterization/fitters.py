@@ -52,7 +52,7 @@ class BaseFitter:
 
         if backend_result is not None:
             autofit = True
-            if type(backend_result) is list:
+            if isinstance(backend_result, list):
                 for result in backend_result:
                     self._backend_result_list.append(result)
             else:
@@ -73,7 +73,8 @@ class BaseFitter:
                             range(len(self._qubits))] for i in self._series}
 
         self._params_err = {i: [[] for j in
-                            range(len(self._qubits))] for i in self._series}
+                                range(len(self._qubits))]
+                            for i in self._series}
 
         if autofit:
             self._calc_data()
@@ -164,19 +165,18 @@ class BaseFitter:
         if qid != -1:
             if err:
                 return self._params_err[series][qid][param_ind]
+
+            return self._params[series][qid][param_ind]
+
+        param_list = []
+        for qind, _ in enumerate(self._qubits):
+            if err:
+                param_list.append(self._params_err
+                                  [series][qind][param_ind])
             else:
-                return self._params[series][qid][param_ind]
+                param_list.append(self._params[series][qind][param_ind])
 
-        else:
-            param_list = []
-            for qind, _ in enumerate(self._qubits):
-                if err:
-                    param_list.append(self._params_err
-                                      [series][qind][param_ind])
-                else:
-                    param_list.append(self._params[series][qind][param_ind])
-
-            return param_list
+        return param_list
 
     def add_data(self, results, recalc=True, refit=True):
         """
@@ -188,7 +188,7 @@ class BaseFitter:
             refit: Refit the data
         """
 
-        if type(results) is list:
+        if isinstance(results, list):
             for result in results:
                 self._backend_result_list.append(result)
         else:
@@ -199,23 +199,6 @@ class BaseFitter:
 
         if refit:
             self.fit_data()
-
-    def _build_counts_dict_from_list(self, count_list):
-
-        """
-        Add dictionary counts together
-
-        """
-
-        if len(count_list) == 1:
-            return count_list[0]
-        else:
-            new_count_dict = {}
-            for countdict in count_list:
-                for x in countdict:
-                    new_count_dict[x] = countdict[x]+new_count_dict.get(x, 0)
-
-        return new_count_dict
 
     def _calc_data(self):
         """
@@ -229,7 +212,7 @@ class BaseFitter:
         """
 
         circ_counts = {}
-        for seriesind, serieslbl in enumerate(self._series):
+        for _, serieslbl in enumerate(self._series):
             for circ, _ in enumerate(self._xdata):
                 circname = self._circuit_names[circ] + serieslbl
                 count_list = []
@@ -240,10 +223,10 @@ class BaseFitter:
                         pass
 
                 circ_counts[circname] = \
-                    self._build_counts_dict_from_list(count_list)
+                    build_counts_dict_from_list(count_list)
 
         self._ydata = {}
-        for seriesind, serieslbl in enumerate(self._series):
+        for _, serieslbl in enumerate(self._series):
             self._ydata[serieslbl] = []
             for qind, _ in enumerate(self._qubits):
                 self._ydata[serieslbl].append({'mean': [], 'std': []})
@@ -256,7 +239,7 @@ class BaseFitter:
                         counts_subspace.get(self._expected_state, 0) / shots
                     self._ydata[serieslbl][-1]['mean'].append(success_prob)
                     self._ydata[serieslbl][-1]['std'].append(
-                            np.sqrt(success_prob * (1-success_prob) / shots))
+                        np.sqrt(success_prob * (1-success_prob) / shots))
                     # problem for the fitter if one of the std points is
                     # exactly zero
                     if self._ydata[serieslbl][-1]['std'][-1] == 0:
@@ -276,7 +259,7 @@ class BaseFitter:
         if series is None:
             series = self._series.copy()
 
-        if not type(series) is list:
+        if not isinstance(series, list):
             series = [series]
 
         if qid == -1:
@@ -290,7 +273,7 @@ class BaseFitter:
         if p0 is None:
             p0 = self._defaultp0
 
-        for seriesind, serieslbl in enumerate(series):
+        for _, serieslbl in enumerate(series):
             for qind, _ in enumerate(qfit):
                 tmp_params, fcov = \
                      curve_fit(self._fit_fun, self._xdata,
@@ -300,23 +283,6 @@ class BaseFitter:
 
                 self._params[serieslbl][qind] = tmp_params.copy()
                 self._params_err[serieslbl][qind] = np.sqrt(np.diag(fcov))
-
-    def plot(self, qind, series, ax=None, show_plot=True):
-        """
-        Plot data.
-
-        Implemented in child classes.
-
-        Args:
-            qind: qubit index to plot
-            series: which series to plot
-            ax: plot axes
-            show_plot: call plt.show()
-
-        return the axes object
-        """
-
-        pass
 
     @staticmethod
     def _exp_fit_fun(x, a, tau, c):
@@ -417,3 +383,21 @@ class BaseCoherenceFitter(BaseFitter):
             plt.show()
 
         return ax
+
+
+def build_counts_dict_from_list(count_list):
+
+    """
+    Add dictionary counts together
+
+    """
+
+    if len(count_list) == 1:
+        return count_list[0]
+
+    new_count_dict = {}
+    for countdict in count_list:
+        for x in countdict:
+            new_count_dict[x] = countdict[x]+new_count_dict.get(x, 0)
+
+    return new_count_dict
