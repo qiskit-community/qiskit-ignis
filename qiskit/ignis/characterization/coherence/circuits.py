@@ -42,7 +42,7 @@ def t1_circuits(num_of_gates, gate_time, qubits):
 
     for circ_index, circ_length in enumerate(num_of_gates):
         circ = qiskit.QuantumCircuit(qr, cr)
-        circ.name = 'circuit_' + str(circ_index)
+        circ.name = 't1circuit_' + str(circ_index) + '_0'
         for _, qubit in enumerate(qubits):
             circ.x(qr[qubit])
             circ = pad_id_gates(circ, qr, qubit, circ_length)
@@ -86,7 +86,7 @@ def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
 
     for circ_index, circ_length in enumerate(num_of_gates):
         circ = qiskit.QuantumCircuit(qr, cr)
-        circ.name = 'circuit_' + str(circ_index)
+        circ.name = 't2starcircuit_' + str(circ_index) + '_0'
         for qind, qubit in enumerate(qubits):
             circ.h(qr[qubit])
             circ = pad_id_gates(circ, qr, qubit, circ_length)
@@ -141,7 +141,7 @@ def t2_circuits(num_of_gates, gate_time, qubits, n_echos=1,
 
     for circ_index, circ_length in enumerate(num_of_gates):
         circ = qiskit.QuantumCircuit(qr, cr)
-        circ.name = 'circuit_' + str(circ_index)
+        circ.name = 't2circuit_' + str(circ_index) + '_0'
         for qind, qubit in enumerate(qubits):
 
             # First Y90 and Y echo

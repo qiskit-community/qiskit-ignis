@@ -69,12 +69,13 @@ class TestT2Star(unittest.TestCase):
                        qubits,
                        fit_p0=[initial_a, initial_t2, initial_c],
                        fit_bounds=([-0.5, 0, -0.5],
-                                   [1.5, expected_t2*1.2, 1.5]))
+                                   [1.5, expected_t2*1.2, 1.5]),
+                                   circbasename='t2star')
 
-        self.assertAlmostEqual(fit.time[0], expected_t2, delta=2,
+        self.assertAlmostEqual(fit.time(qid=0), expected_t2, delta=2,
                                msg='Calculated T2 is inaccurate')
         self.assertTrue(
-            fit.time_err[0] < 2,
+            fit.time_err(qid=0) < 2,
             'Confidence in T2 calculation is too low: ' + str(fit.time_err))
 
         # Estimate T2* via an oscilliator function
@@ -99,10 +100,10 @@ class TestT2Star(unittest.TestCase):
                                        [1.5, expected_t2*1.2, omega+0.02,
                                         np.pi, 1.5]))
 
-        self.assertAlmostEqual(fit.time[0], expected_t2, delta=2,
+        self.assertAlmostEqual(fit.time(qid=0), expected_t2, delta=2,
                                msg='Calculated T2 is inaccurate')
         self.assertTrue(
-            fit.time_err[0] < 2,
+            fit.time_err(qid=0) < 2,
             'Confidence in T2 calculation is too low: ' + str(fit.time_err))
 
         # TODO: add SPAM
@@ -149,10 +150,10 @@ class TestT1(unittest.TestCase):
                        fit_p0=[initial_a, initial_t1, initial_c],
                        fit_bounds=([0, 0, -1], [2, expected_t1*1.2, 1]))
 
-        self.assertAlmostEqual(fit.time[0], expected_t1, delta=2,
+        self.assertAlmostEqual(fit.time(qid=0), expected_t1, delta=2,
                                msg='Calculated T1 is inaccurate')
         self.assertTrue(
-            fit.time_err[0] < 30,
+            fit.time_err(qid=0) < 30,
             'Confidence in T1 calculation is too low: ' + str(fit.time_err))
 
 
@@ -198,10 +199,10 @@ class TestT2(unittest.TestCase):
                        fit_p0=[initial_a, initial_t2, initial_c],
                        fit_bounds=([0, 0, -1], [2, expected_t2*1.2, 1]))
 
-        self.assertAlmostEqual(fit.time[0], expected_t2, delta=5,
+        self.assertAlmostEqual(fit.time(qid=0), expected_t2, delta=5,
                                msg='Calculated T2 is inaccurate')
         self.assertTrue(
-            fit.time_err[0] < 5,
+            fit.time_err(qid=0) < 5,
             'Confidence in T2 calculation is too low: ' + str(fit.time_err))
 
 
