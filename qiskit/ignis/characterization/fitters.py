@@ -300,6 +300,14 @@ class BaseFitter:
 
         return a * np.exp(-x / tau) * np.cos(2 * np.pi * f * x + phi) + c
 
+    @staticmethod
+    def _osc_nodecay_fit_fun(x, a, f, phi, c):
+        """
+        Function used to fit the decay cosine
+        """
+
+        return a * np.cos(2 * np.pi * f * x + phi) + c
+
 
 class BaseCoherenceFitter(BaseFitter):
     """
