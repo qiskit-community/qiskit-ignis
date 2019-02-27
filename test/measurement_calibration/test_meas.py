@@ -21,6 +21,7 @@ expected (equally distributed) result
 """
 
 import unittest
+import os
 import pickle
 import numpy as np
 import qiskit
@@ -243,7 +244,8 @@ class TestMeasCal(unittest.TestCase):
 
         # pre-generated results with noise
         # load from pickled file
-        fo = open('test_meas_results.pkl', 'rb')
+        fo = open(os.path.join(
+            os.path.dirname(__file__), 'test_meas_results.pkl'), 'rb')
         tests = pickle.load(fo)
         fo.close()
 
