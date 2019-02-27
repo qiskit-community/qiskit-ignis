@@ -221,7 +221,7 @@ class TestZZ(unittest.TestCase):
         Then verify that the calculated ZZ matches the zz parameter.
         """
 
-        num_of_gates = np.arange(0, 100, 4)
+        num_of_gates = np.arange(0, 60, 3)
         gate_time = 0.1
         qubits = [0]
         spectators = [1]
