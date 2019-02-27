@@ -105,8 +105,8 @@ class MeasurementFitter():
             assign_fid_list.append(0)
             for state_idx_i in fid_label_sublist:
                 for state_idx_j in fid_label_sublist:
-                    assign_fid_list[-1] += self._cal_matrix[state_idx_i,
-                                                            state_idx_j]
+                    assign_fid_list[-1] += self._cal_matrix[state_idx_i]\
+                                                           [state_idx_j]
             assign_fid_list[-1] /= len(fid_label_sublist)
 
         return np.mean(assign_fid_list)
