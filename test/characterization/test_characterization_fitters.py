@@ -17,7 +17,10 @@ import unittest
 
 import numpy as np
 
-from qiskit.ignis.characterization.coherence.fitters import T1Fitter, T2Fitter, T2StarFitter
+from qiskit.ignis.characterization.coherence.fitters import T1Fitter, \
+                                                            T2Fitter, \
+                                                            T2StarFitter
+
 from qiskit.ignis.characterization.hamiltonian.fitters import ZZFitter
 
 
@@ -29,8 +32,10 @@ class TestFitters(unittest.TestCase):
         Test fitters of Ignis characterization
         """
 
-        files_with_pickles = ['test_fitters_t1.pickle', 'test_fitters_t2.pickle',
-                              'test_fitters_t2star.pickle', 'test_fitters_zz.pickle']
+        files_with_pickles = ['test_fitters_t1.pkl', 'test_fitters_t2.pkl',
+                              'test_fitters_t2star.pkl',
+                              'test_fitters_zz.pkl']
+
         for picfile in files_with_pickles:
             fo = open(os.path.join(os.path.dirname(__file__),
                                    picfile), 'rb')
@@ -50,32 +55,42 @@ class TestFitters(unittest.TestCase):
             elif fit_type == 'zz':
                 fit = ZZFitter(**input_to_fitter)
             else:
-                raise NotImplementedError('Unrecognized fitter type ' + fit_type)
+                raise NotImplementedError('Unrecognized fitter type '
+                                          + fit_type)
 
             expected_fit = file_content['expected_fit']
             series = fit.series
             self.assertTrue(series == expected_fit.series and
-                            sorted(series) == sorted(list(fit.params.keys())) and
-                            sorted(series) == sorted(list(expected_fit.params.keys())),
-                            'Incorrect series in '+ error_msg_prefix)
+                            sorted(series) ==
+                            sorted(list(fit.params.keys())) and
+                            sorted(series) ==
+                            sorted(list(expected_fit.params.keys())),
+                            'Incorrect series in ' + error_msg_prefix)
 
             num_of_qubits = len(input_to_fitter['qubits'])
             for serie in series:
-                self.assertTrue(num_of_qubits == len(fit.params[serie]) and
-                                num_of_qubits == len(expected_fit.params[serie]) and
-                                num_of_qubits == len(fit.params_err[serie]) and
-                                num_of_qubits == len(expected_fit.params_err[serie]),
+                self.assertTrue(num_of_qubits ==
+                                len(fit.params[serie]) and
+                                num_of_qubits ==
+                                len(expected_fit.params[serie]) and
+                                num_of_qubits ==
+                                len(fit.params_err[serie]) and
+                                num_of_qubits ==
+                                len(expected_fit.params_err[serie]),
                                 'Error for serie ' + serie + error_msg_prefix)
 
                 self.assertTrue(
                     all(
                         (all(np.isclose(a, b) for a, b in zip(
-                            fit.params[serie][qubit], expected_fit.params[serie][qubit]))
+                            fit.params[serie][qubit],
+                            expected_fit.params[serie][qubit]))
                          and
                          all(np.isclose(a, b) for a, b in zip(
-                             fit.params_err[serie][qubit], expected_fit.params_err[serie][qubit])))
+                             fit.params_err[serie][qubit],
+                             expected_fit.params_err[serie][qubit])))
                         for qubit in range(num_of_qubits)),
-                    'Incorrect fit parameters for serie' + serie + error_msg_prefix)
+                    'Incorrect fit parameters for serie'
+                    + serie + error_msg_prefix)
 
 
 if __name__ == '__main__':
