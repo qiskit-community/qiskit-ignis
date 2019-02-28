@@ -44,8 +44,8 @@ class TestT2Star(unittest.TestCase):
         # Setting parameters
 
         num_of_gates = num_of_gates = np.append(
-            (np.linspace(10, 150, 30)).astype(int),
-            (np.linspace(160, 450, 20)).astype(int))
+            (np.linspace(10, 150, 10)).astype(int),
+            (np.linspace(160, 450, 5)).astype(int))
         gate_time = 0.1
         qubits = [0]
 
@@ -55,7 +55,7 @@ class TestT2Star(unittest.TestCase):
         noise_model.add_all_qubit_quantum_error(error, 'id')
 
         backend = qiskit.Aer.get_backend('qasm_simulator')
-        shots = 300
+        shots = 200
 
         # Estimating T2* via an exponential function
         circs, xdata, _ = t2star_circuits(num_of_gates, gate_time,
@@ -114,7 +114,7 @@ class TestT1(unittest.TestCase):
         """
 
         # 25 numbers ranging from 1 to 200, linearly spaced
-        num_of_gates = (np.linspace(1, 200, 25)).astype(int)
+        num_of_gates = (np.linspace(1, 200, 15)).astype(int)
         gate_time = 0.11
         qubits = [0]
 
@@ -127,7 +127,7 @@ class TestT1(unittest.TestCase):
         # TODO: Include SPAM errors
 
         backend = qiskit.Aer.get_backend('qasm_simulator')
-        shots = 300
+        shots = 100
         backend_result = qiskit.execute(
             circs, backend,
             shots=shots,
@@ -154,7 +154,7 @@ class TestT2(unittest.TestCase):
         Then verify that the calculated T2 matches the t2 parameter.
         """
 
-        num_of_gates = (np.linspace(1, 30, 30)).astype(int)
+        num_of_gates = (np.linspace(1, 30, 10)).astype(int)
         gate_time = 0.11
         qubits = [0]
         n_echos = 5
@@ -170,7 +170,7 @@ class TestT2(unittest.TestCase):
         # TODO: Include SPAM errors
 
         backend = qiskit.Aer.get_backend('qasm_simulator')
-        shots = 300
+        shots = 100
         backend_result = qiskit.execute(
             circs, backend,
             shots=shots,
@@ -197,7 +197,7 @@ class TestZZ(unittest.TestCase):
         Then verify that the calculated ZZ matches the zz parameter.
         """
 
-        num_of_gates = np.arange(0, 60, 3)
+        num_of_gates = np.arange(0, 60, 10)
         gate_time = 0.1
         qubits = [0]
         spectators = [1]
@@ -217,7 +217,7 @@ class TestZZ(unittest.TestCase):
 
         # Run the simulator
         backend = qiskit.Aer.get_backend('qasm_simulator')
-        shots = 300
+        shots = 100
         # For demonstration purposes split the execution into two jobs
         backend_result = qiskit.execute(circs, backend,
                                         shots=shots,
