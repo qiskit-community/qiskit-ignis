@@ -308,6 +308,14 @@ class BaseFitter:
 
         return a * np.cos(2 * np.pi * f * x + phi) + c
 
+    @staticmethod
+    def _cal_fit_fun(x, a, thetaerr, phierr, theta0, phi0, c):
+        """
+        Function used to fit gate calibrations
+        """
+
+        return a*np.cos((theta0+thetaerr) * x + phi0 + phierr) + c
+
 
 class BaseCoherenceFitter(BaseFitter):
     """
