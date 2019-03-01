@@ -12,6 +12,7 @@ Circuit generation for measuring gate errors
 import numpy as np
 import qiskit
 
+
 def ampcal_1Q_circuits(max_reps, qubits):
     """
     Generates circuit for measuring the amplitude error of
@@ -37,23 +38,22 @@ def ampcal_1Q_circuits(max_reps, qubits):
 
     qr = qiskit.QuantumRegister(max(qubits)+1)
     cr = qiskit.ClassicalRegister(len(qubits))
-
-
     circuits = []
 
     for circ_index, circ_length in enumerate(xdata):
         circ = qiskit.QuantumCircuit(qr, cr)
         circ.name = 'ampcal1Qcircuit_' + str(circ_index) + '_0'
         for qind, qubit in enumerate(qubits):
-            circ.u2(0.0 ,0.0, qr[qubit])
-            for nrep in range(circ_length):
-                circ.u2(0.0 ,0.0, qr[qubit])
+            circ.u2(0.0, 0.0, qr[qubit])
+            for _ in range(circ_length):
+                circ.u2(0.0, 0.0, qr[qubit])
 
         for qind, qubit in enumerate(qubits):
             circ.measure(qr[qubit], cr[qind])
         circuits.append(circ)
 
     return circuits, xdata
+
 
 def anglecal_1Q_circuits(max_reps, qubits, angleerr=0.0):
     """
@@ -77,31 +77,30 @@ def anglecal_1Q_circuits(max_reps, qubits, angleerr=0.0):
 
     qr = qiskit.QuantumRegister(max(qubits)+1)
     cr = qiskit.ClassicalRegister(len(qubits))
-
-
     circuits = []
 
     for circ_index, circ_length in enumerate(np.arange(max_reps)):
         circ = qiskit.QuantumCircuit(qr, cr)
         circ.name = 'anglecal1Qcircuit_' + str(circ_index) + '_0'
         for qind, qubit in enumerate(qubits):
-            circ.u2(0.0 ,0.0, qr[qubit]) # Y90p
-            for nrep in range(circ_length):
+            circ.u2(0.0, 0.0, qr[qubit])  # Y90p
+            for _ in range(circ_length):
                 if angleerr != 0:
-                    circ.u1(2*angleerr,qr[qubit])
-                circ.x(qr[qubit]) # Xp
+                    circ.u1(2*angleerr, qr[qubit])
+                circ.x(qr[qubit])  # Xp
                 if angleerr != 0:
-                    circ.u1(-2*angleerr,qr[qubit])
-                circ.y(qr[qubit]) # Yp
+                    circ.u1(-2*angleerr, qr[qubit])
+                circ.y(qr[qubit])  # Yp
 
             if angleerr != 0:
-                circ.u1(angleerr,qr[qubit])
-            circ.u2(np.pi/2 , -np.pi/2, qr[qubit]) # X90p
+                circ.u1(angleerr, qr[qubit])
+            circ.u2(np.pi/2, -np.pi/2, qr[qubit])  # X90p
         for qind, qubit in enumerate(qubits):
             circ.measure(qr[qubit], cr[qind])
         circuits.append(circ)
 
     return circuits, xdata
+
 
 def ampcal_cx_circuits(max_reps, qubits, control_qubits):
     """
@@ -128,12 +127,10 @@ def ampcal_cx_circuits(max_reps, qubits, control_qubits):
        A list of QuantumCircuit
        xdata: a list of gate repetitions
     """
-
     xdata = np.arange(max_reps)
 
     qr = qiskit.QuantumRegister(max([max(qubits), max(control_qubits)])+1)
     cr = qiskit.ClassicalRegister(len(qubits))
-
 
     circuits = []
 
@@ -142,15 +139,16 @@ def ampcal_cx_circuits(max_reps, qubits, control_qubits):
         circ.name = 'ampcalcxcircuit_' + str(circ_index) + '_0'
         for qind, qubit in enumerate(qubits):
             circ.x(qr[control_qubits[qind]])
-            circ.u2(np.pi/2, -np.pi/2, qr[qubit]) # X90p
-            for nrep in range(circ_length):
-                circ.cx(qr[control_qubits[qind]],qr[qubit])
+            circ.u2(np.pi/2, -np.pi/2, qr[qubit])  # X90p
+            for _ in range(circ_length):
+                circ.cx(qr[control_qubits[qind]], qr[qubit])
 
         for qind, qubit in enumerate(qubits):
             circ.measure(qr[qubit], cr[qind])
         circuits.append(circ)
 
     return circuits, xdata
+
 
 def anglecal_cx_circuits(max_reps, qubits, control_qubits, angleerr=0.0):
     """
@@ -183,7 +181,6 @@ def anglecal_cx_circuits(max_reps, qubits, control_qubits, angleerr=0.0):
     qr = qiskit.QuantumRegister(max([max(qubits), max(control_qubits)])+1)
     cr = qiskit.ClassicalRegister(len(qubits))
 
-
     circuits = []
 
     for circ_index, circ_length in enumerate(xdata):
@@ -191,16 +188,16 @@ def anglecal_cx_circuits(max_reps, qubits, control_qubits, angleerr=0.0):
         circ.name = 'anglecalcxcircuit_' + str(circ_index) + '_0'
         for qind, qubit in enumerate(qubits):
             circ.x(qr[control_qubits[qind]])
-            circ.u2(0.0 ,0.0, qr[qubit]) # Y90p (target)
-            for nrep in range(circ_length):
+            circ.u2(0.0, 0.0, qr[qubit])  # Y90p (target)
+            for _ in range(circ_length):
                 if angleerr != 0:
-                    circ.u1(angleerr,qr[qubit])
-                circ.cx(qr[control_qubits[qind]],qr[qubit])
+                    circ.u1(angleerr, qr[qubit])
+                circ.cx(qr[control_qubits[qind]], qr[qubit])
                 if angleerr != 0:
-                    circ.u1(-angleerr,qr[qubit])
-                circ.y(qr[qubit]) # Yp (target)
+                    circ.u1(-angleerr, qr[qubit])
+                circ.y(qr[qubit])  # Yp (target)
 
-        circ.u2(np.pi/2. , -np.pi/2., qr[qubit]) # X90p (target)
+            circ.u2(np.pi/2., -np.pi/2., qr[qubit])  # X90p (target)
         for qind, qubit in enumerate(qubits):
             circ.measure(qr[qubit], cr[qind])
         circuits.append(circ)
