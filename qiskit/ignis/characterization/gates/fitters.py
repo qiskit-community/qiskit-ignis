@@ -25,20 +25,22 @@ class AmpCalFitter(BaseCoherenceFitter):
         for cind, _ in enumerate(xdata):
             circuit_names.append('ampcal1Qcircuit_%d_' % cind)
 
-        #theoretically
-        #curve is 0.5-0.5*cos((x+1)*2*(pi/4+dphi))
-        #cos(pi/2*x + 2*x*dphi + pi/2+2*dphi)
-
-        fit_func = lambda x, thetaerr, c: \
-            BaseCoherenceFitter._cal_fit_fun(x, -0.5, thetaerr, thetaerr,
-                                             np.pi/2, np.pi/2, c)
+        # theoretically
+        # curve is 0.5-0.5*cos((x+1)*2*(pi/4+dphi))
+        # cos(pi/2*x + 2*x*dphi + pi/2+2*dphi)
 
         BaseCoherenceFitter.__init__(self, '$AmpCal1Q$',
                                      backend_result, xdata,
-                                     qubits, fit_func, fit_p0,
+                                     qubits, self._amp_cal_fit, fit_p0,
                                      fit_bounds, circuit_names,
                                      expected_state='1',
                                      time_index=1)
+
+    @staticmethod
+    def _amp_cal_fit(x, thetaerr, c):
+        return BaseCoherenceFitter._cal_fit_fun(x, -0.5,
+                                                thetaerr, thetaerr,
+                                                np.pi/2, np.pi/2, c)
 
     def angle_err(self, qind=-1):
 
@@ -96,6 +98,7 @@ class AmpCalFitter(BaseCoherenceFitter):
 
         return ax
 
+
 class AngleCalFitter(BaseCoherenceFitter):
     """
     Amplitude error fitter
@@ -108,18 +111,20 @@ class AngleCalFitter(BaseCoherenceFitter):
         for cind, _ in enumerate(xdata):
             circuit_names.append('anglecal1Qcircuit_%d_' % cind)
 
-        #fit function is  0.5-0.5*sin(pi/2*x+delta*x+delta+pi/2)
-
-        fit_func = lambda x, thetaerr, c: \
-            BaseCoherenceFitter._cal_fit_fun(x, -0.5, thetaerr, thetaerr,
-                                             np.pi/2, np.pi/2, c)
+        # fit function is  0.5-0.5*sin(pi/2*x+delta*x+delta+pi/2)
 
         BaseCoherenceFitter.__init__(self, '$AngleCal1Q$',
                                      backend_result, xdata,
-                                     qubits, fit_func, fit_p0,
+                                     qubits, self._angle_cal_fit, fit_p0,
                                      fit_bounds, circuit_names,
                                      expected_state='1',
                                      time_index=1)
+
+    @staticmethod
+    def _angle_cal_fit(x, thetaerr, c):
+        return BaseCoherenceFitter._cal_fit_fun(x, -0.5,
+                                                thetaerr, thetaerr,
+                                                np.pi/2, np.pi/2, c)
 
     def angle_err(self, qind=-1):
 
@@ -177,6 +182,7 @@ class AngleCalFitter(BaseCoherenceFitter):
 
         return ax
 
+
 class AmpCalCXFitter(BaseCoherenceFitter):
     """
     Amplitude error fitter
@@ -189,20 +195,22 @@ class AmpCalCXFitter(BaseCoherenceFitter):
         for cind, _ in enumerate(xdata):
             circuit_names.append('ampcalcxcircuit_%d_' % cind)
 
-        #theoretically
-        #curve is 0.5-0.5*cos((x+1)*2*(pi/4+dphi))
-        #cos(pi/2*x + 2*x*dphi + pi/2+2*dphi)
-
-        fit_func = lambda x, thetaerr, c: \
-            BaseCoherenceFitter._cal_fit_fun(x, -0.5, thetaerr, 0,
-                                             np.pi, np.pi/2, c)
+        # theoretically
+        # curve is 0.5-0.5*cos((x+1)*2*(pi/4+dphi))
+        # cos(pi/2*x + 2*x*dphi + pi/2+2*dphi)
 
         BaseCoherenceFitter.__init__(self, '$AmpCalCX$',
                                      backend_result, xdata,
-                                     qubits, fit_func, fit_p0,
+                                     qubits, self._amp_calcx_fit, fit_p0,
                                      fit_bounds, circuit_names,
                                      expected_state='1',
                                      time_index=1)
+
+    @staticmethod
+    def _amp_calcx_fit(x, thetaerr, c):
+        return BaseCoherenceFitter._cal_fit_fun(x, -0.5,
+                                                thetaerr, 0,
+                                                np.pi, np.pi/2, c)
 
     def angle_err(self, qind=-1):
 
@@ -260,6 +268,7 @@ class AmpCalCXFitter(BaseCoherenceFitter):
 
         return ax
 
+
 class AngleCalCXFitter(BaseCoherenceFitter):
     """
     Amplitude error fitter
@@ -272,18 +281,20 @@ class AngleCalCXFitter(BaseCoherenceFitter):
         for cind, _ in enumerate(xdata):
             circuit_names.append('anglecalcxcircuit_%d_' % cind)
 
-        #fit function is  0.5-0.5*sin(pi/2*x+delta*x+delta+pi/2)
-
-        fit_func = lambda x, thetaerr, c: \
-            BaseCoherenceFitter._cal_fit_fun(x, -0.5, thetaerr, 0.0,
-                                             np.pi, np.pi/2, c)
+        # fit function is  0.5-0.5*sin(pi/2*x+delta*x+delta+pi/2)
 
         BaseCoherenceFitter.__init__(self, '$AngleCalCX$',
                                      backend_result, xdata,
-                                     qubits, fit_func, fit_p0,
+                                     qubits, self._angle_calcx_fit, fit_p0,
                                      fit_bounds, circuit_names,
                                      expected_state='1',
                                      time_index=1)
+
+    @staticmethod
+    def _angle_calcx_fit(x, thetaerr, c):
+        return BaseCoherenceFitter._cal_fit_fun(x, -0.5,
+                                                thetaerr, 0.0,
+                                                np.pi, np.pi/2, c)
 
     def angle_err(self, qind=-1):
 

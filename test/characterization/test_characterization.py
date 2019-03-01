@@ -28,6 +28,15 @@ from qiskit.ignis.characterization.coherence import t1_circuits, \
 
 from qiskit.ignis.characterization.hamiltonian import zz_circuits, ZZFitter
 
+from qiskit.ignis.characterization.gates import (AmpCalFitter,
+                                                 ampcal_1Q_circuits,
+                                                 AngleCalFitter,
+                                                 anglecal_1Q_circuits,
+                                                 AmpCalCXFitter,
+                                                 ampcal_cx_circuits,
+                                                 AngleCalCXFitter,
+                                                 anglecal_cx_circuits)
+
 
 class TestT2Star(unittest.TestCase):
     """
@@ -233,6 +242,143 @@ class TestZZ(unittest.TestCase):
                          initial_phi, initial_c],
                  fit_bounds=([-0.5, 0, -np.pi, -0.5],
                              [1.5, 2*osc_freq, np.pi, 1.5]))
+
+
+class TestCals(unittest.TestCase):
+    """
+    Test cals
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        Init the test cal simulator
+        """
+
+        unittest.TestCase.__init__(self, *args, **kwargs)
+
+        self._qubits = [0, 2]
+        self._controls = [1, 3]
+        self._maxrep = 10
+        self._circs = []
+
+    def run_sim(self, noise):
+        """
+        Run the simulator for these test cals
+        """
+
+        # Run the simulator
+        backend = qiskit.Aer.get_backend('qasm_simulator')
+        shots = 500
+        # For demonstration purposes split the execution into two jobs
+        backend_result = qiskit.execute(self._circs, backend,
+                                        shots=shots,
+                                        noise_model=noise).result()
+
+        return backend_result
+
+    def test_ampcal1Q(self):
+        """
+        Run the amplitude cal circuit generation and through the
+        simulator to make sure there are no errors
+        """
+
+        self._circs, xdata = ampcal_1Q_circuits(self._maxrep, self._qubits)
+
+        # Set the simulator
+        # Add a rotation error
+        err_unitary = np.zeros([2, 2], dtype=complex)
+        angle_err = 0.1
+        for i in range(2):
+            err_unitary[i, i] = np.cos(angle_err)
+            err_unitary[i, (i+1) % 2] = np.sin(angle_err)
+        err_unitary[1, 0] *= -1.0
+
+        error = coherent_unitary_error(err_unitary)
+        noise_model = NoiseModel()
+        noise_model.add_all_qubit_quantum_error(error, 'u2')
+
+        initial_theta = 0.02
+        initial_c = 0.5
+
+        fit = AmpCalFitter(self.run_sim(noise_model), xdata, self._qubits,
+                           fit_p0=[initial_theta, initial_c],
+                           fit_bounds=([-np.pi, -1],
+                                       [np.pi, 1]))
+
+        self.assertAlmostEqual(fit.angle_err(0), -0.1, 2)
+
+    def test_anglecal1Q(self):
+        """
+        Run the angle cal circuit generation and through the
+        simulator to make sure there are no errors
+        """
+
+        self._circs, xdata = anglecal_1Q_circuits(self._maxrep, self._qubits,
+                                                  angleerr=0.1)
+
+        initial_theta = 0.02
+        initial_c = 0.5
+
+        fit = AngleCalFitter(self.run_sim([]), xdata, self._qubits,
+                             fit_p0=[initial_theta, initial_c],
+                             fit_bounds=([-np.pi, -1],
+                                         [np.pi, 1]))
+
+        self.assertAlmostEqual(fit.angle_err(0), 0.1, 2)
+
+    def test_ampcalCX(self):
+        """
+        Run the amplitude cal circuit generation for CX
+        and through the
+        simulator to make sure there are no errors
+        """
+
+        self._circs, xdata = ampcal_cx_circuits(self._maxrep,
+                                                self._qubits,
+                                                self._controls)
+
+        err_unitary = np.eye(4, dtype=complex)
+        angle_err = 0.15
+        for i in range(2):
+            err_unitary[2+i, 2+i] = np.cos(angle_err)
+            err_unitary[2+i, 2+(i+1) % 2] = 1j*np.sin(angle_err)
+
+        error = coherent_unitary_error(err_unitary)
+        noise_model = NoiseModel()
+        noise_model.add_nonlocal_quantum_error(error, 'cx', [1, 0], [0, 1])
+
+        initial_theta = 0.02
+        initial_c = 0.5
+
+        fit = AmpCalCXFitter(self.run_sim(noise_model), xdata, self._qubits,
+                             fit_p0=[initial_theta, initial_c],
+                             fit_bounds=([-np.pi, -1],
+                                         [np.pi, 1]))
+
+        self.assertAlmostEqual(fit.angle_err(0), 0.15, 2)
+        self.assertAlmostEqual(fit.angle_err(1), 0.0, 2)
+
+    def test_anglecalCX(self):
+        """
+        Run the angle cal circuit generation and through the
+        simulator to make sure there are no errors
+        """
+
+        self._circs, xdata = anglecal_cx_circuits(self._maxrep,
+                                                  self._qubits,
+                                                  self._controls,
+                                                  angleerr=0.1)
+
+        initial_theta = 0.02
+        initial_c = 0.5
+
+        fit = AngleCalCXFitter(self.run_sim([]), xdata, self._qubits,
+                               fit_p0=[initial_theta, initial_c],
+                               fit_bounds=([-np.pi, -1],
+                                           [np.pi, 1]))
+
+        self.assertAlmostEqual(fit.angle_err(0), 0.1, 2)
+        self.assertAlmostEqual(fit.angle_err(1), 0.1, 2)
 
 
 if __name__ == '__main__':
