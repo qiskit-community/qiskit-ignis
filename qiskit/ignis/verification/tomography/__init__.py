@@ -20,7 +20,7 @@ from .fitters import StateTomographyFitter
 from .fitters import ProcessTomographyFitter
 from .fitters import TomographyFitter
 
-# Utility functions TODO: move to qiskit.tools
+# Utility functions TODO: move to qiskit.quantum_info
 from .data import marginal_counts     # TODO: move to qiskit.tools
 from .data import combine_counts      # TODO: move to qiskit.tools
 from .data import expectation_counts  # TODO: move to qiskit.tools
