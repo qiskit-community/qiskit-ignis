@@ -26,8 +26,10 @@ import pickle
 import numpy as np
 import qiskit
 from qiskit import QuantumCircuit, ClassicalRegister, Aer
-from qiskit.ignis.mitigation.measurement import MeasurementFitter
-from qiskit.ignis.mitigation.measurement import measurement_calibration
+from qiskit.ignis.mitigation.measurement \
+     import (CompleteMeasFitter,
+             complete_meas_cal,
+             MeasurementFilter)
 
 
 class TestMeasCal(unittest.TestCase):
@@ -110,7 +112,7 @@ class TestMeasCal(unittest.TestCase):
                 qubits, weight = self.choose_calibration(nq, pattern_type)
                 # Generate the calibration circuits
                 meas_calibs, state_labels = \
-                    measurement_calibration(qubit_list=qubits,
+                    complete_meas_cal(qubit_list=qubits,
                                             circlabel='test')
 
                 # Perform an ideal execution on the generated circuits
@@ -121,7 +123,7 @@ class TestMeasCal(unittest.TestCase):
                 cal_results = job.result()
 
                 # Make a calibration matrix
-                meas_cal = MeasurementFitter(cal_results, state_labels,
+                meas_cal = CompleteMeasFitter(cal_results, state_labels,
                                              circlabel='test')
 
                 # Assert that the calibration matrix is equal to identity
@@ -140,15 +142,18 @@ class TestMeasCal(unittest.TestCase):
                 results_dict, results_list = \
                     self.generate_ideal_results(state_labels, weight)
 
+                #output the filter
+                meas_filter = meas_cal.filter
+
                 # Apply the calibration matrix to results
                 # in list and dict forms using different methods
-                results_dict_1 = meas_cal.apply(results_dict,
+                results_dict_1 = meas_filter.apply(results_dict,
                                                 method='least_squares')
-                results_dict_0 = meas_cal.apply(results_dict,
+                results_dict_0 = meas_filter.apply(results_dict,
                                                 method='pseudo_inverse')
-                results_list_1 = meas_cal.apply(results_list,
+                results_list_1 = meas_filter.apply(results_list,
                                                 method='least_squares')
-                results_list_0 = meas_cal.apply(results_list,
+                results_list_0 = meas_filter.apply(results_list,
                                                 method='pseudo_inverse')
 
                 # Assert that the results are equally distributed
@@ -175,7 +180,8 @@ class TestMeasCal(unittest.TestCase):
                     qr = qiskit.QuantumRegister(5)
                     # Generate the calibration circuits
                     meas_calibs, state_labels = \
-                        measurement_calibration(qubit_list=[1, 2, 3], qr=qr)
+                        complete_meas_cal(qubit_list=[1, 2, 3],
+                                                         qr=qr)
 
                     # Run the calibration circuits
                     backend = Aer.get_backend('qasm_simulator')
@@ -185,7 +191,7 @@ class TestMeasCal(unittest.TestCase):
                     cal_results = job.result()
 
                     # Make a calibration matrix
-                    meas_cal = MeasurementFitter(cal_results, state_labels)
+                    meas_cal = CompleteMeasFitter(cal_results, state_labels)
                     # Calculate the fidelity
                     fidelity = meas_cal.readout_fidelity()
 
@@ -208,10 +214,12 @@ class TestMeasCal(unittest.TestCase):
                     predicted_results = {'000': 0.5,
                                          '111': 0.5}
 
+                    meas_filter = meas_cal.filter
+
                     # Calculate the results after mitigation
-                    output_results_pseudo_inverse = meas_cal.apply(
+                    output_results_pseudo_inverse = meas_filter.apply(
                         results, method='pseudo_inverse').get_counts(0)
-                    output_results_least_square = meas_cal.apply(
+                    output_results_least_square = meas_filter.apply(
                         results, method='least_squares').get_counts(0)
 
                     # Compare with expected fidelity and expected results
@@ -252,7 +260,7 @@ class TestMeasCal(unittest.TestCase):
         # Set the state labels
         state_labels = ['000', '001', '010', '011',
                         '100', '101', '110', '111']
-        meas_cal = MeasurementFitter(None, state_labels,
+        meas_cal = CompleteMeasFitter(None, state_labels,
                                      circlabel='test')
 
         for tst_index, _ in enumerate(tests):
@@ -261,10 +269,13 @@ class TestMeasCal(unittest.TestCase):
             # Calculate the fidelity
             fidelity = meas_cal.readout_fidelity()
 
+            meas_filter = MeasurementFilter(tests[tst_index]['cal_matrix'],
+                                            state_labels)
+
             # Calculate the results after mitigation
-            output_results_pseudo_inverse = meas_cal.apply(
+            output_results_pseudo_inverse = meas_filter.apply(
                 tests[tst_index]['results'], method='pseudo_inverse')
-            output_results_least_square = meas_cal.apply(
+            output_results_least_square = meas_filter.apply(
                 tests[tst_index]['results'], method='least_squares')
 
             # Compare with expected fidelity and expected results

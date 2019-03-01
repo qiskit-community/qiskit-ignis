@@ -55,6 +55,11 @@ class CompleteMeasFitter():
         """Return cal_matrix."""
         return self._cal_matrix
 
+    @cal_matrix.setter
+    def cal_matrix(self, new_cal_matrix):
+        """set cal_matrix."""
+        self._cal_matrix = new_cal_matrix
+
     @property
     def filter(self):
         """return a measurement filter using the cal matrix"""
