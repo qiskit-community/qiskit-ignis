@@ -113,7 +113,7 @@ class TestMeasCal(unittest.TestCase):
                 # Generate the calibration circuits
                 meas_calibs, state_labels = \
                     complete_meas_cal(qubit_list=qubits,
-                                            circlabel='test')
+                                      circlabel='test')
 
                 # Perform an ideal execution on the generated circuits
                 backend = Aer.get_backend('qasm_simulator')
@@ -124,7 +124,7 @@ class TestMeasCal(unittest.TestCase):
 
                 # Make a calibration matrix
                 meas_cal = CompleteMeasFitter(cal_results, state_labels,
-                                             circlabel='test')
+                                              circlabel='test')
 
                 # Assert that the calibration matrix is equal to identity
                 IdentityMatrix = np.identity(2 ** weight)
@@ -142,19 +142,19 @@ class TestMeasCal(unittest.TestCase):
                 results_dict, results_list = \
                     self.generate_ideal_results(state_labels, weight)
 
-                #output the filter
+                # output the filter
                 meas_filter = meas_cal.filter
 
                 # Apply the calibration matrix to results
                 # in list and dict forms using different methods
                 results_dict_1 = meas_filter.apply(results_dict,
-                                                method='least_squares')
+                                                   method='least_squares')
                 results_dict_0 = meas_filter.apply(results_dict,
-                                                method='pseudo_inverse')
+                                                   method='pseudo_inverse')
                 results_list_1 = meas_filter.apply(results_list,
-                                                method='least_squares')
+                                                   method='least_squares')
                 results_list_0 = meas_filter.apply(results_list,
-                                                method='pseudo_inverse')
+                                                   method='pseudo_inverse')
 
                 # Assert that the results are equally distributed
                 self.assertListEqual(results_list, results_list_0.tolist())
@@ -181,7 +181,7 @@ class TestMeasCal(unittest.TestCase):
                     # Generate the calibration circuits
                     meas_calibs, state_labels = \
                         complete_meas_cal(qubit_list=[1, 2, 3],
-                                                         qr=qr)
+                                          qr=qr)
 
                     # Run the calibration circuits
                     backend = Aer.get_backend('qasm_simulator')
@@ -261,7 +261,7 @@ class TestMeasCal(unittest.TestCase):
         state_labels = ['000', '001', '010', '011',
                         '100', '101', '110', '111']
         meas_cal = CompleteMeasFitter(None, state_labels,
-                                     circlabel='test')
+                                      circlabel='test')
 
         for tst_index, _ in enumerate(tests):
             # Set the calibration matrix

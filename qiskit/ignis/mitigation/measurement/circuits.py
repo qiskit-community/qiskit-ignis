@@ -16,8 +16,7 @@ from qiskit import QuantumRegister, ClassicalRegister, \
     QuantumCircuit, QiskitError
 
 
-def complete_meas_cal(qubit_list=None,
-                                     qr=None, cr=None, circlabel=''):
+def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
     """
     Return a list of measurement calibration circuits for the full
     Hilbert space.
