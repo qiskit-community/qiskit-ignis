@@ -10,14 +10,14 @@
 
 """
 Measurement correction filters.
-"""
 
+"""
+from copy import deepcopy
 from scipy.optimize import minimize
 import scipy.linalg as la
 import numpy as np
 import qiskit
 from qiskit import QiskitError
-from copy import deepcopy
 
 
 class MeasurementFilter():
@@ -127,9 +127,9 @@ class MeasurementFilter():
             # counts and push back into the new result
             new_result = deepcopy(raw_data)
 
-            for resultidx, result in enumerate(raw_data.results):
+            for resultidx, _ in enumerate(raw_data.results):
                 new_counts = self.apply(
-                        raw_data.get_counts(resultidx), method=method)
+                    raw_data.get_counts(resultidx), method=method)
                 new_result.results[resultidx].data.counts = \
                     new_result.results[resultidx]. \
                     data.counts.from_dict(new_counts)
