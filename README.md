@@ -52,7 +52,7 @@ qobj = qiskit.compile(meas_cals, backend=backend, shots=1000)
 job = backend.run(qobj, noise_model=noise_model)
 cal_results = job.result()
 
-# Make a calibration matrix
+# Fit the results to make a calibration matrix
 meas_fitter = CompleteMeasFitter(cal_results, state_labels)
 
 # Make a 3Q GHZ state
@@ -73,10 +73,11 @@ results = job.result()
 raw_counts = results.get_counts()
 print("Results without mitigation:", raw_counts)
 
-#create a measurement filter from the cal
+# Create a measurement filter from the calibration matrix
 meas_filter = meas_fitter.filter
 
-# Results with mitigation
+# Apply the filter to the raw counts to mitigate the measurement
+# errors
 mitigated_counts = meas_filter.apply(raw_counts)
 print("Results with mitigation:", mitigated_counts)
 ```
