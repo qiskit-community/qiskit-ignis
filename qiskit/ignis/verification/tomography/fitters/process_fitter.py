@@ -10,9 +10,8 @@
 Maximum-Likelihood estimation quantum process tomography fitter
 """
 
-from qiskit import QiskitError
-
 import numpy as np
+from qiskit import QiskitError
 from .base_fitter import TomographyFitter
 from .cvx_fit import cvxpy, cvx_fit
 from .lstsq_fit import lstsq_fit
@@ -21,36 +20,18 @@ from .lstsq_fit import lstsq_fit
 class ProcessTomographyFitter(TomographyFitter):
     """Maximum-Likelihood estimation process tomography fitter."""
 
-    def __init__(self,
-                 result,
-                 circuits,
-                 meas_basis='Pauli',
-                 prep_basis='Pauli'):
-        """Initialize process tomography fitter with experimental data.
-
-        Args:
-            result (Result): a Qiskit Result object obtained from executing
-                            tomography circuits.
-            circuits (list): a list of circuits or circuit names to extract
-                            count information from the result object.
-            meas_basis (TomographyBasis, str): A function to return measurement
-                        operators corresponding to measurement outcomes. See
-                        Additional Information (default: 'Pauli')
-            prep_basis (TomographyBasis, str): A function to return preparation
-                        operators. See Additional Information (default: 'Pauli')
-        """
-        super().__init__(result, circuits, meas_basis, prep_basis)
-
     def fit(self, method='auto', standard_weights=True, beta=0.5, **kwargs):
         """
         Reconstruct a quantum state using CVXPY convex optimization.
 
         Args:
             method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
-            standard_weights (bool, optional): Apply weights to tomography data
-                                            based on count probability (default: True)
-            beta (float): hedging parameter for converting counts to probabilities
-                        (default: 0.5)
+            standard_weights (bool, optional): Apply weights
+                                            to tomography data
+                                            based on count probability
+                                            (default: True)
+            beta (float): hedging parameter for converting counts
+                        to probabilities (default: 0.5)
             **kwargs (optional): kwargs for fitter method.
 
         Returns:
@@ -85,10 +66,12 @@ class ProcessTomographyFitter(TomographyFitter):
             --------------
             The PSD keyword constrains the fitted matrix to be
             postive-semidefinite.
-            For the 'lstsq' fitter method the fitted matrix is rescaled using the
+            For the 'lstsq' fitter method the fitted matrix is
+            rescaled using the
             method proposed in Reference [1].
             For the 'cvx' fitter method the convex constraint makes the
-            optimization problem a SDP. If PSD=False the fitted matrix will still
+            optimization problem a SDP. If PSD=False the
+            fitted matrix will still
             be constrained to be Hermitian, but not PSD. In this case the
             optimization problem becomes a SOCP.
 
@@ -101,12 +84,18 @@ class ProcessTomographyFitter(TomographyFitter):
 
             Trace preserving (TP) constraint
             --------------------------------
-            The trace_preserving keyword constrains the fitted matrix to be TP.
-            This should only be used for process tomography, not state tomography.
-            Note that the TP constraint implicitly enforces the trace of the fitted
-            matrix to be equal to the square-root of the matrix dimension. If a
-            trace constraint is also specified that differs from this value the fit
-            will likely fail. Note that this can only be used for the CVX method.
+            The trace_preserving keyword constrains the fitted
+            matrix to be TP.
+            This should only be used for process tomography,
+            not state tomography.
+            Note that the TP constraint implicitly enforces
+            the trace of the fitted
+            matrix to be equal to the square-root of the
+            matrix dimension. If a
+            trace constraint is also specified that differs f
+            rom this value the fit
+            will likely fail. Note that this can
+            only be used for the CVX method.
 
             CVXPY Solvers:
             -------
@@ -122,13 +111,15 @@ class ProcessTomographyFitter(TomographyFitter):
                 (2012). Open access: arXiv:1106.5458 [quant-ph].
         """
         # Get fitter data
-        data, basis_matrix, weights = self._fitter_data(standard_weights, beta)
+        data, basis_matrix, weights = self._fitter_data(standard_weights,
+                                                        beta)
 
         # Calculate trace of Choi-matrix from projector length
         _, cols = np.shape(basis_matrix)
         dim = int(np.sqrt(np.sqrt(cols)))
         if dim ** 4 != cols:
-            raise ValueError("Input data does not correspond to a process matrix.")
+            raise ValueError("Input data does not correspond "
+                             "to a process matrix.")
         # Choose automatic method
         if method == 'auto':
             if cvxpy is None:
@@ -138,8 +129,7 @@ class ProcessTomographyFitter(TomographyFitter):
         if method == 'lstsq':
             return lstsq_fit(data, basis_matrix, weights=weights,
                              trace=dim, **kwargs)
-        elif method == 'cvx':
+        if method == 'cvx':
             return cvx_fit(data, basis_matrix, weights=weights, trace=dim,
                            trace_preserving=True, **kwargs)
-        else:
-            raise QiskitError('Unrecognised fit method {}'.format(method))
+        raise QiskitError('Unrecognised fit method {}'.format(method))

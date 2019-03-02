@@ -15,6 +15,7 @@ from qiskit import QuantumRegister, QuantumCircuit, Aer
 from qiskit.quantum_info import state_fidelity
 
 import qiskit.ignis.verification.tomography as tomo
+import qiskit.ignis.verification.tomography.fitters.cvx_fit as cvx_fit
 
 
 def run_circuit_and_tomography(circuit, qubits):
@@ -23,11 +24,30 @@ def run_circuit_and_tomography(circuit, qubits):
     qst = tomo.state_tomography_circuits(circuit, qubits)
     job = qiskit.execute(qst, Aer.get_backend('qasm_simulator'),
                          shots=5000)
-    tomo_counts = tomo.tomography_data(job.result(), qst)
-    probs, basis_matrix, _ = tomo.fitter_data(tomo_counts)
-    rho_cvx = tomo.state_cvx_fit(probs, basis_matrix)
-    rho_mle = tomo.state_mle_fit(probs, basis_matrix)
+    tomo_fit = tomo.StateTomographyFitter(job.result(), qst)
+    rho_cvx = tomo_fit.fit(method='cvx')
+    rho_mle = tomo_fit.fit(method='lstsq')
     return (rho_cvx, rho_mle, psi)
+
+
+class TestFitter(unittest.TestCase):
+
+    def test_trace_constraint(self):
+        p = numpy.array([1/2, 1/2, 1/2, 1/2, 1/2, 1/2])
+
+        # the basis matrix for 1-qubit measurement in the Pauli basis
+        A = numpy.array([
+            [0.5 + 0.j, 0.5 + 0.j, 0.5 + 0.j, 0.5 + 0.j],
+            [0.5 + 0.j, -0.5 + 0.j, -0.5 + 0.j, 0.5 + 0.j],
+            [0.5 + 0.j, 0. - 0.5j, 0. + 0.5j, 0.5 + 0.j],
+            [0.5 + 0.j, 0. + 0.5j, 0. - 0.5j, 0.5 + 0.j],
+            [1. + 0.j, 0. + 0.j, 0. + 0.j, 0. + 0.j],
+            [0. + 0.j, 0. + 0.j, 0. + 0.j, 1. + 0.j]
+        ])
+
+        for trace_value in [1, 0.3, 2, 0, 42]:
+            rho = cvx_fit.cvx_fit(p, A, trace=trace_value)
+            self.assertAlmostEqual(numpy.trace(rho), trace_value, places=3)
 
 
 class TestStateTomography(unittest.TestCase):

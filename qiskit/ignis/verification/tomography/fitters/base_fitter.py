@@ -12,11 +12,10 @@ Maximum-Likelihood estimation quantum tomography fitter
 
 import logging
 import itertools as it
+from ast import literal_eval
 import numpy as np
 
 from qiskit import QiskitError
-from ast import literal_eval
-
 from qiskit import QuantumCircuit
 from ..basis import TomographyBasis, default_basis
 from ..data import marginal_counts, combine_counts, count_keys
@@ -42,11 +41,13 @@ class TomographyFitter:
                             tomography circuits.
             circuits (list): a list of circuits or circuit names to extract
                             count information from the result object.
-            meas_basis (TomographyBasis, str): A function to return measurement
-                        operators corresponding to measurement outcomes. See
-                        Additional Information (default: 'Pauli')
-            prep_basis (TomographyBasis, str): A function to return preparation
-                        operators. See Additional Information (default: 'Pauli')
+            meas_basis (TomographyBasis, str): A function to return
+                        measurement operators corresponding to measurement
+                        outcomes. See Additional Information
+                        (default: 'Pauli')
+            prep_basis (TomographyBasis, str): A function to return
+                        preparation operators. See Additional
+                        Information (default: 'Pauli')
         """
 
         # Set the measure and prep basis
@@ -97,9 +98,12 @@ class TomographyFitter:
 
         Args:
             method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
-            standard_weights (bool, optional): Apply weights to tomography data
-                                            based on count probability (default: True)
-            beta (float): hedging parameter for converting counts to probabilities
+            standard_weights (bool, optional): Apply weights to
+                                            tomography data
+                                            based on count probability
+                                            (default: True)
+            beta (float): hedging parameter for converting counts
+                        to probabilities
                         (default: 0.5)
             PSD (bool, optional): Enforced the fitted matrix to be positive
                                 semidefinite (default: True)
@@ -138,16 +142,18 @@ class TomographyFitter:
                 a is the matrix of measurement operators a[i] = vec(M_i).H
                 b is the vector of expectation value data for each projector
                 b[i] ~ Tr[M_i.H * x] = (a * x)[i]
-                x is the vectorized density matrix (or Choi-matrix) to be fitted
+                x is the vectorized density matrix (or Choi-matrix)
+                to be fitted
 
             PSD constraint
             --------------
             The PSD keyword constrains the fitted matrix to be
             postive-semidefinite.
-            For the 'lstsq' fitter method the fitted matrix is rescaled using the
-            method proposed in Reference [1].
+            For the 'lstsq' fitter method the fitted matrix is rescaled
+            using the method proposed in Reference [1].
             For the 'cvx' fitter method the convex constraint makes the
-            optimization problem a SDP. If PSD=False the fitted matrix will still
+            optimization problem a SDP. If PSD=False the fitted matrix
+            will still
             be constrained to be Hermitian, but not PSD. In this case the
             optimization problem becomes a SOCP.
 
@@ -160,12 +166,16 @@ class TomographyFitter:
 
             Trace preserving (TP) constraint
             --------------------------------
-            The trace_preserving keyword constrains the fitted matrix to be TP.
-            This should only be used for process tomography, not state tomography.
-            Note that the TP constraint implicitly enforces the trace of the fitted
-            matrix to be equal to the square-root of the matrix dimension. If a
-            trace constraint is also specified that differs from this value the fit
-            will likely fail. Note that this can only be used for the CVX method.
+            The trace_preserving keyword constrains the fitted matrix
+            to be TP. This should only be used for process tomography,
+            not state tomography.
+            Note that the TP constraint implicitly enforces
+            the trace of the fitted
+            matrix to be equal to the square-root of the matrix dimension.
+            If a trace constraint is also specified that
+            differs from this value the fit
+            will likely fail. Note that this can only be used
+            for the CVX method.
 
             CVXPY Solvers:
             -------
@@ -181,7 +191,8 @@ class TomographyFitter:
                 (2012). Open access: arXiv:1106.5458 [quant-ph].
         """
         # Get fitter data
-        data, basis_matrix, weights = self._fitter_data(standard_weights, beta)
+        data, basis_matrix, weights = self._fitter_data(standard_weights,
+                                                        beta)
         # Choose automatic method
         if method == 'auto':
             if cvxpy is None:
@@ -190,13 +201,17 @@ class TomographyFitter:
                 method = 'cvx'
         if method == 'lstsq':
             return lstsq_fit(data, basis_matrix, weights=weights, **kwargs)
-        elif method == 'cvx':
+
+        if method == 'cvx':
             return cvx_fit(data, basis_matrix, weights=weights, **kwargs)
-        else:
-            raise QiskitError('Unrecognised fit method {}'.format(method))
+
+        raise QiskitError('Unrecognised fit method {}'.format(method))
 
     @property
     def data(self):
+        """
+        Return tomography data
+        """
         return self._data
 
     def add_data(self, result, circuits):
@@ -234,13 +249,18 @@ class TomographyFitter:
 
         Args:
             standard_weights (bool, optional): Apply weights to basis matrix
-                            and data based on count probability (default: True)
-            beta (float): hedging parameter for 0, 1 probabilities (default: 0.5)
+                            and data based on count probability
+                            (default: True)
+            beta (float): hedging parameter for 0, 1
+            probabilities (default: 0.5)
 
         Returns:
-            tuple: (data, basis_matrix, weights) where `data` is a vector of the
-            probability values, and `basis_matrix` is a matrix of the preparation
-            and measurement operator, and `weights` is a vector of weights for the
+            tuple: (data, basis_matrix, weights) where `data`
+            is a vector of the
+            probability values, and `basis_matrix`
+            is a matrix of the preparation
+            and measurement operator, and `weights`
+            is a vector of weights for the
             given probabilities.
 
         Additional Information
@@ -350,8 +370,10 @@ class TomographyFitter:
             raise ValueError('beta = {} must be non-negative.'.format(beta))
         if beta == 0 and (shots in counts or 0 in counts):
             beta = 0.5
-            msg = ("Counts result in probabilities of 0 or 1 in binomial weights "
-                   "calculation. Setting hedging parameter beta={} to prevent "
+            msg = ("Counts result in probabilities of 0 or 1 "
+                   "in binomial weights "
+                   "calculation. Setting hedging "
+                   "parameter beta={} to prevent "
                    "dividing by zero.".format(beta))
             logger.warning(msg)
 
@@ -430,7 +452,8 @@ class TomographyFitter:
             A list of Numpy array for the multi-qubit measurement operators
             for all measurement outcomes for the measurement basis specified
             by the label. These are ordered in increasing binary order. Eg for
-            2-qubits the returned matrices correspond to outcomes [00, 01, 10, 11]
+            2-qubits the returned matrices correspond to outcomes
+            [00, 01, 10, 11]
 
         Additional Information:
             See the Pauli measurement function `pauli_measurement_matrix`

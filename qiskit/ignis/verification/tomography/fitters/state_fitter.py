@@ -39,9 +39,12 @@ class StateTomographyFitter(TomographyFitter):
 
         Args:
             method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
-            standard_weights (bool, optional): Apply weights to tomography data
-                                            based on count probability (default: True)
-            beta (float): hedging parameter for converting counts to probabilities
+            standard_weights (bool, optional): Apply weights to
+                                            tomography data
+                                            based on count probability
+                                            (default: True)
+            beta (float): hedging parameter for converting counts
+                        to probabilities
                         (default: 0.5)
             **kwargs (optional): kwargs for fitter method.
 
@@ -76,10 +79,12 @@ class StateTomographyFitter(TomographyFitter):
             --------------
             The PSD keyword constrains the fitted matrix to be
             postive-semidefinite.
-            For the 'lstsq' fitter method the fitted matrix is rescaled using the
+            For the 'lstsq' fitter method the fitted matrix
+            is rescaled using the
             method proposed in Reference [1].
             For the 'cvx' fitter method the convex constraint makes the
-            optimization problem a SDP. If PSD=False the fitted matrix will still
+            optimization problem a SDP. If PSD=False the fitted
+            matrix will still
             be constrained to be Hermitian, but not PSD. In this case the
             optimization problem becomes a SOCP.
 
