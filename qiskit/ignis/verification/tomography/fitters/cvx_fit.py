@@ -153,10 +153,9 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
     if cvxpy is None:
         raise Exception('CVXPY is not installed. Use `mle_fit` instead.')
     # Check CVXPY version
-    else:
-        version = cvxpy.__version__
-        if not (version[0] == '1' or version[:3] == '0.4'):
-            raise Exception('Incompatible CVXPY version. Install 1.0 or 0.4')
+    version = cvxpy.__version__
+    if not (version[0] == '1' or version[:3] == '0.4'):
+        raise Exception('Incompatible CVXPY version. Install 1.0 or 0.4')
 
     # SDP VARIABLES
 
