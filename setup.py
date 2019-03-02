@@ -14,6 +14,16 @@ requirements = [
     "scipy>=0.19,!=0.19.1",
 ]
 
+def find_qiskit_ignis_packages():
+    location = 'qiskit/ignis'
+    prefix = 'qiskit.ignis'
+    ignis_packages = find_packages(where=location, exclude=['test*'])
+    pkg_list = list(
+        map(lambda package_name: '{}.{}'.format(prefix, package_name),
+            ignis_packages)
+    )
+    return pkg_list
+
 
 setup(
     name="qiskit-ignis",
@@ -37,7 +47,7 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     keywords="qiskit sdk quantum",
-    packages=find_packages(exclude=['test*']),
+    packages=find_qiskit_ignis_packages(),
     install_requires=requirements,
     include_package_data=True,
     python_requires=">=3.5"
