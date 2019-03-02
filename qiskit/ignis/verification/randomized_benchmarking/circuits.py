@@ -134,7 +134,7 @@ def load_tables(max_nrb=2):
 
 def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 rb_pattern=None,
-                                length_multiplier=1):
+                                length_multiplier=1, seed_offset=0):
     """
     Get a generic randomized benchmarking sequence
 
@@ -152,6 +152,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         For 'regular' RB the qubit_pattern is just [[0]],[[0,1]].
         length_multiplier: if this is an array it scales each rb_sequence by
         the multiplier
+        seed_offset: What to start the seeds at (e.g. if we
+        want to add more seeds later)
 
     Returns:
         rb_circs: list of lists of circuits for the rb sequences (separate list
@@ -226,8 +228,9 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                 # q->c is 1 to 1
                 circ.measure(qr, cr)
 
-                circ.name = 'rb_seed_' + str(
-                    seed) + '_length_' + str(length_vector[length_index])
+                circ.name = 'rb_length_%d_seed_%d' % (length_index,
+                                                      seed + seed_offset)
+
                 circuits[seed].append(circ)
                 length_index += 1
 

@@ -109,7 +109,6 @@ class TestFitters(unittest.TestCase):
 
             # RBFitter class
             rb_fit = RBFitter(results_list, tst['rb_opts']['xdata'],
-                              tst['rb_opts']['shots'],
                               tst['rb_opts']['rb_pattern'])
             ydata = rb_fit.ydata
             fit = rb_fit.fit
