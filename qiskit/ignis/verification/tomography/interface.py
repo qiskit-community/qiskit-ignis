@@ -20,7 +20,6 @@ from .basis.circuits import state_tomography_circuits
 from .basis.circuits import process_tomography_circuits
 
 
-
 def perform_state_tomography(circuit, measured_qubits,
                              backend=None,
                              method='cvx',
