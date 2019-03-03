@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2018, IBM.
+# Copyright 2019, IBM.
 #
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
@@ -11,77 +11,11 @@ Maximum-Likelihood estimation quantum tomography fitter
 """
 
 import numpy as np
+from scipy import linalg as la
 from scipy.linalg import lstsq
 
-from .utils import make_positive_semidefinite
 
-
-def state_mle_fit(data, basis_matrix, weights=None):
-    """
-    Reconstruct a density matrix using MLE least-squares fitting.
-
-    Args:
-        data (vector like): vector of expectation values
-        basis_matrix (matrix like): matrix of measurement operators
-        weights (vector like, optional): vector of weights to apply to the
-                                         objective function (default: None)
-        PSD (bool, optional): Enforced the fitted matrix to be positive
-                              semidefinite (default: True)
-        trace (int, optional): trace constraint for the fitted matrix
-                               (default: None).
-
-    Returns:
-        The fitted matrix rho that minimizes
-        ||basis_matrix * vec(rho) - data||_2.
-
-    Additional Information:
-        This function is a wrapper for `mle_fit`. See
-        `tomography.fitters.mle_fit` documentation for additional information.
-    """
-    return mle_fit(data, basis_matrix, weights=weights, PSD=True, trace=1)
-
-
-def process_mle_fit(data, basis_matrix, weights=None):
-    """
-    Reconstruct a process (Choi) matrix using MLE least-squares fitting.
-
-    Note: due to limitations of the fitting method the returned Choi-matrix
-          will be completely-positive, but not necessarily trace preserving.
-
-    Args:
-        data (vector like): vector of expectation values
-        basis_matrix (matrix like): matrix of measurement operators
-        weights (vector like, optional): vector of weights to apply to the
-                                         objective function (default: None)
-        PSD (bool, optional): Enforced the fitted matrix to be positive
-                              semidefinite (default: True)
-        trace (int, optional): trace constraint for the fitted matrix
-                               (default: None).
-
-    Returns:
-        The fitted Choi-matrix that minimizes
-        ||basis_matrix * vec(choi) - data||_2.
-
-    Additional Information:
-        Due to limitations of the fitting method the returned Choi-matrix will
-        be completely-positive, but not necessarily trace preserving.
-
-        This function is a wrapper for `mle_fit`. See
-        `tomography.fitters.mle_fit` documentation for additional information.
-    """
-    # Calculate trace of Choi-matrix from projector length
-    _, cols = np.shape(basis_matrix)
-    dim = int(np.sqrt(np.sqrt(cols)))
-    if dim ** 4 != cols:
-        raise ValueError("Input data does not correspond to a process matrix.")
-    return mle_fit(data, basis_matrix, weights=weights, PSD=True, trace=dim)
-
-
-###########################################################################
-# Linear Inversion (Least-Squares) Fitter
-###########################################################################
-
-def mle_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
+def lstsq_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
     """
     Reconstruct a density matrix using MLE least-squares fitting.
 
@@ -165,3 +99,53 @@ def mle_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
     if trace is not None:
         rho_fit *= trace / np.trace(rho_fit)
     return rho_fit
+
+
+###########################################################################
+# Wizard Method rescaling
+###########################################################################
+
+def make_positive_semidefinite(mat, epsilon=0):
+    """
+    Rescale a Hermitian matrix to nearest postive semidefinite matrix.
+
+    Args:
+        mat (array like): a hermitian matrix.
+        epsilon (float >=0, optional): the threshold for setting
+            eigenvalues to zero. If epsilon > 0 positive eigenvalues
+            below epislon will also be set to zero (Default 0).
+    Returns:
+        The input matrix rescaled to have non-negative eigenvalues.
+
+    References:
+        [1] J Smolin, JM Gambetta, G Smith, Phys. Rev. Lett. 108, 070502
+            (2012). Open access: arXiv:1106.5458 [quant-ph].
+    """
+
+    if epsilon < 0:
+        raise ValueError('epsilon must be non-negative.')
+
+    # Get the eigenvalues and eigenvectors of rho
+    # eigenvalues are sorted in increasing order
+    # v[i] <= v[i+1]
+
+    dim = len(mat)
+    v, w = la.eigh(mat)
+    for j in range(dim):
+        if v[j] < epsilon:
+            tmp = v[j]
+            v[j] = 0.
+            # Rescale remaining eigenvalues
+            x = 0.
+            for k in range(j + 1, dim):
+                x += tmp / (dim - (j + 1))
+                v[k] = v[k] + tmp / (dim - (j + 1))
+
+    # Build positive matrix from the rescaled eigenvalues
+    # and the original eigenvectors
+
+    mat_psd = np.zeros([dim, dim], dtype=complex)
+    for j in range(dim):
+        mat_psd += v[j] * np.outer(w[:, j], np.conj(w[:, j]))
+
+    return mat_psd

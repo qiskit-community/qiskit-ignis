@@ -13,53 +13,7 @@ Quantum tomography data
 from itertools import combinations
 from functools import reduce
 from re import match
-from ast import literal_eval
 import numpy as np
-
-from qiskit import QuantumCircuit
-
-
-###########################################################################
-# Data formats for converting from counts to fitter data
-###########################################################################
-
-def tomography_data(result, circuits):
-    """
-    Extract tomography data from a QISKit Result object.
-
-    Args:
-        result (Result): a result object obtained from executing
-                         tomography circuits.
-        circuits (list): a list of circuits or circuit names to extract
-                         count information from the result object.
-
-    Returns:
-        A dictionary containing the count information indexed by the
-        measurement and preparation basis operator labels.
-    """
-
-    # Check if result circuit has only tomogrpahy cregs
-    # This allows us to avoid the expensive marginal counts function
-    if len(circuits[0].cregs) == 1:
-        marginalize = False
-    else:
-        marginalize = True
-
-    # Process measurements into expectation values
-    data = {}
-    for circ in circuits:
-        counts = result.get_counts(circ)
-        if isinstance(circ, str):
-            tup = literal_eval(circ)
-        elif isinstance(circ, QuantumCircuit):
-            tup = literal_eval(circ.name)
-        else:
-            tup = circ
-        if marginalize:
-            data[tup] = marginal_counts(counts, range(len(tup[0])))
-        else:
-            data[tup] = counts
-    return data
 
 
 ###########################################################################

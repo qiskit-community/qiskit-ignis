@@ -16,20 +16,11 @@ from .basis import process_tomography_circuits
 from . import basis
 
 # Tomography data formatting
-from .data import tomography_data
+from .fitters import StateTomographyFitter
+from .fitters import ProcessTomographyFitter
+from .fitters import TomographyFitter
 
-# Tomography data fitting
-from .fitters import fitter_data
-from .fitters import state_mle_fit
-from .fitters import process_mle_fit
-from .fitters import state_cvx_fit
-from .fitters import process_cvx_fit
-from . import fitters
-
-# Utility functions TODO: move to qiskit.tools
+# Utility functions TODO: move to qiskit.quantum_info
 from .data import marginal_counts     # TODO: move to qiskit.tools
 from .data import combine_counts      # TODO: move to qiskit.tools
 from .data import expectation_counts  # TODO: move to qiskit.tools
-
-# TODO: move to qiskit.quantum_info
-from .fitters import make_positive_semidefinite

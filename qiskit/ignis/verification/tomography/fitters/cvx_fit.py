@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2018, IBM.
+# Copyright 2019, IBM.
 #
 # This source code is licensed under the Apache License, Version 2.0 found in
 # the LICENSE.txt file in the root directory of this source tree.
@@ -18,61 +18,6 @@ try:
     import cvxpy
 except ImportError:
     cvxpy = None
-
-
-def state_cvx_fit(data, basis_matrix, weights=None, **kwargs):
-    """
-    Reconstruct a quantum state using CVXPY convex optimization.
-
-    Args:
-        data (vector like): vector of expectation values
-        basis_matrix (matrix like): matrix of measurement operators
-        weights (vector like, optional): vector of weights to apply to the
-                                         objective function (default: None)
-        **kwargs (optional): kwargs for cvxpy solver.
-
-    Returns:
-        The fitted matrix rho that minimizes
-        ||basis_matrix * vec(rho) - data||_2.
-
-    Additional Information:
-        This function is a wrapper for `cvx_fit`. See
-        `tomography.fitters.cvx_fit` documentation for additional information.
-    """
-    return cvx_fit(data, basis_matrix, weights=weights,
-                   PSD=True, trace=1, **kwargs)
-
-
-def process_cvx_fit(data, basis_matrix, weights=None, **kwargs):
-    """
-    Reconstruct a process (Choi) matrix using CVXPY convex optimization.
-
-    Args:
-        data (vector like): vector of expectation values
-        basis_matrix (matrix like): matrix of measurement operators
-        weights (vector like, optional): vector of weights to apply to the
-                                         objective function (default: None)
-        **kwargs (optional): kwargs for cvxpy solver.
-
-    Returns:
-        The fitted choi-matrix that minimizes
-        ||basis_matrix * vec(choi) - data||_2.
-
-    Additional Information:
-        This function is a wrapper for `cvx_fit`. See
-        `tomography.fitters.cvx_fit` documentation for additional information.
-    """
-    # Calculate trace
-    _, cols = np.shape(basis_matrix)
-    dim = int(np.sqrt(np.sqrt(cols)))
-    if dim ** 4 != cols:
-        raise ValueError("Input data does not correspond to a process matrix.")
-    return cvx_fit(data, basis_matrix, weights=weights,
-                   PSD=True, trace=dim, trace_preserving=True, **kwargs)
-
-###########################################################################
-# CVXPY Fitter
-###########################################################################
 
 
 def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
@@ -153,10 +98,9 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
     if cvxpy is None:
         raise Exception('CVXPY is not installed. Use `mle_fit` instead.')
     # Check CVXPY version
-    else:
-        version = cvxpy.__version__
-        if not (version[0] == '1' or version[:3] == '0.4'):
-            raise Exception('Incompatible CVXPY version. Install 1.0 or 0.4')
+    version = cvxpy.__version__
+    if not (version[0] == '1' or version[:3] == '0.4'):
+        raise Exception('Incompatible CVXPY version. Install 1.0 or 0.4')
 
     # SDP VARIABLES
 
@@ -206,6 +150,13 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
         ptr = partial_trace_super(sdim, sdim)
         cons.append(ptr * cvxpy.vec(rho_r) == np.identity(sdim).ravel())
 
+    # Rescale input data and matrix by weights if they are provided
+    if weights is not None:
+        w = np.array(weights)
+        w = w / np.sqrt(sum(w**2))
+        basis_matrix = w[:, None] * basis_matrix
+        data = w * data
+
     # OBJECTIVE FUNCTION
 
     # The function we wish to minimize is || arg ||_2 where
@@ -229,15 +180,6 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
 
     arg = bm_r * cvxpy.vec(rho_r) - bm_i * cvxpy.vec(rho_i) - np.array(data)
 
-    # Add weights vector if specified
-    if weights is not None:
-
-        # normalie weights?
-        weights = np.array(weights)
-        weights = weights/np.sqrt(sum(weights**2))
-
-        arg = cvxpy.diag(weights) * arg
-
     # SDP objective function
     obj = cvxpy.Minimize(cvxpy.norm(arg, p=2))
 
@@ -246,13 +188,13 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
     iters = 5000
     max_iters = kwargs.get('max_iters', 20000)
 
+    # Set the default solver to 'CVXOPT'
     if 'solver' not in kwargs:
-        kwargs['solver'] = 'CVXOPT'   # make CVXOPT default solver
+        kwargs['solver'] = 'CVXOPT'
 
     problem_solved = False
     while not problem_solved:
         kwargs['max_iters'] = iters
-        kwargs['solver'] = 'CVXOPT'
         prob.solve(**kwargs)
         if prob.status in ["optimal_inaccurate", "optimal"]:
             problem_solved = True

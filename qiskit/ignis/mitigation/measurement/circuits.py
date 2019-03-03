@@ -7,8 +7,8 @@
 
 
 """
-Measurement correction circuits. To apply the measurement correction
-use the fitters.
+Measurement calibration circuits. To apply the measurement mitigation
+use the fitters to produce a filter.
 """
 
 import qiskit.tools.qcvv.tomography as tomo
@@ -16,9 +16,10 @@ from qiskit import QuantumRegister, ClassicalRegister, \
     QuantumCircuit, QiskitError
 
 
-def measurement_calibration(qubit_list=None, qr=None, cr=None, circlabel=''):
+def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
     """
-    Return a list of measurement calibration circuits.
+    Return a list of measurement calibration circuits for the full
+    Hilbert space.
 
     Each circuits creates a basis state
 

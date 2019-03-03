@@ -183,8 +183,8 @@ class TestRB(unittest.TestCase):
 
                             self.assertEqual(
                                 rb_circs[seed][circ_index].name,
-                                'rb_seed_%s_length_%s' % (
-                                    str(seed), str(vec_len)),
+                                'rb_length_%d_seed_%d' % (
+                                    circ_index, seed),
                                 'Error: incorrect circuit name')
                             self.verify_circuit(rb_circs[seed][circ_index],
                                                 nq, rb_opts,
