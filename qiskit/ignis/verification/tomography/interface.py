@@ -14,16 +14,16 @@ import qiskit
 from qiskit import Aer
 from qiskit.quantum_info import state_fidelity
 from qiskit.tools.qi.qi import outer
-from qiskit.ignis.verification.tomography.fitters import fitter_data, \
-    state_cvx_fit, process_cvx_fit, state_mle_fit, process_mle_fit
+from .fitters import StateTomographyFitter
+from .fitters import ProcessTomographyFitter
 from .basis.circuits import state_tomography_circuits
 from .basis.circuits import process_tomography_circuits
-from .data import tomography_data
+
 
 
 def perform_state_tomography(circuit, measured_qubits,
                              backend=None,
-                             fitter='cvx',
+                             method='cvx',
                              ideal=True,
                              fidelity=True,
                              shots=5000,
@@ -59,16 +59,8 @@ def perform_state_tomography(circuit, measured_qubits,
         backend = Aer.get_backend('qasm_simulator')
     tomography_circuits = state_tomography_circuits(circuit, measured_qubits)
     job = qiskit.execute(tomography_circuits, backend, shots=shots)
-    data_results = tomography_data(job.result(), tomography_circuits)
-    data, basis, _ = fitter_data(data_results)
-    rho = None
-    if fitter == 'cvx':
-        try:
-            rho = state_cvx_fit(data, basis)
-        except RuntimeError as e:
-            print("CVX run failed: {}, attempting MLE fit".format(e))
-    if fitter == 'mle' or rho is None:
-        rho = state_mle_fit(data, basis)
+    tomo_fitter = StateTomographyFitter(job.result(), tomography_circuits)
+    rho = tomo_fitter.fit(method=method)
 
     if ideal is False and fidelity is False:
         return rho
@@ -87,7 +79,7 @@ def perform_state_tomography(circuit, measured_qubits,
 
 def perform_process_tomography(circuit, measured_qubits,
                                backend=None,
-                               fitter='cvx',
+                               method='cvx',
                                ideal=True,
                                fidelity=True,
                                shots=4000, ):
@@ -120,18 +112,10 @@ def perform_process_tomography(circuit, measured_qubits,
 
     if backend is None:
         backend = Aer.get_backend('qasm_simulator')
-    circuits = process_tomography_circuits(circuit, measured_qubits)
-    job = qiskit.execute(circuits, backend, shots=shots)
-    tomography_data_results = tomography_data(job.result(), circuits)
-    data, basis, _ = fitter_data(tomography_data_results)
-    choi = None
-    if fitter == 'cvx':
-        try:
-            choi = process_cvx_fit(data, basis)
-        except RuntimeError as e:
-            print("CVX run failed: {}, attempting MLE fit".format(e))
-    if fitter == 'mle' or choi is None:
-        choi = process_mle_fit(data, basis)
+    tomography_circuits = process_tomography_circuits(circuit, measured_qubits)
+    job = qiskit.execute(tomography_circuits, backend, shots=shots)
+    tomo_fitter = ProcessTomographyFitter(job.result(), tomography_circuits)
+    choi = tomo_fitter.fit(method=method)
 
     if ideal is False and fidelity is False:
         return choi
