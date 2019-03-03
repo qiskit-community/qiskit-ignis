@@ -32,7 +32,7 @@ class ZZFitter(BaseCoherenceFitter):
         BaseCoherenceFitter.__init__(self, '$ZZ$',
                                      backend_result, xdata,
                                      qubits,
-                                     BaseCoherenceFitter._osc_nodecay_fit_fun,
+                                     self._osc_nodecay_fit_fun,
                                      fit_p0, fit_bounds, circuit_names,
                                      series=['0', '1'], expected_state='0',
                                      time_index=1, time_unit=time_unit)
