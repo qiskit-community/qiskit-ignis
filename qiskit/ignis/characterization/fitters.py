@@ -325,7 +325,8 @@ class BaseCoherenceFitter(BaseFitter):
     def __init__(self, description, backend_result, xdata,
                  qubits, fit_fun, fit_p0,
                  fit_bounds, circuit_names,
-                 series=None, expected_state='0', time_index=0):
+                 series=None, expected_state='0',
+                 time_index=0, time_unit='micro-seconds'):
 
         """
         See BaseFitter __init__
@@ -341,6 +342,7 @@ class BaseCoherenceFitter(BaseFitter):
                             series, expected_state)
 
         self._time_index = time_index
+        self._time_unit = time_unit
 
     def time(self, qid=-1, series='0'):
         """
@@ -385,11 +387,11 @@ class BaseCoherenceFitter(BaseFitter):
                                            *self._params[series][qind]),
                 c='r', linestyle='--',
                 label=self._description + ': ' +
-                str(np.around(self.time(qid=qind), 1)))
+                str(np.around(self.time(qid=qind), 1)) + ' ' + self._time_unit)
 
         ax.tick_params(axis='x', labelsize=14, labelrotation=70)
         ax.tick_params(axis='y', labelsize=14)
-        ax.set_xlabel('Time', fontsize=16)
+        ax.set_xlabel('Time ['+ self._time_unit + ']', fontsize=16)
         ax.set_ylabel('Probability of success', fontsize=16)
         ax.set_title(self._description + ' for qubit ' +
                      str(self._qubits[qind]), fontsize=18)
