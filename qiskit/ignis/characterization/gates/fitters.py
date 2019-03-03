@@ -41,9 +41,9 @@ class AmpCalFitter(BaseCoherenceFitter):
 
     @staticmethod
     def _amp_cal_fit(x, thetaerr, c):
-        return BaseCoherenceFitter._cal_fit_fun(x, -0.5,
-                                                thetaerr, thetaerr,
-                                                np.pi/2, np.pi/2, c)
+        return AmpCalFitter._cal_fit_fun(x, -0.5,
+                                         thetaerr, thetaerr,
+                                         np.pi/2, np.pi/2, c)
 
     def angle_err(self, qind=-1):
 
@@ -125,9 +125,9 @@ class AngleCalFitter(BaseCoherenceFitter):
 
     @staticmethod
     def _angle_cal_fit(x, thetaerr, c):
-        return BaseCoherenceFitter._cal_fit_fun(x, -0.5,
-                                                thetaerr, thetaerr,
-                                                np.pi/2, np.pi/2, c)
+        return AngleCalFitter._cal_fit_fun(x, -0.5,
+                                           thetaerr, thetaerr,
+                                           np.pi/2, np.pi/2, c)
 
     def angle_err(self, qind=-1):
 
@@ -211,9 +211,9 @@ class AmpCalCXFitter(BaseCoherenceFitter):
 
     @staticmethod
     def _amp_calcx_fit(x, thetaerr, c):
-        return BaseCoherenceFitter._cal_fit_fun(x, -0.5,
-                                                thetaerr, 0,
-                                                np.pi, np.pi/2, c)
+        return AmpCalCXFitter._cal_fit_fun(x, -0.5,
+                                           thetaerr, 0,
+                                           np.pi, np.pi/2, c)
 
     def angle_err(self, qind=-1):
 
@@ -295,9 +295,9 @@ class AngleCalCXFitter(BaseCoherenceFitter):
 
     @staticmethod
     def _angle_calcx_fit(x, thetaerr, c):
-        return BaseCoherenceFitter._cal_fit_fun(x, -0.5,
-                                                thetaerr, 0.0,
-                                                np.pi, np.pi/2, c)
+        return AngleCalCXFitter._cal_fit_fun(x, -0.5,
+                                             thetaerr, 0.0,
+                                             np.pi, np.pi/2, c)
 
     def angle_err(self, qind=-1):
 
