@@ -19,7 +19,8 @@ class T1Fitter(BaseCoherenceFitter):
 
     def __init__(self, backend_result, xdata,
                  qubits,
-                 fit_p0, fit_bounds):
+                 fit_p0, fit_bounds,
+                 time_unit='micro-seconds'):
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
@@ -31,7 +32,7 @@ class T1Fitter(BaseCoherenceFitter):
                                      BaseCoherenceFitter._exp_fit_fun,
                                      fit_p0, fit_bounds,
                                      circuit_names, expected_state='1',
-                                     time_index=1)
+                                     time_index=1, time_unit=time_unit)
 
     def plot(self, qind, series='0', ax=None, show_plot=False):
 
@@ -48,7 +49,8 @@ class T2Fitter(BaseCoherenceFitter):
     """
 
     def __init__(self, backend_result, xdata,
-                 qubits, fit_p0, fit_bounds, circbasename='t2'):
+                 qubits, fit_p0, fit_bounds, circbasename='t2',
+                 time_unit='micro-seconds'):
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
@@ -60,7 +62,7 @@ class T2Fitter(BaseCoherenceFitter):
                                      BaseCoherenceFitter._exp_fit_fun,
                                      fit_p0, fit_bounds,
                                      circuit_names, expected_state='0',
-                                     time_index=1)
+                                     time_index=1, time_unit=time_unit)
 
     def plot(self, qind, series='0', ax=None, show_plot=False):
 
@@ -77,7 +79,8 @@ class T2StarFitter(BaseCoherenceFitter):
     """
 
     def __init__(self, backend_result, xdata,
-                 qubits, fit_p0, fit_bounds):
+                 qubits, fit_p0, fit_bounds,
+                 time_unit='micro-seconds'):
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
@@ -89,7 +92,7 @@ class T2StarFitter(BaseCoherenceFitter):
                                      T2StarFitter._osc_fit_fun,
                                      fit_p0, fit_bounds,
                                      circuit_names, expected_state='0',
-                                     time_index=1)
+                                     time_index=1, time_unit=time_unit)
 
     def plot(self, qind, series='0', ax=None, show_plot=False):
 
