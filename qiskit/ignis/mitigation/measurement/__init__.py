@@ -7,9 +7,10 @@
 
 
 """
-Coherence module
+Measurement correction module
 """
 
 # Measurement correction functions
-from .circuits import t1_circuits, t2_circuits, t2star_circuits
-from .fitters import T1Fitter, T2Fitter, T2StarFitter
+from .circuits import complete_meas_cal
+from .filters import MeasurementFilter
+from .fitters import CompleteMeasFitter

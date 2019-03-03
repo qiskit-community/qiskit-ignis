@@ -9,15 +9,25 @@ from setuptools import setup, find_packages
 
 
 requirements = [
-    "numpy>=1.13,<1.16",
+    "numpy>=1.13",
     "qiskit-terra>=0.7.0",
     "scipy>=0.19,!=0.19.1",
 ]
 
+def find_qiskit_ignis_packages():
+    location = 'qiskit/ignis'
+    prefix = 'qiskit.ignis'
+    ignis_packages = find_packages(where=location, exclude=['test*'])
+    pkg_list = list(
+        map(lambda package_name: '{}.{}'.format(prefix, package_name),
+            ignis_packages)
+    )
+    return pkg_list
+
 
 setup(
     name="qiskit-ignis",
-    version="0.8.0",
+    version="0.1.0",
     description="Qiskit tools for quantum information science",
     url="https://github.com/Qiskit/qiskit-ignis",
     author="Qiskit Development Team",
@@ -37,7 +47,7 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     keywords="qiskit sdk quantum",
-    packages=find_packages(exclude=['test*']),
+    packages=find_qiskit_ignis_packages(),
     install_requires=requirements,
     include_package_data=True,
     python_requires=">=3.5"

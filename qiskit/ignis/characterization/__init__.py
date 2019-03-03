@@ -7,9 +7,7 @@
 
 
 """
-Coherence module
+Characterization module
 """
 
-# Measurement correction functions
-from .circuits import t1_circuits, t2_circuits, t2star_circuits
-from .fitters import T1Fitter, T2Fitter, T2StarFitter
+from .fitters import BaseCoherenceFitter
