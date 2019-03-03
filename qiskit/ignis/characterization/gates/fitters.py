@@ -12,6 +12,9 @@ Fitters for hamiltonian parameters
 import numpy as np
 from .. import BaseCoherenceFitter
 
+xaxis_str = 'Number of Gate Repetitions'
+yaxis_str = 'Excited state population'
+
 
 class AmpCalFitter(BaseCoherenceFitter):
     """
@@ -19,8 +22,7 @@ class AmpCalFitter(BaseCoherenceFitter):
     """
 
     def __init__(self, backend_result, xdata,
-                 qubits, fit_p0, fit_bounds,
-                 time_unit='micro-seconds'):
+                 qubits, fit_p0, fit_bounds):
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
@@ -35,7 +37,7 @@ class AmpCalFitter(BaseCoherenceFitter):
                                      qubits, self._amp_cal_fit, fit_p0,
                                      fit_bounds, circuit_names,
                                      expected_state='1',
-                                     time_index=1, time_unit=time_unit)
+                                     time_index=1)
 
     @staticmethod
     def _amp_cal_fit(x, thetaerr, c):
@@ -88,8 +90,8 @@ class AmpCalFitter(BaseCoherenceFitter):
 
         ax.tick_params(axis='x', labelsize=14, labelrotation=70)
         ax.tick_params(axis='y', labelsize=14)
-        ax.set_xlabel('Time [' + self._time_unit +']', fontsize=16)
-        ax.set_ylabel('Excited state population', fontsize=16)
+        ax.set_xlabel(xaxis_str, fontsize=16)
+        ax.set_ylabel(yaxis_str, fontsize=16)
         ax.set_title(self._description + ' for qubit ' +
                      str(self._qubits[qind]), fontsize=18)
         ax.legend(fontsize=12)
@@ -106,8 +108,7 @@ class AngleCalFitter(BaseCoherenceFitter):
     """
 
     def __init__(self, backend_result, xdata,
-                 qubits, fit_p0, fit_bounds,
-                 time_unit='micro-seconds'):
+                 qubits, fit_p0, fit_bounds):
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
@@ -120,7 +121,7 @@ class AngleCalFitter(BaseCoherenceFitter):
                                      qubits, self._angle_cal_fit, fit_p0,
                                      fit_bounds, circuit_names,
                                      expected_state='1',
-                                     time_index=1, time_unit=time_unit)
+                                     time_index=1)
 
     @staticmethod
     def _angle_cal_fit(x, thetaerr, c):
@@ -173,8 +174,8 @@ class AngleCalFitter(BaseCoherenceFitter):
 
         ax.tick_params(axis='x', labelsize=14, labelrotation=70)
         ax.tick_params(axis='y', labelsize=14)
-        ax.set_xlabel('Time [' + self._time_unit +']', fontsize=16)
-        ax.set_ylabel('Excited state population', fontsize=16)
+        ax.set_xlabel(xaxis_str, fontsize=16)
+        ax.set_ylabel(yaxis_str, fontsize=16)
         ax.set_title(self._description + ' for qubit ' +
                      str(self._qubits[qind]), fontsize=18)
         ax.legend(fontsize=12)
@@ -191,8 +192,7 @@ class AmpCalCXFitter(BaseCoherenceFitter):
     """
 
     def __init__(self, backend_result, xdata,
-                 qubits, fit_p0, fit_bounds,
-                 time_unit='micro-seconds'):
+                 qubits, fit_p0, fit_bounds):
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
@@ -207,7 +207,7 @@ class AmpCalCXFitter(BaseCoherenceFitter):
                                      qubits, self._amp_calcx_fit, fit_p0,
                                      fit_bounds, circuit_names,
                                      expected_state='1',
-                                     time_index=1, time_unit=time_unit)
+                                     time_index=1)
 
     @staticmethod
     def _amp_calcx_fit(x, thetaerr, c):
@@ -260,8 +260,8 @@ class AmpCalCXFitter(BaseCoherenceFitter):
 
         ax.tick_params(axis='x', labelsize=14, labelrotation=70)
         ax.tick_params(axis='y', labelsize=14)
-        ax.set_xlabel('Time [' + self._time_unit +']', fontsize=16)
-        ax.set_ylabel('Excited state population', fontsize=16)
+        ax.set_xlabel(xaxis_str, fontsize=16)
+        ax.set_ylabel(yaxis_str, fontsize=16)
         ax.set_title(self._description + ' for qubit ' +
                      str(self._qubits[qind]), fontsize=18)
         ax.legend(fontsize=12)
@@ -278,8 +278,7 @@ class AngleCalCXFitter(BaseCoherenceFitter):
     """
 
     def __init__(self, backend_result, xdata,
-                 qubits, fit_p0, fit_bounds,
-                 time_unit='micro_seconds'):
+                 qubits, fit_p0, fit_bounds):
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
@@ -292,7 +291,7 @@ class AngleCalCXFitter(BaseCoherenceFitter):
                                      qubits, self._angle_calcx_fit, fit_p0,
                                      fit_bounds, circuit_names,
                                      expected_state='1',
-                                     time_index=1, time_unit=time_unit)
+                                     time_index=1)
 
     @staticmethod
     def _angle_calcx_fit(x, thetaerr, c):
@@ -345,8 +344,8 @@ class AngleCalCXFitter(BaseCoherenceFitter):
 
         ax.tick_params(axis='x', labelsize=14, labelrotation=70)
         ax.tick_params(axis='y', labelsize=14)
-        ax.set_xlabel('Time [' + self._time_unit +']', fontsize=16)
-        ax.set_ylabel('Excited state population', fontsize=16)
+        ax.set_xlabel(xaxis_str, fontsize=16)
+        ax.set_ylabel(yaxis_str, fontsize=16)
         ax.set_title(self._description + ' for qubit ' +
                      str(self._qubits[qind]), fontsize=18)
         ax.legend(fontsize=12)
