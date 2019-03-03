@@ -24,13 +24,13 @@ def t1_circuits(num_of_gates, gate_time, qubits):
        num_of_gates (list of integers): the number of identity gates in each
                                         circuit. Must be in an increasing
                                         order.
-       gate_time (float): time in micro-seconds of running a single gate.
+       gate_time (float): time of running a single gate.
        qubits (list of integers): indices of the qubits whose T1 are
        to be measured.
 
     Returns:
        A list of QuantumCircuit
-       xdata: a list of delay times in seconds
+       xdata: a list of delay times
     """
 
     xdata = gate_time * num_of_gates
@@ -65,13 +65,13 @@ def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
        num_of_gates (list of integers): the number of identity gates in each
                                         circuit. Must be in an increasing
                                         order.
-       gate_time (float): time in micro-seconds of running a single gate.
+       gate_time (float): time of running a single gate.
        qubits (list of integers): indices of the qubits
        whose T2* are to be measured.
        nosc: number of oscillations to induce using the phase gate
     Returns:
        A list of QuantumCircuit
-       xdata: a list of delay times in seconds
+       xdata: a list of delay times
        osc_freq: the induced oscillation frequency
     """
 
@@ -118,7 +118,7 @@ def t2_circuits(num_of_gates, gate_time, qubits, n_echos=1,
           num_of_gates[i] is the number of identity gates in each section
           "t" of the pulse sequeence in circuit no. i.
           Must be in an increasing order.
-       gate_time (float): time in micro-seconds of running a single gate.
+       gate_time (float): time of running a single gate.
        qubits (list of integers): indices of the qubits whose
        T2 are to be measured.
        n_echos (integer): number of echo gates (X or Y).

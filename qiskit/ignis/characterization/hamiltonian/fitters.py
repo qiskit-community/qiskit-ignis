@@ -88,7 +88,7 @@ class ZZFitter(BaseCoherenceFitter):
 
         ax.tick_params(axis='x', labelsize=14, labelrotation=70)
         ax.tick_params(axis='y', labelsize=14)
-        ax.set_xlabel('time [micro-seconds]', fontsize=16)
+        ax.set_xlabel('time', fontsize=16)
         ax.set_ylabel('Ground state population', fontsize=16)
         ax.set_title(self._description + ' for qubit ' +
                      str(self._qubits[qind]), fontsize=18)

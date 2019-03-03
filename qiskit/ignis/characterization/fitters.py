@@ -385,11 +385,11 @@ class BaseCoherenceFitter(BaseFitter):
                                            *self._params[series][qind]),
                 c='r', linestyle='--',
                 label=self._description + ': ' +
-                str(np.around(self.time(qid=qind), 1)) + ' micro-seconds')
+                str(np.around(self.time(qid=qind), 1)))
 
         ax.tick_params(axis='x', labelsize=14, labelrotation=70)
         ax.tick_params(axis='y', labelsize=14)
-        ax.set_xlabel('time [micro-seconds]', fontsize=16)
+        ax.set_xlabel('time', fontsize=16)
         ax.set_ylabel('Probability of success', fontsize=16)
         ax.set_title(self._description + ' for qubit ' +
                      str(self._qubits[qind]), fontsize=18)
