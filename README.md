@@ -32,8 +32,8 @@ from qiskit import QuantumRegister, QuantumCircuit, ClassicalRegister
 from qiskit.providers.aer import noise # import AER noise model
 
 # Measurement error mitigation functions
-from qiskit.ignis.error_mitigation.measurement import (complete_meas_cal,
-                                                       CompleteMeasFitter)
+from qiskit.ignis.error_mitigation.measurement import (measurement_calibration,
+                                                       MeasurementFitter)
 
 # Generate a noise model for the qubits
 noise_model = noise.NoiseModel()
@@ -44,16 +44,15 @@ for qi in range(5):
 # Generate the measurement calibration circuits
 # for running measurement error mitigation
 qr = QuantumRegister(5)
-meas_cals, state_labels = complete_meas_cal(qubit_list=[2,3,4], qr=qr)
+meas_cals, state_labels = measurement_calibration(qubit_list=[2,3,4], qr=qr)
 
-# Run the calibration circuits
+# Execute the calibration circuits
 backend = qiskit.Aer.get_backend('qasm_simulator')
-qobj = qiskit.compile(meas_cals, backend=backend, shots=1000)
-job = backend.run(qobj, noise_model=noise_model)
+job = qiskit.execute(meas_cals, backend=backend, shots=1000, noise_model=noise_model)
 cal_results = job.result()
 
-# Fit the results to make a calibration matrix
-meas_fitter = CompleteMeasFitter(cal_results, state_labels)
+# Make a calibration matrix
+meas_fitter = MeasurementFitter(cal_results, state_labels)
 
 # Make a 3Q GHZ state
 cr = ClassicalRegister(3)
@@ -65,20 +64,16 @@ ghz.measure(qr[2],cr[0])
 ghz.measure(qr[3],cr[1])
 ghz.measure(qr[4],cr[2])
 
-qobj = qiskit.compile(ghz, backend=backend, shots=1000)
-job = backend.run(qobj, noise_model=noise_model)
+# Execute the GHZ circuit (with the same noise model)
+job = qiskit.execute(ghz, backend=backend, shots=1000, noise_model=noise_model)
 results = job.result()
 
 # Results without mitigation
 raw_counts = results.get_counts()
 print("Results without mitigation:", raw_counts)
 
-# Create a measurement filter from the calibration matrix
-meas_filter = meas_fitter.filter
-
-# Apply the filter to the raw counts to mitigate the measurement
-# errors
-mitigated_counts = meas_filter.apply(raw_counts)
+# Results with mitigation
+mitigated_counts = meas_fitter.calibrate(raw_counts)
 print("Results with mitigation:", mitigated_counts)
 ```
 
