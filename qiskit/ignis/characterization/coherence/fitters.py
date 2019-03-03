@@ -28,7 +28,7 @@ class T1Fitter(BaseCoherenceFitter):
         BaseCoherenceFitter.__init__(self, '$T_1$',
                                      backend_result, xdata,
                                      qubits,
-                                     BaseCoherenceFitter._exp_fit_fun,
+                                     self._exp_fit_fun,
                                      fit_p0, fit_bounds,
                                      circuit_names, expected_state='1',
                                      time_index=1)
@@ -57,7 +57,7 @@ class T2Fitter(BaseCoherenceFitter):
         BaseCoherenceFitter.__init__(self, '$T_2$',
                                      backend_result,
                                      xdata, qubits,
-                                     BaseCoherenceFitter._exp_fit_fun,
+                                     self._exp_fit_fun,
                                      fit_p0, fit_bounds,
                                      circuit_names, expected_state='0',
                                      time_index=1)
@@ -86,7 +86,7 @@ class T2StarFitter(BaseCoherenceFitter):
         BaseCoherenceFitter.__init__(self, '$T_2^*$',
                                      backend_result,
                                      xdata, qubits,
-                                     T2StarFitter._osc_fit_fun,
+                                     self._osc_fit_fun,
                                      fit_p0, fit_bounds,
                                      circuit_names, expected_state='0',
                                      time_index=1)

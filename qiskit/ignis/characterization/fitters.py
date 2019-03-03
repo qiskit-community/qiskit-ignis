@@ -132,7 +132,7 @@ class BaseFitter:
     def fit_fun(self):
         """
         Return the function used in the fit,
-        e.g. BaseCoherenceFitter._exp_fit_fun
+        e.g. BaseFitter._exp_fit_fun
         """
         return self._fit_fun
 
@@ -348,16 +348,16 @@ class BaseCoherenceFitter(BaseFitter):
         If qid==-1 return all the qubit data
         """
 
-        return BaseCoherenceFitter._get_param(self,
-                                              self._time_index, qid, series)
+        return self._get_param(self,
+                               self._time_index, qid, series)
 
     def time_err(self, qid=-1, series='0'):
         """
         Return the error of the characteristic time
         """
-        return BaseCoherenceFitter._get_param(self,
-                                              self._time_index,
-                                              qid, series, err=True)
+        return self._get_param(self,
+                               self._time_index,
+                               qid, series, err=True)
 
     def plot(self, qind, series, ax=None, show_plot=True):
         """
