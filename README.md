@@ -6,6 +6,7 @@
 
 Qiskit is made up of elements that each work together to enable quantum computing. This element is **Ignis**, which provides tools for quantum hardware verification, noise characterization, and error correction.
 
+
 ## Installation
 
 We encourage installing Qiskit via the PIP tool (a python package manager), which installs all Qiskit elements, including this one.
@@ -32,9 +33,9 @@ from qiskit import QuantumRegister, QuantumCircuit, ClassicalRegister
 from qiskit.providers.aer import noise # import AER noise model
 
 # Measurement error mitigation functions
-from qiskit.ignis.error_mitigation.measurement import (complete_meas_cal,
-                                                       CompleteMeasFitter, 
-                                                       MeasurementFilter)
+from qiskit.ignis.mitigation.measurement import (complete_meas_cal,
+                                                 CompleteMeasFitter, 
+                                                 MeasurementFilter)
 
 # Generate a noise model for the qubits
 noise_model = noise.NoiseModel()
