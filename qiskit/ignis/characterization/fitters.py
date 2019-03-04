@@ -11,8 +11,8 @@ Fitters of characteristic times
 
 from scipy.optimize import curve_fit
 import numpy as np
-from qiskit.tools.qcvv.tomography import marginal_counts
 from qiskit import QiskitError
+from ..verification.tomography import marginal_counts
 
 
 class BaseFitter:
