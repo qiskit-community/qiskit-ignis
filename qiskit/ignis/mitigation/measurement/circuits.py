@@ -11,9 +11,9 @@ Measurement calibration circuits. To apply the measurement mitigation
 use the fitters to produce a filter.
 """
 
-import qiskit.tools.qcvv.tomography as tomo
 from qiskit import QuantumRegister, ClassicalRegister, \
     QuantumCircuit, QiskitError
+from ...verification.tomography import count_keys
 
 
 def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
@@ -68,7 +68,7 @@ def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
         cr = ClassicalRegister(nqubits)
 
     # labels for 2**n qubit states
-    state_labels = tomo.count_keys(nqubits)
+    state_labels = count_keys(nqubits)
 
     for basis_state in state_labels:
         qc_circuit = QuantumCircuit(qr, cr,

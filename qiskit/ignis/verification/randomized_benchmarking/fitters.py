@@ -11,8 +11,8 @@ Functions used for the analysis of randomized benchmarking results.
 
 from scipy.optimize import curve_fit
 import numpy as np
-from qiskit.tools.qcvv.tomography import marginal_counts
 from qiskit import QiskitError
+from ..tomography import marginal_counts
 from ...characterization.fitters import build_counts_dict_from_list
 
 try:
