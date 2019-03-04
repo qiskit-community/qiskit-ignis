@@ -24,3 +24,4 @@ from .fitters import TomographyFitter
 from .data import marginal_counts     # TODO: move to qiskit.tools
 from .data import combine_counts      # TODO: move to qiskit.tools
 from .data import expectation_counts  # TODO: move to qiskit.tools
+from .data import count_keys  # TODO: move to qiskit.tools
