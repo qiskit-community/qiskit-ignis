@@ -401,6 +401,68 @@ class BaseCoherenceFitter(BaseFitter):
         return ax
 
 
+class BaseGateFitter(BaseFitter):
+    """
+    Base class for fitters of gate errors
+    """
+
+    def __init__(self, description, backend_result, xdata,
+                 qubits, fit_fun, fit_p0,
+                 fit_bounds, circuit_names,
+                 series=None, expected_state='0'):
+
+        """
+        See BaseFitter __init__
+
+        """
+
+        BaseFitter.__init__(self, description,
+                            backend_result, xdata,
+                            qubits, fit_fun,
+                            fit_p0, fit_bounds, circuit_names,
+                            series, expected_state)
+
+    def plot(self, qind, series='0', ax=None, show_plot=True):
+        """
+        Plot err data.
+
+        Args:
+            qind: qubit index to plot
+            ax: plot axes
+            show_plot: call plt.show()
+
+        return the axes object
+        """
+
+        from matplotlib import pyplot as plt
+
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+
+        ax.errorbar(self._xdata, self._ydata[series][qind]['mean'],
+                    self._ydata[series][qind]['std'],
+                    marker='.', markersize=9,
+                    c='b', linestyle='')
+        ax.plot(self._xdata, self._fit_fun(self._xdata,
+                                           *self._params[series][qind]),
+                c='r', linestyle='--',
+                label='Q%d' % (self._qubits[qind]))
+
+        ax.tick_params(axis='x', labelsize=14, labelrotation=70)
+        ax.tick_params(axis='y', labelsize=14)
+        ax.set_xlabel('Number of Gate Repetitions', fontsize=16)
+        ax.set_ylabel('Excited state population', fontsize=16)
+        ax.set_title(self._description + ' for qubit ' +
+                     str(self._qubits[qind]), fontsize=18)
+        ax.legend(fontsize=12)
+        ax.grid(True)
+        if show_plot:
+            plt.show()
+
+        return ax
+
+
 def build_counts_dict_from_list(count_list):
 
     """
