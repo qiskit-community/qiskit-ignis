@@ -291,7 +291,7 @@ class TestCals(unittest.TestCase):
         for i in range(2):
             err_unitary[i, i] = np.cos(angle_err)
             err_unitary[i, (i+1) % 2] = np.sin(angle_err)
-        err_unitary[1, 0] *= -1.0
+        err_unitary[0, 1] *= -1.0
 
         error = coherent_unitary_error(err_unitary)
         noise_model = NoiseModel()
@@ -305,7 +305,7 @@ class TestCals(unittest.TestCase):
                            fit_bounds=([-np.pi, -1],
                                        [np.pi, 1]))
 
-        self.assertAlmostEqual(fit.angle_err(0), -0.1, 2)
+        self.assertAlmostEqual(fit.angle_err(0), 0.1, 2)
 
     def test_anglecal1Q(self):
         """
@@ -341,7 +341,7 @@ class TestCals(unittest.TestCase):
         angle_err = 0.15
         for i in range(2):
             err_unitary[2+i, 2+i] = np.cos(angle_err)
-            err_unitary[2+i, 2+(i+1) % 2] = 1j*np.sin(angle_err)
+            err_unitary[2+i, 2+(i+1) % 2] = -1j*np.sin(angle_err)
 
         error = coherent_unitary_error(err_unitary)
         noise_model = NoiseModel()

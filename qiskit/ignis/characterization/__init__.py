@@ -10,4 +10,4 @@
 Characterization module
 """
 
-from .fitters import BaseCoherenceFitter
+from .fitters import BaseCoherenceFitter, BaseGateFitter
