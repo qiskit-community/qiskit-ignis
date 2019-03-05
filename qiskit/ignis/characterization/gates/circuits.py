@@ -86,15 +86,17 @@ def anglecal_1Q_circuits(max_reps, qubits, angleerr=0.0):
             circ.u2(0.0, 0.0, qr[qubit])  # Y90p
             for _ in range(circ_length):
                 if angleerr != 0:
-                    circ.u1(2*angleerr, qr[qubit])
-                circ.x(qr[qubit])  # Xp
-                if angleerr != 0:
                     circ.u1(-2*angleerr, qr[qubit])
-                circ.y(qr[qubit])  # Yp
+                for _ in range(2):
+                    circ.u2(-np.pi/2, np.pi/2, qr[qubit])  # Xp
+                if angleerr != 0:
+                    circ.u1(2*angleerr, qr[qubit])
+                for _ in range(2):
+                    circ.u2(0.0, 0.0, qr[qubit])  # Yp
 
             if angleerr != 0:
-                circ.u1(angleerr, qr[qubit])
-            circ.u2(np.pi/2, -np.pi/2, qr[qubit])  # X90p
+                circ.u1(-angleerr, qr[qubit])
+            circ.u2(-np.pi/2, np.pi/2, qr[qubit])  # X90p
         for qind, qubit in enumerate(qubits):
             circ.measure(qr[qubit], cr[qind])
         circuits.append(circ)
@@ -139,7 +141,7 @@ def ampcal_cx_circuits(max_reps, qubits, control_qubits):
         circ.name = 'ampcalcxcircuit_' + str(circ_index) + '_0'
         for qind, qubit in enumerate(qubits):
             circ.x(qr[control_qubits[qind]])
-            circ.u2(np.pi/2, -np.pi/2, qr[qubit])  # X90p
+            circ.u2(-np.pi/2, np.pi/2, qr[qubit])  # X90p
             for _ in range(circ_length):
                 circ.cx(qr[control_qubits[qind]], qr[qubit])
 
@@ -191,13 +193,13 @@ def anglecal_cx_circuits(max_reps, qubits, control_qubits, angleerr=0.0):
             circ.u2(0.0, 0.0, qr[qubit])  # Y90p (target)
             for _ in range(circ_length):
                 if angleerr != 0:
-                    circ.u1(angleerr, qr[qubit])
+                    circ.u1(-angleerr, qr[qubit])
                 circ.cx(qr[control_qubits[qind]], qr[qubit])
                 if angleerr != 0:
-                    circ.u1(-angleerr, qr[qubit])
+                    circ.u1(angleerr, qr[qubit])
                 circ.y(qr[qubit])  # Yp (target)
 
-            circ.u2(np.pi/2., -np.pi/2., qr[qubit])  # X90p (target)
+            circ.u2(-np.pi/2., np.pi/2., qr[qubit])  # X90p (target)
         for qind, qubit in enumerate(qubits):
             circ.measure(qr[qubit], cr[qind])
         circuits.append(circ)

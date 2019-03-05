@@ -20,7 +20,8 @@ class ZZFitter(BaseCoherenceFitter):
 
     def __init__(self, backend_result, xdata,
                  qubits, spectators,
-                 fit_p0, fit_bounds):
+                 fit_p0, fit_bounds,
+                 time_unit='micro-seconds'):
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
@@ -31,10 +32,10 @@ class ZZFitter(BaseCoherenceFitter):
         BaseCoherenceFitter.__init__(self, '$ZZ$',
                                      backend_result, xdata,
                                      qubits,
-                                     BaseCoherenceFitter._osc_nodecay_fit_fun,
+                                     self._osc_nodecay_fit_fun,
                                      fit_p0, fit_bounds, circuit_names,
                                      series=['0', '1'], expected_state='0',
-                                     time_index=1)
+                                     time_index=1, time_unit=time_unit)
 
     def ZZ_rate(self, qind=-1):
 
@@ -88,7 +89,7 @@ class ZZFitter(BaseCoherenceFitter):
 
         ax.tick_params(axis='x', labelsize=14, labelrotation=70)
         ax.tick_params(axis='y', labelsize=14)
-        ax.set_xlabel('time [micro-seconds]', fontsize=16)
+        ax.set_xlabel('Time [' + self._time_unit + ']', fontsize=16)
         ax.set_ylabel('Ground state population', fontsize=16)
         ax.set_title(self._description + ' for qubit ' +
                      str(self._qubits[qind]), fontsize=18)
