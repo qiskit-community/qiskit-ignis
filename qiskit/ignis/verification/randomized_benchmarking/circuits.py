@@ -156,6 +156,11 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         the multiplier
         seed_offset: What to start the seeds at (e.g. if we
         want to add more seeds later)
+        align_cliffs: If true adds a barrier across all qubits in rb_pattern
+        after each set of cliffords (note: aligns after each increment
+        of cliffords including the length multiplier so if the multiplier
+        is [1,3] it will barrier after 1 clifford for the first pattern
+        and 3 for the second)
 
     Returns:
         rb_circs: list of lists of circuits for the rb sequences (separate list
