@@ -211,7 +211,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                         *[qr[x] for x in rb_pattern[rb_pattern_index]])
 
             if align_cliffs:
-                #if align cliffords at a barrier across all patterns
+                # if align cliffords at a barrier across all patterns
                 general_circ.barrier(
                     *[qr[x] for x in qlist_flat])
 
