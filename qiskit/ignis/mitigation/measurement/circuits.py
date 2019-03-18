@@ -85,7 +85,7 @@ def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
     return cal_circuits, state_labels
 
 
-def complete_meas_cal_tensored(qubit_list=None, qr=None, cr=None, circlabel=''):
+def tensored_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
     """
     Return a list of calibration circuits for the all zeros and all ones basis states.
 
@@ -133,11 +133,17 @@ def complete_meas_cal_tensored(qubit_list=None, qr=None, cr=None, circlabel=''):
     zero_label = ''.zfill(nqubits)
     zero_circ = QuantumCircuit(qr, cr,
                                name=circlabel+'cal_'+zero_label)
-    zero_circ.measure(qr[qubit_list[qind]], cr[qind])
 
-    one_label = bin(2**nqubits-1)[2:]
+    for qind, qubit in enumertae(qubit_list):
+        zero_circ.measure(qr[qubit], cr[qind])
+
+    one_label = zero_label
+    for qubit in qubit_list:
+        one_label[nqubits-qubit-1] = 1
     one_circ = QuantumCircuit(qr, cr, name=circlabel+'cal_'+one_label)
-    one_circ.x(qr[qubit_list[qind]])
-    one_circ.measure(qr[qubit_list[qind]], cr[qind])
+
+    for qind, qubit in enumerate(qubit_list):
+        one_circ.x(qr[qubit])
+        one_circ.measure(qr[qubit], cr[qind])
 
     return [zero_circ, one_circ], [zero_label, one_label]
