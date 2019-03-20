@@ -7,7 +7,7 @@
 
 """
 Test of measurement calibration:
-1) Preparation of all 2 ** n basis states, generating the calibration circuits
+1) Preparation of the basis states, generating the calibration circuits
 (without noise), computing the calibration matrices,
 and validating that they equal
 to the identity matrices
@@ -28,7 +28,7 @@ import qiskit
 from qiskit import QuantumCircuit, ClassicalRegister, Aer
 from qiskit.ignis.mitigation.measurement \
      import (CompleteMeasFitter,
-             complete_meas_cal,
+             complete_meas_cal, tensored_meas_cal,
              MeasurementFilter)
 
 
@@ -298,6 +298,14 @@ class TestMeasCal(unittest.TestCase):
                 output_results_least_square['111'],
                 tests[tst_index]['results_least_square']['111'], places=0)
 
+
+    def test_ideal_tensored_meas_cal(self):
+        """
+        Test ideal execution, without noise
+        """
+            
+        tensored_meas_cal(mit_pattern=[[1,2],[3,4,5],[6]])
+        
 
 if __name__ == '__main__':
     unittest.main()
