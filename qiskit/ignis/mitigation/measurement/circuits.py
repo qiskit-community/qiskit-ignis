@@ -85,7 +85,7 @@ def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
     return cal_circuits, state_labels
 
 
-def tensored_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
+def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
     """
     Return a list of calibration circuits for the all zeros and all ones basis states.
 
@@ -114,36 +114,61 @@ def tensored_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
         Pass the results of these circuits to "MeasurementFitter" constructor
     """
 
-    if qubit_list is None and qr is None:
-        raise QiskitError("Must give one of a qubit_list or a qr")
+    if mit_pattern is None and qr is None:
+        raise QiskitError("Must give one of mit_pattern or qr")
 
-    # Create the registers if not already done
-    if qr is None:
-        qr = QuantumRegister(max(qubit_list)+1)
+    qubits_in_pattern = []
+    if mit_pattern is not None:
+        for qubit_list in mit_pattern:
+            for qubit in qubit_list:
+                if qubit in qubits_in_pattern:
+                    raise QiskitError("mit_pattern cannot contain multiple instances of the same qubit")
+                qubits_in_pattern.append(qubit)
+                
+        # Create the registers if not already done
+        if qr is None:
+            qr = QuantumRegister(max(qubits_in_pattern)+1)
+    else:
+        qubits_in_pattern = range(len(qr))
+        mit_pattern = [qubits_in_pattern]
 
-    if qubit_list is None:
-        qubit_list = range(len(qr))
-
-    nqubits = len(qubit_list)
-
+    nqubits = len(qubits_in_pattern)
     # create classical bit registers
     if cr is None:
         cr = ClassicalRegister(nqubits)
 
-    zero_label = ''.zfill(nqubits)
-    zero_circ = QuantumCircuit(qr, cr,
-                               name=circlabel+'cal_'+zero_label)
+    size_of_largest_group = max([len(qubit_list) for qubit_list in mit_pattern])
+    largest_labels = count_keys(size_of_largest_group)
 
-    for qind, qubit in enumertae(qubit_list):
-        zero_circ.measure(qr[qubit], cr[qind])
+    state_labels = []
+    for largest_state in largest_labels:
+        basis_state = ''
+        for qubit_list in mit_pattern:
+            basis_state += largest_state[:len(qubit_list)]
+        state_labels.append(basis_state)
+                
 
-    one_label = zero_label
-    for qubit in qubit_list:
-        one_label[nqubits-qubit-1] = 1
-    one_circ = QuantumCircuit(qr, cr, name=circlabel+'cal_'+one_label)
+    cal_circuits = []
+    for basis_state in state_labels:
+        qc_circuit = QuantumCircuit(qr, cr,
+                                    name='%scal_%s' % (circlabel, basis_state))
 
-    for qind, qubit in enumerate(qubit_list):
-        one_circ.x(qr[qubit])
-        one_circ.measure(qr[qubit], cr[qind])
+        start_index = 0
+        for qubit_list in mit_pattern:
+            
+            end_index = start_index + len(qubit_list)
+            substate = basis_state[start_index:end_index]
+            start_index = end_index
+            
+            for qind, _ in enumerate(substate):
+                if substate[len(substate)-qind-1] == '1':
+                    # the index labeling of the label is backwards with
+                    # the list
+                    qc_circuit.x(qr[qubit_list[qind]])
 
-    return [zero_circ, one_circ], [zero_label, one_label]
+                # add measurements
+                qc_circuit.measure(qr[qubit_list[qind]], cr[qind])
+
+        cal_circuits.append(qc_circuit)
+
+    return cal_circuits, state_labels
