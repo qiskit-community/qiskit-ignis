@@ -260,14 +260,14 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
     # Check qubits being measured are defined in circuit
     for reg in meas_qubit_registers:
         if reg not in circuit.qregs:
-            logger.warning('WARNING: circuit does not contain '
+            logger.warning('circuit does not contain '
                            'measured QuantumRegister: %s', reg.name)
 
     prep_qubit_registers = set(q[0] for q in prep_qubits)
     # Check qubits being measured are defined in circuit
     for reg in prep_qubit_registers:
         if reg not in circuit.qregs:
-            logger.warning('WARNING: circuit does not contain '
+            logger.warning('circuit does not contain '
                            'prepared QuantumRegister: %s', reg.name)
 
     # Get combined registers
@@ -276,9 +276,9 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
     # Check if there are already measurements in the circuit
     for op in circuit:
         if isinstance(op, Measure):
-            logger.warning('WARNING: circuit already contains measurements')
+            logger.warning('circuit already contains measurements')
         if isinstance(op, Reset):
-            logger.warning('WARNING: circuit contains resets')
+            logger.warning('circuit contains resets')
 
     # Load built-in circuit functions
     if callable(meas_basis):

@@ -16,6 +16,9 @@ from .base_fitter import TomographyFitter
 from .cvx_fit import cvxpy, cvx_fit
 from .lstsq_fit import lstsq_fit
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ProcessTomographyFitter(TomographyFitter):
     """Maximum-Likelihood estimation process tomography fitter."""
@@ -111,6 +114,8 @@ class ProcessTomographyFitter(TomographyFitter):
                 (2012). Open access: arXiv:1106.5458 [quant-ph].
         """
         # Get fitter data
+
+        logger.info("Process Tomography fitter activated with method %s", method)
         data, basis_matrix, weights = self._fitter_data(standard_weights,
                                                         beta)
 

@@ -11,7 +11,9 @@ Maximum-Likelihood estimation quantum state tomography fitter
 """
 
 from .base_fitter import TomographyFitter
+import logging
 
+logger = logging.getLogger(__name__)
 
 class StateTomographyFitter(TomographyFitter):
     """Maximum-Likelihood estimation state tomography fitter."""
@@ -108,5 +110,8 @@ class StateTomographyFitter(TomographyFitter):
             [1] J Smolin, JM Gambetta, G Smith, Phys. Rev. Lett. 108, 070502
                 (2012). Open access: arXiv:1106.5458 [quant-ph].
         """
+
+        logger.info("State Tomography fitter activated with method %s", method)
+
         return super().fit(method, standard_weights, beta,
                            trace=1, PSD=True, **kwargs)
