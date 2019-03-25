@@ -169,3 +169,83 @@ class CompleteMeasFitter():
 
         if show_plot:
             plt.show()
+
+
+class TensoredMeasFitter():
+    """
+    Measurement correction fitter for a tensored calibration
+    """
+
+    def __init__(self, results, state_labels, mit_pattern=None, circlabel=''):
+        """
+        Initialize a measurement calibration matrix from the results of running
+        the circuits returned by `measurement_calibration_circuits`
+
+        Args:
+            results: the results of running the measurement calibration
+            ciruits. If this is None the user will set a call matrix later
+
+            state_labels: list of calibration state labels
+            returned from `measurement_calibration_circuits`. The output matrix
+            will obey this ordering.
+        """
+
+        self._results = results
+        self._state_labels = state_labels
+        self._cal_matrices = None
+        self._circlabel = circlabel
+
+        if mit_pattern is None:
+            self._qubit_list_sizes = [len(state_labels[0])]
+        else:
+            self._qubit_list_sizes = [len(qubit_list) for qubit_list in mit_pattern]
+            if sum(self._qubit_list_sizes) != len(state_labels[0]):
+                raise ValueError("mit_pattern does not match state_labels")
+
+        if self._results is not None:
+            self._build_calibration_matrices()
+
+    @property
+    def cal_matrices(self):
+        """Return cal_matrices."""
+        return self._cal_matrices
+
+    @cal_matrices.setter
+    def cal_matrices(self, new_cal_matrices):
+        """set cal_matrices."""
+        self._cal_matrices = copy(new_cal_matrices)
+
+    def _build_calibration_matrices(self):
+        """
+        TODO: modify this comment and comments of other functions
+        Build the measurement calibration matrix from the results of running
+        the circuits returned by `measurement_calibration`
+
+        Creates a 2**n x 2**n matrix that can be used to correct measurement
+        errors
+        """
+
+        self._cal_matrices = []
+        for list_size in self._qubit_list_sizes:
+            self._cal_matrices.append(np.zeros([2**list_size, 2**list_size], dtype=float))
+
+        for state in self._state_labels:
+            state_cnts = self._results.get_counts('%scal_%s' %
+                                                  (self._circlabel, state))
+            for measured_state, counts in state_cnts.items():
+                measured_state = measured_state[::-1]
+                start_index = 0
+                for list_size, cal_mat in zip(self._qubit_list_sizes, self._cal_matrices):
+                    end_index = start_index + list_size
+                    substate_as_int = int(state[start_index:end_index], 2)
+                    measured_substate_as_int = int(measured_state[start_index:end_index], 2)
+                    start_index = end_index
+
+                    cal_mat[measured_substate_as_int][substate_as_int] += counts
+
+        for mat_index, _ in enumerate(self._cal_matrices):
+            sums_of_columns = np.sum(self._cal_matrices[mat_index], axis=0)
+            self._cal_matrices[mat_index] = np.divide(self._cal_matrices[mat_index], sums_of_columns,
+                                                      out=np.zeros_like(self._cal_matrices[mat_index]),
+                                                      where=sums_of_columns!=0)
+
