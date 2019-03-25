@@ -133,6 +133,7 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
         mit_pattern = [qubits_in_pattern]
 
     nqubits = len(qubits_in_pattern)
+
     # create classical bit registers
     if cr is None:
         cr = ClassicalRegister(nqubits)
@@ -158,7 +159,6 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
             
             end_index = start_index + len(qubit_list)
             substate = basis_state[start_index:end_index]
-            start_index = end_index
             
             for qind, _ in enumerate(substate):
                 if substate[len(substate)-qind-1] == '1':
@@ -167,7 +167,10 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
                     qc_circuit.x(qr[qubit_list[qind]])
 
                 # add measurements
-                qc_circuit.measure(qr[qubit_list[qind]], cr[qind])
+                qc_circuit.measure(qr[qubit_list[qind]],
+                                   cr[end_index-qind-1])
+
+            start_index = end_index
 
         cal_circuits.append(qc_circuit)
 
