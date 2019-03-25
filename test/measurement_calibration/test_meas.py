@@ -27,7 +27,7 @@ import numpy as np
 import qiskit
 from qiskit import QuantumCircuit, ClassicalRegister, Aer
 from qiskit.ignis.mitigation.measurement \
-     import (CompleteMeasFitter,
+     import (CompleteMeasFitter, TensoredMeasFitter,
              complete_meas_cal, tensored_meas_cal,
              MeasurementFilter)
 
@@ -51,7 +51,7 @@ class TestMeasCal(unittest.TestCase):
 
             Args:
                 nq: number of qubits
-                pattern_type: a pattern in range(1,2**nq)
+                pattern_type: a pattern in range(1, 2**nq)
 
             Returns:
                 qubits: a list of qubits according to the given pattern
@@ -108,8 +108,10 @@ class TestMeasCal(unittest.TestCase):
             print("Testing %d qubit measurement calibration" % nq)
 
             for pattern_type in range(1, 2 ** nq):
+
                 # Generate the quantum register according to the pattern
                 qubits, weight = self.choose_calibration(nq, pattern_type)
+
                 # Generate the calibration circuits
                 meas_calibs, state_labels = \
                     complete_meas_cal(qubit_list=qubits,
@@ -303,8 +305,29 @@ class TestMeasCal(unittest.TestCase):
         """
         Test ideal execution, without noise
         """
-            
-        tensored_meas_cal(mit_pattern=[[1,2],[3,4,5],[6]])
+
+        mit_pattern = [[1,2],[3,4,5],[6]]
+
+        # Generate the calibration circuits
+        meas_calibs, state_labels = tensored_meas_cal(mit_pattern=mit_pattern)
+
+        # Perform an ideal execution on the generated circuits
+        backend = Aer.get_backend('qasm_simulator')
+        cal_results = qiskit.execute(meas_calibs, backend=backend, shots=self.shots).result()
+
+        # Make calibration matrices
+        meas_cal = TensoredMeasFitter(cal_results, state_labels, mit_pattern)
+
+        # Assert that the calibration matrices are equal to identity
+        cal_matrices = meas_cal.cal_matrices
+        self.assertEqual(len(mit_pattern), len(cal_matrices),
+                         'Wrong number of calibration matrices')
+        for qubit_list, cal_mat in zip(mit_pattern, cal_matrices):
+            IdentityMatrix = np.identity(2**len(qubit_list))
+            self.assertListEqual(cal_mat.tolist(),
+                                 IdentityMatrix.tolist(),
+                                 'Error: the calibration matrix is \
+                                 not equal to identity')
         
 
 if __name__ == '__main__':
