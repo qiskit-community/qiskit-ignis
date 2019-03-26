@@ -68,7 +68,7 @@ class CompleteMeasFitter():
     def readout_fidelity(self, label_list=None):
         """
         Based on the results output the readout fidelity which is the
-        trace of the calibration matrix
+        normalized trace of the calibration matrix
 
         Args:
             label_list: If none returns the average assignment fidelity
@@ -82,7 +82,7 @@ class CompleteMeasFitter():
         Additional Information:
             The on-diagonal elements of the calibration matrix are the
             probabilities of measuring state 'x' given preparation of state
-            'x' and so the trace is the average assignment fidelity
+            'x' and so the normalized trace is the average assignment fidelity
         """
 
         if self._cal_matrix is None:
@@ -214,6 +214,54 @@ class TensoredMeasFitter():
     def cal_matrices(self, new_cal_matrices):
         """set cal_matrices."""
         self._cal_matrices = copy(new_cal_matrices)
+
+    def readout_fidelity(self, label_list=None):
+        """
+        TODO: modify this comment and comments of other functions
+        Based on the results output the readout fidelity which is the
+        trace of the calibration matrix
+
+        Args:
+            label_list: If none returns the average assignment fidelity
+            of a single state. Otherwise it returns the assignment fidelity
+            to be in any one of these states averaged over the second index.
+
+        Returns:
+            readout fidelity (assignment fidelity)
+
+
+        Additional Information:
+            The on-diagonal elements of the calibration matrix are the
+            probabilities of measuring state 'x' given preparation of state
+            'x' and so the trace is the average assignment fidelity
+        """
+
+        if self._cal_matrices is None:
+            raise QiskitError("Cal matrix has not been set")
+
+        if label_list is None:
+            label_list = [[label] for label in self._state_labels]
+
+        assign_fid_list = []
+        for state_list in label_list:
+            state_list_prob = 0.
+            for state1 in state_list:
+                for state2 in state_list:
+                    start_index = 0
+                    state1_state2_prob = 1.
+                    for list_size, cal_mat in zip(self._qubit_list_sizes, self._cal_matrices):
+                        end_index = start_index + list_size
+                        substate1_as_int = int(state1[start_index:end_index], 2)
+                        substate2_as_int = int(state2[start_index:end_index], 2)
+                        start_index = end_index
+
+                        state1_state2_prob *= cal_mat[substate1_as_int][substate2_as_int]
+
+                    state_list_prob += state1_state2_prob
+
+            assign_fid_list.append(state_list_prob)
+
+        return np.mean(assign_fid_list)
 
     def _build_calibration_matrices(self):
         """
