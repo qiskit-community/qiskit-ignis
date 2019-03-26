@@ -328,6 +328,11 @@ class TestMeasCal(unittest.TestCase):
                                  IdentityMatrix.tolist(),
                                  'Error: the calibration matrix is \
                                  not equal to identity')
+
+        # Assert that the readout fidelity is equal to 1
+        self.assertEqual(meas_cal.readout_fidelity(), 1.0,
+                         'Error: the average fidelity  \
+                         is not equal to 1')
         
 
 if __name__ == '__main__':
