@@ -29,7 +29,8 @@ from qiskit import QuantumCircuit, ClassicalRegister, Aer
 from qiskit.ignis.mitigation.measurement \
      import (CompleteMeasFitter, TensoredMeasFitter,
              complete_meas_cal, tensored_meas_cal,
-             MeasurementFilter)
+             MeasurementFilter, TensoredFilter)
+from qiskit.ignis.verification.tomography import count_keys
 
 
 class TestMeasCal(unittest.TestCase):
@@ -144,7 +145,7 @@ class TestMeasCal(unittest.TestCase):
                 results_dict, results_list = \
                     self.generate_ideal_results(state_labels, weight)
 
-                # output the filter
+                # Output the filter
                 meas_filter = meas_cal.filter
 
                 # Apply the calibration matrix to results
@@ -333,6 +334,34 @@ class TestMeasCal(unittest.TestCase):
         self.assertEqual(meas_cal.readout_fidelity(), 1.0,
                          'Error: the average fidelity  \
                          is not equal to 1')
+
+        # Generate ideal (equally distributed) results
+        results_dict, results_list = \
+                      self.generate_ideal_results(count_keys(6), 6)
+
+        # Output the filter
+        meas_filter = meas_cal.filter
+
+        # Apply the calibration matrix to results
+        # in list and dict forms using different methods
+        #results_dict_1 = meas_filter.apply(results_dict,
+        #                                   method='least_squares')
+        results_dict_0 = meas_filter.apply(results_dict,
+                                           method='pseudo_inverse')
+        #results_list_1 = meas_filter.apply(results_list,
+        #                                   method='least_squares')
+        results_list_0 = meas_filter.apply(results_list,
+                                           method='pseudo_inverse')
+
+        # Assert that the results are equally distributed
+        self.assertListEqual(results_list, results_list_0)
+        #self.assertListEqual(results_list,
+        #                     np.round(results_list_1))
+        self.assertDictEqual(results_dict, results_dict_0)
+        #round_results = {}
+        #for key, val in results_dict_1.items():
+        #    round_results[key] = np.round(val)
+        #self.assertDictEqual(results_dict, round_results)
         
 
 if __name__ == '__main__':

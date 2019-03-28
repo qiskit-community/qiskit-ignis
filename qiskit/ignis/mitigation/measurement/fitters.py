@@ -14,7 +14,7 @@ Measurement correction fitters.
 
 import numpy as np
 from qiskit import QiskitError
-from .filters import MeasurementFilter
+from .filters import MeasurementFilter, TensoredFilter
 
 try:
     from matplotlib import pyplot as plt
@@ -214,6 +214,11 @@ class TensoredMeasFitter():
     def cal_matrices(self, new_cal_matrices):
         """set cal_matrices."""
         self._cal_matrices = copy(new_cal_matrices)
+
+    @property
+    def filter(self):
+        """return a measurement filter using the cal matrix"""
+        return TensoredFilter(self._cal_matrices, self._qubit_list_sizes)
 
     def readout_fidelity(self, label_list=None):
         """
