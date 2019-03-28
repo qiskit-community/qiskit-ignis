@@ -19,6 +19,7 @@ import numpy as np
 import qiskit
 from qiskit import QiskitError
 from ...verification.tomography import count_keys
+import copy
 
 
 class MeasurementFilter():
@@ -282,7 +283,7 @@ class TensoredFilter():
             size_ratio = len(raw_data)/num_of_states
             if len(raw_data) == num_of_states:
                 data_format = 1
-                raw_data2 = [raw_data]
+                raw_data2 = [copy.deepcopy(raw_data)]
             elif int(size_ratio) == size_ratio:
                 data_format = 2
                 size_ratio = int(size_ratio)
@@ -334,23 +335,37 @@ class TensoredFilter():
 
         # Apply the correction
         for data_idx, _ in enumerate(raw_data2):
-
-            if method == 'pseudo_inverse':
-                for ten_idx, cal_mat in enumerate(pinv_cal_matrices):
-                    tensored_prob_vec[data_idx][ten_idx] = np.dot(cal_mat,
+            for ten_idx, list_size in enumerate(self._qubit_list_sizes):
+                
+                if method == 'pseudo_inverse':
+                    tensored_prob_vec[data_idx][ten_idx] = np.dot(pinv_cal_matrices[ten_idx],
                                                                   tensored_prob_vec[data_idx][ten_idx])
-                for state_idx, state in enumerate(all_states):
-                    total_prob = 1.
-                    start_index = 0
-                    for ten_idx, list_size in enumerate(self._qubit_list_sizes):
-                        end_index = start_index + list_size
-                        substate_as_int = int(state[start_index:end_index], 2)
-                        start_index = end_index
+                    
+                elif method == 'least_squares':
+                    def fun(x):
+                        return sum(
+                            (tensored_prob_vec[data_idx][ten_idx]- np.dot(self._cal_matrices[ten_idx], x))**2)
+                    x0 = np.random.rand(2**list_size)
+                    x0 = x0 / sum(x0)
+                    cons = ({'type': 'eq', 'fun': lambda x: 1 - sum(x)})
+                    bnds = tuple((0, 1) for x in x0)
+                    res = minimize(fun, x0, method='SLSQP',
+                                   constraints=cons, bounds=bnds, tol=(1e-6)/shots[data_idx])
+                    tensored_prob_vec[data_idx][ten_idx] = res.x
+                
+                else:
+                    raise QiskitError("Unrecognized method.")
 
-                        total_prob *= tensored_prob_vec[data_idx][ten_idx][substate_as_int]
-                    raw_data2[data_idx][state_idx] = total_prob * shots[data_idx]
-            else:
-                raise QiskitError("Unrecognized method.")
+        for state_idx, state in enumerate(all_states):
+            total_prob = 1.
+            start_index = 0
+            for ten_idx, list_size in enumerate(self._qubit_list_sizes):
+                end_index = start_index + list_size
+                substate_as_int = int(state[start_index:end_index], 2)
+                start_index = end_index
+
+                total_prob *= tensored_prob_vec[data_idx][ten_idx][substate_as_int]
+            raw_data2[data_idx][state_idx] = total_prob * shots[data_idx]
 
         if data_format == 2:
             # flatten back out the list
