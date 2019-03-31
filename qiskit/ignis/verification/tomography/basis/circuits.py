@@ -64,6 +64,8 @@ def state_tomography_circuits(circuit, measured_qubits,
         a subset of state tomography circuits for a partial tomography
         experiment use the general function `tomography_circuits`.
     """
+    logger.info('Preparing circuits for state tomography')
+
     return _tomography_circuits(circuit, measured_qubits, None,
                                 meas_labels=meas_labels, meas_basis=meas_basis,
                                 prep_labels=None, prep_basis=None)
@@ -118,6 +120,8 @@ def process_tomography_circuits(circuit, measured_qubits,
         a subset of process tomography circuits for a partial tomography
         experiment use the general function `tomography_circuits`.
     """
+    logger.info('Preparing circuits for process tomography')
+
     return _tomography_circuits(circuit, measured_qubits, prepared_qubits,
                                 meas_labels=meas_labels, meas_basis=meas_basis,
                                 prep_labels=prep_labels, prep_basis=prep_basis)
@@ -238,6 +242,8 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         prep_circuit_fn='SIC'.
     """
 
+    logger.debug('Measurement labels: %s,  basis: %s\n\tPrepared labels: %s,  basis: %s', meas_labels, meas_basis, prep_labels, prep_basis)
+
     # Check for different prepared qubits
     if prepared_qubits is None:
         prepared_qubits = measured_qubits
@@ -310,6 +316,8 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
     if isinstance(prep_labels, str):
         prep_labels = _default_preparation_labels(prep_labels)
 
+    logger.debug('prep basis: %s, meas basis: %s', prep_labels, meas_labels )
+
     # Generate n-qubit labels
     meas_labels = _generate_labels(meas_labels, num_qubits)
     prep_labels = _generate_labels(prep_labels, num_qubits)
@@ -349,6 +357,8 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
                 # process tomography circuit
                 circ.name = str((pl, ml))
             qst_circs.append(circ)
+
+    logger.debug('%d measurement circuits were generated', len(qst_circs))
     return qst_circs
 
 
@@ -458,3 +468,6 @@ def _operator_tuples(labels, qubits):
     else:
         num_qubits = len(_format_registers(qubits))
     return list(it.product(labels, repeat=num_qubits))
+
+
+
