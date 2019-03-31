@@ -314,10 +314,6 @@ class TensoredFilter():
 
         else:
             raise QiskitError("Unrecognized type for raw_data.")
-
-        shots = []
-        for data_idx, rd in enumerate(raw_data2):
-            shots.append(sum(rd))
         
         if method == 'pseudo_inverse':
             pinv_cal_matrices = []
@@ -328,10 +324,45 @@ class TensoredFilter():
         for data_idx, _ in enumerate(raw_data2):
             
             if method == 'pseudo_inverse':
-                pass
+                for state1_idx, state1 in enumerate(all_states):
+                    total = 0.
+                    for state2_idx, state2 in enumerate(all_states):
+                        product = 1.
+                        start_index = 0
+                        for pinv_cal_mat, list_size in zip(pinv_cal_matrices, self._qubit_list_sizes):
+                            end_index = start_index + list_size
+                            state1_as_int = int(state1[start_index:end_index], 2)
+                            state2_as_int = int(state2[start_index:end_index], 2)
+                            start_index = end_index
+                            product *= pinv_cal_mat[state1_as_int][state2_as_int]
+                        total += (product * raw_data2[data_idx][state2_idx])
+                    raw_data2[data_idx][state1_idx] = total                        
                     
             elif method == 'least_squares':
-                pass
+                def fun(x):
+                    mat_dot_x = np.zeros([num_of_states], dtype=float)
+                    for state1_idx, state1 in enumerate(all_states):
+                        mat_dot_x[state1_idx] = 0.
+                        for state2_idx, state2 in enumerate(all_states):
+                            product = 1.
+                            start_index = 0
+                            for cal_mat, list_size in zip(self._cal_matrices, self._qubit_list_sizes):
+                                end_index = start_index + list_size
+                                state1_as_int = int(state1[start_index:end_index], 2)
+                                state2_as_int = int(state2[start_index:end_index], 2)
+                                start_index = end_index
+                                product *= cal_mat[state1_as_int][state2_as_int]
+                            mat_dot_x[state1_idx] += (product * x[state1_idx])                    
+                    return sum(
+                        (raw_data2[data_idx] - mat_dot_x)**2)
+                x0 = np.random.rand(num_of_states)
+                x0 = x0 / sum(x0)
+                nshots = sum(raw_data2[data_idx])
+                cons = ({'type': 'eq', 'fun': lambda x: nshots - sum(x)})
+                bnds = tuple((0, nshots) for x in x0)
+                res = minimize(fun, x0, method='SLSQP',
+                               constraints=cons, bounds=bnds, tol=1e-6)
+                raw_data2[data_idx] = res.x
                 
             else:
                 raise QiskitError("Unrecognized method.")
