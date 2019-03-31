@@ -59,8 +59,7 @@ def check_pattern(pattern):
         ValueError: if the pattern is not valid
 
     Return:
-        qlist: flat list of all the qubits in the pattern
-        maxqubit: the maximum qubit number
+        nqubits, maxqubit
     """
 
     pattern_flat = []
@@ -71,7 +70,7 @@ def check_pattern(pattern):
     if (uni_counts > 1).any():
         raise ValueError("Invalid pattern. Duplicate qubit index.")
 
-    return pattern_flat, np.max(pattern_flat)
+    return len(pattern_flat), np.max(pattern_flat)
 
 
 def calc_xdata(length_vector, length_multiplier):
@@ -135,8 +134,7 @@ def load_tables(max_nrb=2):
 
 def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 rb_pattern=None,
-                                length_multiplier=1, seed_offset=0,
-                                align_cliffs=False):
+                                length_multiplier=1, seed_offset=0):
     """
     Get a generic randomized benchmarking sequence
 
@@ -156,11 +154,6 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         the multiplier
         seed_offset: What to start the seeds at (e.g. if we
         want to add more seeds later)
-        align_cliffs: If true adds a barrier across all qubits in rb_pattern
-        after each set of cliffords (note: aligns after each increment
-        of cliffords including the length multiplier so if the multiplier
-        is [1,3] it will barrier after 1 clifford for the first pattern
-        and 3 for the second)
 
     Returns:
         rb_circs: list of lists of circuits for the rb sequences (separate list
@@ -173,7 +166,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     if length_vector is None:
         length_vector = [1, 10, 20]
 
-    qlist_flat, n_q_max = check_pattern(rb_pattern)
+    _, n_q_max = check_pattern(rb_pattern)
     length_multiplier = handle_length_multiplier(length_multiplier,
                                                  len(rb_pattern))
 
@@ -214,11 +207,6 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     # add a barrier
                     general_circ.barrier(
                         *[qr[x] for x in rb_pattern[rb_pattern_index]])
-
-            if align_cliffs:
-                # if align cliffords at a barrier across all patterns
-                general_circ.barrier(
-                    *[qr[x] for x in qlist_flat])
 
             # if the number of cliffords matches one of the sequence lengths
             # then calculate the inverse and produce the circuit
