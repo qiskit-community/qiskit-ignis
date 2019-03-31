@@ -362,6 +362,75 @@ class TestMeasCal(unittest.TestCase):
         for key, val in results_dict_1.items():
             round_results[key] = np.round(val)
         self.assertDictEqual(results_dict, round_results)
+
+    def test_tensored_meas_cal_on_circuit(self):
+        """
+            Test an execution on a circuit
+        """
+
+        mit_pattern = [[2], [4, 1]]
+
+        qr = qiskit.QuantumRegister(5)
+        # Generate the calibration circuits
+        meas_calibs, state_labels = \
+                     tensored_meas_cal(mit_pattern, qr=qr)
+
+        # Run the calibration circuits
+        backend = Aer.get_backend('qasm_simulator')
+        cal_results = qiskit.execute(meas_calibs, backend=backend,
+                                     shots=self.shots).result()
+
+        # Make a calibration matrix
+        meas_cal = TensoredMeasFitter(cal_results, state_labels, mit_pattern)
+        # Calculate the fidelity
+        fidelity = meas_cal.readout_fidelity()
+
+        # Make a 3Q GHZ state
+        cr = ClassicalRegister(3)
+        ghz = QuantumCircuit(qr, cr)
+        ghz.h(qr[2])
+        ghz.cx(qr[2], qr[4])
+        ghz.cx(qr[2], qr[1])
+        ghz.measure(qr[2], cr[0])
+        ghz.measure(qr[4], cr[1])
+        ghz.measure(qr[1], cr[2])
+
+        results = qiskit.execute([ghz], backend=backend,
+                                 shots=self.shots).result()
+
+        # Predicted equally distributed results
+        predicted_results = {'000': 0.5,
+                             '111': 0.5}
+
+        meas_filter = meas_cal.filter
+
+        # Calculate the results after mitigation
+        output_results_pseudo_inverse = meas_filter.apply(
+            results, method='pseudo_inverse').get_counts(0)
+        output_results_least_square = meas_filter.apply(
+            results, method='least_squares').get_counts(0)
+
+        # Compare with expected fidelity and expected results
+        self.assertAlmostEqual(fidelity, 1.0)
+        self.assertAlmostEqual(
+            output_results_pseudo_inverse['000']/self.shots,
+            predicted_results['000'],
+            places=1)
+
+        self.assertAlmostEqual(
+            output_results_least_square['000']/self.shots,
+            predicted_results['000'],
+            places=1)
+
+        self.assertAlmostEqual(
+            output_results_pseudo_inverse['111']/self.shots,
+            predicted_results['111'],
+            places=1)
+
+        self.assertAlmostEqual(
+            output_results_least_square['111']/self.shots,
+            predicted_results['111'],
+            places=1)
         
 
 if __name__ == '__main__':
