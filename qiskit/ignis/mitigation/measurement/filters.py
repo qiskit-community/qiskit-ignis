@@ -315,19 +315,10 @@ class TensoredFilter():
         else:
             raise QiskitError("Unrecognized type for raw_data.")
 
-        tensored_prob_vec = [[np.zeros(2**list_size, dtype=float) for list_size in self._qubit_list_sizes]]*len(raw_data2)
         shots = []
         for data_idx, rd in enumerate(raw_data2):
             shots.append(sum(rd))
-            for state, count in zip(all_states, rd):
-                start_index = 0
-                for ten_idx, list_size in enumerate(self._qubit_list_sizes):
-                    end_index = start_index + list_size
-                    substate_as_int = int(state[start_index:end_index], 2)
-                    start_index = end_index
-
-                    tensored_prob_vec[data_idx][ten_idx][substate_as_int] += (count/shots[-1])
-
+        
         if method == 'pseudo_inverse':
             pinv_cal_matrices = []
             for cal_mat in self._cal_matrices:
@@ -335,37 +326,15 @@ class TensoredFilter():
 
         # Apply the correction
         for data_idx, _ in enumerate(raw_data2):
-            for ten_idx, list_size in enumerate(self._qubit_list_sizes):
-                
-                if method == 'pseudo_inverse':
-                    tensored_prob_vec[data_idx][ten_idx] = np.dot(pinv_cal_matrices[ten_idx],
-                                                                  tensored_prob_vec[data_idx][ten_idx])
+            
+            if method == 'pseudo_inverse':
+                pass
                     
-                elif method == 'least_squares':
-                    def fun(x):
-                        return sum(
-                            (tensored_prob_vec[data_idx][ten_idx]- np.dot(self._cal_matrices[ten_idx], x))**2)
-                    x0 = np.random.rand(2**list_size)
-                    x0 = x0 / sum(x0)
-                    cons = ({'type': 'eq', 'fun': lambda x: 1 - sum(x)})
-                    bnds = tuple((0, 1) for x in x0)
-                    res = minimize(fun, x0, method='SLSQP',
-                                   constraints=cons, bounds=bnds, tol=(1e-6)/shots[data_idx])
-                    tensored_prob_vec[data_idx][ten_idx] = res.x
+            elif method == 'least_squares':
+                pass
                 
-                else:
-                    raise QiskitError("Unrecognized method.")
-
-        for state_idx, state in enumerate(all_states):
-            total_prob = 1.
-            start_index = 0
-            for ten_idx, list_size in enumerate(self._qubit_list_sizes):
-                end_index = start_index + list_size
-                substate_as_int = int(state[start_index:end_index], 2)
-                start_index = end_index
-
-                total_prob *= tensored_prob_vec[data_idx][ten_idx][substate_as_int]
-            raw_data2[data_idx][state_idx] = total_prob * shots[data_idx]
+            else:
+                raise QiskitError("Unrecognized method.")
 
         if data_format == 2:
             # flatten back out the list
