@@ -202,7 +202,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         tomography experiment we might only specify correlated measurements eg:
             meas_labels=[('X','X'), ('Y','Y'), ('Z','Z')]
 
-        Custom Measurement Circuit Funtion
+        Custom Measurement Circuit Function
         ----------------------------------
         Custom measurement circuit functions can be used by passing the
         function using the `meas_circuit_fn` keyword. These functions should
@@ -220,7 +220,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         The built-in Pauli measurement function `pauli_measurement_circuit`
         may be invoked using the meas_circuit_fn='Pauli'.
 
-        Custom Preparation Circuit Funtion
+        Custom Preparation Circuit Function
         ----------------------------------
         Custom preparation circuit functions can be used by passing the
         function using the `prep_circuit_fn` keyword. These functions should
@@ -324,7 +324,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
 
     # Note if the input circuit already has classical registers defined
     # the returned circuits add a new classical register for the tomography
-    # measurments which will be inserted as the first classical register in
+    # measurements which will be inserted as the first classical register in
     # the list of returned circuits.
     registers = qubit_registers.copy()
     if measurement is not None:

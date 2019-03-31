@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class TomographyFitter:
-    """Basse maximum-likelihood estimate tomography fitter class"""
+    """Base maximum-likelihood estimate tomography fitter class"""
 
     def __init__(self,
                  result,
@@ -199,6 +199,7 @@ class TomographyFitter:
                 method = 'lstsq'
             else:
                 method = 'cvx'
+
         if method == 'lstsq':
             return lstsq_fit(data, basis_matrix, weights=weights, **kwargs)
 
