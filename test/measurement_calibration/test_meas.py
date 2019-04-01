@@ -15,9 +15,9 @@ to the identity matrices
 the calibration output (without noise),
 and validating that it is equally distributed
 3) Testing the the measurement calibration on a circuit
-(without noise) verifying that it is close to the
+(without noise), verifying that it is close to the
 expected (equally distributed) result
-4) Testing MeasurementFitter on pre-generated data with noise
+4) Testing the fitters on pre-generated data with noise
 """
 
 import unittest

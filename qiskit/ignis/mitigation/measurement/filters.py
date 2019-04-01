@@ -191,23 +191,22 @@ class MeasurementFilter():
 
 class TensoredFilter():
     """
-    TODO: Modify all comments in this class
-    Measurement error mitigation filter
+    Tensored measurement error mitigation filter
 
-    Produced from a measurement calibration fitter and can be applied
+    Produced from a tensored measurement calibration fitter and can be applied
     to data
 
     """
 
     def __init__(self, cal_matrices, qubit_list_sizes):
         """
-        TODO: modify comment
-        Initialize a measurement error mitigation filter using the cal_matrix
-        from a measurement calibration fitter
+        Initialize a tensored measurement error mitigation filter using the cal_matrices
+        from a tensored measurement calibration fitter
 
         Args:
-            cal_matrix: the calibration matrix for applying the correction
-            state_labels: the states for the ordering of the cal matrix
+            cal_matrices: the calibration matrices for applying the correction
+            qubit_list_sizes: the lengths of the lists in mit_pattern
+            (see tensored_meas_cal in circuits.py for mit_pattern)
         """
 
         self._cal_matrices = cal_matrices
@@ -227,46 +226,28 @@ class TensoredFilter():
         return sum(self._qubit_list_sizes)
 
     @cal_matrices.setter
-    def cal_matriices(self, new_cal_matrices):
+    def cal_matrices(self, new_cal_matrices):
         """Set cal_matrices."""
         self._cal_matrices = copy(new_cal_matrices)
 
     def apply(self, raw_data, method='least_squares'):
         """
-        TODO: modify this comment
-        Apply the calibration matrix to results
+        Apply the calibration matrices to results
 
         Args:
             raw_data: The data to be corrected. Can be in a number of forms.
                 Form1: a counts dictionary from results.get_counts
-                Form2: a list of counts of length==len(state_labels)
-                Form3: a list of counts of length==M*len(state_labels) where M
+                Form2: a complete list of counts
+                Form3: a flat concatenation of M lists of counts, where M
                     is an integer (e.g. for use with the tomography data)
                 Form4: a qiskit Result
 
             method (str): fitting method. If None, then least_squares is used.
-                'pseudo_inverse': direct inversion of the A matrix
+                'pseudo_inverse': direct inversion of the cal matrices
                 'least_squares': constrained to have physical probabilities
 
         Returns:
             The corrected data in the same form as raw_data
-
-        Additional Information:
-
-            e.g.
-            calcircuits, state_labels = complete_measurement_calibration(
-                qiskit.QuantumRegister(5))
-            job = qiskit.execute(calcircuits)
-            meas_fitter = CompleteMeasFitter(job.results(),
-                                            state_labels)
-            meas_filter = MeasurementFilter(meas_fitter.cal_matrix)
-
-            job2 = qiskit.execute(my_circuits)
-            result2 = job2.results()
-
-            error_mitigated_counts = meas_filter.apply(
-                result2.get_counts('circ1'))
-
         """
 
         all_states = count_keys(self.nqubits)
