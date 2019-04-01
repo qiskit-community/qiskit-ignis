@@ -220,7 +220,11 @@ class TensoredFilter():
 
     @property
     def qubit_list_sizes(self):
-        return self._qubit_list_sizs
+        return self._qubit_list_sizes
+
+    @property
+    def nqubits(self):
+        return sum(self._qubit_list_sizes)
 
     @cal_matrices.setter
     def cal_matriices(self, new_cal_matrices):
@@ -265,9 +269,8 @@ class TensoredFilter():
 
         """
 
-        nqubits = sum(self._qubit_list_sizes)
-        all_states = count_keys(nqubits)
-        num_of_states = 2**nqubits
+        all_states = count_keys(self.nqubits)
+        num_of_states = 2**self.nqubits
        
         # check forms of raw_data
         if isinstance(raw_data, dict):
@@ -324,37 +327,39 @@ class TensoredFilter():
         for data_idx, _ in enumerate(raw_data2):
             
             if method == 'pseudo_inverse':
+                inv_mat_dot_raw = np.zeros([num_of_states], dtype=float)
                 for state1_idx, state1 in enumerate(all_states):
-                    total = 0.
                     for state2_idx, state2 in enumerate(all_states):
                         product = 1.
-                        start_index = 0
+                        end_index = self.nqubits
                         for pinv_cal_mat, list_size in zip(pinv_cal_matrices, self._qubit_list_sizes):
-                            end_index = start_index + list_size
+                            start_index = end_index - list_size
                             state1_as_int = int(state1[start_index:end_index], 2)
                             state2_as_int = int(state2[start_index:end_index], 2)
-                            start_index = end_index
+                            end_index = start_index
                             product *= pinv_cal_mat[state1_as_int][state2_as_int]
-                        total += (product * raw_data2[data_idx][state2_idx])
-                    raw_data2[data_idx][state1_idx] = total                        
+                        inv_mat_dot_raw[state1_idx] += (product * raw_data2[data_idx][state2_idx])
+                raw_data2[data_idx] = inv_mat_dot_raw
                     
             elif method == 'least_squares':
+                
                 def fun(x):
                     mat_dot_x = np.zeros([num_of_states], dtype=float)
                     for state1_idx, state1 in enumerate(all_states):
                         mat_dot_x[state1_idx] = 0.
                         for state2_idx, state2 in enumerate(all_states):
                             product = 1.
-                            start_index = 0
+                            end_index = self.nqubits
                             for cal_mat, list_size in zip(self._cal_matrices, self._qubit_list_sizes):
-                                end_index = start_index + list_size
+                                start_index = end_index - list_size
                                 state1_as_int = int(state1[start_index:end_index], 2)
                                 state2_as_int = int(state2[start_index:end_index], 2)
-                                start_index = end_index
+                                end_index = start_index
                                 product *= cal_mat[state1_as_int][state2_as_int]
-                            mat_dot_x[state1_idx] += (product * x[state1_idx])                    
+                            mat_dot_x[state1_idx] += (product * x[state2_idx])
                     return sum(
                         (raw_data2[data_idx] - mat_dot_x)**2)
+                
                 x0 = np.random.rand(num_of_states)
                 x0 = x0 / sum(x0)
                 nshots = sum(raw_data2[data_idx])
@@ -380,5 +385,7 @@ class TensoredFilter():
 
             raw_data2 = new_count_dict
         else:
+            # TODO: should probably change to:
+            # raw_data2 = raw_data2[0].tolist()
             raw_data2 = raw_data2[0]
         return raw_data2

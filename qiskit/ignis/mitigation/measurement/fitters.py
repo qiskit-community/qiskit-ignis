@@ -199,7 +199,7 @@ class TensoredMeasFitter():
             self._qubit_list_sizes = [len(state_labels[0])]
         else:
             self._qubit_list_sizes = [len(qubit_list) for qubit_list in mit_pattern]
-            if sum(self._qubit_list_sizes) != len(state_labels[0]):
+            if self.nqubits != len(state_labels[0]):
                 raise ValueError("mit_pattern does not match state_labels")
 
         if self._results is not None:
@@ -219,6 +219,10 @@ class TensoredMeasFitter():
     def filter(self):
         """return a measurement filter using the cal matrix"""
         return TensoredFilter(self._cal_matrices, self._qubit_list_sizes)
+
+    @property
+    def nqubits(self):
+        return sum(self._qubit_list_sizes)
 
     def readout_fidelity(self, label_list=None):
         """
@@ -252,13 +256,13 @@ class TensoredMeasFitter():
             state_list_prob = 0.
             for state1 in state_list:
                 for state2 in state_list:
-                    start_index = 0
+                    end_index = self.nqubits
                     state1_state2_prob = 1.
                     for list_size, cal_mat in zip(self._qubit_list_sizes, self._cal_matrices):
-                        end_index = start_index + list_size
+                        start_index = end_index - list_size
                         substate1_as_int = int(state1[start_index:end_index], 2)
                         substate2_as_int = int(state2[start_index:end_index], 2)
-                        start_index = end_index
+                        end_index = start_index
 
                         state1_state2_prob *= cal_mat[substate1_as_int][substate2_as_int]
 
@@ -286,13 +290,12 @@ class TensoredMeasFitter():
             state_cnts = self._results.get_counts('%scal_%s' %
                                                   (self._circlabel, state))
             for measured_state, counts in state_cnts.items():
-                measured_state = measured_state[::-1]
-                start_index = 0
+                end_index = self.nqubits
                 for list_size, cal_mat in zip(self._qubit_list_sizes, self._cal_matrices):
-                    end_index = start_index + list_size
+                    start_index = end_index - list_size
                     substate_as_int = int(state[start_index:end_index], 2)
                     measured_substate_as_int = int(measured_state[start_index:end_index], 2)
-                    start_index = end_index
+                    end_index = start_index
 
                     cal_mat[measured_substate_as_int][substate_as_int] += counts
 

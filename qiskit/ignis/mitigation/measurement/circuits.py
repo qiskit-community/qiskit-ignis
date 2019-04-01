@@ -138,39 +138,39 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
     if cr is None:
         cr = ClassicalRegister(nqubits)
 
-    size_of_largest_group = max([len(qubit_list) for qubit_list in mit_pattern])
+    qubits_list_sizes = [len(qubit_list) for qubit_list in mit_pattern]
+    nqubits = sum(qubits_list_sizes)
+    size_of_largest_group = max([list_size for list_size in qubits_list_sizes])
     largest_labels = count_keys(size_of_largest_group)
 
     state_labels = []
     for largest_state in largest_labels:
         basis_state = ''
-        for qubit_list in mit_pattern:
-            basis_state += largest_state[:len(qubit_list)]
+        for list_size in qubits_list_sizes:
+            basis_state = largest_state[:list_size] + basis_state
         state_labels.append(basis_state)
-                
 
     cal_circuits = []
     for basis_state in state_labels:
         qc_circuit = QuantumCircuit(qr, cr,
                                     name='%scal_%s' % (circlabel, basis_state))
 
-        start_index = 0
-        for qubit_list in mit_pattern:
+        end_index = nqubits
+        for qubit_list, list_size in zip(mit_pattern, qubits_list_sizes):
             
-            end_index = start_index + len(qubit_list)
+            start_index = end_index - list_size
             substate = basis_state[start_index:end_index]
-            start_index = end_index
             
-            for qind, _ in enumerate(substate):
-                if substate[len(substate)-qind-1] == '1':
+            for qind, _ in enumerate(substate[::-1]):
+                if substate[list_size-qind-1] == '1':
                     # the index labeling of the label is backwards with
                     # the list
                     qc_circuit.x(qr[qubit_list[qind]])
-                    qc_circuit.t(qr[qubit_list[qind]])
 
                 # add measurements
-                qc_circuit.measure(qr[qubit_list[qind]],
-                                   cr[end_index-qind-1])
+                qc_circuit.measure(qr[qubit_list[qind]], cr[nqubits-(end_index-qind)])
+
+            end_index = start_index
 
         cal_circuits.append(qc_circuit)
 
