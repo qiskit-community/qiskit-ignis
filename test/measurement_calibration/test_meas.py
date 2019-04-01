@@ -29,9 +29,8 @@ from qiskit import QuantumCircuit, ClassicalRegister, Aer
 from qiskit.ignis.mitigation.measurement \
      import (CompleteMeasFitter, TensoredMeasFitter,
              complete_meas_cal, tensored_meas_cal,
-             MeasurementFilter, TensoredFilter)
+             MeasurementFilter)
 from qiskit.ignis.verification.tomography import count_keys
-from qiskit.providers.aer.noise import NoiseModel
 
 
 class TestMeasCal(unittest.TestCase):
@@ -307,14 +306,15 @@ class TestMeasCal(unittest.TestCase):
         Test ideal execution, without noise
         """
 
-        mit_pattern = [[1,2],[3,4,5],[6]]
+        mit_pattern = [[1, 2], [3, 4, 5], [6]]
 
         # Generate the calibration circuits
         meas_calibs, state_labels = tensored_meas_cal(mit_pattern=mit_pattern)
 
         # Perform an ideal execution on the generated circuits
         backend = Aer.get_backend('qasm_simulator')
-        cal_results = qiskit.execute(meas_calibs, backend=backend, shots=self.shots).result()
+        cal_results = qiskit.execute(
+            meas_calibs, backend=backend, shots=self.shots).result()
 
         # Make calibration matrices
         meas_cal = TensoredMeasFitter(cal_results, state_labels, mit_pattern)
@@ -337,7 +337,7 @@ class TestMeasCal(unittest.TestCase):
 
         # Generate ideal (equally distributed) results
         results_dict, results_list = \
-                      self.generate_ideal_results(count_keys(6), 6)
+            self.generate_ideal_results(count_keys(6), 6)
 
         # Output the filter
         meas_filter = meas_cal.filter
@@ -373,7 +373,7 @@ class TestMeasCal(unittest.TestCase):
         qr = qiskit.QuantumRegister(5)
         # Generate the calibration circuits
         meas_calibs, state_labels = \
-                     tensored_meas_cal(mit_pattern, qr=qr)
+            tensored_meas_cal(mit_pattern, qr=qr)
 
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
@@ -450,7 +450,7 @@ class TestMeasCal(unittest.TestCase):
 
         # Set the calibration matrix
         meas_cal.cal_matrices = pickled_info['cal_matrices']
-        
+
         # Calculate the fidelity
         fidelity = meas_cal.readout_fidelity()
 
@@ -466,7 +466,7 @@ class TestMeasCal(unittest.TestCase):
         self.assertAlmostEqual(fidelity,
                                pickled_info['fidelity'],
                                places=0)
-        
+
         self.assertAlmostEqual(
             output_results_pseudo_inverse['000'],
             pickled_info['results_pseudo_inverse']['000'], places=0)
@@ -482,7 +482,7 @@ class TestMeasCal(unittest.TestCase):
         self.assertAlmostEqual(
             output_results_least_square['111'],
             pickled_info['results_least_square']['111'], places=0)
-       
+
 
 if __name__ == '__main__':
     unittest.main()

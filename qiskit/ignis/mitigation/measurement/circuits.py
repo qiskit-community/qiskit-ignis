@@ -45,7 +45,8 @@ def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
         where XXX is the basis state,
         e.g., cal_1001
 
-        Pass the results of these circuits to the CompleteMeasurementFitter constructor
+        Pass the results of these circuits to the CompleteMeasurementFitter
+        constructor
     """
 
     if qubit_list is None and qr is None:
@@ -103,7 +104,8 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
         unique identification
 
     Returns:
-        A list of two QuantumCircuit objects containing the calibration circuits
+        A list of two QuantumCircuit objects containing the calibration
+        circuits
 
         A list of calibration state labels
 
@@ -112,7 +114,8 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
         where XXX is the basis state,
         e.g., cal_000 and cal_111
 
-        Pass the results of these circuits to the TensoredMeasurementFitter constructor
+        Pass the results of these circuits to the TensoredMeasurementFitter
+        constructor
     """
 
     if mit_pattern is None and qr is None:
@@ -123,9 +126,10 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
         for qubit_list in mit_pattern:
             for qubit in qubit_list:
                 if qubit in qubits_in_pattern:
-                    raise QiskitError("mit_pattern cannot contain multiple instances of the same qubit")
+                    raise QiskitError("mit_pattern cannot contain \
+                    multiple instances of the same qubit")
                 qubits_in_pattern.append(qubit)
-                
+
         # Create the registers if not already done
         if qr is None:
             qr = QuantumRegister(max(qubits_in_pattern)+1)
@@ -158,16 +162,17 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
 
         end_index = nqubits
         for qubit_list, list_size in zip(mit_pattern, qubits_list_sizes):
-            
+
             start_index = end_index - list_size
             substate = basis_state[start_index:end_index]
-            
+
             for qind, _ in enumerate(substate[::-1]):
                 if substate[list_size-qind-1] == '1':
                     qc_circuit.x(qr[qubit_list[qind]])
 
                 # add measurements
-                qc_circuit.measure(qr[qubit_list[qind]], cr[nqubits-(end_index-qind)])
+                qc_circuit.measure(qr[qubit_list[qind]],
+                                   cr[nqubits-(end_index-qind)])
 
             end_index = start_index
 

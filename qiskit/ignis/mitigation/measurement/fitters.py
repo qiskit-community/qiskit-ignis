@@ -12,10 +12,10 @@
 Measurement correction fitters.
 """
 
+import copy
 import numpy as np
 from qiskit import QiskitError
 from .filters import MeasurementFilter, TensoredFilter
-import copy
 
 try:
     from matplotlib import pyplot as plt
@@ -36,7 +36,8 @@ class CompleteMeasFitter():
 
         Args:
             results: the results of running the measurement calibration
-            ciruits. If this is None the user will set a calibrarion matrix later
+            ciruits. If this is None the user will set a calibrarion matrix
+            later
 
             state_labels: list of calibration state labels
             returned from `measurement_calibration_circuits`. The output matrix
@@ -184,7 +185,8 @@ class TensoredMeasFitter():
 
         Args:
             results: the results of running the measurement calibration
-            circuits. If this is None the user will set calibration matrices later
+            circuits. If this is None the user will set calibration matrices
+            later
 
             state_labels: list of calibration state labels
             returned from `measurement_calibration_circuits`
@@ -200,7 +202,8 @@ class TensoredMeasFitter():
         if mit_pattern is None:
             self._qubit_list_sizes = [len(state_labels[0])]
         else:
-            self._qubit_list_sizes = [len(qubit_list) for qubit_list in mit_pattern]
+            self._qubit_list_sizes = \
+                [len(qubit_list) for qubit_list in mit_pattern]
             if self.nqubits != len(state_labels[0]):
                 raise ValueError("mit_pattern does not match state_labels")
 
@@ -224,6 +227,7 @@ class TensoredMeasFitter():
 
     @property
     def nqubits(self):
+        """Return _qubit_list_sizes"""
         return sum(self._qubit_list_sizes)
 
     def readout_fidelity(self, label_list=None):
@@ -232,7 +236,7 @@ class TensoredMeasFitter():
         of the diagonal entries in the calibration matrices
 
         Args:
-            label_list (list of lists on states): 
+            label_list (list of lists on states):
             Returns the average fidelity over of the groups of states.
             If None then each state used in the construction of the
             calibration matrices forms a group of size 1
@@ -262,13 +266,18 @@ class TensoredMeasFitter():
                 for state2 in state_list:
                     end_index = self.nqubits
                     state1_state2_prob = 1.
-                    for list_size, cal_mat in zip(self._qubit_list_sizes, self._cal_matrices):
+                    for list_size, cal_mat \
+                            in zip(self._qubit_list_sizes,
+                                   self._cal_matrices):
                         start_index = end_index - list_size
-                        substate1_as_int = int(state1[start_index:end_index], 2)
-                        substate2_as_int = int(state2[start_index:end_index], 2)
+                        substate1_as_int = \
+                            int(state1[start_index:end_index], 2)
+                        substate2_as_int = \
+                            int(state2[start_index:end_index], 2)
                         end_index = start_index
 
-                        state1_state2_prob *= cal_mat[substate1_as_int][substate2_as_int]
+                        state1_state2_prob *= \
+                            cal_mat[substate1_as_int][substate2_as_int]
 
                     state_list_prob += state1_state2_prob
 
@@ -284,24 +293,30 @@ class TensoredMeasFitter():
 
         self._cal_matrices = []
         for list_size in self._qubit_list_sizes:
-            self._cal_matrices.append(np.zeros([2**list_size, 2**list_size], dtype=float))
+            self._cal_matrices.append(np.zeros([2**list_size, 2**list_size],
+                                               dtype=float))
 
         for state in self._state_labels:
             state_cnts = self._results.get_counts('%scal_%s' %
                                                   (self._circlabel, state))
             for measured_state, counts in state_cnts.items():
                 end_index = self.nqubits
-                for list_size, cal_mat in zip(self._qubit_list_sizes, self._cal_matrices):
+                for list_size, cal_mat \
+                        in zip(self._qubit_list_sizes,
+                               self._cal_matrices):
                     start_index = end_index - list_size
                     substate_as_int = int(state[start_index:end_index], 2)
-                    measured_substate_as_int = int(measured_state[start_index:end_index], 2)
+                    measured_substate_as_int = \
+                        int(measured_state[start_index:end_index], 2)
                     end_index = start_index
 
-                    cal_mat[measured_substate_as_int][substate_as_int] += counts
+                    cal_mat[measured_substate_as_int][substate_as_int] += \
+                        counts
 
         for mat_index, _ in enumerate(self._cal_matrices):
             sums_of_columns = np.sum(self._cal_matrices[mat_index], axis=0)
-            self._cal_matrices[mat_index] = np.divide(self._cal_matrices[mat_index], sums_of_columns,
-                                                      out=np.zeros_like(self._cal_matrices[mat_index]),
-                                                      where=sums_of_columns!=0)
-
+            # pylint: disable=assignment-from-no-return
+            self._cal_matrices[mat_index] = np.divide(
+                self._cal_matrices[mat_index], sums_of_columns,
+                out=np.zeros_like(self._cal_matrices[mat_index]),
+                where=sums_of_columns != 0)
