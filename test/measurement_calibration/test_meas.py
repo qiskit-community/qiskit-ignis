@@ -31,6 +31,7 @@ from qiskit.ignis.mitigation.measurement \
              complete_meas_cal, tensored_meas_cal,
              MeasurementFilter, TensoredFilter)
 from qiskit.ignis.verification.tomography import count_keys
+from qiskit.providers.aer.noise import NoiseModel
 
 
 class TestMeasCal(unittest.TestCase):
@@ -301,7 +302,6 @@ class TestMeasCal(unittest.TestCase):
                 output_results_least_square['111'],
                 tests[tst_index]['results_least_square']['111'], places=0)
 
-
     def test_ideal_tensored_meas_cal(self):
         """
         Test ideal execution, without noise
@@ -354,7 +354,7 @@ class TestMeasCal(unittest.TestCase):
                                            method='pseudo_inverse')
 
         # Assert that the results are equally distributed
-        self.assertListEqual(results_list, results_list_0)
+        self.assertListEqual(results_list, results_list_0.tolist())
         self.assertListEqual(results_list,
                              np.round(results_list_1).tolist())
         self.assertDictEqual(results_dict, results_dict_0)
@@ -431,7 +431,58 @@ class TestMeasCal(unittest.TestCase):
             output_results_least_square['111']/self.shots,
             predicted_results['111'],
             places=1)
+
+    def test_tensored_meas_fitter_with_noise(self):
+        """
+            Test the TensoredFitter with noise
+        """
+
+        # pre-generated results with noise
+        # load from pickled file
+        fo = open(os.path.join(
+            os.path.dirname(__file__), 'test_tensored_meas_results.pkl'), 'rb')
+        pickled_info = pickle.load(fo)
+        fo.close()
+
+        meas_cal = TensoredMeasFitter(None, pickled_info['state_labels'],
+                                      pickled_info['mit_pattern'],
+                                      circlabel='test')
+
+        # Set the calibration matrix
+        meas_cal.cal_matrices = pickled_info['cal_matrices']
         
+        # Calculate the fidelity
+        fidelity = meas_cal.readout_fidelity()
+
+        meas_filter = meas_cal.filter
+
+        # Calculate the results after mitigation
+        output_results_pseudo_inverse = meas_filter.apply(
+            pickled_info['results'], method='pseudo_inverse')
+        output_results_least_square = meas_filter.apply(
+            pickled_info['results'], method='least_squares')
+
+        # Compare with expected fidelity and expected results
+        self.assertAlmostEqual(fidelity,
+                               pickled_info['fidelity'],
+                               places=0)
+        
+        self.assertAlmostEqual(
+            output_results_pseudo_inverse['000'],
+            pickled_info['results_pseudo_inverse']['000'], places=0)
+
+        self.assertAlmostEqual(
+            output_results_least_square['000'],
+            pickled_info['results_least_square']['000'], places=0)
+
+        self.assertAlmostEqual(
+            output_results_pseudo_inverse['111'],
+            pickled_info['results_pseudo_inverse']['111'], places=0)
+
+        self.assertAlmostEqual(
+            output_results_least_square['111'],
+            pickled_info['results_least_square']['111'], places=0)
+       
 
 if __name__ == '__main__':
     unittest.main()
