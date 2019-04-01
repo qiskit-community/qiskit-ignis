@@ -15,6 +15,7 @@ Measurement correction fitters.
 import numpy as np
 from qiskit import QiskitError
 from .filters import MeasurementFilter, TensoredFilter
+import copy
 
 try:
     from matplotlib import pyplot as plt
@@ -213,7 +214,7 @@ class TensoredMeasFitter():
     @cal_matrices.setter
     def cal_matrices(self, new_cal_matrices):
         """set cal_matrices."""
-        self._cal_matrices = copy(new_cal_matrices)
+        self._cal_matrices = copy.deepcopy(new_cal_matrices)
 
     @property
     def filter(self):
