@@ -45,7 +45,7 @@ def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
         where XXX is the basis state,
         e.g., cal_1001
 
-        Pass the results of these circuits to "MeasurementFitter" constructor
+        Pass the results of these circuits to the CompleteMeasurementFitter constructor
     """
 
     if qubit_list is None and qr is None:
@@ -87,12 +87,13 @@ def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
 
 def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
     """
-    Return a list of calibration circuits for the all zeros and all ones basis states.
+    Return a list of calibration circuits
 
     Args:
-        qubit_list: A list of qubits to perform the measurement correction on,
+        mit_pattern (list of lists of integers): Qubits to perform the
+        measurement correction on, divided to groups according to tensors.
         if None and qr is given then assumed to be performed over the entire
-        qr.
+        qr as one group
 
         qr (QuantumRegister): A quantum register. If none one is created
 
@@ -109,9 +110,9 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
     Additional Information:
         The returned circuits are named circlabel+cal_XXX
         where XXX is the basis state,
-        i.e., cal_000 and cal_111
+        e.g., cal_000 and cal_111
 
-        Pass the results of these circuits to "MeasurementFitter" constructor
+        Pass the results of these circuits to the TensoredMeasurementFitter constructor
     """
 
     if mit_pattern is None and qr is None:
@@ -163,8 +164,6 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
             
             for qind, _ in enumerate(substate[::-1]):
                 if substate[list_size-qind-1] == '1':
-                    # the index labeling of the label is backwards with
-                    # the list
                     qc_circuit.x(qr[qubit_list[qind]])
 
                 # add measurements
