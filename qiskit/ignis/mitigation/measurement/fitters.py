@@ -16,6 +16,7 @@ import copy
 import numpy as np
 from qiskit import QiskitError
 from .filters import MeasurementFilter, TensoredFilter
+from ...verification.tomography import count_keys
 
 try:
     from matplotlib import pyplot as plt
@@ -230,12 +231,13 @@ class TensoredMeasFitter():
         """Return _qubit_list_sizes"""
         return sum(self._qubit_list_sizes)
 
-    def readout_fidelity(self, label_list=None):
+    def readout_fidelity(self, cal_index=0, label_list=None):
         """
         Based on the results output the readout fidelity, which is the average
         of the diagonal entries in the calibration matrices
 
         Args:
+            cal_index: readout fidelity of which sub cal?
             label_list (list of lists on states):
             Returns the average fidelity over of the groups of states.
             If None then each state used in the construction of the
@@ -257,33 +259,13 @@ class TensoredMeasFitter():
         if label_list is None:
             # TODO: consider changing the default label_list,
             # probably to all the states
-            label_list = [[label] for label in self._state_labels]
+            label_list = [[label] for label in
+                          count_keys(self._qubit_list_sizes[cal_index])]
 
-        assign_fid_list = []
-        for state_list in label_list:
-            state_list_prob = 0.
-            for state1 in state_list:
-                for state2 in state_list:
-                    end_index = self.nqubits
-                    state1_state2_prob = 1.
-                    for list_size, cal_mat \
-                            in zip(self._qubit_list_sizes,
-                                   self._cal_matrices):
-                        start_index = end_index - list_size
-                        substate1_as_int = \
-                            int(state1[start_index:end_index], 2)
-                        substate2_as_int = \
-                            int(state2[start_index:end_index], 2)
-                        end_index = start_index
-
-                        state1_state2_prob *= \
-                            cal_mat[substate1_as_int][substate2_as_int]
-
-                    state_list_prob += state1_state2_prob
-
-            assign_fid_list.append(state_list_prob)
-
-        return np.mean(assign_fid_list)
+        tmp_fitter = CompleteMeasFitter(None, count_keys(
+            self._qubit_list_sizes[cal_index]), circlabel='')
+        tmp_fitter.cal_matrix = self.cal_matrices[cal_index]
+        return tmp_fitter.readout_fidelity(label_list)
 
     def _build_calibration_matrices(self):
         """
@@ -320,3 +302,18 @@ class TensoredMeasFitter():
                 self._cal_matrices[mat_index], sums_of_columns,
                 out=np.zeros_like(self._cal_matrices[mat_index]),
                 where=sums_of_columns != 0)
+
+    def plot_calibration(self, cal_index=0, ax=None, show_plot=True):
+        """
+        Plot one of the calibration matrices (2D color grid plot)
+
+        Args:
+            cal_index: calibration matrix to plot
+            show_plot (bool): call plt.show()
+
+        """
+
+        tmp_fitter = CompleteMeasFitter(None, count_keys(
+            self._qubit_list_sizes[cal_index]), circlabel='')
+        tmp_fitter.cal_matrix = self.cal_matrices[cal_index]
+        tmp_fitter.plot_calibration(ax, show_plot)
