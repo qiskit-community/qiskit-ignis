@@ -383,7 +383,7 @@ class TestMeasCal(unittest.TestCase):
         # Make a calibration matrix
         meas_cal = TensoredMeasFitter(cal_results, state_labels, mit_pattern)
         # Calculate the fidelity
-        fidelity = meas_cal.readout_fidelity()
+        fidelity = meas_cal.readout_fidelity(0)*meas_cal.readout_fidelity(1)
 
         # Make a 3Q GHZ state
         cr = ClassicalRegister(3)
@@ -452,7 +452,7 @@ class TestMeasCal(unittest.TestCase):
         meas_cal.cal_matrices = pickled_info['cal_matrices']
 
         # Calculate the fidelity
-        fidelity = meas_cal.readout_fidelity()
+        fidelity = meas_cal.readout_fidelity(0)*meas_cal.readout_fidelity(1)
 
         meas_filter = meas_cal.filter
 
