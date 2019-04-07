@@ -312,20 +312,23 @@ class TensoredFilter():
                 inv_mat_dot_raw = np.zeros([num_of_states], dtype=float)
                 for state1_idx, state1 in enumerate(all_states):
                     for state2_idx, state2 in enumerate(all_states):
-                        product = 1.
-                        end_index = self.nqubits
-                        for pinv_cal_mat, list_size in \
-                                zip(pinv_cal_matrices, self._qubit_list_sizes):
-                            start_index = end_index - list_size
-                            state1_as_int = \
-                                int(state1[start_index:end_index], 2)
-                            state2_as_int = \
-                                int(state2[start_index:end_index], 2)
-                            end_index = start_index
-                            product *= \
-                                pinv_cal_mat[state1_as_int][state2_as_int]
-                        inv_mat_dot_raw[state1_idx] += \
-                            (product * raw_data2[data_idx][state2_idx])
+                        if raw_data2[data_idx][state2_idx] != 0:
+                            product = 1.
+                            end_index = self.nqubits
+                            for pinv_cal_mat, list_size in \
+                                    zip(pinv_cal_matrices, self._qubit_list_sizes):
+                                start_index = end_index - list_size
+                                state1_as_int = \
+                                              int(state1[start_index:end_index], 2)
+                                state2_as_int = \
+                                              int(state2[start_index:end_index], 2)
+                                end_index = start_index
+                                product *= \
+                                        pinv_cal_mat[state1_as_int][state2_as_int]
+                                if product == 0:
+                                    break
+                            inv_mat_dot_raw[state1_idx] += \
+                                                        (product * raw_data2[data_idx][state2_idx])
                 raw_data2[data_idx] = inv_mat_dot_raw
 
             elif method == 'least_squares':
@@ -335,20 +338,23 @@ class TensoredFilter():
                     for state1_idx, state1 in enumerate(all_states):
                         mat_dot_x[state1_idx] = 0.
                         for state2_idx, state2 in enumerate(all_states):
-                            product = 1.
-                            end_index = self.nqubits
-                            for cal_mat, list_size \
-                                    in zip(self._cal_matrices,
-                                           self._qubit_list_sizes):
-                                start_index = end_index - list_size
-                                state1_as_int = \
-                                    int(state1[start_index:end_index], 2)
-                                state2_as_int = \
-                                    int(state2[start_index:end_index], 2)
-                                end_index = start_index
-                                product *= \
-                                    cal_mat[state1_as_int][state2_as_int]
-                            mat_dot_x[state1_idx] += (product * x[state2_idx])
+                            if x[state2_idx] != 0:
+                                product = 1.
+                                end_index = self.nqubits
+                                for cal_mat, list_size \
+                                        in zip(self._cal_matrices,
+                                               self._qubit_list_sizes):
+                                    start_index = end_index - list_size
+                                    state1_as_int = \
+                                                  int(state1[start_index:end_index], 2)
+                                    state2_as_int = \
+                                                  int(state2[start_index:end_index], 2)
+                                    end_index = start_index
+                                    product *= \
+                                            cal_mat[state1_as_int][state2_as_int]
+                                    if product == 0:
+                                        break
+                                mat_dot_x[state1_idx] += (product * x[state2_idx])
                     return sum(
                         (raw_data2[data_idx] - mat_dot_x)**2)
 
