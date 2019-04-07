@@ -11,9 +11,9 @@ Maximum-Likelihood estimation quantum state tomography fitter
 """
 
 from .base_fitter import TomographyFitter
-import logging
+from ..tomo_logger import TomoLogger
 
-logger = logging.getLogger(__name__)
+logger = TomoLogger.get_logger(__name__)
 
 class StateTomographyFitter(TomographyFitter):
     """Maximum-Likelihood estimation state tomography fitter."""

@@ -10,7 +10,6 @@
 Quantum tomography circuit generation.
 """
 
-import logging
 import itertools as it
 
 from qiskit import QuantumRegister
@@ -23,9 +22,10 @@ from qiskit.circuit.reset import Reset
 from .tomographybasis import TomographyBasis
 from .paulibasis import PauliBasis
 from .sicbasis import SICBasis
+from ..tomo_logger import TomoLogger
 
 # Create logger
-logger = logging.getLogger(__name__)
+logger = TomoLogger.get_logger(__name__)
 
 
 # TODO: Update docstrings
@@ -242,7 +242,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         prep_circuit_fn='SIC'.
     """
 
-    logger.debug('Measurement labels: %s,  basis: %s\n\tPrepared labels: %s,  basis: %s', meas_labels, meas_basis, prep_labels, prep_basis)
+    logger.info('Measurement labels: %s,  basis: %s\tPrepared labels: %s,  basis: %s', meas_labels, meas_basis, prep_labels, prep_basis)
 
     # Check for different prepared qubits
     if prepared_qubits is None:
@@ -316,7 +316,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
     if isinstance(prep_labels, str):
         prep_labels = _default_preparation_labels(prep_labels)
 
-    logger.debug('prep basis: %s, meas basis: %s', prep_labels, meas_labels )
+    logger.info('prep basis: %s, meas basis: %s', prep_labels, meas_labels )
 
     # Generate n-qubit labels
     meas_labels = _generate_labels(meas_labels, num_qubits)
@@ -358,7 +358,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
                 circ.name = str((pl, ml))
             qst_circs.append(circ)
 
-    logger.debug('%d measurement circuits were generated', len(qst_circs))
+    logger.info('%d measurement circuits were generated', len(qst_circs))
     return qst_circs
 
 
