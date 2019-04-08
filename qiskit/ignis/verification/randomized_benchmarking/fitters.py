@@ -14,6 +14,7 @@ import numpy as np
 from qiskit import QiskitError
 from ..tomography import marginal_counts
 from ...characterization.fitters import build_counts_dict_from_list
+from ...logging import QiskitLogging
 
 try:
     from matplotlib import pyplot as plt
@@ -45,6 +46,8 @@ class RBFitter:
         self._ydata = []
         self._fit = []
         self._nseeds = 0
+
+        self._qiskitlogger = QiskitLogging()
 
         self._result_list = []
         self.add_data(backend_result)
@@ -243,6 +246,11 @@ class RBFitter:
             nrb = 2 ** len(qubits)
             epc = (nrb-1)/nrb*(1-alpha)
             epc_err = epc*alpha_err/alpha
+
+            #log the results
+            self._qiskitlogger.logvalue(qubit_list=qubits,
+                                        valuename='epc', value=epc,
+                                        valueerr=epc_err)
 
             self._fit.append({'params': params, 'params_err': params_err,
                               'epc': epc, 'epc_err': epc_err})
