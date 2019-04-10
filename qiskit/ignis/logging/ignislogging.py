@@ -119,12 +119,13 @@ class IgnisLogging():
         self._load_config()
 
 
-    def logvalue(self, qubit_list, valuename, value, valueerr=0, valueunits=''):
+    def logvalue(self, backend, qubit_list, valuename, value, valueerr=0, valueunits=''):
         """
         Write a single value to the log file. If logging is disabled this
         will just be ignored.
 
         Args:
+            backend: backend used
             qubit_list: qubits associated with this value
             valuename: name of the value (e.g. 't1')
             value: the value (a float)
@@ -136,9 +137,9 @@ class IgnisLogging():
         if self.logging:
             #log to the file
             fo = open(self.logfile,'a')
-            fo.write('%s,%s,%s,%s,%f'%(
+            fo.write('%s,%s,%s,%s,%s,%f'%(
                     datetime.datetime.now().strftime('%Y-%M-%d %H:%M:%S'),
-                    qubit_list, valuename, valueunits, value))
+                    backend, qubit_list, valuename, valueunits, value))
             fo.close()
 
 
