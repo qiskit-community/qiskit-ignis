@@ -248,7 +248,8 @@ class RBFitter:
             epc_err = epc*alpha_err/alpha
 
             #log the results
-            self._qiskitlogger.logvalue(qubit_list=qubits,
+            self._qiskitlogger.logvalue(backend=self._result_list[0].backend_name,
+                                        qubit_list=qubits,
                                         valuename='epc', value=epc,
                                         valueerr=epc_err)
 
