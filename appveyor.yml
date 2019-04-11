@@ -53,7 +53,7 @@ install:
   # about it being out of date.
   - "conda update -y pip"
   - "python -m pip install --disable-pip-version-check --upgrade pip"
-  - "python -m pip install tox"
+  - "pip install tox"
 
 build: off
 
