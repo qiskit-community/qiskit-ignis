@@ -15,10 +15,8 @@ Test Clifford functions:
 """
 
 import unittest
-import filecmp
 import random
 import os
-import tempfile
 import numpy as np
 
 # Import the clifford_utils functions
