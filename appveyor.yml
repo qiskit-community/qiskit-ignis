@@ -52,8 +52,8 @@ install:
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   - "conda update -y pip"
-  #  - "python -m pip install --disable-pip-version-check --upgrade pip"
-  - "python -m pip install --disable-pip-version-check tox"
+  - "python -m pip install --disable-pip-version-check --upgrade pip"
+  - "python -m pip install tox"
 
 build: off
 
