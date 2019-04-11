@@ -48,7 +48,7 @@ install:
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  - "conda install -y --all mkl"
+  - "conda install --update-all --update-deps -y mkl"
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   - "python -m pip install --disable-pip-version-check --user --upgrade pip"
