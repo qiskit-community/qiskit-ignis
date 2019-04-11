@@ -6,18 +6,21 @@ environment:
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_env.cmd"
 
   matrix:
-    - PYTHON: "C:\\Miniconda37-x64"
-      PYTHON_VERSION: "3.7.0"
-      PYTHON_ARCH: "64"
-      TOX_ENV: "py37"
-    - PYTHON: "C:\\Miniconda36-x64"
+# NOTE(mtreinish): Python 3.7 and Python 3.5 temporarily disabled because of
+# broken Aer wheels for windows:
+#    - PYTHON: "C:\\Miniconda37-x64"
+#      PYTHON_VERSION: "3.7.0"
+#      PYTHON_ARCH: "64"
+#      TOX_ENV: "py37"
+#    - PYTHON: "C:\\Miniconda35-x64"
+#      PYTHON_VERSION: "3.5.3"
+#      PYTHON_ARCH: "64"
+#      TOX_ENV: "py35"
+    - PYTHON: "C:\\Python36-x64"
       PYTHON_VERSION: "3.6.1"
       PYTHON_ARCH: "64"
       TOX_ENV: "py36"
-    - PYTHON: "C:\\Miniconda35-x64"
-      PYTHON_VERSION: "3.5.3"
-      PYTHON_ARCH: "64"
-      TOX_ENV: "py35"
+
 
 install:
   # If there is a newer build queued for the same PR, cancel this one.
@@ -44,13 +47,8 @@ install:
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  - "conda update -y pip conda"
-  - "conda install --update-deps -y mkl vs2015_runtime"
-  - "conda install -y -c conda-forge openblas"
-  - ps: |
-      if ($env:TOX_ENV -eq "py35") {
-        conda install -y python=3.5.0
-      }
+#  - "conda update -y pip conda"
+#  - "conda install --update-deps -y mkl vs2015_runtime"
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   - "python -m pip install --disable-pip-version-check --upgrade pip"
