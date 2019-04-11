@@ -6,15 +6,15 @@ environment:
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_env.cmd"
 
   matrix:
-    - PYTHON: "C:\\Python37-x64"
+    - PYTHON: "C:\\Miniconda37-x64"
       PYTHON_VERSION: "3.7.0"
       PYTHON_ARCH: "64"
       TOX_ENV: "py37"
-    - PYTHON: "C:\\Python36-x64"
+    - PYTHON: "C:\\Miniconda36-x64"
       PYTHON_VERSION: "3.6.1"
       PYTHON_ARCH: "64"
       TOX_ENV: "py36"
-    - PYTHON: "C:\\Python35-x64"
+    - PYTHON: "C:\\Miniconda35-x64"
       PYTHON_VERSION: "3.5.3"
       PYTHON_ARCH: "64"
       TOX_ENV: "py35"
@@ -57,6 +57,7 @@ install:
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
   - "pip install -U tox"
+  - "conda install mkl"
 
 build_script:
   - "tox -e%TOX_ENV% --notest"
