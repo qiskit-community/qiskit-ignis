@@ -16,7 +16,7 @@ environment:
 #      PYTHON_VERSION: "3.5.3"
 #      PYTHON_ARCH: "64"
 #      TOX_ENV: "py35"
-    - PYTHON: "C:\\Python36-x64"
+    - PYTHON: "C:\\Miniconda36-x64"
       PYTHON_VERSION: "3.6.1"
       PYTHON_ARCH: "64"
       TOX_ENV: "py36"
@@ -47,8 +47,7 @@ install:
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-#  - "conda update -y pip conda"
-#  - "conda install --update-deps -y mkl vs2015_runtime"
+  - "conda install --update-deps -y mkl"
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   - "python -m pip install --disable-pip-version-check --upgrade pip"
