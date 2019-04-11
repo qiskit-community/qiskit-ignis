@@ -49,7 +49,7 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   - "conda update -y pip conda"
-  - "conda install --update-deps -y mkl numpy vs2015_runtime"
+  - "conda install --update-deps -y mkl vs2015_runtime"
   - "conda install -y -c conda-forge openblas"
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
