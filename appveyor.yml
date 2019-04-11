@@ -35,10 +35,6 @@ install:
   - ECHO "Installed SDKs:"
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
- # Install Python (from the official .msi of http://python.org) and pip when
-  # not already installed.
-  - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
-
   # Prepend newly installed Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
@@ -51,6 +47,10 @@ install:
   - "conda update -y pip conda"
   - "conda install --update-deps -y mkl vs2015_runtime"
   - "conda install -y -c conda-forge openblas"
+  - ps: |
+      if ($env:TOX_ENV -eq "py35") {
+        conda install -y python=3.5.0
+      }
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   - "python -m pip install --disable-pip-version-check --upgrade pip"
