@@ -57,7 +57,7 @@ install:
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
   - "pip install -U tox"
-  - "conda install mkl"
+  - "conda install -y mkl"
 
 build_script:
   - "tox -e%TOX_ENV% --notest"
