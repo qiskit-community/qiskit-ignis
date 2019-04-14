@@ -336,7 +336,7 @@ class TestMeasCal(unittest.TestCase):
                          is not equal to 1')
 
         # Generate ideal (equally distributed) results
-        results_dict, results_list = \
+        results_dict, _ = \
             self.generate_ideal_results(count_keys(6), 6)
 
         # Output the filter
@@ -374,7 +374,7 @@ class TestMeasCal(unittest.TestCase):
 
         # Make a calibration matrix
         meas_cal = TensoredMeasFitter(cal_results,
-				      mit_pattern=mit_pattern)
+                                      mit_pattern=mit_pattern)
         # Calculate the fidelity
         fidelity = meas_cal.readout_fidelity(0)*meas_cal.readout_fidelity(1)
 
@@ -471,16 +471,17 @@ class TestMeasCal(unittest.TestCase):
             output_results_least_square.get_counts(0)['111'],
             pickled_info['results_least_square']['111'], places=0)
 
-
         substates_list = []
         for qubit_list in pickled_info['mit_pattern']:
             substates_list.append(count_keys(len(qubit_list))[::-1])
 
-        fitter_other_order = TensoredMeasFitter(pickled_info['cal_results'],
-                                                substate_labels_list=substates_list,
-                                                mit_pattern=pickled_info['mit_pattern'])
-        
-        fidelity = fitter_other_order.readout_fidelity(0)*meas_cal.readout_fidelity(1)
+        fitter_other_order = TensoredMeasFitter(
+            pickled_info['cal_results'],
+            substate_labels_list=substates_list,
+            mit_pattern=pickled_info['mit_pattern'])
+
+        fidelity = fitter_other_order.readout_fidelity(0) * \
+            meas_cal.readout_fidelity(1)
 
         self.assertAlmostEqual(fidelity,
                                pickled_info['fidelity'],
