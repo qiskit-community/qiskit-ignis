@@ -13,10 +13,6 @@ CVXPY convex optimization quantum tomography fitter
 import numpy as np
 from scipy import sparse as sps
 
-import logging
-
-logger = logging.getLogger(__name__)
-
 # Check if CVXPY package is installed
 try:
     import cvxpy
@@ -97,8 +93,6 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
             'ECOS'  : SOCP only
         See the documentation on CVXPY for more information on solvers.
     """
-
-    logger.info('Running cvx fitter')
 
     # Check if CVXPY package is installed
     if cvxpy is None:

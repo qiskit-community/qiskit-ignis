@@ -10,6 +10,7 @@
 Quantum tomography circuit generation.
 """
 
+import logging
 import itertools as it
 
 from qiskit import QuantumRegister
@@ -22,10 +23,9 @@ from qiskit.circuit.reset import Reset
 from .tomographybasis import TomographyBasis
 from .paulibasis import PauliBasis
 from .sicbasis import SICBasis
-from ..tomo_logger import TomoLogger
 
 # Create logger
-logger = TomoLogger.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 # TODO: Update docstrings
@@ -64,8 +64,6 @@ def state_tomography_circuits(circuit, measured_qubits,
         a subset of state tomography circuits for a partial tomography
         experiment use the general function `tomography_circuits`.
     """
-    logger.info('Preparing circuits for state tomography')
-
     return _tomography_circuits(circuit, measured_qubits, None,
                                 meas_labels=meas_labels, meas_basis=meas_basis,
                                 prep_labels=None, prep_basis=None)
@@ -120,8 +118,6 @@ def process_tomography_circuits(circuit, measured_qubits,
         a subset of process tomography circuits for a partial tomography
         experiment use the general function `tomography_circuits`.
     """
-    logger.info('Preparing circuits for process tomography')
-
     return _tomography_circuits(circuit, measured_qubits, prepared_qubits,
                                 meas_labels=meas_labels, meas_basis=meas_basis,
                                 prep_labels=prep_labels, prep_basis=prep_basis)
@@ -202,7 +198,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         tomography experiment we might only specify correlated measurements eg:
             meas_labels=[('X','X'), ('Y','Y'), ('Z','Z')]
 
-        Custom Measurement Circuit Function
+        Custom Measurement Circuit Funtion
         ----------------------------------
         Custom measurement circuit functions can be used by passing the
         function using the `meas_circuit_fn` keyword. These functions should
@@ -220,7 +216,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         The built-in Pauli measurement function `pauli_measurement_circuit`
         may be invoked using the meas_circuit_fn='Pauli'.
 
-        Custom Preparation Circuit Function
+        Custom Preparation Circuit Funtion
         ----------------------------------
         Custom preparation circuit functions can be used by passing the
         function using the `prep_circuit_fn` keyword. These functions should
@@ -241,8 +237,6 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         `sicpovm_preparation_circuit` may be invoked using the
         prep_circuit_fn='SIC'.
     """
-
-    logger.info('Measurement labels: %s,  basis: %s\tPrepared labels: %s,  basis: %s', meas_labels, meas_basis, prep_labels, prep_basis)
 
     # Check for different prepared qubits
     if prepared_qubits is None:
@@ -266,14 +260,14 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
     # Check qubits being measured are defined in circuit
     for reg in meas_qubit_registers:
         if reg not in circuit.qregs:
-            logger.warning('circuit does not contain '
+            logger.warning('WARNING: circuit does not contain '
                            'measured QuantumRegister: %s', reg.name)
 
     prep_qubit_registers = set(q[0] for q in prep_qubits)
     # Check qubits being measured are defined in circuit
     for reg in prep_qubit_registers:
         if reg not in circuit.qregs:
-            logger.warning('circuit does not contain '
+            logger.warning('WARNING: circuit does not contain '
                            'prepared QuantumRegister: %s', reg.name)
 
     # Get combined registers
@@ -282,9 +276,9 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
     # Check if there are already measurements in the circuit
     for op in circuit:
         if isinstance(op, Measure):
-            logger.warning('circuit already contains measurements')
+            logger.warning('WARNING: circuit already contains measurements')
         if isinstance(op, Reset):
-            logger.warning('circuit contains resets')
+            logger.warning('WARNING: circuit contains resets')
 
     # Load built-in circuit functions
     if callable(meas_basis):
@@ -316,15 +310,13 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
     if isinstance(prep_labels, str):
         prep_labels = _default_preparation_labels(prep_labels)
 
-    logger.info('prep basis: %s, meas basis: %s', prep_labels, meas_labels )
-
     # Generate n-qubit labels
     meas_labels = _generate_labels(meas_labels, num_qubits)
     prep_labels = _generate_labels(prep_labels, num_qubits)
 
     # Note if the input circuit already has classical registers defined
     # the returned circuits add a new classical register for the tomography
-    # measurements which will be inserted as the first classical register in
+    # measurments which will be inserted as the first classical register in
     # the list of returned circuits.
     registers = qubit_registers.copy()
     if measurement is not None:
@@ -357,8 +349,6 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
                 # process tomography circuit
                 circ.name = str((pl, ml))
             qst_circs.append(circ)
-
-    logger.info('%d measurement circuits were generated', len(qst_circs))
     return qst_circs
 
 
@@ -468,6 +458,3 @@ def _operator_tuples(labels, qubits):
     else:
         num_qubits = len(_format_registers(qubits))
     return list(it.product(labels, repeat=num_qubits))
-
-
-

@@ -13,8 +13,6 @@ Maximum-Likelihood estimation quantum tomography fitter
 import numpy as np
 from scipy import linalg as la
 from scipy.linalg import lstsq
-import logging
-logger = logging.getLogger(__name__)
 
 
 def lstsq_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
@@ -73,7 +71,6 @@ def lstsq_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
     #   a is the matrix of measurement operators
     #   b is the vector of expectation value data for each projector
     #   x is the vectorized density matrix (or Choi-matrix) to be fitted
-    logger.info('Running lstsq fitter')
     a = basis_matrix
     b = np.array(data)
 
