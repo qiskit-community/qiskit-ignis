@@ -13,6 +13,7 @@ Measurement correction fitters.
 """
 
 import copy
+import re
 import numpy as np
 from qiskit import QiskitError
 from .filters import MeasurementFilter, TensoredFilter
@@ -179,7 +180,8 @@ class TensoredMeasFitter():
     Measurement correction fitter for a tensored calibration
     """
 
-    def __init__(self, results, state_labels, mit_pattern=None, circlabel=''):
+    def __init__(self, results, substate_labels_list=None,
+                 mit_pattern=None, circlabel=''):
         """
         Initialize a measurement calibration matrix from the results of running
         the circuits returned by `measurement_calibration_circuits`
@@ -196,7 +198,6 @@ class TensoredMeasFitter():
         """
 
         self._results = results
-        self._state_labels = state_labels
         self._cal_matrices = None
         self._circlabel = circlabel
 
@@ -205,8 +206,20 @@ class TensoredMeasFitter():
         else:
             self._qubit_list_sizes = \
                 [len(qubit_list) for qubit_list in mit_pattern]
-            if self.nqubits != len(state_labels[0]):
-                raise ValueError("mit_pattern does not match state_labels")
+
+        self._indices_list = []
+        if substate_labels_list is None:
+            for list_size in self._qubit_list_sizes:
+                self._indices_list.append(range(2**list_size))
+        else:
+            if len(self._qubit_list_sizes) != len(substate_labels_list):
+                raise ValueError("mit_pattern does not match substate_labels_list")
+            for list_size, substate_labels in zip(self._qubit_list_sizes, substate_labels_list):
+                self._indices_list.append([0]*(2**list_size))
+                for index, substate in enumerate(substate_labels):
+                    if len(substate) != list_size:
+                        raise ValueError("mit_pattern does not match substate_labels_list")
+                    self._indices_list[-1][int(substate, 2)] = index
 
         if self._results is not None:
             self._build_calibration_matrices()
@@ -224,7 +237,7 @@ class TensoredMeasFitter():
     @property
     def filter(self):
         """return a measurement filter using the cal matrices"""
-        return TensoredFilter(self._cal_matrices, self._qubit_list_sizes)
+        return TensoredFilter(self._cal_matrices, self._qubit_list_sizes, self._indices_list)
 
     @property
     def nqubits(self):
@@ -257,8 +270,6 @@ class TensoredMeasFitter():
             raise QiskitError("Cal matrix has not been set")
 
         if label_list is None:
-            # TODO: consider changing the default label_list,
-            # probably to all the states
             label_list = [[label] for label in
                           count_keys(self._qubit_list_sizes[cal_index])]
 
@@ -278,21 +289,23 @@ class TensoredMeasFitter():
             self._cal_matrices.append(np.zeros([2**list_size, 2**list_size],
                                                dtype=float))
 
-        for state in self._state_labels:
-            state_cnts = self._results.get_counts('%scal_%s' %
-                                                  (self._circlabel, state))
+        for experiment in self._results.results:
+            circ_name = experiment.header.name
+            state = re.search('(?<=' + self._circlabel + 'cal_)\w+', circ_name).group(0)
+            state_cnts = self._results.get_counts(circ_name)
             for measured_state, counts in state_cnts.items():
                 end_index = self.nqubits
-                for list_size, cal_mat \
+                for list_size, cal_mat, indices \
                         in zip(self._qubit_list_sizes,
-                               self._cal_matrices):
+                               self._cal_matrices,
+                               self._indices_list):
                     start_index = end_index - list_size
-                    substate_as_int = int(state[start_index:end_index], 2)
-                    measured_substate_as_int = \
-                        int(measured_state[start_index:end_index], 2)
+                    substate_index = indices[int(state[start_index:end_index], 2)]
+                    measured_substate_index = \
+                        indices[int(measured_state[start_index:end_index], 2)]
                     end_index = start_index
 
-                    cal_mat[measured_substate_as_int][substate_as_int] += \
+                    cal_mat[measured_substate_index][substate_index] += \
                         counts
 
         for mat_index, _ in enumerate(self._cal_matrices):
