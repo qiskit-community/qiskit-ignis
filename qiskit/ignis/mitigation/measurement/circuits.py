@@ -107,8 +107,6 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
         A list of two QuantumCircuit objects containing the calibration
         circuits
 
-        A list of calibration state labels
-
     Additional Information:
         The returned circuits are named circlabel+cal_XXX
         where XXX is the basis state,

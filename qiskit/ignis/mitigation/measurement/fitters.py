@@ -191,10 +191,12 @@ class TensoredMeasFitter():
             circuits. If this is None the user will set calibration matrices
             later
 
-            state_labels: list of calibration state labels
-            returned from `measurement_calibration_circuits`
+            substate_labels_list (list of lists of strings): for each
+            calibration matrix, the labels of its rows and columns.
+            If None then the labels are ordered lexicographically
 
-            mit_pattern: see tensored_meas_cal in circuits.py
+            mit_pattern (list of lists of integers): qubits to perform the
+            measurement correction on, divided to groups according to tensors.
         """
 
         self._results = results

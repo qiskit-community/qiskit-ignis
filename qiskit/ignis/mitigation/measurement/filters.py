@@ -207,6 +207,8 @@ class TensoredFilter():
             cal_matrices: the calibration matrices for applying the correction
             qubit_list_sizes: the lengths of the lists in mit_pattern
             (see tensored_meas_cal in circuits.py for mit_pattern)
+            indices_list (list of lists): for a calibration matrix and a state
+            label, the index of the row and column of the label
         """
 
         self._cal_matrices = cal_matrices
@@ -239,11 +241,8 @@ class TensoredFilter():
 
         Args:
             raw_data: The data to be corrected. Can be in a number of forms.
-                Form1: a counts dictionary from results.get_counts
-                Form2: a complete list of counts
-                Form3: a flat concatenation of M lists of counts, where M
-                    is an integer (e.g. for use with the tomography data)
-                Form4: a qiskit Result
+                a counts dictionary from results.get_countsphy data);
+                or a qiskit Result
 
             method (str): fitting method. If None, then least_squares is used.
                 'pseudo_inverse': direct inversion of the cal matrices
