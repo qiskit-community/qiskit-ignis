@@ -262,7 +262,7 @@ class TensoredFilter():
             raw_data2 = [np.zeros(num_of_states, dtype=float)]
             for state, count in raw_data.items():
                 stateidx = int(state, 2)
-                raw_data2[0][stateidx] = count      
+                raw_data2[0][stateidx] = count
 
         elif isinstance(raw_data, qiskit.result.result.Result):
 
@@ -297,14 +297,16 @@ class TensoredFilter():
                             product = 1.
                             end_index = self.nqubits
                             for pinv_cal_mat, list_size, indices in \
-                                    zip(pinv_cal_matrices,
+                                zip(pinv_cal_matrices,
                                         self._qubit_list_sizes,
                                         self._indices_list):
                                 start_index = end_index - list_size
                                 state1_as_int = \
-                                    indices[int(state1[start_index:end_index], 2)]
+                                    indices[int(state1[start_index:end_index],
+                                                2)]
                                 state2_as_int = \
-                                    indices[int(state2[start_index:end_index], 2)]
+                                    indices[int(state2[start_index:end_index],
+                                                2)]
                                 end_index = start_index
                                 product *= \
                                     pinv_cal_mat[state1_as_int][state2_as_int]
@@ -330,9 +332,13 @@ class TensoredFilter():
                                                self._indices_list):
                                     start_index = end_index - list_size
                                     state1_as_int = \
-                                        indices[int(state1[start_index:end_index], 2)]
+                                        indices[
+                                            int(state1[start_index:end_index],
+                                                2)]
                                     state2_as_int = \
-                                        indices[int(state2[start_index:end_index], 2)]
+                                        indices[
+                                            int(state2[start_index:end_index],
+                                                2)]
                                     end_index = start_index
                                     product *= \
                                         cal_mat[state1_as_int][state2_as_int]

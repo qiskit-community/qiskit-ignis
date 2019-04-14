@@ -215,12 +215,15 @@ class TensoredMeasFitter():
                 self._indices_list.append(range(2**list_size))
         else:
             if len(self._qubit_list_sizes) != len(substate_labels_list):
-                raise ValueError("mit_pattern does not match substate_labels_list")
-            for list_size, substate_labels in zip(self._qubit_list_sizes, substate_labels_list):
+                raise ValueError("mit_pattern does not match \
+                    substate_labels_list")
+            for list_size, substate_labels in zip(self._qubit_list_sizes,
+                                                  substate_labels_list):
                 self._indices_list.append([0]*(2**list_size))
                 for index, substate in enumerate(substate_labels):
                     if len(substate) != list_size:
-                        raise ValueError("mit_pattern does not match substate_labels_list")
+                        raise ValueError("mit_pattern does not match \
+                            substate_labels_list")
                     self._indices_list[-1][int(substate, 2)] = index
 
         if self._results is not None:
@@ -239,7 +242,8 @@ class TensoredMeasFitter():
     @property
     def filter(self):
         """return a measurement filter using the cal matrices"""
-        return TensoredFilter(self._cal_matrices, self._qubit_list_sizes, self._indices_list)
+        return TensoredFilter(self._cal_matrices, self._qubit_list_sizes,
+                              self._indices_list)
 
     @property
     def nqubits(self):
@@ -293,7 +297,8 @@ class TensoredMeasFitter():
 
         for experiment in self._results.results:
             circ_name = experiment.header.name
-            state = re.search('(?<=' + self._circlabel + 'cal_)\w+', circ_name).group(0)
+            state = re.search('(?<=' + self._circlabel + 'cal_)\w+',
+                              circ_name).group(0)
             state_cnts = self._results.get_counts(circ_name)
             for measured_state, counts in state_cnts.items():
                 end_index = self.nqubits
@@ -302,7 +307,8 @@ class TensoredMeasFitter():
                                self._cal_matrices,
                                self._indices_list):
                     start_index = end_index - list_size
-                    substate_index = indices[int(state[start_index:end_index], 2)]
+                    substate_index = indices[int(
+                        state[start_index:end_index], 2)]
                     measured_substate_index = \
                         indices[int(measured_state[start_index:end_index], 2)]
                     end_index = start_index
