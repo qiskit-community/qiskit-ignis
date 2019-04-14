@@ -186,4 +186,4 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
 
         cal_circuits.append(qc_circuit)
 
-    return cal_circuits, state_labels
+    return cal_circuits

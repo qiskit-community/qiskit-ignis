@@ -309,7 +309,7 @@ class TestMeasCal(unittest.TestCase):
         mit_pattern = [[1, 2], [3, 4, 5], [6]]
 
         # Generate the calibration circuits
-        meas_calibs, state_labels = tensored_meas_cal(mit_pattern=mit_pattern)
+        meas_calibs = tensored_meas_cal(mit_pattern=mit_pattern)
 
         # Perform an ideal execution on the generated circuits
         backend = Aer.get_backend('qasm_simulator')
@@ -317,7 +317,7 @@ class TestMeasCal(unittest.TestCase):
             meas_calibs, backend=backend, shots=self.shots).result()
 
         # Make calibration matrices
-        meas_cal = TensoredMeasFitter(cal_results, state_labels, mit_pattern)
+        meas_cal = TensoredMeasFitter(cal_results, mit_pattern=mit_pattern)
 
         # Assert that the calibration matrices are equal to identity
         cal_matrices = meas_cal.cal_matrices
@@ -348,15 +348,8 @@ class TestMeasCal(unittest.TestCase):
                                            method='least_squares')
         results_dict_0 = meas_filter.apply(results_dict,
                                            method='pseudo_inverse')
-        results_list_1 = meas_filter.apply(results_list,
-                                           method='least_squares')
-        results_list_0 = meas_filter.apply(results_list,
-                                           method='pseudo_inverse')
 
         # Assert that the results are equally distributed
-        self.assertListEqual(results_list, results_list_0.tolist())
-        self.assertListEqual(results_list,
-                             np.round(results_list_1).tolist())
         self.assertDictEqual(results_dict, results_dict_0)
         round_results = {}
         for key, val in results_dict_1.items():
@@ -372,8 +365,7 @@ class TestMeasCal(unittest.TestCase):
 
         qr = qiskit.QuantumRegister(5)
         # Generate the calibration circuits
-        meas_calibs, state_labels = \
-            tensored_meas_cal(mit_pattern, qr=qr)
+        meas_calibs = tensored_meas_cal(mit_pattern, qr=qr)
 
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
@@ -381,7 +373,8 @@ class TestMeasCal(unittest.TestCase):
                                      shots=self.shots).result()
 
         # Make a calibration matrix
-        meas_cal = TensoredMeasFitter(cal_results, state_labels, mit_pattern)
+        meas_cal = TensoredMeasFitter(cal_results,
+				      mit_pattern=mit_pattern)
         # Calculate the fidelity
         fidelity = meas_cal.readout_fidelity(0)*meas_cal.readout_fidelity(1)
 
@@ -444,35 +437,30 @@ class TestMeasCal(unittest.TestCase):
         pickled_info = pickle.load(fo)
         fo.close()
 
-        meas_cal = TensoredMeasFitter(None, pickled_info['state_labels'],
-                                      pickled_info['mit_pattern'],
-                                      circlabel='test')
-
-        # Set the calibration matrix
-        meas_cal.cal_matrices = pickled_info['cal_matrices']
+        meas_cal = TensoredMeasFitter(pickled_info['cal_results'],
+                                      mit_pattern=pickled_info['mit_pattern'])
 
         # Calculate the fidelity
         fidelity = meas_cal.readout_fidelity(0)*meas_cal.readout_fidelity(1)
+        # Compare with expected fidelity and expected results
+        self.assertAlmostEqual(fidelity,
+                               pickled_info['fidelity'],
+                               places=0)
 
         meas_filter = meas_cal.filter
 
         # Calculate the results after mitigation
         output_results_pseudo_inverse = meas_filter.apply(
-            pickled_info['results'], method='pseudo_inverse')
+            pickled_info['results'].get_counts(0), method='pseudo_inverse')
         output_results_least_square = meas_filter.apply(
             pickled_info['results'], method='least_squares')
-
-        # Compare with expected fidelity and expected results
-        self.assertAlmostEqual(fidelity,
-                               pickled_info['fidelity'],
-                               places=0)
 
         self.assertAlmostEqual(
             output_results_pseudo_inverse['000'],
             pickled_info['results_pseudo_inverse']['000'], places=0)
 
         self.assertAlmostEqual(
-            output_results_least_square['000'],
+            output_results_least_square.get_counts(0)['000'],
             pickled_info['results_least_square']['000'], places=0)
 
         self.assertAlmostEqual(
@@ -480,7 +468,46 @@ class TestMeasCal(unittest.TestCase):
             pickled_info['results_pseudo_inverse']['111'], places=0)
 
         self.assertAlmostEqual(
-            output_results_least_square['111'],
+            output_results_least_square.get_counts(0)['111'],
+            pickled_info['results_least_square']['111'], places=0)
+
+
+        substates_list = []
+        for qubit_list in pickled_info['mit_pattern']:
+            substates_list.append(count_keys(len(qubit_list))[::-1])
+
+        fitter_other_order = TensoredMeasFitter(pickled_info['cal_results'],
+                                                substate_labels_list=substates_list,
+                                                mit_pattern=pickled_info['mit_pattern'])
+        
+        fidelity = fitter_other_order.readout_fidelity(0)*meas_cal.readout_fidelity(1)
+
+        self.assertAlmostEqual(fidelity,
+                               pickled_info['fidelity'],
+                               places=0)
+
+        meas_filter = fitter_other_order.filter
+
+        # Calculate the results after mitigation
+        output_results_pseudo_inverse = meas_filter.apply(
+            pickled_info['results'].get_counts(0), method='pseudo_inverse')
+        output_results_least_square = meas_filter.apply(
+            pickled_info['results'], method='least_squares')
+
+        self.assertAlmostEqual(
+            output_results_pseudo_inverse['000'],
+            pickled_info['results_pseudo_inverse']['000'], places=0)
+
+        self.assertAlmostEqual(
+            output_results_least_square.get_counts(0)['000'],
+            pickled_info['results_least_square']['000'], places=0)
+
+        self.assertAlmostEqual(
+            output_results_pseudo_inverse['111'],
+            pickled_info['results_pseudo_inverse']['111'], places=0)
+
+        self.assertAlmostEqual(
+            output_results_least_square.get_counts(0)['111'],
             pickled_info['results_least_square']['111'], places=0)
 
 

@@ -17,6 +17,7 @@ from scipy.optimize import minimize
 import scipy.linalg as la
 import numpy as np
 import qiskit
+from qiskit.validation.base import Obj
 from qiskit import QiskitError
 from ...verification.tomography import count_keys
 
@@ -197,7 +198,7 @@ class TensoredFilter():
 
     """
 
-    def __init__(self, cal_matrices, qubit_list_sizes):
+    def __init__(self, cal_matrices, qubit_list_sizes, indices_list):
         """
         Initialize a tensored measurement error mitigation filter using
         the cal_matrices from a tensored measurement calibration fitter
@@ -210,6 +211,7 @@ class TensoredFilter():
 
         self._cal_matrices = cal_matrices
         self._qubit_list_sizes = qubit_list_sizes
+        self._indices_list = indices_list
 
     @property
     def cal_matrices(self):
@@ -257,30 +259,11 @@ class TensoredFilter():
         # check forms of raw_data
         if isinstance(raw_data, dict):
             # counts dictionary
-            data_format = 0
-            # convert to form2
+            # convert to list
             raw_data2 = [np.zeros(num_of_states, dtype=float)]
             for state, count in raw_data.items():
                 stateidx = int(state, 2)
-                raw_data2[0][stateidx] = count
-
-        elif isinstance(raw_data, list):
-            size_ratio = len(raw_data)/num_of_states
-            if len(raw_data) == num_of_states:
-                data_format = 1
-                raw_data2 = [deepcopy(raw_data)]
-            elif int(size_ratio) == size_ratio:
-                data_format = 2
-                size_ratio = int(size_ratio)
-                # make the list into chunks the size of num_of_states
-                # for easier processing
-                raw_data2 = np.zeros([size_ratio, num_of_states])
-                for i in range(size_ratio):
-                    raw_data2[i][:] = raw_data[
-                        i * num_of_states:(i + 1)*num_of_states]
-            else:
-                raise QiskitError("Data list is not an integer multiple "
-                                  "of the number of calibrated states")
+                raw_data2[0][stateidx] = count      
 
         elif isinstance(raw_data, qiskit.result.result.Result):
 
@@ -292,8 +275,7 @@ class TensoredFilter():
                 new_counts = self.apply(
                     raw_data.get_counts(resultidx), method=method)
                 new_result.results[resultidx].data.counts = \
-                    new_result.results[resultidx]. \
-                    data.counts.from_dict(new_counts)
+                    Obj(**new_counts)
 
             return new_result
 
@@ -315,14 +297,15 @@ class TensoredFilter():
                         if raw_data2[data_idx][state2_idx] != 0:
                             product = 1.
                             end_index = self.nqubits
-                            for pinv_cal_mat, list_size in \
+                            for pinv_cal_mat, list_size, indices in \
                                     zip(pinv_cal_matrices,
-                                            self._qubit_list_sizes):
+                                        self._qubit_list_sizes,
+                                        self._indices_list):
                                 start_index = end_index - list_size
                                 state1_as_int = \
-                                    int(state1[start_index:end_index], 2)
+                                    indices[int(state1[start_index:end_index], 2)]
                                 state2_as_int = \
-                                    int(state2[start_index:end_index], 2)
+                                    indices[int(state2[start_index:end_index], 2)]
                                 end_index = start_index
                                 product *= \
                                     pinv_cal_mat[state1_as_int][state2_as_int]
@@ -342,14 +325,15 @@ class TensoredFilter():
                             if x[state2_idx] != 0:
                                 product = 1.
                                 end_index = self.nqubits
-                                for cal_mat, list_size \
+                                for cal_mat, list_size, indices \
                                         in zip(self._cal_matrices,
-                                               self._qubit_list_sizes):
+                                               self._qubit_list_sizes,
+                                               self._indices_list):
                                     start_index = end_index - list_size
                                     state1_as_int = \
-                                        int(state1[start_index:end_index], 2)
+                                        indices[int(state1[start_index:end_index], 2)]
                                     state2_as_int = \
-                                        int(state2[start_index:end_index], 2)
+                                        indices[int(state2[start_index:end_index], 2)]
                                     end_index = start_index
                                     product *= \
                                         cal_mat[state1_as_int][state2_as_int]
@@ -372,20 +356,10 @@ class TensoredFilter():
             else:
                 raise QiskitError("Unrecognized method.")
 
-        if data_format == 2:
-            # flatten back out the list
-            raw_data2 = raw_data2.flatten()
+        # convert back into a counts dictionary
+        new_count_dict = {}
+        for state_idx, state in enumerate(all_states):
+            if raw_data2[0][state_idx] != 0:
+                new_count_dict[state] = raw_data2[0][state_idx]
 
-        elif data_format == 0:
-            # convert back into a counts dictionary
-            new_count_dict = {}
-            for state_idx, state in enumerate(all_states):
-                if raw_data2[0][state_idx] != 0:
-                    new_count_dict[state] = raw_data2[0][state_idx]
-
-            raw_data2 = new_count_dict
-        else:
-            # TODO: should probably change to:
-            # raw_data2 = raw_data2[0].tolist()
-            raw_data2 = raw_data2[0]
-        return raw_data2
+        return new_count_dict
