@@ -180,8 +180,8 @@ class TensoredMeasFitter():
     Measurement correction fitter for a tensored calibration
     """
 
-    def __init__(self, results, substate_labels_list=None,
-                 mit_pattern=None, circlabel=''):
+    def __init__(self, results, mit_pattern,
+                 substate_labels_list=None, circlabel=''):
         """
         Initialize a measurement calibration matrix from the results of running
         the circuits returned by `measurement_calibration_circuits`
@@ -191,23 +191,20 @@ class TensoredMeasFitter():
             circuits. If this is None the user will set calibration matrices
             later
 
+            mit_pattern (list of lists of integers): qubits to perform the
+            measurement correction on, divided to groups according to tensors
+
             substate_labels_list (list of lists of strings): for each
             calibration matrix, the labels of its rows and columns.
             If None then the labels are ordered lexicographically
-
-            mit_pattern (list of lists of integers): qubits to perform the
-            measurement correction on, divided to groups according to tensors.
         """
 
         self._results = results
         self._cal_matrices = None
         self._circlabel = circlabel
 
-        if mit_pattern is None:
-            self._qubit_list_sizes = [len(state_labels[0])]
-        else:
-            self._qubit_list_sizes = \
-                [len(qubit_list) for qubit_list in mit_pattern]
+        self._qubit_list_sizes = \
+                               [len(qubit_list) for qubit_list in mit_pattern]
 
         self._indices_list = []
         if substate_labels_list is None:
