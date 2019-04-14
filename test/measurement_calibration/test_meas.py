@@ -309,7 +309,7 @@ class TestMeasCal(unittest.TestCase):
         mit_pattern = [[1, 2], [3, 4, 5], [6]]
 
         # Generate the calibration circuits
-        meas_calibs = tensored_meas_cal(mit_pattern=mit_pattern)
+        meas_calibs, _ = tensored_meas_cal(mit_pattern=mit_pattern)
 
         # Perform an ideal execution on the generated circuits
         backend = Aer.get_backend('qasm_simulator')
@@ -365,7 +365,7 @@ class TestMeasCal(unittest.TestCase):
 
         qr = qiskit.QuantumRegister(5)
         # Generate the calibration circuits
-        meas_calibs = tensored_meas_cal(mit_pattern, qr=qr)
+        meas_calibs, _ = tensored_meas_cal(mit_pattern, qr=qr)
 
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
@@ -437,8 +437,9 @@ class TestMeasCal(unittest.TestCase):
         pickled_info = pickle.load(fo)
         fo.close()
 
-        meas_cal = TensoredMeasFitter(pickled_info['cal_results'],
-                                      mit_pattern=pickled_info['mit_pattern'])
+        meas_cal = TensoredMeasFitter(
+            pickled_info['cal_results'],
+            mit_pattern=pickled_info['mit_pattern'])
 
         # Calculate the fidelity
         fidelity = meas_cal.readout_fidelity(0)*meas_cal.readout_fidelity(1)

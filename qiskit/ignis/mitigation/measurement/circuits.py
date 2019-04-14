@@ -106,6 +106,7 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
     Returns:
         A list of two QuantumCircuit objects containing the calibration
         circuits
+        mit_pattern
 
     Additional Information:
         The returned circuits are named circlabel+cal_XXX
@@ -184,4 +185,4 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
 
         cal_circuits.append(qc_circuit)
 
-    return cal_circuits
+    return cal_circuits, mit_pattern
