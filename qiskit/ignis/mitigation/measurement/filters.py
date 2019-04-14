@@ -102,9 +102,8 @@ class MeasurementFilter():
             data_format = 0
             # convert to form2
             raw_data2 = [np.zeros(len(self._state_labels), dtype=float)]
-            for state, count in raw_data.items():
-                stateidx = int(state, 2)
-                raw_data2[0][stateidx] = count
+            for stateidx, state in enumerate(self._state_labels):
+                raw_data2[0][stateidx] = raw_data.get(state, 0)
 
         elif isinstance(raw_data, list):
             size_ratio = len(raw_data)/len(self._state_labels)
