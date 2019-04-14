@@ -1,0 +1,4 @@
+file_logging: True
+log_file: ignis_test_log.log
+max_size: 1000
+max_rotations: 1
