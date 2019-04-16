@@ -54,6 +54,11 @@ class MeasurementFilter():
         """return the state label ordering of the cal matrix"""
         return self._state_labels
 
+    @state_labels.setter
+    def state_labels(self, new_state_labels):
+        """set the state label ordering of the cal matrix"""
+        self._state_labels = new_state_labels
+
     @cal_matrix.setter
     def cal_matrix(self, new_cal_matrix):
         """Set cal_matrix."""
@@ -197,7 +202,7 @@ class TensoredFilter():
 
     """
 
-    def __init__(self, cal_matrices, qubit_list_sizes, indices_list):
+    def __init__(self, cal_matrices, substate_labels_list):
         """
         Initialize a tensored measurement error mitigation filter using
         the cal_matrices from a tensored measurement calibration fitter
@@ -206,18 +211,48 @@ class TensoredFilter():
             cal_matrices: the calibration matrices for applying the correction
             qubit_list_sizes: the lengths of the lists in mit_pattern
             (see tensored_meas_cal in circuits.py for mit_pattern)
-            indices_list (list of lists): for a calibration matrix and a state
-            label, the index of the row and column of the label
+            substate_labels_list (list of lists): for each calibration matrix
+            a list of the states (as strings, states in the subspace)
         """
 
         self._cal_matrices = cal_matrices
-        self._qubit_list_sizes = qubit_list_sizes
-        self._indices_list = indices_list
+        self._qubit_list_sizes = []
+        self._indices_list = []
+        self._substate_labels_list = []
+        self.substate_labels_list = substate_labels_list
 
     @property
     def cal_matrices(self):
         """Return cal_matrices."""
         return self._cal_matrices
+
+    @cal_matrices.setter
+    def cal_matrices(self, new_cal_matrices):
+        """Set cal_matrices."""
+        self._cal_matrices = deepcopy(new_cal_matrices)
+
+    @property
+    def substate_labels_list(self):
+        """Return _substate_labels_list"""
+        return self._substate_labels_list
+
+    @substate_labels_list.setter
+    def substate_labels_list(self, new_substate_labels_list):
+        """Return _substate_labels_list"""
+        self._substate_labels_list = new_substate_labels_list
+
+        # get the number of qubits in each subspace
+        self._qubit_list_sizes = []
+        for _, substate_label_list in enumerate(self._substate_labels_list):
+            self._qubit_list_sizes.append(
+                int(np.log2(len(substate_label_list))))
+
+        # get the indices in the calibration matrix
+        self._indices_list = []
+        for _, sub_labels in enumerate(self._substate_labels_list):
+
+            self._indices_list.append(
+                {lab: ind for ind, lab in enumerate(sub_labels)})
 
     @property
     def qubit_list_sizes(self):
@@ -228,11 +263,6 @@ class TensoredFilter():
     def nqubits(self):
         """Return the number of qubits"""
         return sum(self._qubit_list_sizes)
-
-    @cal_matrices.setter
-    def cal_matrices(self, new_cal_matrices):
-        """Set cal_matrices."""
-        self._cal_matrices = deepcopy(new_cal_matrices)
 
     def apply(self, raw_data, method='least_squares'):
         """
@@ -297,15 +327,19 @@ class TensoredFilter():
 
                         product = 1.
                         end_index = self.nqubits
-                        for pinv_mat, l_sze, inds \
-                                in zip(pinv_cal_matrices,
-                                       self._qubit_list_sizes,
-                                       self._indices_list):
-                            start_index = end_index - l_sze
+                        for p_ind, pinv_mat in enumerate(pinv_cal_matrices):
+
+                            start_index = end_index - \
+                                self._qubit_list_sizes[p_ind]
+
                             state1_as_int = \
-                                inds[int(state1[start_index:end_index], 2)]
+                                self._indices_list[p_ind][
+                                    state1[start_index:end_index]]
+
                             state2_as_int = \
-                                inds[int(state2[start_index:end_index], 2)]
+                                self._indices_list[p_ind][
+                                    state2[start_index:end_index]]
+
                             end_index = start_index
                             product *= \
                                 pinv_mat[state1_as_int][state2_as_int]
@@ -325,19 +359,20 @@ class TensoredFilter():
                             if x[state2_idx] != 0:
                                 product = 1.
                                 end_index = self.nqubits
-                                for cal_mat, list_size, indices \
-                                        in zip(self._cal_matrices,
-                                               self._qubit_list_sizes,
-                                               self._indices_list):
-                                    start_index = end_index - list_size
+                                for c_ind, cal_mat in \
+                                        enumerate(self._cal_matrices):
+
+                                    start_index = end_index - \
+                                        self._qubit_list_sizes[c_ind]
+
                                     state1_as_int = \
-                                        indices[
-                                            int(state1[start_index:end_index],
-                                                2)]
+                                        self._indices_list[c_ind][
+                                            state1[start_index:end_index]]
+
                                     state2_as_int = \
-                                        indices[
-                                            int(state2[start_index:end_index],
-                                                2)]
+                                        self._indices_list[c_ind][
+                                            state2[start_index:end_index]]
+
                                     end_index = start_index
                                     product *= \
                                         cal_mat[state1_as_int][state2_as_int]
