@@ -229,7 +229,6 @@ class TensoredMeasFitter():
         if self._results is not None:
             self._build_calibration_matrices()
 
-
     @property
     def cal_matrices(self):
         """Return cal_matrices."""
