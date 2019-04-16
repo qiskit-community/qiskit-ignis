@@ -307,8 +307,6 @@ class TensoredMeasFitter():
             self._cal_matrices.append(np.zeros([2**list_size, 2**list_size],
                                                dtype=float))
 
-        print("blah")
-
         # go through for each calibration experiment
         for experiment in self._results.results:
             circ_name = experiment.header.name
