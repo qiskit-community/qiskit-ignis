@@ -284,8 +284,9 @@ class TensoredMeasFitter():
             label_list = [[label] for label in
                           self._substate_labels_list[cal_index]]
 
-        tmp_fitter = CompleteMeasFitter(None, count_keys(
-            self._qubit_list_sizes[cal_index]), circlabel='')
+        tmp_fitter = CompleteMeasFitter(None,
+                                        self._substate_labels_list[cal_index],
+                                        circlabel='')
         tmp_fitter.cal_matrix = self.cal_matrices[cal_index]
         return tmp_fitter.readout_fidelity(label_list)
 
