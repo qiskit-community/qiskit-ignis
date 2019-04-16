@@ -204,7 +204,7 @@ class TensoredMeasFitter():
         self._circlabel = circlabel
 
         self._qubit_list_sizes = \
-                               [len(qubit_list) for qubit_list in mit_pattern]
+            [len(qubit_list) for qubit_list in mit_pattern]
 
         self._indices_list = []
         if substate_labels_list is None:
@@ -294,7 +294,7 @@ class TensoredMeasFitter():
 
         for experiment in self._results.results:
             circ_name = experiment.header.name
-            state = re.search('(?<=' + self._circlabel + 'cal_)\w+',
+            state = re.search('(?<=' + self._circlabel + 'cal_)\\w+',
                               circ_name).group(0)
             state_cnts = self._results.get_counts(circ_name)
             for measured_state, counts in state_cnts.items():

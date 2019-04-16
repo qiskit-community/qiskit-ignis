@@ -292,27 +292,27 @@ class TensoredFilter():
                 inv_mat_dot_raw = np.zeros([num_of_states], dtype=float)
                 for state1_idx, state1 in enumerate(all_states):
                     for state2_idx, state2 in enumerate(all_states):
-                        if raw_data2[data_idx][state2_idx] != 0:
-                            product = 1.
-                            end_index = self.nqubits
-                            for pinv_cal_mat, list_size, indices in \
-                                zip(pinv_cal_matrices,
-                                        self._qubit_list_sizes,
-                                        self._indices_list):
-                                start_index = end_index - list_size
-                                state1_as_int = \
-                                    indices[int(state1[start_index:end_index],
-                                                2)]
-                                state2_as_int = \
-                                    indices[int(state2[start_index:end_index],
-                                                2)]
-                                end_index = start_index
-                                product *= \
-                                    pinv_cal_mat[state1_as_int][state2_as_int]
-                                if product == 0:
-                                    break
-                            inv_mat_dot_raw[state1_idx] += \
-                                (product * raw_data2[data_idx][state2_idx])
+                        if raw_data2[data_idx][state2_idx] == 0:
+                            continue
+
+                        product = 1.
+                        end_index = self.nqubits
+                        for pinv_mat, l_sze, inds \
+                                in zip(pinv_cal_matrices,
+                                       self._qubit_list_sizes,
+                                       self._indices_list):
+                            start_index = end_index - l_sze
+                            state1_as_int = \
+                                inds[int(state1[start_index:end_index], 2)]
+                            state2_as_int = \
+                                inds[int(state2[start_index:end_index], 2)]
+                            end_index = start_index
+                            product *= \
+                                pinv_mat[state1_as_int][state2_as_int]
+                            if product == 0:
+                                break
+                        inv_mat_dot_raw[state1_idx] += \
+                            (product * raw_data2[data_idx][state2_idx])
                 raw_data2[data_idx] = inv_mat_dot_raw
 
             elif method == 'least_squares':
