@@ -208,9 +208,12 @@ class TensoredMeasFitter():
 
         self._indices_list = []
         if substate_labels_list is None:
+            self._substate_labels_list = []
             for list_size in self._qubit_list_sizes:
                 self._indices_list.append(range(2**list_size))
+                self._substate_labels_list.append(count_keys(list_size))
         else:
+            self._substate_labels_list = substate_labels_list
             if len(self._qubit_list_sizes) != len(substate_labels_list):
                 raise ValueError("mit_pattern does not match \
                     substate_labels_list")
@@ -225,6 +228,7 @@ class TensoredMeasFitter():
 
         if self._results is not None:
             self._build_calibration_matrices()
+
 
     @property
     def cal_matrices(self):
@@ -246,6 +250,11 @@ class TensoredMeasFitter():
     def nqubits(self):
         """Return _qubit_list_sizes"""
         return sum(self._qubit_list_sizes)
+
+    @property
+    def substate_labels_list(self):
+        """Return _substate_labels_list"""
+        return self._substate_labels_list
 
     def readout_fidelity(self, cal_index=0, label_list=None):
         """
@@ -274,7 +283,7 @@ class TensoredMeasFitter():
 
         if label_list is None:
             label_list = [[label] for label in
-                          count_keys(self._qubit_list_sizes[cal_index])]
+                          self._substate_labels_list[cal_index]]
 
         tmp_fitter = CompleteMeasFitter(None, count_keys(
             self._qubit_list_sizes[cal_index]), circlabel='')
@@ -331,7 +340,8 @@ class TensoredMeasFitter():
 
         """
 
-        tmp_fitter = CompleteMeasFitter(None, count_keys(
-            self._qubit_list_sizes[cal_index]), circlabel='')
+        tmp_fitter = CompleteMeasFitter(None,
+                                        self._substate_labels_list[cal_index],
+                                        circlabel='')
         tmp_fitter.cal_matrix = self.cal_matrices[cal_index]
         tmp_fitter.plot_calibration(ax, show_plot)
