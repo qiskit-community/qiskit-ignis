@@ -71,7 +71,7 @@ def check_pattern(pattern):
     if (uni_counts > 1).any():
         raise ValueError("Invalid pattern. Duplicate qubit index.")
 
-    return pattern_flat, np.max(pattern_flat)
+    return pattern_flat, np.max(pattern_flat).item()
 
 
 def calc_xdata(length_vector, length_multiplier):
@@ -263,11 +263,10 @@ def replace_q_indices(circuit, q_nums, qr):
     """
 
     new_circuit = qiskit.QuantumCircuit(qr)
-    for op in circuit.data:
-        original_qubits = op.qargs
-        new_op = copy.deepcopy(op)
-        new_op.qargs = [
-            (qr, q_nums[x]) for x in [arg[1] for arg in original_qubits]]
+    for instr, qargs, cargs in circuit.data:
+        new_qargs = [
+            (qr, q_nums[x]) for x in [arg[1] for arg in qargs]]
+        new_op = copy.deepcopy((instr, new_qargs, cargs))
         new_circuit.data.append(new_op)
 
     return new_circuit

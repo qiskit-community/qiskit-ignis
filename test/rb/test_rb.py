@@ -108,14 +108,14 @@ class TestRB(unittest.TestCase):
                 # for each Clifford...
                 for _ in range(rb_opts['length_multiplier'][pat_index]):
                     # for each basis gate...
-                    while ops[op_index].name != 'barrier':
+                    while ops[op_index][0].name != 'barrier':
                         # Verify that the gate acts on the correct qubits
                         # This happens if the sequence is composed of the
                         # correct sub-sequences, as specified by vec_len and
                         # rb_opts
                         self.assertTrue(
                             all(x[1] in rb_opts['rb_pattern'][pat_index]
-                                for x in ops[op_index].qargs),
+                                for x in ops[op_index][1]),
                             "Error: operation acts on incorrect qubits")
                         op_index += 1
                     # increment because of the barrier gate
@@ -165,9 +165,7 @@ class TestRB(unittest.TestCase):
                         continue
 
                     # Perform an ideal execution on the generated sequences
-                    # basis_gates = ['u1','u2','u3','cx'] # use U, CX for now
-                    # Shelly: changed format to fit qiskit current version
-                    basis_gates = 'u1, u2, u3, cx'
+                    basis_gates = ['u1', 'u2', 'u3', 'cx']
                     shots = 100
                     result = []
                     for seed in range(rb_opts['nseeds']):
