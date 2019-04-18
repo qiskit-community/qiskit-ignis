@@ -45,15 +45,18 @@ def qv_circuits(qubit_list=None, depth_list=None, ntrials=1,
 
     # go through for each trial
     for trial in range(ntrials):
-        qr = qiskit.QuantumRegister(n_q_max+1, 'qr')
-        cr = qiskit.ClassicalRegister(width, 'cr')
+        qr = qiskit.QuantumRegister(int(n_q_max+1), 'qr')
+        qr2 = qiskit.QuantumRegister(int(width), 'qr')
+        cr = qiskit.ClassicalRegister(int(width), 'cr')
 
         #go through for each depth in the depth list
         for depth in depth_list:
 
             qc = qiskit.QuantumCircuit(qr, cr)
+            qc2 = qiskit.QuantumCircuit(qr2, cr)
 
             qc.name = 'qv_depth_%d_trial_%d'%(depth,trial)
+            qc2.name = qc.name
 
             #build the circuit
             for j in range(depth):
@@ -65,8 +68,10 @@ def qv_circuits(qubit_list=None, depth_list=None, ntrials=1,
                     pair = int(perm[2*k]), int(perm[2*k+1])
                     qc.append(U, [qr[qubit_list[pair[0]]],
                                   qr[qubit_list[pair[1]]]])
+                    qc2.append(U, [qr2[pair[0]],
+                                  qr2[pair[1]]])
 
-            circuits_nomeas[trial].append(copy.deepcopy(qc))
+            circuits_nomeas[trial].append(qc2)
 
             #add measurement
             for qind, qubit in enumerate(qubit_list):

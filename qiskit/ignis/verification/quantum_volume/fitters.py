@@ -25,8 +25,9 @@ class QVFitter:
         Class for fitters for quantum volume
     """
 
-    def __init__(self, backend_result, statevector_result, qubit_list,
-                 depth_list):
+    def __init__(self, backend_result=None, statevector_result=None,
+                 qubit_list=None,
+                 depth_list=None):
         """
         Args:
             backend_result: list of results (qiskit.Result).
@@ -110,7 +111,7 @@ class QVFitter:
                           for b in range(2**self._width)}
                 median_prob = self._median_probabilities([pmap])
                 self._heavy_outputs[qvcirc.header.name] = \
-                    self._heavy_strings(pmap, median_prob)
+                    self._heavy_strings(pmap, median_prob[0])
 
                 #calculate the heavy output probability
                 self._heavy_output_prob_ideal[circname] = \
@@ -148,7 +149,7 @@ class QVFitter:
                 if (ntrials_circ+1) > self._ntrials:
                     self._ntrials = ntrials_circ+1
 
-                if qvcirc.header.name not in self._heavy_strings:
+                if qvcirc.header.name not in self._heavy_output_prob_ideal:
                     raise QiskitError('Ideal distribution '
                                       'must be loaded first')
 
@@ -171,7 +172,7 @@ class QVFitter:
         circ_counts = {}
         circ_shots = {}
         for trialidx in range(self._ntrials):
-            for circid, depth in enumerate(self._depth_list):
+            for circid, depth in enumerate(self._depths):
                 circ_name = 'qv_depth_%d_trial_%d' % (depth, trialidx)
 
                 #get the counts form ALL executed circuits
@@ -195,7 +196,7 @@ class QVFitter:
                 self._heavy_output_prob[circ_name] = \
                     self._subset_probability(
                         self._heavy_outputs[circ_name],
-                        circ_counts[circ_name]/circ_shots[circ_name])
+                        circ_counts[circ_name])
 
 
     def calc_statistics(self):
@@ -209,10 +210,10 @@ class QVFitter:
         exp_vals = np.zeros(self._ntrials, dtype=float)
         ideal_vals = np.zeros(self._ntrials, dtype=float)
 
-        for depthidx, depth in enumerate(depth_list):
+        for depthidx, depth in enumerate(self._depths):
 
             for trialidx in range(self._ntrials):
-                cname = 'qc_depth_%d_trial_%d'%(depth,trialidx)
+                cname = 'qv_depth_%d_trial_%d'%(depth,trialidx)
                 exp_vals[trialidx] = self._heavy_output_prob[cname]
                 ideal_vals[trialidx] = self._heavy_output_prob_ideal[cname]
 
@@ -311,4 +312,4 @@ class QVFitter:
         of the probabilities of each string as given by the
         distribution.
         """
-        return sum([distribution[value] for value in strings])
+        return sum([distribution.get(value,0) for value in strings])
