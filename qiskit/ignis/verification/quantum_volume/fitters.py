@@ -101,24 +101,24 @@ class QVFitter:
 
                 if circname in self._heavy_outputs:
                     raise QiskitError("Already added the ideal result "
-                                      "for circuit %s"%circname)
+                                      "for circuit %s" % circname)
 
-                #convert the result into probability dictionary
+                # convert the result into probability dictionary
                 qstate = result.get_statevector(circname)
                 pvector = np.multiply(qstate, qstate.conjugate())
                 format_spec = "{0:0%db}" % self._width
-                pmap = {format_spec.format(b): float(np.real(pvector[b]))
-                          for b in range(2**self._width)}
+                pmap = {format_spec.format(b):
+                        float(np.real(pvector[b]))
+                        for b in range(2**self._width)}
                 median_prob = self._median_probabilities([pmap])
                 self._heavy_outputs[qvcirc.header.name] = \
                     self._heavy_strings(pmap, median_prob[0])
 
-                #calculate the heavy output probability
+                # calculate the heavy output probability
                 self._heavy_output_prob_ideal[circname] = \
                     self._subset_probability(
                         self._heavy_outputs[circname],
                         pmap)
-
 
     def add_data(self, new_backend_result, rerun_fit=True):
         """
@@ -134,7 +134,7 @@ class QVFitter:
         """
 
         if new_backend_result is None:
-                return
+            return
 
         if not isinstance(new_backend_result, list):
             new_backend_result = [new_backend_result]
@@ -172,10 +172,10 @@ class QVFitter:
         circ_counts = {}
         circ_shots = {}
         for trialidx in range(self._ntrials):
-            for circid, depth in enumerate(self._depths):
+            for _, depth in enumerate(self._depths):
                 circ_name = 'qv_depth_%d_trial_%d' % (depth, trialidx)
 
-                #get the counts form ALL executed circuits
+                # get the counts form ALL executed circuits
                 count_list = []
                 for result in self._result_list:
                     try:
@@ -188,16 +188,15 @@ class QVFitter:
 
                 circ_shots[circ_name] = sum(circ_counts[circ_name].values())
 
-                #normalize
+                # normalize
                 for state in circ_counts[circ_name]:
                     circ_counts[circ_name][state] /= circ_shots[circ_name]
 
-                #calculate the heavy output probability
+                # calculate the heavy output probability
                 self._heavy_output_prob[circ_name] = \
                     self._subset_probability(
                         self._heavy_outputs[circ_name],
                         circ_counts[circ_name])
-
 
     def calc_statistics(self):
         """
@@ -205,7 +204,7 @@ class QVFitter:
         for plotting
         """
 
-        self._ydata = np.zeros([4,len(self._depths)],dtype=float)
+        self._ydata = np.zeros([4, len(self._depths)], dtype=float)
 
         exp_vals = np.zeros(self._ntrials, dtype=float)
         ideal_vals = np.zeros(self._ntrials, dtype=float)
@@ -213,7 +212,7 @@ class QVFitter:
         for depthidx, depth in enumerate(self._depths):
 
             for trialidx in range(self._ntrials):
-                cname = 'qv_depth_%d_trial_%d'%(depth,trialidx)
+                cname = 'qv_depth_%d_trial_%d' % (depth, trialidx)
                 exp_vals[trialidx] = self._heavy_output_prob[cname]
                 ideal_vals[trialidx] = self._heavy_output_prob_ideal[cname]
 
@@ -244,7 +243,6 @@ class QVFitter:
             ax = plt.gca()
 
         xdata = self._depths
-
 
         # Plot the experimental data with error bars
         ax.errorbar(xdata, self._ydata[0],
@@ -285,7 +283,7 @@ class QVFitter:
         whose ideal probability of occurrence exceeds the median.
         """
         return list(filter(lambda x: ideal_distribution[x] > ideal_median,
-                       list(ideal_distribution.keys())))
+                           list(ideal_distribution.keys())))
 
     def _median_probabilities(self, distributions):
         """Return a list of median probabilities.
@@ -299,6 +297,7 @@ class QVFitter:
         for dist in distributions:
             values = np.array(list(dist.values()))
             medians.append(float(np.real(np.median(values))))
+
         return medians
 
     def _subset_probability(self, strings, distribution):
@@ -312,4 +311,4 @@ class QVFitter:
         of the probabilities of each string as given by the
         distribution.
         """
-        return sum([distribution.get(value,0) for value in strings])
+        return sum([distribution.get(value, 0) for value in strings])

@@ -9,7 +9,6 @@
 Generates quantum volume circuits
 """
 
-import copy
 import numpy as np
 import qiskit
 from qiskit.quantum_info.random import random_unitary
@@ -49,17 +48,17 @@ def qv_circuits(qubit_list=None, depth_list=None, ntrials=1,
         qr2 = qiskit.QuantumRegister(int(width), 'qr')
         cr = qiskit.ClassicalRegister(int(width), 'cr')
 
-        #go through for each depth in the depth list
+        # go through for each depth in the depth list
         for depth in depth_list:
 
             qc = qiskit.QuantumCircuit(qr, cr)
             qc2 = qiskit.QuantumCircuit(qr2, cr)
 
-            qc.name = 'qv_depth_%d_trial_%d'%(depth,trial)
+            qc.name = 'qv_depth_%d_trial_%d' % (depth, trial)
             qc2.name = qc.name
 
-            #build the circuit
-            for j in range(depth):
+            # build the circuit
+            for _ in range(depth):
                 # Generate uniformly random permutation Pj of [0...n-1]
                 perm = np.random.permutation(width)
                 # For each pair p in Pj, generate Haar random SU(4)
@@ -69,11 +68,11 @@ def qv_circuits(qubit_list=None, depth_list=None, ntrials=1,
                     qc.append(U, [qr[qubit_list[pair[0]]],
                                   qr[qubit_list[pair[1]]]])
                     qc2.append(U, [qr2[pair[0]],
-                                  qr2[pair[1]]])
+                                   qr2[pair[1]]])
 
             circuits_nomeas[trial].append(qc2)
 
-            #add measurement
+            # add measurement
             for qind, qubit in enumerate(qubit_list):
                 qc.measure(qr[qubit], cr[qind])
 
