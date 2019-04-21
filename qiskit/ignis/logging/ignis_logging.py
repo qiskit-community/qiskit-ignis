@@ -13,20 +13,22 @@ import logging
 import logging.handlers
 import logging.config
 from logging import Logger
-import os, glob
+import os
+import glob
 from datetime import datetime
 import yaml  # TODO: can we avoid yaml?
 
 
 class IgnisLogger(logging.getLoggerClass()):
     """
-    A logger class for Ignis. IgnisLogger is a like any other logging.Logger object except it has an additional method:
-    log_to_file, used to log data in the form of key:value pairs to a log file. Logging configuration is performed via
-    a configuration file and is handled by IgnisLogging.
+    A logger class for Ignis. IgnisLogger is a like any other logging.Logger
+    object except it has an additional method:    log_to_file, used to log data
+    in the form of key:value pairs to a log file. Logging configuration is
+    performed via a configuration file and is handled by IgnisLogging.
 
     """
     def __init__(self, name, level=logging.NOTSET):
-        Logger.__init__(self, name,level)
+        Logger.__init__(self, name, level)
         self._file_logging_enabled = True
         self._file_handler = None
 
@@ -38,14 +40,15 @@ class IgnisLogger(logging.getLoggerClass()):
         This function logs key:value pairs to a log file.
         Note: Logger name in the log file is fixed (ignis_logging)
 
-        :param kargs: Keyword parameters to be logged (e.g t1=0.02, qubits=[1,2,4])
+        :param kargs: Keyword parameters to be logged (e.g t1=0.02,
+        qubits=[1,2,4])
         """
         if not self._file_logging_enabled or self._file_handler is None:
             return
 
         Logger.addHandler(self, self._file_handler)
         logstr = ""
-        for k,v in kargs.items():
+        for k, v in kargs.items():
             logstr += "'{}':'{}' ".format(k, v)
 
         Logger.log(self, 100, logstr)
@@ -61,20 +64,26 @@ class IgnisLogger(logging.getLoggerClass()):
 
 class IgnisLogging:
     """
-    Singleton class to configure file logging via IgnisLogger.  Logging to file is enabled only if there is a
-    config file present. Otherwise IgnisLogger will behave as a regular logger.
+    Singleton class to configure file logging via IgnisLogger.  Logging to file
+    is enabled only if there is a config file present. Otherwise IgnisLogger
+    will behave as a regular logger.
 
     Config file is assumed to be <user home>/.qiskit/logging.yaml
 
     Config file fields:
     ===================
     file_logging: {true/false}      - Specifies whether file logging is enabled
-    log_file_path: <path>           - path to the log file. If not specified, ignis.log will be used
-    max_size:  <# bytes>            - maximum size limit for a given log file. If not specified file size is unlimited
-    max_rotations: <count>          - maximum number of log files to rotate (oldest file is deleted in case count is reached)
+    log_file_path: <path>           - path to the log file. If not specified,
+                                        ignis.log will be used
+    max_size:  <# bytes>            - maximum size limit for a given log file.
+                                        If not specified file size is unlimited
+    max_rotations: <count>          - maximum number of log files to rotate
+                                        (oldest file is deleted in case count
+                                        is reached)
     """
 
-    #TODO: Should we allow to override file settings programmatically ? (e.g. enable loogging)
+    # TODO: Should we allow to override file settings programmatically ?
+    # (e.g. enable logging)
     _instance = None
     _file_logging_enabled = False
     _log_file = None
@@ -91,6 +100,7 @@ class IgnisLogging:
 
         return IgnisLogging._instance
 
+    @staticmethod
     def _initialize():
         """
         Initializes the logging facility for Ignis.
@@ -98,7 +108,8 @@ class IgnisLogging:
         logging.setLoggerClass(IgnisLogger)
 
         # Loading and handling the config file
-        config_file_path = os.path.join(os.path.expanduser('~'), ".qiskit", "logging.yaml")
+        config_file_path = os.path.join(os.path.expanduser('~'),
+                                        ".qiskit", "logging.yaml")
         if os.path.exists(config_file_path):
             IgnisLogging._file_logging_enabled = True
 
@@ -106,11 +117,14 @@ class IgnisLogging:
         log_config = yaml.load(config_file, Loader=yaml.FullLoader)
 
         # Reading the config file content
-        IgnisLogging._file_logging_enabled = True if log_config.get('file_logging') else False
-        IgnisLogging._log_file = log_config.get('log_file') if log_config.get('log_file') is not None else "ignis.log"
-        IgnisLogging._max_bytes = log_config.get('max_size') if log_config.get('max_size') is not None else 0
-        IgnisLogging._max_rotations = log_config.get('max_rotations') if log_config.get('max_rotations') is not None else 0
-
+        IgnisLogging._file_logging_enabled = True if \
+            log_config.get('file_logging') else False
+        IgnisLogging._log_file = log_config.get('log_file') if \
+            log_config.get('log_file') is not None else "ignis.log"
+        IgnisLogging._max_bytes = log_config.get('max_size') if \
+            log_config.get('max_size') is not None else 0
+        IgnisLogging._max_rotations = log_config.get('max_rotations') if \
+            log_config.get('max_rotations') is not None else 0
 
     def get_logger(self, __name__):
         """
@@ -119,18 +133,24 @@ class IgnisLogging:
         :return: IgnisLogger
         """
         logger = logging.getLogger(__name__)
-        assert(isinstance(logger, IgnisLogger)), "IgnisLogger class was not registered"
+        assert(isinstance(logger, IgnisLogger)), \
+            "IgnisLogger class was not registered"
         self._configure_logger(logger)
 
         return logger
 
     def _configure_logger(self, logger):
         if IgnisLogging._file_logging_enabled:
-            # This will enable limiting file size and rotating once file size is exhausted
-            fh = logging.handlers.RotatingFileHandler(IgnisLogging._log_file, maxBytes=IgnisLogging._max_bytes, backupCount=IgnisLogging._max_rotations)  # make limits configurable
+            # This will enable limiting file size and rotating once file size
+            # is exhausted
+            fh = logging.handlers.RotatingFileHandler(
+                IgnisLogging._log_file, maxBytes=IgnisLogging._max_bytes,
+                backupCount=IgnisLogging._max_rotations)
 
             # Formatting
-            formatter = logging.Formatter('%(asctime)s {} %(message)s'.format(IgnisLogging._log_label), datefmt=IgnisLogging._default_datefmt)
+            formatter = logging.Formatter(
+                '%(asctime)s {} %(message)s'.format(IgnisLogging._log_label),
+                datefmt=IgnisLogging._default_datefmt)
             fh.setFormatter(formatter)
             logger._set_file_handler(fh)
 
@@ -140,18 +160,20 @@ class IgnisLogging:
         """
         return IgnisLogging._log_file
 
-    def get_default_datetime_fmt(self):
+    def default_datetime_fmt(self):
         return IgnisLogging._default_datefmt
 
 
 class IgnisLogReader:
     """
-    Class to read from Ignis log and construct tabular representation based on date/time and key criteria
+    Class to read from Ignis log and construct tabular representation based on
+    date/time and key criteria
     """
 
     def get_log_files(self):
         """
-        :return: Names of all log files (several may be present due to logging file rotation). File names are sorted by
+        :return: Names of all log files (several may be present due to logging
+        file rotation). File names are sorted by
         modification time.
         """
         file_name = IgnisLogging().get_log_file()
@@ -159,17 +181,23 @@ class IgnisLogReader:
 
         return sorted(glob.glob(search_path), key=os.path.getmtime)
 
-
-    def read_values(self, keys=None, from_datetime=None, from_datetime_format=None, to_datetime=None, to_datetime_format=None):
+    def read_values(self, keys=None, from_datetime=None,
+                    from_datetime_format=None, to_datetime=None,
+                    to_datetime_format=None):
         """
         Retrieves log lines.
 
-        :param keys: Retrieve only key value pairs of corresponding to keys. A row with no matching keys will not be
-        retrieved. If not specified, all keys are retrieved (optional)
-        :param from_datetime: Retrieve only rows newer than the given date and time (optional)
-        :param from_datetime_format: datetime format string. If not specified will assume "%Y/%m/%d %H:%M:%S" (optional)
-        :param to_datetime: Retrieve only rows older than the given date and time (optional)
-        :param to_datetime_format: datetime format string. If not specified will assume "%Y/%m/%d %H:%M:%S" (optional)
+        :param keys: Retrieve only key value pairs of corresponding to keys.
+            A row with no matching keys will not be
+            retrieved. If not specified, all keys are retrieved (optional)
+        :param from_datetime: Retrieve only rows newer than the given date and
+            time (optional)
+        :param from_datetime_format: datetime format string. If not specified
+            will assume "%Y/%m/%d %H:%M:%S" (optional)
+        :param to_datetime: Retrieve only rows older than the given date and
+            time (optional)
+        :param to_datetime_format: datetime format string. If not specified
+            will assume "%Y/%m/%d %H:%M:%S" (optional)
         :return: A list containing the retrieved rows and key pair values
         """
         files = self.get_log_files()
@@ -181,7 +209,11 @@ class IgnisLogReader:
                     terms = line.split()
                     date_time = terms[0:2]
 
-                    dt_filterd = self._filter_by_datetime(date_time, from_datetime, from_datetime_format, to_datetime, to_datetime_format)
+                    dt_filterd = self._filter_by_datetime(date_time,
+                                                          from_datetime,
+                                                          from_datetime_format,
+                                                          to_datetime,
+                                                          to_datetime_format)
                     if dt_filterd:
                         continue
 
@@ -194,7 +226,6 @@ class IgnisLogReader:
                     retrieved_date.append(date_time + key_values)
 
         return retrieved_date
-
 
     def _filter_keys(self, key_values, keys):
         """
@@ -214,42 +245,46 @@ class IgnisLogReader:
 
         return result
 
-    def _filter_by_datetime(self, row_datetime, from_datetime, from_datetime_format, to_datetime, to_datetime_format):
+    def _filter_by_datetime(self, row_datetime, from_dt,
+                            from_dt_fmt, to_dt,
+                            to_dt_fmt):
 
         """
         :return: True if the row should be filtered out
         """
-        if not isinstance(from_datetime, datetime):
+        if not isinstance(from_dt, datetime):
             try:
-                from_datetime = datetime.strptime(from_datetime, from_datetime_format if from_datetime_format is not None else IgnisLogging().get_default_datetime_fmt())
-            except:
-                #TODO: signal the user
+                if from_dt_fmt is None:
+                    from_dt_fmt = IgnisLogging().default_datetime_fmt()
+                from_dt = datetime.strptime(from_dt, from_dt_fmt)
+            except ValueError as ve:
+                # TODO: signal the user
                 pass
 
-        if not isinstance(to_datetime, datetime):
+        if not isinstance(to_dt, datetime):
             try:
-                to_datetime = datetime.strptime(to_datetime, to_datetime_format if to_datetime_format is not None else IgnisLogging().get_default_datetime_fmt())
-            except:
-                #TODO: signal the user
+                if to_dt_fmt is None:
+                    to_dt_fmt = IgnisLogging().default_datetime_fmt()
+                to_dt = datetime.strptime(to_dt, to_dt_fmt)
+            except ValueError as ve:
+                # TODO: signal the user
                 pass
 
-        if from_datetime is None and to_datetime is None:
+        if from_dt is None and to_dt is None:
             return False
 
-        row_datetime = datetime.strptime("%s %s" % (row_datetime[0], row_datetime[1]), IgnisLogging().get_default_datetime_fmt())
+        row_datetime = datetime.strptime("%s %s" % (row_datetime[0],
+                                                    row_datetime[1]),
+                                         IgnisLogging().default_datetime_fmt())
 
-        if from_datetime is not None:
-            if row_datetime < from_datetime:
+        if from_dt is not None:
+            if row_datetime < from_dt:
                 return True
 
-        if to_datetime is not None:
-            if row_datetime > to_datetime:
+        if to_dt is not None:
+            if row_datetime > to_dt:
                 return True
 
         return False
-
-
-
-
 
 
