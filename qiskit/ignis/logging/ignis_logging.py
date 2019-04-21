@@ -13,8 +13,9 @@ import logging
 import logging.handlers
 import logging.config
 from logging import Logger
-import os
-import yaml
+import os, glob
+import csv
+import yaml  # TODO: can we avoid yaml
 
 
 class IgnisLogger(logging.getLoggerClass()):
@@ -47,7 +48,7 @@ class IgnisLogger(logging.getLoggerClass()):
         for k,v in kargs.items():
             logstr += "'{}':'{}' ".format(k, v)
 
-        Logger.info(self, logstr)
+        Logger.log(self, 100, logstr)
 
         Logger.removeHandler(self, self._file_handler)
 
@@ -72,11 +73,14 @@ class IgnisLogging:
     max_size:  <# bytes>            - maximum size limit for a given log file. If not specified file size is unlimited
     max_rotations: <count>          - maximum number of log files to rotate (oldest file is deleted in case count is reached)
     """
+
+    #TODO: Should we allow to override file settings programmatically ? (e.g. enable loogging)
     _instance = None
     _file_logging_enabled = False
     _log_file = None
     _max_bytes = 0
     _max_rotations = 0
+    _log_label = "ignis_logging"
 
     # Making the class a Singleton
     def __new__(cls):
@@ -125,7 +129,7 @@ class IgnisLogging:
             fh = logging.handlers.RotatingFileHandler(IgnisLogging._log_file, maxBytes=IgnisLogging._max_bytes, backupCount=IgnisLogging._max_rotations)  # make limits configurable
 
             # Formatting
-            formatter = logging.Formatter('%(asctime)s - ignis_logging %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
+            formatter = logging.Formatter('%(asctime)s {} %(message)s'.format(IgnisLogging._log_label), datefmt='%m/%d/%Y %H:%M:%S')
             fh.setFormatter(formatter)
             logger._set_file_handler(fh)
 
@@ -141,8 +145,54 @@ class IgnisLogReader:
     Class to read from Ignis log and construct tabular representation based on date/time and key criteria
     """
 
-    def read_values(self, time_range=None, keys=None):
-        pass
+    def get_log_files(self):
+        """
+        :return: Names of all log files (several may be present due to logging file rotation). File names are sorted by
+        modification time.
+        """
+        file_name = IgnisLogging().get_log_file()
+        search_path = os.path.abspath(os.path.abspath(file_name + "*"))
+
+        return sorted(glob.glob(search_path), key=os.path.getmtime)
+
+
+    def read_values(self, from_datetime=None, to_datetime=None, keys=None):
+        """
+        Retrieves log lines.
+
+        :param from_datetime: Retrieve only rows newer than the given date and time (optional)
+        :param to_datetime: Retrieve only rows older than the given date and time (optional)
+        :param keys: Retrieve only key value pairs of corresponding to keys. A row with no matching keys will not be
+        retrieved.
+        :return: A csv object containing the retrieved rows and keys
+        """
+        files = self.get_log_files()
+
+        for file in files:
+            with open(file, "r") as f:
+                for line in f:
+                    terms = line.split()
+                    if keys is not None:
+                        self._filter_keys(terms[3:], keys)
+
+
+    def _filter_keys(self, key_values, keys):
+        """
+        Retrieves key value pairs matching the given keys
+
+        :param key_values: list of key value pairs
+        :param keys: list of keys to retrieve key value pair of
+        :return: list of key value pairs according to keys
+        """
+
+        result = list()
+        assert(isinstance(key_values, list)), "key_values is not a list"
+        for kv in key_values:
+            if kv[0] in keys:
+                result.append(kv)
+
+        return result
+
 
 
 
