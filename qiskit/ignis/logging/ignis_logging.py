@@ -32,7 +32,11 @@ class IgnisLogger(logging.getLoggerClass()):
         self._file_logging_enabled = True
         self._file_handler = None
 
-    def _set_file_handler(self, fh):
+    def set_file_handler(self, fh):
+        """
+        Sets the file handler to be used for file logging. Should only called
+        by IgnisLogger
+        """
         self._file_handler = fh
 
     def log_to_file(self, **kargs):
@@ -56,9 +60,17 @@ class IgnisLogger(logging.getLoggerClass()):
         Logger.removeHandler(self, self._file_handler)
 
     def enable_file_logging(self):
+        """
+        Enables file logging for this logger object (note there is a single
+        object for a given logger name
+        """
         self._file_logging_enabled = True
 
     def disable_file_logging(self):
+        """
+        Enables file logging for this logger object (note there is a single
+        object for a given logger name
+        """
         self._file_logging_enabled = False
 
 
@@ -117,8 +129,7 @@ class IgnisLogging:
         log_config = yaml.load(config_file, Loader=yaml.FullLoader)
 
         # Reading the config file content
-        IgnisLogging._file_logging_enabled = True if \
-            log_config.get('file_logging') else False
+        IgnisLogging._file_logging_enabled = log_config.get('file_logging')
         IgnisLogging._log_file = log_config.get('log_file') if \
             log_config.get('log_file') is not None else "ignis.log"
         IgnisLogging._max_bytes = log_config.get('max_size') if \
@@ -152,7 +163,7 @@ class IgnisLogging:
                 '%(asctime)s {} %(message)s'.format(IgnisLogging._log_label),
                 datefmt=IgnisLogging._default_datefmt)
             fh.setFormatter(formatter)
-            logger._set_file_handler(fh)
+            logger.set_file_handler(fh)
 
     def get_log_file(self):
         """
@@ -161,6 +172,9 @@ class IgnisLogging:
         return IgnisLogging._log_file
 
     def default_datetime_fmt(self):
+        """
+        :return: Default date time format used for writing log entries
+        """
         return IgnisLogging._default_datefmt
 
 
@@ -220,7 +234,7 @@ class IgnisLogReader:
                     key_values = terms[3:]
                     if keys is not None:
                         key_values = self._filter_keys(key_values, keys)
-                    if len(key_values) == 0:
+                    if not key_values:
                         continue
 
                     retrieved_date.append(date_time + key_values)
@@ -258,8 +272,7 @@ class IgnisLogReader:
                     from_dt_fmt = IgnisLogging().default_datetime_fmt()
                 from_dt = datetime.strptime(from_dt, from_dt_fmt)
             except ValueError as ve:
-                # TODO: signal the user
-                pass
+                raise ve
 
         if not isinstance(to_dt, datetime):
             try:
@@ -267,8 +280,7 @@ class IgnisLogReader:
                     to_dt_fmt = IgnisLogging().default_datetime_fmt()
                 to_dt = datetime.strptime(to_dt, to_dt_fmt)
             except ValueError as ve:
-                # TODO: signal the user
-                pass
+                raise ve
 
         if from_dt is None and to_dt is None:
             return False
@@ -286,5 +298,3 @@ class IgnisLogReader:
                 return True
 
         return False
-
-
