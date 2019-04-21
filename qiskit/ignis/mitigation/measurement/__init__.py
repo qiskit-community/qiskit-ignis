@@ -11,6 +11,6 @@ Measurement correction module
 """
 
 # Measurement correction functions
-from .circuits import complete_meas_cal
-from .filters import MeasurementFilter
-from .fitters import CompleteMeasFitter
+from .circuits import complete_meas_cal, tensored_meas_cal
+from .filters import MeasurementFilter, TensoredFilter
+from .fitters import CompleteMeasFitter, TensoredMeasFitter
