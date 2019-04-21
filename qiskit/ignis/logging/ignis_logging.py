@@ -14,8 +14,8 @@ import logging.handlers
 import logging.config
 from logging import Logger
 import os, glob
-import csv
-import yaml  # TODO: can we avoid yaml
+from datetime import datetime
+import yaml  # TODO: can we avoid yaml?
 
 
 class IgnisLogger(logging.getLoggerClass()):
@@ -81,6 +81,7 @@ class IgnisLogging:
     _max_bytes = 0
     _max_rotations = 0
     _log_label = "ignis_logging"
+    _default_datefmt = '%Y/%m/%d %H:%M:%S'
 
     # Making the class a Singleton
     def __new__(cls):
@@ -129,7 +130,7 @@ class IgnisLogging:
             fh = logging.handlers.RotatingFileHandler(IgnisLogging._log_file, maxBytes=IgnisLogging._max_bytes, backupCount=IgnisLogging._max_rotations)  # make limits configurable
 
             # Formatting
-            formatter = logging.Formatter('%(asctime)s {} %(message)s'.format(IgnisLogging._log_label), datefmt='%m/%d/%Y %H:%M:%S')
+            formatter = logging.Formatter('%(asctime)s {} %(message)s'.format(IgnisLogging._log_label), datefmt=IgnisLogging._default_datefmt)
             fh.setFormatter(formatter)
             logger._set_file_handler(fh)
 
@@ -138,6 +139,9 @@ class IgnisLogging:
         :return: name of the log file
         """
         return IgnisLogging._log_file
+
+    def get_default_datetime_fmt(self):
+        return IgnisLogging._default_datefmt
 
 
 class IgnisLogReader:
@@ -156,24 +160,40 @@ class IgnisLogReader:
         return sorted(glob.glob(search_path), key=os.path.getmtime)
 
 
-    def read_values(self, from_datetime=None, to_datetime=None, keys=None):
+    def read_values(self, keys=None, from_datetime=None, from_datetime_format=None, to_datetime=None, to_datetime_format=None):
         """
         Retrieves log lines.
 
-        :param from_datetime: Retrieve only rows newer than the given date and time (optional)
-        :param to_datetime: Retrieve only rows older than the given date and time (optional)
         :param keys: Retrieve only key value pairs of corresponding to keys. A row with no matching keys will not be
-        retrieved.
-        :return: A csv object containing the retrieved rows and keys
+        retrieved. If not specified, all keys are retrieved (optional)
+        :param from_datetime: Retrieve only rows newer than the given date and time (optional)
+        :param from_datetime_format: datetime format string. If not specified will assume "%Y/%m/%d %H:%M:%S" (optional)
+        :param to_datetime: Retrieve only rows older than the given date and time (optional)
+        :param to_datetime_format: datetime format string. If not specified will assume "%Y/%m/%d %H:%M:%S" (optional)
+        :return: A list containing the retrieved rows and key pair values
         """
         files = self.get_log_files()
+        retrieved_date = list()
 
         for file in files:
             with open(file, "r") as f:
                 for line in f:
                     terms = line.split()
+                    date_time = terms[0:2]
+
+                    dt_filterd = self._filter_by_datetime(date_time, from_datetime, from_datetime_format, to_datetime, to_datetime_format)
+                    if dt_filterd:
+                        continue
+
+                    key_values = terms[3:]
                     if keys is not None:
-                        self._filter_keys(terms[3:], keys)
+                        key_values = self._filter_keys(key_values, keys)
+                    if len(key_values) == 0:
+                        continue
+
+                    retrieved_date.append(date_time + key_values)
+
+        return retrieved_date
 
 
     def _filter_keys(self, key_values, keys):
@@ -187,11 +207,47 @@ class IgnisLogReader:
 
         result = list()
         assert(isinstance(key_values, list)), "key_values is not a list"
+
         for kv in key_values:
-            if kv[0] in keys:
+            if kv.split(":")[0].strip("'") in keys:
                 result.append(kv)
 
         return result
+
+    def _filter_by_datetime(self, row_datetime, from_datetime, from_datetime_format, to_datetime, to_datetime_format):
+
+        """
+        :return: True if the row should be filtered out
+        """
+        if not isinstance(from_datetime, datetime):
+            try:
+                from_datetime = datetime.strptime(from_datetime, from_datetime_format if from_datetime_format is not None else IgnisLogging().get_default_datetime_fmt())
+            except:
+                #TODO: signal the user
+                pass
+
+        if not isinstance(to_datetime, datetime):
+            try:
+                to_datetime = datetime.strptime(to_datetime, to_datetime_format if to_datetime_format is not None else IgnisLogging().get_default_datetime_fmt())
+            except:
+                #TODO: signal the user
+                pass
+
+        if from_datetime is None and to_datetime is None:
+            return False
+
+        row_datetime = datetime.strptime("%s %s" % (row_datetime[0], row_datetime[1]), IgnisLogging().get_default_datetime_fmt())
+
+        if from_datetime is not None:
+            if row_datetime < from_datetime:
+                return True
+
+        if to_datetime is not None:
+            if row_datetime > to_datetime:
+                return True
+
+        return False
+
 
 
 
