@@ -12,6 +12,7 @@ Maximum-Likelihood estimation quantum process tomography fitter
 
 import numpy as np
 from qiskit import QiskitError
+from qiskit.quantum_info.operators import Choi
 from .base_fitter import TomographyFitter
 from .cvx_fit import cvxpy, cvx_fit
 from .lstsq_fit import lstsq_fit
@@ -22,7 +23,7 @@ class ProcessTomographyFitter(TomographyFitter):
 
     def fit(self, method='auto', standard_weights=True, beta=0.5, **kwargs):
         """
-        Reconstruct a quantum state using CVXPY convex optimization.
+        Reconstruct a quantum channel using CVXPY convex optimization.
 
         Args:
             method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
@@ -35,10 +36,19 @@ class ProcessTomographyFitter(TomographyFitter):
             **kwargs (optional): kwargs for fitter method.
 
         Returns:
-            The fitted matrix rho that minimizes
-            ||basis_matrix * vec(rho) - data||_2.
+            Choi: The fitted Choi-matrix J for the channel that maximizes
+            ||basis_matrix * vec(J) - data||_2. The Numpy matrix can be
+            obtained from `Choi.data`.
 
         Additional Information:
+
+            Choi matrix
+            -----------
+            The Choi matrix object is a QuantumChannel representation which
+            may be converted to other representations using the classes
+            `SuperOp`, `Kraus`, `Stinespring`, `PTM`, `Chi` from the module
+            `qiskit.quantum_info.operators`. The raw matrix data for the
+            representation may be obtained by `channel.data`.
 
             Fitter method
             -------------
@@ -127,9 +137,9 @@ class ProcessTomographyFitter(TomographyFitter):
             else:
                 method = 'cvx'
         if method == 'lstsq':
-            return lstsq_fit(data, basis_matrix, weights=weights,
-                             trace=dim, **kwargs)
+            return Choi(lstsq_fit(data, basis_matrix, weights=weights,
+                                  trace=dim, **kwargs))
         if method == 'cvx':
-            return cvx_fit(data, basis_matrix, weights=weights, trace=dim,
-                           trace_preserving=True, **kwargs)
+            return Choi(cvx_fit(data, basis_matrix, weights=weights, trace=dim,
+                                trace_preserving=True, **kwargs))
         raise QiskitError('Unrecognised fit method {}'.format(method))
