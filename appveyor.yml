@@ -48,7 +48,8 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   - "conda install --update-deps -y mkl"
-  - "conda install --update-deps -y openblas"
+  # Aer build requirements
+  - "conda install --update-deps -y openblas cmake cython"
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   - "python -m pip install --disable-pip-version-check --upgrade pip"
