@@ -88,7 +88,7 @@ matrix:
         - TOXENV=py37
 
 language: python
-install: pip install -U tox
+install: pip install -U tox pip
 script:
   - tox
 
