@@ -8,6 +8,7 @@ addons:
     packages:
       - gcc-4.8
       - g++-4.8
+      - libopenblas-dev
 
 install_osx: &stage_osx
   os: osx
