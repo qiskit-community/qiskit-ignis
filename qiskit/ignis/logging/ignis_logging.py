@@ -16,7 +16,6 @@ from logging import Logger
 import os
 import glob
 from datetime import datetime
-import yaml  # TODO: can we avoid yaml?
 
 
 class IgnisLogger(logging.getLoggerClass()):
@@ -113,29 +112,44 @@ class IgnisLogging:
         return IgnisLogging._instance
 
     @staticmethod
+    def _load_config_file():
+        """
+        Loads and parses the config file
+        :return: a dictionary containing the the settings
+        """
+        config_file_path = os.path.join(os.path.expanduser('~'),
+                                        ".qiskit", "logging.yaml")
+        config = dict()
+        if os.path.exists(config_file_path):
+            with open(config_file_path, "r") as log_file:
+                for line in log_file:
+                    line = line[:line.find('#')]    # removing comments
+                    line = line.split(':')  # Splitting to key value
+                    if len(line) < 2:
+                        continue
+                    config[line[0].strip().lower()] = line[1].strip().lower()
+
+        return config
+
+    @staticmethod
     def _initialize():
         """
         Initializes the logging facility for Ignis.
         """
         logging.setLoggerClass(IgnisLogger)
 
-        # Loading and handling the config file
-        config_file_path = os.path.join(os.path.expanduser('~'),
-                                        ".qiskit", "logging.yaml")
-        if os.path.exists(config_file_path):
-            IgnisLogging._file_logging_enabled = True
-
-        config_file = open(config_file_path, 'r')
-        log_config = yaml.load(config_file, Loader=yaml.FullLoader)
-
+        log_config = IgnisLogging._load_config_file()
         # Reading the config file content
-        IgnisLogging._file_logging_enabled = log_config.get('file_logging')
+        IgnisLogging._file_logging_enabled = \
+            log_config.get('file_logging') == "true"
         IgnisLogging._log_file = log_config.get('log_file') if \
             log_config.get('log_file') is not None else "ignis.log"
-        IgnisLogging._max_bytes = log_config.get('max_size') if \
-            log_config.get('max_size') is not None else 0
-        IgnisLogging._max_rotations = log_config.get('max_rotations') if \
-            log_config.get('max_rotations') is not None else 0
+        max_size = log_config.get('max_size')
+        IgnisLogging._max_bytes = int(max_size) if \
+            max_size is not None and max_size.isdigit() else 0
+        max_rotations = log_config.get('max_rotations')
+        IgnisLogging._max_rotations = int(max_rotations) if \
+            max_rotations is not None and max_rotations.isdigit() else 0
 
     def get_logger(self, __name__):
         """
@@ -151,19 +165,20 @@ class IgnisLogging:
         return logger
 
     def _configure_logger(self, logger):
-        if IgnisLogging._file_logging_enabled:
-            # This will enable limiting file size and rotating once file size
-            # is exhausted
-            fh = logging.handlers.RotatingFileHandler(
-                IgnisLogging._log_file, maxBytes=IgnisLogging._max_bytes,
-                backupCount=IgnisLogging._max_rotations)
+        # This will enable limiting file size and rotating once file size
+        # is exhausted
+        fh = logging.handlers.RotatingFileHandler(
+            IgnisLogging._log_file, maxBytes=IgnisLogging._max_bytes,
+            backupCount=IgnisLogging._max_rotations)
 
-            # Formatting
-            formatter = logging.Formatter(
-                '%(asctime)s {} %(message)s'.format(IgnisLogging._log_label),
-                datefmt=IgnisLogging._default_datefmt)
-            fh.setFormatter(formatter)
-            logger.set_file_handler(fh)
+        # Formatting
+        formatter = logging.Formatter(
+            '%(asctime)s {} %(message)s'.format(IgnisLogging._log_label),
+            datefmt=IgnisLogging._default_datefmt)
+        fh.setFormatter(formatter)
+        logger.set_file_handler(fh)
+        if IgnisLogging._file_logging_enabled:
+            logger.enable_file_logging()
 
     def get_log_file(self):
         """
