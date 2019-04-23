@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class TomographyFitter:
+    """Base maximum-likelihood estimate tomography fitter class"""
 
     def __init__(self,
                  result,
