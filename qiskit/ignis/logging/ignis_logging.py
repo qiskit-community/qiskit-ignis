@@ -28,7 +28,7 @@ class IgnisLogger(logging.getLoggerClass()):
     """
     def __init__(self, name, level=logging.NOTSET):
         Logger.__init__(self, name, level)
-        self._file_logging_enabled = True
+        self._file_logging_enabled = False
         self._file_handler = None
 
     def set_file_handler(self, fh):
@@ -177,6 +177,7 @@ class IgnisLogging:
             datefmt=IgnisLogging._default_datefmt)
         fh.setFormatter(formatter)
         logger.set_file_handler(fh)
+
         if IgnisLogging._file_logging_enabled:
             logger.enable_file_logging()
 
@@ -210,12 +211,13 @@ class IgnisLogReader:
 
         return sorted(glob.glob(search_path), key=os.path.getmtime)
 
-    def read_values(self, keys=None, from_datetime=None,
+    def read_values(self, log_files=None, keys=None, from_datetime=None,
                     from_datetime_format=None, to_datetime=None,
                     to_datetime_format=None):
         """
         Retrieves log lines.
 
+        :param log_files: List of log files to read from.
         :param keys: Retrieve only key value pairs of corresponding to keys.
             A row with no matching keys will not be
             retrieved. If not specified, all keys are retrieved (optional)
@@ -229,7 +231,11 @@ class IgnisLogReader:
             will assume "%Y/%m/%d %H:%M:%S" (optional)
         :return: A list containing the retrieved rows and key pair values
         """
-        files = self.get_log_files()
+
+        if log_files is not None:
+            files = [log_files] if isinstance(log_files, str) else log_files
+        else:
+            files = self.get_log_files()
         retrieved_date = list()
 
         for file in files:
@@ -281,7 +287,7 @@ class IgnisLogReader:
         """
         :return: True if the row should be filtered out
         """
-        if not isinstance(from_dt, datetime):
+        if from_dt is not None and not isinstance(from_dt, datetime):
             try:
                 if from_dt_fmt is None:
                     from_dt_fmt = IgnisLogging().default_datetime_fmt()
@@ -289,7 +295,7 @@ class IgnisLogReader:
             except ValueError as ve:
                 raise ve
 
-        if not isinstance(to_dt, datetime):
+        if to_dt is not None and not isinstance(to_dt, datetime):
             try:
                 if to_dt_fmt is None:
                     to_dt_fmt = IgnisLogging().default_datetime_fmt()
