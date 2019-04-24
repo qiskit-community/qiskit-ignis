@@ -186,7 +186,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     # go through for each seed
     for seed in range(nseeds):
         qr = qiskit.QuantumRegister(n_q_max+1, 'qr')
-        cr = qiskit.ClassicalRegister(n_q_max+1, 'cr')
+        cr = qiskit.ClassicalRegister(len(qlist_flat), 'cr')
         general_circ = qiskit.QuantumCircuit(qr, cr)
 
         # make Clifford sequences for each of the separate sequences in
@@ -237,8 +237,10 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                         rb_pattern[rb_pattern_index], qr)
 
                 # add measurement
-                # q->c is 1 to 1
-                circ.measure(qr, cr)
+                # qubits measure to the c registers as
+                # they appear in the pattern
+                for qind, qb in enumerate(qlist_flat):
+                    circ.measure(qr[qb], cr[qind])
 
                 circ.name = 'rb_length_%d_seed_%d' % (length_index,
                                                       seed + seed_offset)
