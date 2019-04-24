@@ -120,9 +120,8 @@ class TestMeasCal(unittest.TestCase):
 
                 # Perform an ideal execution on the generated circuits
                 backend = Aer.get_backend('qasm_simulator')
-                qobj = qiskit.compile(meas_calibs, backend=backend,
-                                      shots=self.shots)
-                job = backend.run(qobj)
+                job = qiskit.execute(meas_calibs, backend=backend,
+                                     shots=self.shots)
                 cal_results = job.result()
 
                 # Make a calibration matrix
@@ -188,9 +187,8 @@ class TestMeasCal(unittest.TestCase):
 
                     # Run the calibration circuits
                     backend = Aer.get_backend('qasm_simulator')
-                    qobj = qiskit.compile(meas_calibs, backend=backend,
-                                          shots=self.shots)
-                    job = backend.run(qobj)
+                    job = qiskit.execute(meas_calibs, backend=backend,
+                                         shots=self.shots)
                     cal_results = job.result()
 
                     # Make a calibration matrix
@@ -208,9 +206,8 @@ class TestMeasCal(unittest.TestCase):
                     ghz.measure(qr[q2], cr[1])
                     ghz.measure(qr[q3], cr[2])
 
-                    qobj = qiskit.compile([ghz], backend=backend,
-                                          shots=self.shots)
-                    job = backend.run(qobj)
+                    job = qiskit.execute([ghz], backend=backend,
+                                         shots=self.shots)
                     results = job.result()
 
                     # Predicted equally distributed results

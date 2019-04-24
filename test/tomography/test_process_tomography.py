@@ -25,8 +25,8 @@ def run_circuit_and_tomography(circuit, qubits):
     job = qiskit.execute(qst, Aer.get_backend('qasm_simulator'),
                          shots=5000)
     tomo_fit = tomo.ProcessTomographyFitter(job.result(), qst)
-    choi_cvx = tomo_fit.fit(method='cvx')
-    choi_mle = tomo_fit.fit(method='lstsq')
+    choi_cvx = tomo_fit.fit(method='cvx').data
+    choi_mle = tomo_fit.fit(method='lstsq').data
     return (choi_cvx, choi_mle, choi_ideal)
 
 
