@@ -52,7 +52,7 @@ install:
   - "conda install --update-deps -c conda-forge -y openblas cmake cython"
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "python -m pip install --disable-pip-version-check --upgrade pip"
+#  - "python -m pip install --disable-pip-version-check --upgrade pip"
   - "pip install tox"
 
 build: off
