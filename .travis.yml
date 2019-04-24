@@ -91,7 +91,7 @@ matrix:
 language: python
 install: pip install -U tox pip
 script:
-  - tox
+  - travis_wait tox
 
 notifications:
   email: false
