@@ -20,8 +20,6 @@ environment:
       PYTHON_VERSION: "3.6.1"
       PYTHON_ARCH: "64"
       TOX_ENV: "py36"
-      TOX_PIP_VERSION: "18.1"
-      VIRTUALENV_NO_DOWNLOAD: 1
 
 
 install:
@@ -51,11 +49,11 @@ install:
 
   - "conda install --update-deps -y mkl"
   # Aer build requirements
-  - "conda install --update-deps -c conda-forge -y openblas cmake cython"
+  - "conda install --update-deps -c conda-forge -y openblas cmake"
+  - "conda install pip=18.1"
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "python -m pip install --disable-pip-version-check --user pip==18.1"
-  - "pip install tox"
+  - "pip install tox tox-pip-version"
 
 build: off
 
