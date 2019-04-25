@@ -20,6 +20,7 @@ environment:
       PYTHON_VERSION: "3.6.1"
       PYTHON_ARCH: "64"
       TOX_ENV: "py36"
+      TOX_PIP_VERSION: "18.1"
 
 
 install:
@@ -52,7 +53,8 @@ install:
   - "conda install --update-deps -c conda-forge -y openblas cmake cython"
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-#  - "python -m pip install --disable-pip-version-check --upgrade pip"
+  - "python -m pip install --disable-pip-version-check --upgrade pip"
+  - "pip install tox-pip-version"
   - "pip install tox"
 
 build: off
