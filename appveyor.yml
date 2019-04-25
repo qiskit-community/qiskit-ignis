@@ -50,10 +50,10 @@ install:
   - "conda install --update-deps -y mkl"
   # Aer build requirements
   - "conda install --update-deps -c conda-forge -y openblas cmake"
-  - "conda install -y pip=18.1"
+  - "conda install -y pip=18.1 virtualenv"
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "pip install tox tox-pip-version"
+  - "pip install tox tox-virtualenv-no-download"
 
 build: off
 
