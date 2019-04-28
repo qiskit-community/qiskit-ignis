@@ -9,6 +9,7 @@
 Functions used for the analysis of quantum volume results.
 """
 
+import math
 import numpy as np
 from qiskit import QiskitError
 from ...characterization.fitters import build_counts_dict_from_list
@@ -270,6 +271,48 @@ class QVFitter:
 
         if show_plt:
             plt.show()
+
+    def qv_success(self):
+        """Return whether each depth was successful (>2/3) and with what
+        confidence.
+
+        Returns:
+            List of lenth depth with eact element a 3 list with
+            - success True/False
+            - error in the mean
+            - confidence
+        """
+
+        success_list = []
+
+        for depth_ind, _ in enumerate(self._depths):
+            success_list.append([])
+            hmean = self._ydata[0][depth_ind]
+            success_list[-1].append(hmean > (2/3))
+            success_list[-1].append(self._ydata[1][depth_ind] /
+                                    self._ntrials**0.5)
+            if success_list[-1][0]:
+                cfd = 0.5*(1 +
+                           math.erf((hmean - 2/3)
+                                    / (1e-10 + success_list[-1][1])/2**0.5))
+                success_list[-1].append(cfd)
+            else:
+                success_list[-1].append(0)
+
+        return success_list
+
+    def quantum_volume(self):
+        """Return the volume for each depth.
+
+        Returns:
+            List of quantum volumes
+        """
+
+        qv_list = np.min([self._depths, len(self._qubit_list) *
+                          np.ones(len(self._depths))], axis=0)
+        qv_list = 2**qv_list
+
+        return qv_list
 
     def _heavy_strings(self, ideal_distribution, ideal_median):
         """Return the set of heavy output strings.
