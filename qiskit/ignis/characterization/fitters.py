@@ -109,11 +109,11 @@ class BaseFitter:
         return self._series
 
     @property
-    def measured_qubit(self):
+    def measured_qubits(self):
         """
-        Return the index of the qubit whose characteristic time is measured
+        Return the indices of the qubits whose characteristic time is measured
         """
-        return self._qubit
+        return self._qubits
 
     @property
     def xdata(self):
