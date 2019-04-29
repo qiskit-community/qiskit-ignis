@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2019, IBM.
+# This code is part of Qiskit.
 #
-# This source code is licensed under the Apache License, Version 2.0 found in
-# the LICENSE.txt file in the root directory of this source tree.
+# (C) Copyright IBM Corp. 2017 and later.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 """
 Fitters of characteristic times
@@ -102,11 +109,11 @@ class BaseFitter:
         return self._series
 
     @property
-    def measured_qubit(self):
+    def measured_qubits(self):
         """
-        Return the index of the qubit whose characteristic time is measured
+        Return the indices of the qubits whose characteristic time is measured
         """
-        return self._qubit
+        return self._qubits
 
     @property
     def xdata(self):
