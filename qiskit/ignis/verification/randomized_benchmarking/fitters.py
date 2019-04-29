@@ -175,7 +175,7 @@ class RBFitter:
                     circ_name = 'rb_length_%d_seed_%d' % (k, i)
                     counts_subspace = marginal_counts(
                         circ_counts[circ_name],
-                        np.arange(startind,endind))
+                        np.arange(startind, endind))
                     self._raw_data[-1][i].append(
                         counts_subspace.get(string_of_0s, 0)
                         / circ_shots[circ_name])
