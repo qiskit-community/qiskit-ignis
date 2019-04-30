@@ -24,19 +24,17 @@ class TestQV(unittest.TestCase):
         """ Test circuit generation """
 
         # Qubit list
-        qubit_list = [0, 1, 2, 4, 7]
-        depth_list = [1, 2, 3, 4, 5, 6, 7]
+        qubit_lists = [[0, 1, 2], [0, 1, 2, 4], [0, 1, 2, 4, 7]]
         ntrials = 5
 
-        qv_circs, _ = qv.qv_circuits(qubit_list,
-                                     depth_list, ntrials)
+        qv_circs, _ = qv.qv_circuits(qubit_lists, ntrials)
 
         self.assertEqual(len(qv_circs), ntrials,
                          "Error: Not enough trials")
 
-        self.assertEqual(len(qv_circs[0]), len(depth_list),
+        self.assertEqual(len(qv_circs[0]), len(qubit_lists),
                          "Error: Not enough circuits for the "
-                         "number of specified depths")
+                         "number of specified qubit lists")
 
     def test_qv_fitter(self):
 
@@ -55,15 +53,16 @@ class TestQV(unittest.TestCase):
         exp_results = pickle.load(f0)
         f0.close()
 
-        qubit_list = [0, 1, 2, 4, 7]
-        depth_list = [1, 2, 3, 4, 5, 6, 7]
+        qubit_lists = [[0, 1, 3], [0, 1, 3, 5], [0, 1, 3, 5, 7],
+                       [0, 1, 3, 5, 7, 10]]
 
-        qv_fitter = qv.QVFitter(qubit_list=qubit_list, depth_list=depth_list)
+        qv_fitter = qv.QVFitter(qubit_lists=qubit_lists)
         qv_fitter.add_statevectors(ideal_results)
         qv_fitter.add_data(exp_results)
 
         qv_success_list = qv_fitter.qv_success()
-        self.assertTrue(qv_success_list[4][0])
+        self.assertTrue(qv_success_list[2][0])
+        self.assertFalse(qv_success_list[3][0])
 
 
 if __name__ == '__main__':

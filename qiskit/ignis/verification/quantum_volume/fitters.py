@@ -27,19 +27,18 @@ class QVFitter:
     """
 
     def __init__(self, backend_result=None, statevector_result=None,
-                 qubit_list=None,
-                 depth_list=None):
+                 qubit_lists=None):
         """
         Args:
             backend_result: list of results (qiskit.Result).
             statevector_result: the ideal statevectors of each circuit
-            qubit_list: list of qubits
-            depth_list: the depths explored in the results
+            qubit_lists: list of qubit lists (what was passed to the
+            circuit generation)
         """
 
-        self._depths = depth_list
-        self._qubit_list = qubit_list
-        self._width = len(qubit_list)
+
+        self._qubit_lists = qubit_lists
+        self._depths = [len(l) for l in qubit_lists]
         self._ntrials = 0
 
         self._result_list = []
@@ -54,6 +53,11 @@ class QVFitter:
     def depths(self):
         """Return depth list."""
         return self._depths
+
+    @property
+    def qubit_lists(self):
+        """Return depth list."""
+        return self._qubit_lists
 
     @property
     def results(self):
@@ -100,6 +104,10 @@ class QVFitter:
 
                 circname = qvcirc.header.name
 
+                # get the depth/width from the circuit name
+                # qv_depth_%d_trial_%d
+                depth = int(circname.split('_')[2])
+
                 if circname in self._heavy_outputs:
                     raise QiskitError("Already added the ideal result "
                                       "for circuit %s" % circname)
@@ -107,10 +115,10 @@ class QVFitter:
                 # convert the result into probability dictionary
                 qstate = result.get_statevector(circname)
                 pvector = np.multiply(qstate, qstate.conjugate())
-                format_spec = "{0:0%db}" % self._width
+                format_spec = "{0:0%db}" % depth
                 pmap = {format_spec.format(b):
                         float(np.real(pvector[b]))
-                        for b in range(2**self._width)}
+                        for b in range(2**depth)}
                 median_prob = self._median_probabilities([pmap])
                 self._heavy_outputs[qvcirc.header.name] = \
                     self._heavy_strings(pmap, median_prob[0])
@@ -205,7 +213,7 @@ class QVFitter:
         for plotting
         """
 
-        self._ydata = np.zeros([4, len(self._depths)], dtype=float)
+        self._ydata = np.zeros([6, len(self._depths)], dtype=float)
 
         exp_vals = np.zeros(self._ntrials, dtype=float)
         ideal_vals = np.zeros(self._ntrials, dtype=float)
@@ -219,8 +227,10 @@ class QVFitter:
 
             self._ydata[0][depthidx] = np.mean(exp_vals)
             self._ydata[1][depthidx] = np.std(exp_vals)
-            self._ydata[2][depthidx] = np.mean(ideal_vals)
-            self._ydata[3][depthidx] = np.std(ideal_vals)
+            self._ydata[2][depthidx] = np.std(exp_vals)/self._ntrials**0.5
+            self._ydata[3][depthidx] = np.mean(ideal_vals)
+            self._ydata[4][depthidx] = np.std(ideal_vals)
+            self._ydata[5][depthidx] = np.std(ideal_vals)/self._ntrials**0.5
 
     def plot_qv_data(self, ax=None, show_plt=True):
         """
@@ -243,17 +253,17 @@ class QVFitter:
             plt.figure()
             ax = plt.gca()
 
-        xdata = self._depths
+        xdata = range(len(self._depths))
 
         # Plot the experimental data with error bars
         ax.errorbar(xdata, self._ydata[0],
-                    yerr=self._ydata[1],
+                    yerr=self._ydata[2],
                     color='r', linestyle=None, marker='o', markersize=5,
                     label='Exp')
 
         # Plot the ideal data with error bars
-        ax.errorbar(xdata, self._ydata[2],
-                    yerr=self._ydata[3],
+        ax.errorbar(xdata, self._ydata[3],
+                    yerr=self._ydata[5],
                     color='b', linestyle=None, marker='o', markersize=5,
                     label='Ideal')
 
@@ -263,7 +273,10 @@ class QVFitter:
                 color='black', linestyle='--', linewidth=2, label='Threshold')
         ax.tick_params(labelsize=14)
 
-        ax.set_xlabel('Depth', fontsize=16)
+        ax.set_xticks(xdata)
+        ax.set_xticklabels(self._qubit_lists, rotation=45)
+
+        ax.set_xlabel('Qubit Subset', fontsize=16)
         ax.set_ylabel('Heavy Probability', fontsize=16)
         ax.grid(True)
 
@@ -279,7 +292,6 @@ class QVFitter:
         Returns:
             List of lenth depth with eact element a 3 list with
             - success True/False
-            - error in the mean
             - confidence
         """
 
@@ -289,12 +301,11 @@ class QVFitter:
             success_list.append([])
             hmean = self._ydata[0][depth_ind]
             success_list[-1].append(hmean > (2/3))
-            success_list[-1].append(self._ydata[1][depth_ind] /
-                                    self._ntrials**0.5)
             if success_list[-1][0]:
                 cfd = 0.5*(1 +
                            math.erf((hmean - 2/3)
-                                    / (1e-10 + success_list[-1][1])/2**0.5))
+                                    / (1e-10 +
+                                       self._ydata[1][depth_ind])/2**0.5))
                 success_list[-1].append(cfd)
             else:
                 success_list[-1].append(0)
@@ -308,9 +319,7 @@ class QVFitter:
             List of quantum volumes
         """
 
-        qv_list = np.min([self._depths, len(self._qubit_list) *
-                          np.ones(len(self._depths))], axis=0)
-        qv_list = 2**qv_list
+        qv_list = 2**np.array(self._depths)
 
         return qv_list
 

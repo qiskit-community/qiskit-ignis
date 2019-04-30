@@ -14,17 +14,18 @@ import qiskit
 from qiskit.quantum_info.random import random_unitary
 
 
-def qv_circuits(qubit_list=None, depth_list=None, ntrials=1,
+def qv_circuits(qubit_lists=None, ntrials=1,
                 qr=None, cr=None):
     """
-    Return a list of quantum volume circuits
+    Return a list of square quantum volume circuits (depth=width)
 
-    For the set of qubits listed (number of qubits here is the width)
-    circuits will be returned for the each of the depths in depth list
+    The qubit_lists is specified as a list of qubit lists. For each
+    set of qubits, circuits the depth as the number of qubits in the list
+    are generated
 
     Args:
-        qubit_list: list of qubits to apply qv circuits to
-        depth_list: list of depths (typically [0,1,2,..,d])
+        qubit_lists: list of list of qubits to apply qv circuits to. Assume
+        the list is ordered in increasing number of qubits
         ntrials: number of random iterations
         qr: quantum register to act on (if None one is created)
         cr: classical register to measure to (if None one is created)
@@ -39,17 +40,22 @@ def qv_circuits(qubit_list=None, depth_list=None, ntrials=1,
     circuits = [[] for e in range(ntrials)]
     circuits_nomeas = [[] for e in range(ntrials)]
 
-    n_q_max = np.max(qubit_list)
-    width = len(qubit_list)
+    # get the largest qubit number out of all the lists (for setting the
+    # register)
+
+    depth_list = [len(l) for l in qubit_lists]
 
     # go through for each trial
     for trial in range(ntrials):
-        qr = qiskit.QuantumRegister(int(n_q_max+1), 'qr')
-        qr2 = qiskit.QuantumRegister(int(width), 'qr')
-        cr = qiskit.ClassicalRegister(int(width), 'cr')
 
         # go through for each depth in the depth list
-        for depth in depth_list:
+        for depthidx, depth in enumerate(depth_list):
+
+            n_q_max = np.max(qubit_lists[depthidx])
+
+            qr = qiskit.QuantumRegister(int(n_q_max+1), 'qr')
+            qr2 = qiskit.QuantumRegister(int(depth), 'qr')
+            cr = qiskit.ClassicalRegister(int(depth), 'cr')
 
             qc = qiskit.QuantumCircuit(qr, cr)
             qc2 = qiskit.QuantumCircuit(qr2, cr)
@@ -60,20 +66,20 @@ def qv_circuits(qubit_list=None, depth_list=None, ntrials=1,
             # build the circuit
             for _ in range(depth):
                 # Generate uniformly random permutation Pj of [0...n-1]
-                perm = np.random.permutation(width)
+                perm = np.random.permutation(depth)
                 # For each pair p in Pj, generate Haar random SU(4)
-                for k in range(int(np.floor(width/2))):
+                for k in range(int(np.floor(depth/2))):
                     U = random_unitary(4)
                     pair = int(perm[2*k]), int(perm[2*k+1])
-                    qc.append(U, [qr[qubit_list[pair[0]]],
-                                  qr[qubit_list[pair[1]]]])
+                    qc.append(U, [qr[qubit_lists[depthidx][pair[0]]],
+                                  qr[qubit_lists[depthidx][pair[1]]]])
                     qc2.append(U, [qr2[pair[0]],
                                    qr2[pair[1]]])
 
             circuits_nomeas[trial].append(qc2)
 
             # add measurement
-            for qind, qubit in enumerate(qubit_list):
+            for qind, qubit in enumerate(qubit_lists[depthidx]):
                 qc.measure(qr[qubit], cr[qind])
 
             circuits[trial].append(qc)
