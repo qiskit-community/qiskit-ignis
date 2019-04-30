@@ -45,13 +45,11 @@ install:
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  - "conda install --update-deps -y mkl vs2017_win-64 vs2017_win-32 msvc_runtime"
-  # Aer build requirements
-  - "conda install --update-deps -c conda-forge -y openblas cmake"
-  - "conda install -y pip=18.1 virtualenv"
+  - "conda install --update-deps -y mkl"
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "pip install tox tox-virtualenv-no-download"
+  - "python -m pip install --disable-pip-version-check --upgrade pip"
+  - "pip install tox"
 
 build: off
 
