@@ -8,10 +8,6 @@ addons:
     packages:
       - gcc-4.8
       - g++-4.8
-      - libopenblas-dev
-      - g++-7
-      - cmake
-      - cython3
 
 install_osx: &stage_osx
   os: osx
@@ -89,9 +85,9 @@ matrix:
         - TOXENV=py37
 
 language: python
-install: pip install -U tox pip tox-pip-version
+install: pip install -U tox pip
 script:
-  - travis_wait tox
+  - tox
 
 notifications:
   email: false
