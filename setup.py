@@ -34,7 +34,7 @@ def find_qiskit_ignis_packages():
 
 setup(
     name="qiskit-ignis",
-    version="0.1.0",
+    version="0.2.0",
     description="Qiskit tools for quantum information science",
     url="https://github.com/Qiskit/qiskit-ignis",
     author="Qiskit Development Team",
