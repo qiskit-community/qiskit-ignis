@@ -234,20 +234,20 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     # interleaved rb sequences
                     if interleaved_gates is not None:
                         Cliffs_interleaved[rb_pattern_index] = \
-                            clutils.compose_gates( \
-                                Cliffs_interleaved[rb_pattern_index], \
+                            clutils.compose_gates(
+                                Cliffs_interleaved[rb_pattern_index],
                                 new_cliff_gatelist)
                         Cliffs_interleaved[rb_pattern_index] = \
-                            clutils.compose_gates( \
-                                Cliffs_interleaved[rb_pattern_index], \
+                            clutils.compose_gates(
+                                Cliffs_interleaved[rb_pattern_index],
                                 interleaved_gates)
-                        interleaved_circ += replace_q_indices( \
-                            clutils.get_quantum_circuit(new_cliff_gatelist, \
-                                                        rb_q_num), \
+                        interleaved_circ += replace_q_indices(
+                            clutils.get_quantum_circuit(new_cliff_gatelist,
+                                                        rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
-                        interleaved_circ += replace_q_indices( \
-                            clutils.get_quantum_circuit(interleaved_gates, \
-                                                        rb_q_num), \
+                        interleaved_circ += replace_q_indices(
+                            clutils.get_quantum_circuit(interleaved_gates,
+                                                        rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
 
                     # add a barrier
