@@ -14,6 +14,9 @@
 
 """
 Functions used for the analysis of quantum volume results.
+
+Based on Cross et al. "Validating quantum computers using
+randomized model circuits", arXiv:1811.12926
 """
 
 import math
@@ -48,7 +51,8 @@ class QVFitter:
         self._ntrials = 0
 
         self._result_list = []
-        self._heavy_output_prob = {}
+        self._heavy_output_counts = {}
+        self._circ_shots = {}
         self._heavy_output_prob_ideal = {}
         self._ydata = []
         self._heavy_outputs = {}
@@ -76,9 +80,9 @@ class QVFitter:
         return self._heavy_outputs
 
     @property
-    def heavy_output_prob(self):
-        """Return the heavy output probability as measured."""
-        return self._heavy_output_prob
+    def heavy_output_counts(self):
+        """Return the number of heavy output counts as measured."""
+        return self._heavy_output_counts
 
     @property
     def heavy_output_prob_ideal(self):
@@ -185,7 +189,6 @@ class QVFitter:
         """
 
         circ_counts = {}
-        circ_shots = {}
         for trialidx in range(self._ntrials):
             for _, depth in enumerate(self._depths):
                 circ_name = 'qv_depth_%d_trial_%d' % (depth, trialidx)
@@ -201,42 +204,46 @@ class QVFitter:
                 circ_counts[circ_name] = \
                     build_counts_dict_from_list(count_list)
 
-                circ_shots[circ_name] = sum(circ_counts[circ_name].values())
-
-                # normalize
-                for state in circ_counts[circ_name]:
-                    circ_counts[circ_name][state] /= circ_shots[circ_name]
+                self._circ_shots[circ_name] = \
+                    sum(circ_counts[circ_name].values())
 
                 # calculate the heavy output probability
-                self._heavy_output_prob[circ_name] = \
+                self._heavy_output_counts[circ_name] = \
                     self._subset_probability(
                         self._heavy_outputs[circ_name],
                         circ_counts[circ_name])
 
     def calc_statistics(self):
         """
-        Convert the heavy outputs in the different trials into mean and std
+        Convert the heavy outputs in the different trials into mean and error
         for plotting
+
+        Here we assume the error is due to a binomial distribution
         """
 
-        self._ydata = np.zeros([6, len(self._depths)], dtype=float)
+        self._ydata = np.zeros([4, len(self._depths)], dtype=float)
 
         exp_vals = np.zeros(self._ntrials, dtype=float)
         ideal_vals = np.zeros(self._ntrials, dtype=float)
 
         for depthidx, depth in enumerate(self._depths):
 
+            exp_shots = 0
+
             for trialidx in range(self._ntrials):
                 cname = 'qv_depth_%d_trial_%d' % (depth, trialidx)
-                exp_vals[trialidx] = self._heavy_output_prob[cname]
+                exp_vals[trialidx] = self._heavy_output_counts[cname]
+                exp_shots += self._circ_shots[cname]
                 ideal_vals[trialidx] = self._heavy_output_prob_ideal[cname]
 
-            self._ydata[0][depthidx] = np.mean(exp_vals)
-            self._ydata[1][depthidx] = np.std(exp_vals)
-            self._ydata[2][depthidx] = np.std(exp_vals)/self._ntrials**0.5
-            self._ydata[3][depthidx] = np.mean(ideal_vals)
-            self._ydata[4][depthidx] = np.std(ideal_vals)
-            self._ydata[5][depthidx] = np.std(ideal_vals)/self._ntrials**0.5
+            self._ydata[0][depthidx] = np.sum(exp_vals)/np.sum(exp_shots)
+            self._ydata[1][depthidx] = (self._ydata[0][depthidx] *
+                                        (1.0-self._ydata[0][depthidx])
+                                        / self._ntrials)**0.5
+            self._ydata[2][depthidx] = np.mean(ideal_vals)
+            self._ydata[3][depthidx] = (self._ydata[2][depthidx] *
+                                        (1.0-self._ydata[2][depthidx])
+                                        / self._ntrials)**0.5
 
     def plot_qv_data(self, ax=None, show_plt=True):
         """
@@ -263,13 +270,13 @@ class QVFitter:
 
         # Plot the experimental data with error bars
         ax.errorbar(xdata, self._ydata[0],
-                    yerr=self._ydata[2],
+                    yerr=self._ydata[1],
                     color='r', linestyle=None, marker='o', markersize=5,
                     label='Exp')
 
         # Plot the ideal data with error bars
-        ax.errorbar(xdata, self._ydata[3],
-                    yerr=self._ydata[5],
+        ax.errorbar(xdata, self._ydata[2],
+                    yerr=self._ydata[3],
                     color='b', linestyle=None, marker='o', markersize=5,
                     label='Ideal')
 
@@ -292,8 +299,8 @@ class QVFitter:
             plt.show()
 
     def qv_success(self):
-        """Return whether each depth was successful (>2/3) and with what
-        confidence.
+        """Return whether each depth was successful (>2/3 with confidence
+        greater than 97.5) and the confidence
 
         Returns:
             List of lenth depth with eact element a 3 list with
@@ -304,17 +311,17 @@ class QVFitter:
         success_list = []
 
         for depth_ind, _ in enumerate(self._depths):
-            success_list.append([])
+            success_list.append([False, 0.0])
             hmean = self._ydata[0][depth_ind]
-            success_list[-1].append(hmean > (2/3))
-            if success_list[-1][0]:
-                cfd = 0.5*(1 +
-                           math.erf((hmean - 2/3)
-                                    / (1e-10 +
-                                       self._ydata[1][depth_ind])/2**0.5))
-                success_list[-1].append(cfd)
-            else:
-                success_list[-1].append(0)
+            if hmean > 2/3:
+                cfd = 0.5 * (1 +
+                             math.erf((hmean - 2/3)
+                                      / (1e-10 +
+                                         self._ydata[1][depth_ind])/2**0.5))
+                success_list[-1][1] = cfd
+
+                if cfd > 0.975:
+                    success_list[-1][0] = True
 
         return success_list
 
