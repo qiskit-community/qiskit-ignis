@@ -70,5 +70,6 @@ class TestQV(unittest.TestCase):
         qv_success_list = qv_fitter.qv_success()
         self.assertFalse(qv_success_list[0][0])
 
+
 if __name__ == '__main__':
     unittest.main()
