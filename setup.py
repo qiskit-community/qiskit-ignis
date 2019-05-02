@@ -57,5 +57,6 @@ setup(
     packages=find_qiskit_ignis_packages(),
     install_requires=requirements,
     include_package_data=True,
-    python_requires=">=3.5"
+    python_requires=">=3.5",
+    zip_safe=False
 )
