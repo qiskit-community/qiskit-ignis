@@ -17,7 +17,7 @@ from setuptools import setup, find_packages
 
 requirements = [
     "numpy>=1.13",
-    "qiskit-terra>=0.7.0",
+    "qiskit-terra>=0.8.0",
     "scipy>=0.19,!=0.19.1",
 ]
 
