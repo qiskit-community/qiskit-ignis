@@ -38,25 +38,33 @@ class CompleteMeasFitter():
     Measurement correction fitter for a full calibration
     """
 
-    def __init__(self, results, state_labels, circlabel=''):
+    def __init__(self, results, state_labels, qubit_list=None, circlabel=''):
         """
         Initialize a measurement calibration matrix from the results of running
         the circuits returned by `measurement_calibration_circuits`
 
         Args:
             results: the results of running the measurement calibration
-            ciruits. If this is None the user will set a calibrarion matrix
+            circuits. If this is None the user will set a calibrarion matrix
             later
 
             state_labels: list of calibration state labels
             returned from `measurement_calibration_circuits`. The output matrix
             will obey this ordering.
+
+            qubit_list: List of the qubits (for reference and if the
+            subset is needed)
+
+            circlabel: if the qubits were labeled
         """
 
         self._results = results
         self._state_labels = state_labels
         self._cal_matrix = None
         self._circlabel = circlabel
+        if qubit_list is None:
+            qubit_list = range(len(state_labels[0]))
+        self._qubit_list = qubit_list
 
         if self._results is not None:
             self._build_calibration_matrix()
@@ -76,6 +84,11 @@ class CompleteMeasFitter():
         """Return state_labels."""
         return self._state_labels
 
+    @property
+    def qubit_list(self):
+        """Return list of qubits."""
+        return self._qubit_list
+
     @state_labels.setter
     def state_labels(self, new_state_labels):
         """set state label."""
@@ -85,6 +98,75 @@ class CompleteMeasFitter():
     def filter(self):
         """return a measurement filter using the cal matrix"""
         return MeasurementFilter(self._cal_matrix, self._state_labels)
+
+    def subset_fitter(self, qubit_sublist=None):
+        """
+        Return a fitter object that is a subset of the qubits in the original
+        list.
+
+        Args:
+            qubit_sublist: must be a subset of qubit_list
+
+        Returns:
+            A fitter than has the calibration for a subset of qubits
+
+        """
+
+        if self._cal_matrix is None:
+            raise QiskitError("Calibration matrix is not initialized")
+
+        if qubit_sublist is None:
+            raise QiskitError("Qubit sublist must be specified")
+
+        for qb in qubit_sublist:
+            if qb not in self._qubit_list:
+                raise QiskitError("Qubit not in the original set of qubits")
+
+        # build state labels
+        new_state_labels = count_keys(len(qubit_sublist))
+
+        # mapping between indices in the state_labels and the qubits in
+        # the sublist
+        qubit_sublist_ind = []
+        for sqb in qubit_sublist:
+            for qbind, qb in enumerate(self._qubit_list):
+                if qb == sqb:
+                    qubit_sublist_ind.append(qbind)
+
+        # states in the full calibration which correspond
+        # to the reduced labels
+        q_q_mapping = []
+        state_labels_reduced = []
+        for label in self._state_labels:
+            tmplabel = [label[l] for l in qubit_sublist_ind]
+            state_labels_reduced.append(''.join(tmplabel))
+
+        for sub_lab_ind, _ in enumerate(new_state_labels):
+            q_q_mapping.append([])
+            for labelind, label in enumerate(state_labels_reduced):
+                if label == new_state_labels[sub_lab_ind]:
+                    q_q_mapping[-1].append(labelind)
+
+        new_fitter = CompleteMeasFitter(results=None,
+                                        state_labels=new_state_labels,
+                                        qubit_list=qubit_sublist)
+
+        new_cal_matrix = np.zeros([len(new_state_labels),
+                                   len(new_state_labels)])
+
+        # do a partial trace
+        for i in range(len(new_state_labels)):
+            for j in range(len(new_state_labels)):
+
+                for l in q_q_mapping[i]:
+                    for k in q_q_mapping[j]:
+                        new_cal_matrix[i, j] += self._cal_matrix[l, k]
+
+                new_cal_matrix[i, j] /= len(q_q_mapping[i])
+
+        new_fitter.cal_matrix = new_cal_matrix
+
+        return new_fitter
 
     def readout_fidelity(self, label_list=None):
         """
