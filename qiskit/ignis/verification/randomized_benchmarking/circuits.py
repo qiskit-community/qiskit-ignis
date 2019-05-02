@@ -169,8 +169,9 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         of cliffords including the length multiplier so if the multiplier
         is [1,3] it will barrier after 1 clifford for the first pattern
         and 3 for the second)
-        interleaved_gates: A Clifford element that will be interleaved
-        (for interleaved randomized benchmarking)
+        interleaved_gates: A list of gates of Clifford elements that
+        will be interleaved (for interleaved randomized benchmarking)
+        The length of the list would equal the length of the rb_pattern).
 
     Returns:
         circuits: list of lists of circuits for the rb sequences (separate list
@@ -219,7 +220,6 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         length_index = 0
         for cliff_index in range(length_vector[-1]):
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
-
                 for _ in range(length_multiplier[rb_pattern_index]):
 
                     new_cliff_gatelist = clutils.random_clifford_gates(
@@ -231,6 +231,10 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                                     rb_q_num),
                         rb_pattern[rb_pattern_index], qr)
 
+                    # add a barrier
+                    general_circ.barrier(
+                        *[qr[x] for x in rb_pattern[rb_pattern_index]])
+
                     # interleaved rb sequences
                     if interleaved_gates is not None:
                         Cliffs_interleaved[rb_pattern_index] = \
@@ -240,21 +244,19 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                         Cliffs_interleaved[rb_pattern_index] = \
                             clutils.compose_gates(
                                 Cliffs_interleaved[rb_pattern_index],
-                                interleaved_gates)
+                                interleaved_gates[rb_pattern_index])
                         interleaved_circ += replace_q_indices(
                             clutils.get_quantum_circuit(new_cliff_gatelist,
                                                         rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
+                        # add a barrier - interleaved rb
+                        interleaved_circ.barrier(
+                                *[qr[x] for x in rb_pattern[rb_pattern_index]])
                         interleaved_circ += replace_q_indices(
-                            clutils.get_quantum_circuit(interleaved_gates,
+                            clutils.get_quantum_circuit(interleaved_gates[rb_pattern_index],
                                                         rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
-
-                    # add a barrier
-                    general_circ.barrier(
-                        *[qr[x] for x in rb_pattern[rb_pattern_index]])
-                    # add a barrier - interleaved rb
-                    if interleaved_gates is not None:
+                        # add a barrier - interleaved rb
                         interleaved_circ.barrier(
                             *[qr[x] for x in rb_pattern[rb_pattern_index]])
 

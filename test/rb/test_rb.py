@@ -24,7 +24,6 @@ import random
 import qiskit
 import qiskit.ignis.verification.randomized_benchmarking as rb
 
-
 class TestRB(unittest.TestCase):
     """ The test class """
 
@@ -82,6 +81,22 @@ class TestRB(unittest.TestCase):
             res = [i + 1 for i in range(len_pattern)]
 
         return res
+
+    @staticmethod
+    def choose_interleaved_gates(rb_pattern):
+        '''
+        :param rb_pattern
+        :return: interleaved_gates:
+        A list of gates of Clifford elements that
+        will be interleaved (for interleaved randomized benchmarking)
+        The length of the list would equal the length of the rb_pattern).
+        '''
+        pattern_sizes = [len(pat) for pat in rb_pattern]
+        interleaved_gates = []
+        for (rb_pattern_index, nq) in enumerate(pattern_sizes):
+            interleaved_gates.append(
+                rb.clifford_utils.random_clifford_gates(nq))
+        return interleaved_gates
 
     def verify_circuit(self, circ, nq, rb_opts, vec_len, result, shots):
         '''
@@ -150,7 +165,7 @@ class TestRB(unittest.TestCase):
                 for multiplier_type in range(2):
                     # See documentation of choose_pattern for the meaning of
                     # the different pattern types
-
+                    # Choose options for standard (simultaneous) RB:
                     rb_opts = {}
                     rb_opts['nseeds'] = 3
                     rb_opts['length_vector'] = [1, 3, 4, 7]
@@ -161,10 +176,28 @@ class TestRB(unittest.TestCase):
                         continue
                     rb_opts['length_multiplier'] = self.choose_multiplier(
                         multiplier_type, len(rb_opts['rb_pattern']))
+                    # Choose options for interleaved RB:
+                    rb_opts_interleaved = rb_opts.copy()
+                    rb_opts_interleaved['interleaved_gates'] = \
+                        self.choose_interleaved_gates(rb_opts['rb_pattern'])
+                    # print (rb_opts_interleaved)
 
                     # Generate the sequences
                     try:
+                        # Standard (simultaneous) RB sequences:
                         rb_circs, _ = rb.randomized_benchmarking_seq(**rb_opts)
+                        # Interleaved RB sequences:
+                        rb_original_circs, _, rb_interleaved_circs = \
+                            rb.randomized_benchmarking_seq(**rb_opts_interleaved)
+                        #print(rb_original_circs[0][0])
+                        #print(rb_interleaved_circs[0][0])
+                        #print(rb_original_circs[0][1])
+                        #print(rb_interleaved_circs[0][1])
+                        #print(rb_original_circs[0][2])
+                        #print(rb_interleaved_circs[0][2])
+                        #print(rb_original_circs[0][3])
+                        #print(rb_interleaved_circs[0][3])
+
                     except OSError:
                         skip_msg = ('Skipping tests for %s qubits because '
                                     'tables are missing' % str(nq))
@@ -175,9 +208,19 @@ class TestRB(unittest.TestCase):
                     basis_gates = ['u1', 'u2', 'u3', 'cx']
                     shots = 100
                     result = []
+                    result_original = []
+                    result_interleaved = []
                     for seed in range(rb_opts['nseeds']):
                         result.append(
                             qiskit.execute(rb_circs[seed], backend=backend,
+                                           basis_gates=basis_gates,
+                                           shots=shots).result())
+                        result_original.append(
+                            qiskit.execute(rb_original_circs[seed], backend=backend,
+                                           basis_gates=basis_gates,
+                                           shots=shots).result())
+                        result_interleaved.append(
+                            qiskit.execute(rb_interleaved_circs[seed], backend=backend,
                                            basis_gates=basis_gates,
                                            shots=shots).result())
 
@@ -191,9 +234,26 @@ class TestRB(unittest.TestCase):
                                 'rb_length_%d_seed_%d' % (
                                     circ_index, seed),
                                 'Error: incorrect circuit name')
+                            self.assertEqual(
+                                rb_original_circs[seed][circ_index].name,
+                                'rb_length_%d_seed_%d' % (
+                                    circ_index, seed),
+                                'Error: incorrect circuit name')
+                            self.assertEqual(
+                                rb_interleaved_circs[seed][circ_index].name,
+                                'rb_interleaved_length_%d_seed_%d' % (
+                                    circ_index, seed),
+                                'Error: incorrect circuit name')
+
                             self.verify_circuit(rb_circs[seed][circ_index],
                                                 nq, rb_opts,
                                                 vec_len, result[seed], shots)
+                            self.verify_circuit(rb_original_circs[seed][circ_index],
+                                                nq, rb_opts,
+                                                vec_len, result_original[seed], shots)
+                            #self.verify_circuit(rb_interleaved_circs[seed][circ_index],
+                            #                    nq, rb_opts,
+                            #                    2*vec_len, result_interleaved[seed], shots)
 
                     self.assertEqual(circ_index, len(rb_circs),
                                      "Error: additional circuits exist")
