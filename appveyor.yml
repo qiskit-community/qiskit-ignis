@@ -9,14 +9,14 @@ environment:
   matrix:
 # NOTE(mtreinish): Python 3.7 and Python 3.5 temporarily disabled because of
 # broken Aer wheels for windows:
-#    - PYTHON: "C:\\Miniconda37-x64"
-#      PYTHON_VERSION: "3.7.0"
-#      PYTHON_ARCH: "64"
-#      TOX_ENV: "py37"
-#    - PYTHON: "C:\\Miniconda35-x64"
-#      PYTHON_VERSION: "3.5.3"
-#      PYTHON_ARCH: "64"
-#      TOX_ENV: "py35"
+    - PYTHON: "C:\\Miniconda37-x64"
+      PYTHON_VERSION: "3.7.0"
+      PYTHON_ARCH: "64"
+      TOX_ENV: "py37"
+    - PYTHON: "C:\\Miniconda35-x64"
+      PYTHON_VERSION: "3.5.3"
+      PYTHON_ARCH: "64"
+      TOX_ENV: "py35"
     - PYTHON: "C:\\Miniconda36-x64"
       PYTHON_VERSION: "3.6.1"
       PYTHON_ARCH: "64"
