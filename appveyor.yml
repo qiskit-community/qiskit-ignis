@@ -49,7 +49,7 @@ install:
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   - "python -m pip install --disable-pip-version-check --upgrade pip"
-  - "pip install tox"
+  - "pip install --ignore-installed tox"
 
 build: off
 
