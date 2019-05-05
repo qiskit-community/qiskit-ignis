@@ -27,16 +27,27 @@ class IgnisLogger(logging.getLoggerClass()):
 
     """
     def __init__(self, name, level=logging.NOTSET):
+        """
+        :param name: name of the logger. Usually set to package name using
+            __name__
+        :param level: Verbosity level (use logging package enums)
+        """
         Logger.__init__(self, name, level)
         self._file_logging_enabled = False
         self._file_handler = None
+        self._conf_file_exists = False
+        self._warning_omitted = False
 
-    def set_file_handler(self, fh):
+    def configure(self, fh, conf_file_exists):
         """
-        Sets the file handler to be used for file logging. Should only called
+        Internal configuration method of IgnisLogger. Should only be called
         by IgnisLogger
+
+        :param fh: FileHandler object
+        :param conf_file_exists: Wheter or not a file config exists
         """
         self._file_handler = fh
+        self._conf_file_exists = conf_file_exists
 
     def log_to_file(self, **kargs):
         """
@@ -46,7 +57,15 @@ class IgnisLogger(logging.getLoggerClass()):
         :param kargs: Keyword parameters to be logged (e.g t1=0.02,
         qubits=[1,2,4])
         """
-        if not self._file_logging_enabled or self._file_handler is None:
+        assert(self._file_handler is not None), "file_handler is not set"
+        if not self._file_logging_enabled:
+            if not self._warning_omitted:  # Omitting this warning only once
+                msg = "File logging is disabled"
+                if not self._conf_file_exists:
+                    msg += ": no config file"
+                logger = logging.getLogger(__name__)
+                logger.warning(msg)
+                self._warning_omitted = True
             return
 
         Logger.addHandler(self, self._file_handler)
@@ -102,6 +121,7 @@ class IgnisLogging:
     _max_rotations = 0
     _log_label = "ignis_logging"
     _default_datefmt = '%Y/%m/%d %H:%M:%S'
+    _config_file_exists = False
 
     # Making the class a Singleton
     def __new__(cls):
@@ -128,6 +148,7 @@ class IgnisLogging:
                     if len(line) < 2:
                         continue
                     config[line[0].strip().lower()] = line[1].strip().lower()
+            IgnisLogging._config_file_exists = True
 
         return config
 
@@ -176,7 +197,7 @@ class IgnisLogging:
             '%(asctime)s {} %(message)s'.format(IgnisLogging._log_label),
             datefmt=IgnisLogging._default_datefmt)
         fh.setFormatter(formatter)
-        logger.set_file_handler(fh)
+        logger.configure(fh, IgnisLogging._config_file_exists)
 
         if IgnisLogging._file_logging_enabled:
             logger.enable_file_logging()
