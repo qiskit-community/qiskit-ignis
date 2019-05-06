@@ -138,8 +138,8 @@ class TestRB(unittest.TestCase):
                         while ops[op_index][0].name != 'barrier':
                             # Verify that the gate acts on the correct qubits
                             # This happens if the sequence is composed of the
-                            # correct sub-sequences, as specified by vec_len and
-                            # rb_opts
+                            # correct sub-sequences, as specified by vec_len
+                            # and rb_opts
                             self.assertTrue(
                                 all(x[1] in rb_opts['rb_pattern'][pat_index]
                                     for x in ops[op_index][1]),
@@ -192,7 +192,8 @@ class TestRB(unittest.TestCase):
                         rb_circs, _ = rb.randomized_benchmarking_seq(**rb_opts)
                         # Interleaved RB sequences:
                         rb_original_circs, _, rb_interleaved_circs = \
-                            rb.randomized_benchmarking_seq(**rb_opts_interleaved)
+                            rb.randomized_benchmarking_seq(
+                                **rb_opts_interleaved)
 
                     except OSError:
                         skip_msg = ('Skipping tests for %s qubits because '
@@ -212,11 +213,13 @@ class TestRB(unittest.TestCase):
                                            basis_gates=basis_gates,
                                            shots=shots).result())
                         result_original.append(
-                            qiskit.execute(rb_original_circs[seed], backend=backend,
+                            qiskit.execute(rb_original_circs[seed],
+                                           backend=backend,
                                            basis_gates=basis_gates,
                                            shots=shots).result())
                         result_interleaved.append(
-                            qiskit.execute(rb_interleaved_circs[seed], backend=backend,
+                            qiskit.execute(rb_interleaved_circs[seed],
+                                           backend=backend,
                                            basis_gates=basis_gates,
                                            shots=shots).result())
 
@@ -244,12 +247,17 @@ class TestRB(unittest.TestCase):
                             self.verify_circuit(rb_circs[seed][circ_index],
                                                 nq, rb_opts,
                                                 vec_len, result[seed], shots)
-                            self.verify_circuit(rb_original_circs[seed][circ_index],
+                            self.verify_circuit(rb_original_circs[seed]
+                                                [circ_index],
                                                 nq, rb_opts,
-                                                vec_len, result_original[seed], shots)
-                            self.verify_circuit(rb_interleaved_circs[seed][circ_index],
+                                                vec_len,
+                                                result_original[seed], shots)
+                            self.verify_circuit(rb_interleaved_circs[seed]
+                                                [circ_index],
                                                 nq, rb_opts_interleaved,
-                                                vec_len, result_interleaved[seed], shots,
+                                                vec_len,
+                                                result_interleaved[seed],
+                                                shots,
                                                 is_interleaved=True)
 
                     self.assertEqual(circ_index, len(rb_circs),
