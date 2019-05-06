@@ -85,7 +85,7 @@ class TestRB(unittest.TestCase):
     @staticmethod
     def choose_interleaved_gates(rb_pattern):
         '''
-        :param rb_pattern
+        :param rb_pattern: pattern for randomized benchmarking
         :return: interleaved_gates:
         A list of gates of Clifford elements that
         will be interleaved (for interleaved randomized benchmarking)
@@ -98,7 +98,8 @@ class TestRB(unittest.TestCase):
                 rb.clifford_utils.random_clifford_gates(nq))
         return interleaved_gates
 
-    def verify_circuit(self, circ, nq, rb_opts, vec_len, result, shots):
+    def verify_circuit(self, circ, nq, rb_opts, vec_len, result, shots,
+                       is_interleaved=False):
         '''
         For a single sequence, verifies that it meets the requirements:
         - Executing it on the ground state ends up in the ground state
@@ -114,6 +115,7 @@ class TestRB(unittest.TestCase):
         :param result: the output of the simulator
                        when executing all the sequences on the ground state
         :param shots: the number of shots in the simulator execution
+        :param is_interleaved: True if this is an interleaved circuit
         '''
 
         if not hasattr(rb_opts['length_multiplier'], "__len__"):
@@ -129,19 +131,22 @@ class TestRB(unittest.TestCase):
             for pat_index in range(len(rb_opts['rb_pattern'])):
                 # for each Clifford...
                 for _ in range(rb_opts['length_multiplier'][pat_index]):
-                    # for each basis gate...
-                    while ops[op_index][0].name != 'barrier':
-                        # Verify that the gate acts on the correct qubits
-                        # This happens if the sequence is composed of the
-                        # correct sub-sequences, as specified by vec_len and
-                        # rb_opts
-                        self.assertTrue(
-                            all(x[1] in rb_opts['rb_pattern'][pat_index]
-                                for x in ops[op_index][1]),
-                            "Error: operation acts on incorrect qubits")
+                    # if we have an interleaved RB circuit,
+                    # then we have twice as many Cliffords
+                    for _ in range(is_interleaved+1):
+                        # for each basis gate...
+                        while ops[op_index][0].name != 'barrier':
+                            # Verify that the gate acts on the correct qubits
+                            # This happens if the sequence is composed of the
+                            # correct sub-sequences, as specified by vec_len and
+                            # rb_opts
+                            self.assertTrue(
+                                all(x[1] in rb_opts['rb_pattern'][pat_index]
+                                    for x in ops[op_index][1]),
+                                "Error: operation acts on incorrect qubits")
+                            op_index += 1
+                        # increment because of the barrier gate
                         op_index += 1
-                    # increment because of the barrier gate
-                    op_index += 1
         # check if the ground state returns
         self.assertEqual(result.
                          get_counts(circ)['{0:b}'.format(0).zfill(nq)], shots,
@@ -180,7 +185,6 @@ class TestRB(unittest.TestCase):
                     rb_opts_interleaved = rb_opts.copy()
                     rb_opts_interleaved['interleaved_gates'] = \
                         self.choose_interleaved_gates(rb_opts['rb_pattern'])
-                    # print (rb_opts_interleaved)
 
                     # Generate the sequences
                     try:
@@ -189,14 +193,6 @@ class TestRB(unittest.TestCase):
                         # Interleaved RB sequences:
                         rb_original_circs, _, rb_interleaved_circs = \
                             rb.randomized_benchmarking_seq(**rb_opts_interleaved)
-                        #print(rb_original_circs[0][0])
-                        #print(rb_interleaved_circs[0][0])
-                        #print(rb_original_circs[0][1])
-                        #print(rb_interleaved_circs[0][1])
-                        #print(rb_original_circs[0][2])
-                        #print(rb_interleaved_circs[0][2])
-                        #print(rb_original_circs[0][3])
-                        #print(rb_interleaved_circs[0][3])
 
                     except OSError:
                         skip_msg = ('Skipping tests for %s qubits because '
@@ -251,9 +247,10 @@ class TestRB(unittest.TestCase):
                             self.verify_circuit(rb_original_circs[seed][circ_index],
                                                 nq, rb_opts,
                                                 vec_len, result_original[seed], shots)
-                            #self.verify_circuit(rb_interleaved_circs[seed][circ_index],
-                            #                    nq, rb_opts,
-                            #                    2*vec_len, result_interleaved[seed], shots)
+                            self.verify_circuit(rb_interleaved_circs[seed][circ_index],
+                                                nq, rb_opts_interleaved,
+                                                vec_len, result_interleaved[seed], shots,
+                                                is_interleaved=True)
 
                     self.assertEqual(circ_index, len(rb_circs),
                                      "Error: additional circuits exist")
