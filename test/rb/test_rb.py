@@ -24,6 +24,7 @@ import random
 import qiskit
 import qiskit.ignis.verification.randomized_benchmarking as rb
 
+
 class TestRB(unittest.TestCase):
     """ The test class """
 
