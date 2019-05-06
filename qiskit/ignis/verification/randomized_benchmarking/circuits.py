@@ -253,7 +253,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                         interleaved_circ.barrier(
                                 *[qr[x] for x in rb_pattern[rb_pattern_index]])
                         interleaved_circ += replace_q_indices(
-                            clutils.get_quantum_circuit(interleaved_gates[rb_pattern_index],
+                            clutils.get_quantum_circuit(interleaved_gates
+                                                        [rb_pattern_index],
                                                         rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
                         # add a barrier - interleaved rb
