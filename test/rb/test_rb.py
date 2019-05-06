@@ -94,7 +94,7 @@ class TestRB(unittest.TestCase):
         '''
         pattern_sizes = [len(pat) for pat in rb_pattern]
         interleaved_gates = []
-        for (rb_pattern_index, nq) in enumerate(pattern_sizes):
+        for (_, nq) in enumerate(pattern_sizes):
             interleaved_gates.append(
                 rb.clifford_utils.random_clifford_gates(nq))
         return interleaved_gates
