@@ -132,8 +132,8 @@ class TestRB(unittest.TestCase):
             for pat_index in range(len(rb_opts['rb_pattern'])):
                 # for each Clifford...
                 for _ in range(rb_opts['length_multiplier'][pat_index]):
-                    # if we have an interleaved RB circuit,
-                    # then we have twice as many Cliffords
+                    # if it is an interleaved RB circuit,
+                    # then it has twice as many Cliffords
                     for _ in range(is_interleaved+1):
                         # for each basis gate...
                         while ops[op_index][0].name != 'barrier':
@@ -153,6 +153,84 @@ class TestRB(unittest.TestCase):
                          get_counts(circ)['{0:b}'.format(0).zfill(nq)], shots,
                          "Error: %d qubit RB does not return the \
                          ground state back to the ground state" % nq)
+
+    def compare_interleaved_circuit(self, original_circ, interleaved_circ,
+                                    nq, rb_opts_interleaved, vec_len):
+        '''
+        Verifies that interleaved RB circuits meet the requirements:
+        - The non-interleaved Clifford gates are the same as the
+        original Clifford gates.
+        - The interleaved Clifford gates are the same as the ones
+        given in: rb_opts_interleaved['interleaved_gates'] - TBD
+        :param original_circ: original rb circuits
+        :param interleaved_circ: interleaved rb circuits
+        :param nq: number of qubits
+        :param rb_opts_interleaved: the specification that
+        generated the set of sequences which includes circ
+        :param vec_len: the expected length vector of circ
+        (one of rb_opts['length_vector'])
+        '''
+
+        if not hasattr(rb_opts_interleaved['length_multiplier'], "__len__"):
+            rb_opts_interleaved['length_multiplier'] = [
+                rb_opts_interleaved['length_multiplier'] for i in range(
+                    len(rb_opts_interleaved['rb_pattern']))]
+
+        original_ops = original_circ.data
+        interleaved_ops = interleaved_circ.data
+
+        original_op_index = 0
+        interleaved_op_index = 0
+        # for each cycle (the sequence should consist of vec_len cycles)
+        for _ in range(vec_len):
+            # for each component of the pattern...
+            for pat_index in range(len(rb_opts_interleaved['rb_pattern'])):
+                # for each Clifford...
+                for _ in range(rb_opts_interleaved['length_multiplier'][pat_index]):
+                    # original RB sequence
+                    original_gate_list = []
+                    while original_ops[original_op_index][0].name != 'barrier':
+                        gate = original_ops[original_op_index][0].name
+                        for x in original_ops[original_op_index][1]:
+                            gate += ' ' + str(x[1])
+                        original_gate_list.append(gate)
+                        original_op_index += 1
+                    original_op_index += 1
+
+                    # interleaved RB sequence
+                    compared_gate_list = []
+                    while interleaved_ops[interleaved_op_index][0].name != 'barrier':
+                        gate = interleaved_ops[interleaved_op_index][0].name
+                        for x in interleaved_ops[interleaved_op_index][1]:
+                            gate += ' ' + str(x[1])
+                        compared_gate_list.append(gate)
+                        interleaved_op_index += 1
+                    interleaved_op_index += 1
+
+                    # Clifford gates in the interleaved RB sequence
+                    # should be equal to original gates
+                    self.assertEqual(original_gate_list, compared_gate_list,
+                                     "Error: The gates in the %d qubit interleaved RB \
+                                     are not the same as in the original RB circuits"
+                                     %nq)
+                    # Clifford gates in the interleaved RB sequence
+                    # should be equal to the given gates in
+                    # rb_opts_interleaved['interleaved_gates']
+                    interleaved_gate_list = []
+                    while interleaved_ops[interleaved_op_index][0].name != 'barrier':
+                        gate = interleaved_ops[interleaved_op_index][0].name
+                        for x in interleaved_ops[interleaved_op_index][1]:
+                            gate += ' ' + str(x[1])
+                        interleaved_gate_list.append(gate)
+                        interleaved_op_index += 1
+                    interleaved_op_index += 1
+
+                    #print (interleaved_gate_list)
+                    #print (rb_opts_interleaved['interleaved_gates'][pat_index])
+
+                    #self.assertEqual(interleaved_gate_list),
+                    #rb_opts_interleaved['interleaved_gates'][pat_index],
+                    #"Error: TBD")
 
     def test_rb(self):
         """ Main function of the test """
@@ -186,6 +264,7 @@ class TestRB(unittest.TestCase):
                     rb_opts_interleaved = rb_opts.copy()
                     rb_opts_interleaved['interleaved_gates'] = \
                         self.choose_interleaved_gates(rb_opts['rb_pattern'])
+                    # print (rb_opts_interleaved)
 
                     # Generate the sequences
                     try:
@@ -260,6 +339,15 @@ class TestRB(unittest.TestCase):
                                                 result_interleaved[seed],
                                                 shots,
                                                 is_interleaved=True)
+                            # compare the interleaved RB circuits with
+                            # the original RB circuits
+                            self.compare_interleaved_circuit(rb_original_circs
+                                                             [seed][circ_index],
+                                                             rb_interleaved_circs
+                                                             [seed][circ_index],
+                                                             nq,
+                                                             rb_opts_interleaved,
+                                                             vec_len)
 
                     self.assertEqual(circ_index, len(rb_circs),
                                      "Error: additional circuits exist")
