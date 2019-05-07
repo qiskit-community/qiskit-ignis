@@ -214,7 +214,7 @@ class TestRB(unittest.TestCase):
                     self.assertEqual(original_gate_list, compared_gate_list,
                                      "Error: The gates in the %d qubit  \
                                      interleaved RB are not the same as \
-                                     in the original RB circuits" %nq)
+                                     in the original RB circuits" % nq)
                     # Clifford gates in the interleaved RB sequence
                     # should be equal to the given gates in
                     # rb_opts_interleaved['interleaved_gates']
