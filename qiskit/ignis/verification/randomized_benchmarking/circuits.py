@@ -171,7 +171,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         and 3 for the second)
         interleaved_gates: A list of gates of Clifford elements that
         will be interleaved (for interleaved randomized benchmarking)
-        The length of the list would equal the length of the rb_pattern).
+        The length of the list would equal the length of the rb_pattern.
 
     Returns:
         circuits: list of lists of circuits for the rb sequences (separate list

@@ -88,9 +88,9 @@ class TestRB(unittest.TestCase):
         '''
         :param rb_pattern: pattern for randomized benchmarking
         :return: interleaved_gates:
-        A list of gates of Clifford elements that
+        A list of gates of random Clifford elements that
         will be interleaved (for interleaved randomized benchmarking)
-        The length of the list would equal the length of the rb_pattern).
+        The length of the list would equal the length of the rb_pattern.
         '''
         pattern_sizes = [len(pat) for pat in rb_pattern]
         interleaved_gates = []
@@ -98,6 +98,38 @@ class TestRB(unittest.TestCase):
             interleaved_gates.append(
                 rb.clifford_utils.random_clifford_gates(nq))
         return interleaved_gates
+
+    @staticmethod
+    def update_interleaved_gates(gatelist, pattern):
+        '''
+        :param gatelist: list of Clifford gates
+        :param pattern: pattern of indexes (from rb_pattern)
+        :return: updated_gatelist: list of Clifford gates
+        after the following updates:
+        - replace v, w gates
+        - change the indexes from [0,1,...]
+        according to the pattern
+        '''
+        updated_gatelist = []
+        for op in gatelist:
+            split = op.split()
+            op_names = split[0]
+            # updating the qubit indexes according to the pattern
+            # given in rb_pattern
+            op_qubits = [str(pattern[int(x)]) for x in split[1:]]
+
+            # temporary correcting the ops name since QuantumCircuit
+            # has no attributes 'v' or 'w' yet:
+            if op_names == 'v':
+                updated_gatelist += ['sdg ' + op_qubits[0],
+                                     'h ' + op_qubits[0]]
+            elif op_names == 'w':
+                updated_gatelist += ['h '+ op_qubits[0],
+                                     's ' + op_qubits[0]]
+            else:
+                updated_gatelist += [op_names + ' ' +
+                                     (' '.join(op_qubits))]
+        return updated_gatelist
 
     def verify_circuit(self, circ, nq, rb_opts, vec_len, result, shots,
                        is_interleaved=False):
@@ -161,7 +193,7 @@ class TestRB(unittest.TestCase):
         - The non-interleaved Clifford gates are the same as the
         original Clifford gates.
         - The interleaved Clifford gates are the same as the ones
-        given in: rb_opts_interleaved['interleaved_gates'] - TBD
+        given in: rb_opts_interleaved['interleaved_gates'].
         :param original_circ: original rb circuits
         :param interleaved_circ: interleaved rb circuits
         :param nq: number of qubits
@@ -185,6 +217,11 @@ class TestRB(unittest.TestCase):
         for _ in range(vec_len):
             # for each component of the pattern...
             for pat_index in range(len(rb_opts_interleaved['rb_pattern'])):
+                # updating the gates in:
+                # rb_opts_interleaved['interleaved_gates']
+                updated_gatelist = self.update_interleaved_gates(
+                    rb_opts_interleaved['interleaved_gates']
+                    [pat_index], rb_opts_interleaved['rb_pattern'][pat_index])
                 # for each Clifford...
                 for _ in range(rb_opts_interleaved['length_multiplier']
                                [pat_index]):
@@ -218,23 +255,21 @@ class TestRB(unittest.TestCase):
                     # Clifford gates in the interleaved RB sequence
                     # should be equal to the given gates in
                     # rb_opts_interleaved['interleaved_gates']
-                    interleaved_gate_list = []
+                    # (after updating them)
+                    interleaved_gatelist = []
                     while interleaved_ops[interleaved_op_index][0].name != \
                             'barrier':
                         gate = interleaved_ops[interleaved_op_index][0].name
                         for x in interleaved_ops[interleaved_op_index][1]:
                             gate += ' ' + str(x[1])
-                        interleaved_gate_list.append(gate)
+                        interleaved_gatelist.append(gate)
                         interleaved_op_index += 1
                     interleaved_op_index += 1
 
-                    # print (interleaved_gate_list)
-                    # print (rb_opts_interleaved['interleaved_gates']
-                    # [pat_index])
-
-                    # self.assertEqual(interleaved_gate_list),
-                    # rb_opts_interleaved['interleaved_gates'][pat_index],
-                    # "Error: TBD")
+                    self.assertEqual(interleaved_gatelist, updated_gatelist,
+                                     "Error: The interleaved gates in the \
+                                     %d qubit interleaved RB are not the same \
+                                     as given in interleaved_gates input" % nq)
 
     def test_rb(self):
         """ Main function of the test """
@@ -268,7 +303,6 @@ class TestRB(unittest.TestCase):
                     rb_opts_interleaved = rb_opts.copy()
                     rb_opts_interleaved['interleaved_gates'] = \
                         self.choose_interleaved_gates(rb_opts['rb_pattern'])
-                    # print (rb_opts_interleaved)
 
                     # Generate the sequences
                     try:
