@@ -124,7 +124,7 @@ class TestRB(unittest.TestCase):
                 updated_gatelist += ['sdg ' + op_qubits[0],
                                      'h ' + op_qubits[0]]
             elif op_names == 'w':
-                updated_gatelist += ['h '+ op_qubits[0],
+                updated_gatelist += ['h ' + op_qubits[0],
                                      's ' + op_qubits[0]]
             else:
                 updated_gatelist += [op_names + ' ' +
