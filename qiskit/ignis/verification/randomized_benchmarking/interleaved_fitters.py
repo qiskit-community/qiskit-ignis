@@ -40,9 +40,9 @@ class InterleavedRBFitter(RBFitter):
             rb_pattern: the pattern for the rb sequences.
         """
         self.rbfit_original = RBFitter(
-            self, original_result, cliff_lengths, rb_pattern)
+            original_result, cliff_lengths, rb_pattern)
         self.rbfit_interleaved = RBFitter(
-            self, interleaved_result, 2 * cliff_lengths, rb_pattern)
+            interleaved_result, 2 * cliff_lengths, rb_pattern)
         self._fit_interleaved = []
 
     def fit_interleaved_data(self):
