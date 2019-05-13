@@ -66,7 +66,7 @@ class InterleavedRBFitter(RBFitter):
         self._fit_interleaved = []
 
         for patt_ind, (_, qubits) in enumerate(zip(self._cliff_lengths,
-                                                      self._rb_pattern)):
+                                                   self._rb_pattern)):
             # calculate nrb=d=2^n:
             nrb = 2 ** len(qubits)
 
