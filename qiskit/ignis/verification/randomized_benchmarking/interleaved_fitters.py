@@ -20,11 +20,13 @@ randomized benchmarking results.
 import numpy as np
 from .fitters import RBFitter
 
+
 class InterleavedRBFitter(RBFitter):
     """
         Class for fitters for interleaved RB
         Derived from RBFitter class
     """
+
     def __init__(self, original_result, interleaved_result,
                  cliff_lengths, rb_pattern=None):
         """
@@ -40,7 +42,7 @@ class InterleavedRBFitter(RBFitter):
         self.rbfit_original = RBFitter.__init__(
             self, original_result, cliff_lengths, rb_pattern)
         self.rbfit_interleaved = RBFitter.__init__(
-            self, interleaved_result, 2*cliff_lengths, rb_pattern)
+            self, interleaved_result, 2 * cliff_lengths, rb_pattern)
         self._fit_interleaved = []
 
     def fit_interleaved_data(self):
@@ -73,12 +75,14 @@ class InterleavedRBFitter(RBFitter):
             alpha_c = self.rbfit_interleaved.fit[patt_ind]['params'][1]
 
             # Calculate epc_est (=r_c^est) - Eq. (4):
-            epc_est = (nrb-1)*(1-alpha_c/alpha)/nrb
+            epc_est = (nrb - 1) * (1 - alpha_c / alpha) / nrb
 
             # Calculate the error bounds - Eq. (5):
-            params_err_1 = (nrb-1)*(abs(alpha-alpha_c/alpha)+(1-alpha))/nrb
-            params_err_2 = 2*(nrb*nrb-1)*(1-alpha)/(alpha*nrb*nrb) + \
-                           4*(np.sqrt(1-alpha))*(np.sqrt(nrb*nrb-1))/alpha
+            params_err_1 = (nrb - 1) * (abs(alpha - alpha_c / alpha)
+                                        + (1 - alpha)) / nrb
+            params_err_2 = 2 * (nrb * nrb - 1) * (1 - alpha) / \
+                           (alpha * nrb * nrb) + 4 * (np.sqrt(1 - alpha)) * \
+                           (np.sqrt(nrb * nrb - 1)) / alpha
             params_err = min(params_err_1, params_err_2)
             params_err_L = epc_est - params_err
             params_err_R = epc_est + params_err
