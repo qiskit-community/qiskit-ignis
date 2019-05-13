@@ -39,9 +39,9 @@ class InterleavedRBFitter(RBFitter):
                 number of patterns, j is the number of cliffords lengths
             rb_pattern: the pattern for the rb sequences.
         """
-        self.rbfit_original = RBFitter.__init__(
+        self.rbfit_original = RBFitter(
             self, original_result, cliff_lengths, rb_pattern)
-        self.rbfit_interleaved = RBFitter.__init__(
+        self.rbfit_interleaved = RBFitter(
             self, interleaved_result, 2 * cliff_lengths, rb_pattern)
         self._fit_interleaved = []
 
@@ -65,7 +65,7 @@ class InterleavedRBFitter(RBFitter):
         self.rbfit_interleaved.fit_data()
         self._fit_interleaved = []
 
-        for patt_ind, (lens, qubits) in enumerate(zip(self._cliff_lengths,
+        for patt_ind, (_, qubits) in enumerate(zip(self._cliff_lengths,
                                                       self._rb_pattern)):
             # calculate nrb=d=2^n:
             nrb = 2 ** len(qubits)
