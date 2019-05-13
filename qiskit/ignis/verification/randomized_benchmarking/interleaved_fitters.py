@@ -81,8 +81,8 @@ class InterleavedRBFitter(RBFitter):
             params_err_1 = (nrb - 1) * (abs(alpha - alpha_c / alpha)
                                         + (1 - alpha)) / nrb
             params_err_2 = 2 * (nrb * nrb - 1) * (1 - alpha) / \
-                           (alpha * nrb * nrb) + 4 * (np.sqrt(1 - alpha)) * \
-                           (np.sqrt(nrb * nrb - 1)) / alpha
+                (alpha * nrb * nrb) + 4 * (np.sqrt(1 - alpha)) * \
+                (np.sqrt(nrb * nrb - 1)) / alpha
             params_err = min(params_err_1, params_err_2)
             params_err_L = epc_est - params_err
             params_err_R = epc_est + params_err
