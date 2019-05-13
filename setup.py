@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2017, IBM.
+# This code is part of Qiskit.
 #
-# This source code is licensed under the Apache License, Version 2.0 found in
-# the LICENSE.txt file in the root directory of this source tree.
+# (C) Copyright IBM 2019.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 from setuptools import setup, find_packages
 
 
 requirements = [
     "numpy>=1.13",
-    "qiskit-terra>=0.7.0",
+    "qiskit-terra>=0.8.0",
     "scipy>=0.19,!=0.19.1",
 ]
 
@@ -27,7 +34,7 @@ def find_qiskit_ignis_packages():
 
 setup(
     name="qiskit-ignis",
-    version="0.1.0",
+    version="0.1.1",
     description="Qiskit tools for quantum information science",
     url="https://github.com/Qiskit/qiskit-ignis",
     author="Qiskit Development Team",
@@ -50,5 +57,6 @@ setup(
     packages=find_qiskit_ignis_packages(),
     install_requires=requirements,
     include_package_data=True,
-    python_requires=">=3.5"
+    python_requires=">=3.5",
+    zip_safe=False
 )

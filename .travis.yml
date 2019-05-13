@@ -9,27 +9,83 @@ addons:
       - gcc-4.8
       - g++-4.8
 
+install_osx: &stage_osx
+  os: osx
+  osx_image: xcode9.2
+  language: generic
+  cache:
+    pip: true
+    directories:
+      - ~/python-interpreters/
+  before_install:
+    # Travis does not provide support for Python 3 under osx - it needs to be
+    # installed manually.
+    |
+    if [ ${TRAVIS_OS_NAME} = "osx" ]; then
+      if [[ ! -d ~/python-interpreters/$PYTHON_VERSION ]]; then
+        git clone git://github.com/pyenv/pyenv.git
+        cd pyenv/plugins/python-build
+        ./install.sh
+        cd ../../..
+        python-build $PYTHON_VERSION ~/python-interpreters/$PYTHON_VERSION
+      fi
+      virtualenv --python ~/python-interpreters/$PYTHON_VERSION/bin/python venv
+      source venv/bin/activate
+    fi
+
+stages:
+ - lint_and_python
+ - all_python
+
 matrix:
   fast_finish: true
   include:
     - python: "3.5"
       env: TOXENV=py35
       name: "Python 3.5 Tests"
+      stage: lint_and_python
     - python: "3.6"
       env: TOXENV=py36
       name: "Python 3.6 Tests"
+      stage: all_python
     - os: linux
       dist: xenial
       python: "3.7"
       env: TOXENV=py37
       sudo: true
       name: "Python 3.7 Tests"
+      stage: all_python
     - python: "3.5"
       env: TOXENV=lint
       name: "Linter Checks"
+      stage: lint_and_python
+        # OSX, Python 3.5.6 (via pyenv)
+    - stage: all_python
+      name: "Python 3.5 Tests on OSX"
+      <<: *stage_osx
+      env:
+        - MPLBACKEND=ps
+        - PYTHON_VERSION=3.5.6
+        - TOXENV=py35
+    # OSX, Python 3.6.5 (via pyenv)
+    - stage: all_python
+      name: "Python 3.6 Tests on OSX"
+      <<: *stage_osx
+      env:
+        - MPLBACKEND=ps
+        - PYTHON_VERSION=3.6.5
+        - TOXENV=py36
+    # OSX, Python 3.7.2 (via pyenv)
+    - stage: all_python
+      <<: *stage_osx
+      name: "Python 3.7 Tests on OSX"
+      env:
+        - MPLBACKEND=ps
+        - PYTHON_VERSION=3.7.2
+        - TOXENV=py37
 
 language: python
-install: pip install -U tox
+install: pip install -U tox pip
 script:
   - tox
 

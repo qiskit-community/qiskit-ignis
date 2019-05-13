@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2019, IBM.
+# This code is part of Qiskit.
 #
-# This source code is licensed under the Apache License, Version 2.0 found in
-# the LICENSE.txt file in the root directory of this source tree.
+# (C) Copyright IBM 2019.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 # pylint: disable=undefined-loop-variable
 
@@ -108,14 +115,14 @@ class TestRB(unittest.TestCase):
                 # for each Clifford...
                 for _ in range(rb_opts['length_multiplier'][pat_index]):
                     # for each basis gate...
-                    while ops[op_index].name != 'barrier':
+                    while ops[op_index][0].name != 'barrier':
                         # Verify that the gate acts on the correct qubits
                         # This happens if the sequence is composed of the
                         # correct sub-sequences, as specified by vec_len and
                         # rb_opts
                         self.assertTrue(
                             all(x[1] in rb_opts['rb_pattern'][pat_index]
-                                for x in ops[op_index].qargs),
+                                for x in ops[op_index][1]),
                             "Error: operation acts on incorrect qubits")
                         op_index += 1
                     # increment because of the barrier gate
@@ -165,9 +172,7 @@ class TestRB(unittest.TestCase):
                         continue
 
                     # Perform an ideal execution on the generated sequences
-                    # basis_gates = ['u1','u2','u3','cx'] # use U, CX for now
-                    # Shelly: changed format to fit qiskit current version
-                    basis_gates = 'u1, u2, u3, cx'
+                    basis_gates = ['u1', 'u2', 'u3', 'cx']
                     shots = 100
                     result = []
                     for seed in range(rb_opts['nseeds']):

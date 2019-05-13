@@ -19,12 +19,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Tensored Measurement Mitigation
+- Align cliffs option to RB
+- Quantum Volume
+- Subset measurement mitigation
+
 ### Changed
 
 ### Removed
 
 
-## [0.1.0] - 2019-TBD
+## [0.1.0] - 2019-03-04
 
 ### Added
 
@@ -32,4 +37,4 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 
 [UNRELEASED]: TBD
-[0.1.0]: TBD
+[0.1.0]: March 4, 2019

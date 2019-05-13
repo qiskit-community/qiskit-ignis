@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2019, IBM.
+# This code is part of Qiskit.
 #
-# This source code is licensed under the Apache License, Version 2.0 found in
-# the LICENSE.txt file in the root directory of this source tree.
+# (C) Copyright IBM 2019.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 
 """
@@ -11,6 +18,6 @@ Measurement correction module
 """
 
 # Measurement correction functions
-from .circuits import complete_meas_cal
-from .filters import MeasurementFilter
-from .fitters import CompleteMeasFitter
+from .circuits import complete_meas_cal, tensored_meas_cal
+from .filters import MeasurementFilter, TensoredFilter
+from .fitters import CompleteMeasFitter, TensoredMeasFitter

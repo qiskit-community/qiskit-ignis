@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2019, IBM.
+# This code is part of Qiskit.
 #
-# This source code is licensed under the Apache License, Version 2.0 found in
-# the LICENSE.txt file in the root directory of this source tree.
+# (C) Copyright IBM 2019.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 """
 Functions used for the analysis of randomized benchmarking results.
@@ -158,6 +165,7 @@ class RBFitter:
                 circ_shots[circ_name] = sum(circ_counts[circ_name].values())
 
         self._raw_data = []
+        startind = 0
 
         for patt_ind in range(len(self._rb_pattern)):
 
@@ -165,6 +173,7 @@ class RBFitter:
             string_of_0s = string_of_0s.zfill(len(self._rb_pattern[patt_ind]))
 
             self._raw_data.append([])
+            endind = startind+len(self._rb_pattern[patt_ind])
 
             for i in range(self._nseeds):
 
@@ -173,10 +182,11 @@ class RBFitter:
                     circ_name = 'rb_length_%d_seed_%d' % (k, i)
                     counts_subspace = marginal_counts(
                         circ_counts[circ_name],
-                        self._rb_pattern[patt_ind])
+                        np.arange(startind, endind))
                     self._raw_data[-1][i].append(
                         counts_subspace.get(string_of_0s, 0)
                         / circ_shots[circ_name])
+            startind += (endind)
 
     def calc_statistics(self):
         """

@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2019, IBM.
+# This code is part of Qiskit.
 #
-# This source code is licensed under the Apache License, Version 2.0 found in
-# the LICENSE.txt file in the root directory of this source tree.
+# (C) Copyright IBM 2019.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 # TODO(mtreinish): Remove these disables when implementation is finished
 # pylint: disable=unused-argument,unnecessary-pass
@@ -59,7 +66,8 @@ def check_pattern(pattern):
         ValueError: if the pattern is not valid
 
     Return:
-        nqubits, maxqubit
+        qlist: flat list of all the qubits in the pattern
+        maxqubit: the maximum qubit number
     """
 
     pattern_flat = []
@@ -70,7 +78,7 @@ def check_pattern(pattern):
     if (uni_counts > 1).any():
         raise ValueError("Invalid pattern. Duplicate qubit index.")
 
-    return len(pattern_flat), np.max(pattern_flat)
+    return pattern_flat, np.max(pattern_flat).item()
 
 
 def calc_xdata(length_vector, length_multiplier):
@@ -134,7 +142,8 @@ def load_tables(max_nrb=2):
 
 def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 rb_pattern=None,
-                                length_multiplier=1, seed_offset=0):
+                                length_multiplier=1, seed_offset=0,
+                                align_cliffs=False):
     """
     Get a generic randomized benchmarking sequence
 
@@ -154,6 +163,11 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         the multiplier
         seed_offset: What to start the seeds at (e.g. if we
         want to add more seeds later)
+        align_cliffs: If true adds a barrier across all qubits in rb_pattern
+        after each set of cliffords (note: aligns after each increment
+        of cliffords including the length multiplier so if the multiplier
+        is [1,3] it will barrier after 1 clifford for the first pattern
+        and 3 for the second)
 
     Returns:
         rb_circs: list of lists of circuits for the rb sequences (separate list
@@ -166,7 +180,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     if length_vector is None:
         length_vector = [1, 10, 20]
 
-    _, n_q_max = check_pattern(rb_pattern)
+    qlist_flat, n_q_max = check_pattern(rb_pattern)
     length_multiplier = handle_length_multiplier(length_multiplier,
                                                  len(rb_pattern))
 
@@ -179,7 +193,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     # go through for each seed
     for seed in range(nseeds):
         qr = qiskit.QuantumRegister(n_q_max+1, 'qr')
-        cr = qiskit.ClassicalRegister(n_q_max+1, 'cr')
+        cr = qiskit.ClassicalRegister(len(qlist_flat), 'cr')
         general_circ = qiskit.QuantumCircuit(qr, cr)
 
         # make Clifford sequences for each of the separate sequences in
@@ -208,6 +222,11 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     general_circ.barrier(
                         *[qr[x] for x in rb_pattern[rb_pattern_index]])
 
+            if align_cliffs:
+                # if align cliffords at a barrier across all patterns
+                general_circ.barrier(
+                    *[qr[x] for x in qlist_flat])
+
             # if the number of cliffords matches one of the sequence lengths
             # then calculate the inverse and produce the circuit
             if (cliff_index+1) == length_vector[length_index]:
@@ -225,8 +244,10 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                         rb_pattern[rb_pattern_index], qr)
 
                 # add measurement
-                # q->c is 1 to 1
-                circ.measure(qr, cr)
+                # qubits measure to the c registers as
+                # they appear in the pattern
+                for qind, qb in enumerate(qlist_flat):
+                    circ.measure(qr[qb], cr[qind])
 
                 circ.name = 'rb_length_%d_seed_%d' % (length_index,
                                                       seed + seed_offset)
@@ -251,11 +272,10 @@ def replace_q_indices(circuit, q_nums, qr):
     """
 
     new_circuit = qiskit.QuantumCircuit(qr)
-    for op in circuit.data:
-        original_qubits = op.qargs
-        new_op = copy.deepcopy(op)
-        new_op.qargs = [
-            (qr, q_nums[x]) for x in [arg[1] for arg in original_qubits]]
+    for instr, qargs, cargs in circuit.data:
+        new_qargs = [
+            (qr, q_nums[x]) for x in [arg[1] for arg in qargs]]
+        new_op = copy.deepcopy((instr, new_qargs, cargs))
         new_circuit.data.append(new_op)
 
     return new_circuit
