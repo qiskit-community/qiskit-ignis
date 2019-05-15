@@ -22,4 +22,5 @@ from .Clifford import Clifford
 from . import clifford_utils
 from .circuits import randomized_benchmarking_seq
 from .fitters import RBFitter
+from .interleaved_fitters import InterleavedRBFitter
 from . import rb_utils
