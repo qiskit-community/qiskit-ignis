@@ -177,6 +177,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         circuits: list of lists of circuits for the rb sequences (separate list
         for each seed)
         xdata: the Clifford lengths (with multiplier if applicable)
+        rb_opts_dict: option dictionary back out with default options appended
         circuits_interleaved: list of lists of circuits for the interleaved
         rb sequences (separate list for each seed)
     """
