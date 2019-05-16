@@ -88,15 +88,22 @@ class TestRB(unittest.TestCase):
         '''
         :param rb_pattern: pattern for randomized benchmarking
         :return: interleaved_gates:
-        A list of gates of random Clifford elements that
+        A list of gates of Clifford elements that
         will be interleaved (for interleaved randomized benchmarking)
         The length of the list would equal the length of the rb_pattern.
         '''
         pattern_sizes = [len(pat) for pat in rb_pattern]
         interleaved_gates = []
         for (_, nq) in enumerate(pattern_sizes):
-            interleaved_gates.append(
-                rb.clifford_utils.random_clifford_gates(nq))
+            gatelist = []
+            # The interleaved gates contain x gate on each qubit
+            # and cx gate on each pair of consecutive qubits
+            for qubit in range(nq):
+                gatelist.append('x ' + str(qubit))
+            for qubit_i in range(nq):
+                for qubit_j in range(qubit_i+1, nq):
+                    gatelist.append('cx ' + str(qubit_i) + ' ' + str(qubit_j))
+            interleaved_gates.append(gatelist)
         return interleaved_gates
 
     @staticmethod
@@ -117,17 +124,7 @@ class TestRB(unittest.TestCase):
             # updating the qubit indexes according to the pattern
             # given in rb_pattern
             op_qubits = [str(pattern[int(x)]) for x in split[1:]]
-
-            # temporary correcting the ops name since QuantumCircuit
-            # has no attributes 'v' or 'w' yet:
-            if op_names == 'v':
-                updated_gatelist += ['sdg ' + op_qubits[0],
-                                     'h ' + op_qubits[0]]
-            elif op_names == 'w':
-                updated_gatelist += ['h ' + op_qubits[0],
-                                     's ' + op_qubits[0]]
-            else:
-                updated_gatelist += [op_names + ' ' +
+            updated_gatelist += [op_names + ' ' +
                                      (' '.join(op_qubits))]
         return updated_gatelist
 
