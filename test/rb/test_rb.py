@@ -125,7 +125,7 @@ class TestRB(unittest.TestCase):
             # given in rb_pattern
             op_qubits = [str(pattern[int(x)]) for x in split[1:]]
             updated_gatelist += [op_names + ' ' +
-                                     (' '.join(op_qubits))]
+                                 (' '.join(op_qubits))]
         return updated_gatelist
 
     def verify_circuit(self, circ, nq, rb_opts, vec_len, result, shots,
