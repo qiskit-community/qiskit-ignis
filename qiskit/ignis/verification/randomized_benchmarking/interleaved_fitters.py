@@ -52,7 +52,7 @@ class InterleavedRBFitter():
         self.rbfit_original = RBFitter(
             original_result, cliff_lengths, rb_pattern)
         self.rbfit_interleaved = RBFitter(
-            interleaved_result, 2 * cliff_lengths, rb_pattern)
+            interleaved_result, cliff_lengths, rb_pattern)
 
         self._raw_original_data = self.rbfit_original.raw_data
         self._raw_interleaved_data = self.rbfit_interleaved.raw_data
@@ -167,7 +167,7 @@ class InterleavedRBFitter():
 
             # Calculate the systematic error bounds - Eq. (5):
             systematic_err_1 = (nrb - 1) * (abs(alpha - alpha_c / alpha)
-                                        + (1 - alpha)) / nrb
+                                            + (1 - alpha)) / nrb
             systematic_err_2 = 2 * (nrb * nrb - 1) * (1 - alpha) / \
                 (alpha * nrb * nrb) + 4 * (np.sqrt(1 - alpha)) * \
                 (np.sqrt(nrb * nrb - 1)) / alpha
@@ -178,7 +178,8 @@ class InterleavedRBFitter():
             # Calculate epc_est_error
             alpha_err_sq = (alpha_err / alpha) * (alpha_err / alpha)
             alpha_c_err_sq = (alpha_c_err / alpha_c) * (alpha_c_err / alpha_c)
-            epc_est_err = epc_est * (np.sqrt(alpha_err_sq + alpha_c_err_sq))
+            epc_est_err = ((nrb - 1) / nrb) * (alpha_c / alpha) \
+                          * (np.sqrt(alpha_err_sq + alpha_c_err_sq))
 
             self._fit_interleaved.append({'alpha': alpha,
                                           'alpha_err': alpha_err,
@@ -191,7 +192,7 @@ class InterleavedRBFitter():
                                           'systematic_err_R': systematic_err_R})
 
     def plot_interleaved_rb_data(self, pattern_index=0, ax=None,
-                     add_label=True, show_plt=True):
+                                 add_label=True, show_plt=True):
         """
         Plot interleaved randomized benchmarking data of a single pattern.
 
@@ -232,13 +233,17 @@ class InterleavedRBFitter():
                     color='r', linestyle='--', linewidth=3)
         ax.errorbar(xdata, self._ydata_interleaved[pattern_index]['mean'],
                     yerr=self._ydata_interleaved[pattern_index]['std'],
-                    color='g', linestyle='--', linewidth=3)
+                    color='g', linestyle=':', linewidth=3)
 
         # Plot the fit
-        #ax.plot(xdata,
-        #        original_fit_function(xdata, self.rbfit_original._fit[pattern_index]['params']),
-        #        color='blue', linestyle='-', linewidth=2)
-        #ax.tick_params(labelsize=14)
+        ax.plot(xdata,
+                original_fit_function(xdata, *self.rbfit_original._fit \
+                    [pattern_index]['params']), color='blue', linestyle='-', linewidth=2)
+        ax.tick_params(labelsize=14)
+        ax.plot(xdata,
+                interleaved_fit_function(xdata, *self.rbfit_interleaved._fit \
+                    [pattern_index]['params']), color='c', linestyle='-', linewidth=2)
+        ax.tick_params(labelsize=14)
 
         ax.set_xlabel('Clifford Length', fontsize=16)
         ax.set_ylabel('Ground State Population', fontsize=16)
@@ -249,13 +254,16 @@ class InterleavedRBFitter():
                               fc="white", ec="black", lw=2)
 
             ax.text(0.6, 0.9,
-                    "alpha: %.3f(%.1e) alpha_c: %.3e(%.1e) EPC_est: %.3e(%.1e)" %
+                    "alpha: %.3f(%.1e) alpha_c: %.3e(%.1e) \n EPC_est: %.3e(%.1e) \n \
+                    estimated range [%.3e, %.3e]" %
                     (self._fit_interleaved[pattern_index]['alpha'],
                      self._fit_interleaved[pattern_index]['alpha_err'],
                      self._fit_interleaved[pattern_index]['alpha_c'],
                      self._fit_interleaved[pattern_index]['alpha_c_err'],
                      self._fit_interleaved[pattern_index]['epc_est'],
-                     self._fit_interleaved[pattern_index]['systematic_err']),
+                     self._fit_interleaved[pattern_index]['epc_est_err'],
+                     self._fit_interleaved[pattern_index]['systematic_err_L'],
+                     self._fit_interleaved[pattern_index]['systematic_err_R']),
                     ha="center", va="center", size=14,
                     bbox=bbox_props, transform=ax.transAxes)
 
