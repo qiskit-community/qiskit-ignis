@@ -59,7 +59,6 @@ class InterleavedRBFitter():
         self._ydata_original = self.rbfit_original.ydata
         self._ydata_interleaved = self.rbfit_interleaved.ydata
 
-
     @property
     def cliff_lengths(self):
         """Return clifford lengths."""
@@ -89,7 +88,6 @@ class InterleavedRBFitter():
     def raw_interleaved_data(self):
         """Return raw interleaved_data."""
         return self._raw_interleaved_data
-
 
     def add_interleaved_data(self, new_original_result,
                              new_interleaved_result,
@@ -179,7 +177,7 @@ class InterleavedRBFitter():
             alpha_err_sq = (alpha_err / alpha) * (alpha_err / alpha)
             alpha_c_err_sq = (alpha_c_err / alpha_c) * (alpha_c_err / alpha_c)
             epc_est_err = ((nrb - 1) / nrb) * (alpha_c / alpha) \
-                          * (np.sqrt(alpha_err_sq + alpha_c_err_sq))
+                * (np.sqrt(alpha_err_sq + alpha_c_err_sq))
 
             self._fit_interleaved.append({'alpha': alpha,
                                           'alpha_err': alpha_err,
@@ -237,12 +235,12 @@ class InterleavedRBFitter():
 
         # Plot the fit
         ax.plot(xdata,
-                original_fit_function(xdata, *self.rbfit_original._fit \
-                    [pattern_index]['params']), color='blue', linestyle='-', linewidth=2)
+                original_fit_function(xdata, *self.rbfit_original._fit
+                [pattern_index]['params']), color='blue', linestyle='-', linewidth=2)
         ax.tick_params(labelsize=14)
         ax.plot(xdata,
-                interleaved_fit_function(xdata, *self.rbfit_interleaved._fit \
-                    [pattern_index]['params']), color='c', linestyle='-', linewidth=2)
+                interleaved_fit_function(xdata, *self.rbfit_interleaved._fit
+                [pattern_index]['params']), color='c', linestyle='-', linewidth=2)
         ax.tick_params(labelsize=14)
 
         ax.set_xlabel('Clifford Length', fontsize=16)
@@ -254,7 +252,8 @@ class InterleavedRBFitter():
                               fc="white", ec="black", lw=2)
 
             ax.text(0.6, 0.9,
-                    "alpha: %.3f(%.1e) alpha_c: %.3e(%.1e) \n EPC_est: %.3e(%.1e) \n \
+                    "alpha: %.3f(%.1e) alpha_c: %.3e(%.1e) \n \
+                    EPC_est: %.3e(%.1e) \n \
                     estimated range [%.3e, %.3e]" %
                     (self._fit_interleaved[pattern_index]['alpha'],
                      self._fit_interleaved[pattern_index]['alpha_err'],
