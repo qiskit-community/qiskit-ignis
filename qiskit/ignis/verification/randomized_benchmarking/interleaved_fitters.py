@@ -64,7 +64,6 @@ class InterleavedRBFitter():
         self._original_fit = self.rbfit_original.fit
         self._interleaved_fit = self.rbfit_interleaved.fit
 
-
     @property
     def cliff_lengths(self):
         """Return clifford lengths."""
@@ -242,12 +241,14 @@ class InterleavedRBFitter():
         # Plot the fit
         ax.plot(xdata,
                 self._original_fit_function(xdata,
-                                            *self._original_fit[pattern_index]['params']),
+                                            *self._original_fit
+                                            [pattern_index]['params']),
                 color='blue', linestyle='-', linewidth=2)
         ax.tick_params(labelsize=14)
         ax.plot(xdata,
                 self._interleaved_fit_function(xdata,
-                                               *self._interleaved_fit[pattern_index]['params']),
+                                               *self._interleaved_fit
+                                               [pattern_index]['params']),
                 color='c', linestyle='-', linewidth=2)
         ax.tick_params(labelsize=14)
 
