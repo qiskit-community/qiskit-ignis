@@ -185,9 +185,12 @@ class InterleavedRBFitter():
                                           'alpha_c_err': alpha_c_err,
                                           'epc_est': epc_est,
                                           'epc_est_err': epc_est_err,
-                                          'systematic_err': systematic_err,
-                                          'systematic_err_L': systematic_err_L,
-                                          'systematic_err_R': systematic_err_R})
+                                          'systematic_err':
+                                              systematic_err,
+                                          'systematic_err_L':
+                                              systematic_err_L,
+                                          'systematic_err_R':
+                                              systematic_err_R})
 
     def plot_interleaved_rb_data(self, pattern_index=0, ax=None,
                                  add_label=True, show_plt=True):
@@ -235,12 +238,16 @@ class InterleavedRBFitter():
 
         # Plot the fit
         ax.plot(xdata,
-                original_fit_function(xdata, *self.rbfit_original._fit
-                [pattern_index]['params']), color='blue', linestyle='-', linewidth=2)
+                original_fit_function(xdata,
+                                      *self.rbfit_original._fit
+                                      [pattern_index]['params']),
+                color='blue', linestyle='-', linewidth=2)
         ax.tick_params(labelsize=14)
         ax.plot(xdata,
-                interleaved_fit_function(xdata, *self.rbfit_interleaved._fit
-                [pattern_index]['params']), color='c', linestyle='-', linewidth=2)
+                interleaved_fit_function(xdata,
+                                         *self.rbfit_interleaved._fit
+                                         [pattern_index]['params']),
+                color='c', linestyle='-', linewidth=2)
         ax.tick_params(labelsize=14)
 
         ax.set_xlabel('Clifford Length', fontsize=16)
