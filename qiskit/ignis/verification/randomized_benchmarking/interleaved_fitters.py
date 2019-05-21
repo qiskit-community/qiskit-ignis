@@ -59,6 +59,12 @@ class InterleavedRBFitter():
         self._ydata_original = self.rbfit_original.ydata
         self._ydata_interleaved = self.rbfit_interleaved.ydata
 
+        self._original_fit_function = self.rbfit_original.rb_fit_fun
+        self._interleaved_fit_function = self.rbfit_interleaved.rb_fit_fun
+        self._original_fit = self.rbfit_original.fit
+        self._interleaved_fit = self.rbfit_interleaved.fit
+
+
     @property
     def cliff_lengths(self):
         """Return clifford lengths."""
@@ -207,9 +213,6 @@ class InterleavedRBFitter():
             ImportError: If matplotlib is not installed.
         """
 
-        original_fit_function = self.rbfit_original._rb_fit_fun
-        interleaved_fit_function = self.rbfit_interleaved._rb_fit_fun
-
         if not HAS_MATPLOTLIB:
             raise ImportError('The function plot_interleaved_rb_data \
             needs matplotlib. Run "pip install matplotlib" before.')
@@ -238,15 +241,13 @@ class InterleavedRBFitter():
 
         # Plot the fit
         ax.plot(xdata,
-                original_fit_function(xdata,
-                                      *self.rbfit_original._fit
-                                      [pattern_index]['params']),
+                self._original_fit_function(xdata,
+                                            *self._original_fit[pattern_index]['params']),
                 color='blue', linestyle='-', linewidth=2)
         ax.tick_params(labelsize=14)
         ax.plot(xdata,
-                interleaved_fit_function(xdata,
-                                         *self.rbfit_interleaved._fit
-                                         [pattern_index]['params']),
+                self._interleaved_fit_function(xdata,
+                                               *self._interleaved_fit[pattern_index]['params']),
                 color='c', linestyle='-', linewidth=2)
         ax.tick_params(labelsize=14)
 
