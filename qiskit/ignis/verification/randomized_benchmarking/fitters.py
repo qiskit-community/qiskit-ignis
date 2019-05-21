@@ -77,6 +77,11 @@ class RBFitter:
         return self._fit
 
     @property
+    def rb_fit_fun(self):
+        """Return the function rb_fit_fun."""
+        return self._rb_fit_fun
+
+    @property
     def seeds(self):
         """Return the number of loaded seeds."""
         return self._nseeds
