@@ -24,6 +24,7 @@ from qiskit import QuantumRegister
 from qiskit import ClassicalRegister
 from qiskit import QuantumCircuit
 from qiskit import QiskitError
+from qiskit.circuit import Qubit, Clbit
 from qiskit.circuit.measure import Measure
 from qiskit.circuit.reset import Reset
 
@@ -214,8 +215,8 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         meas_circuit_fn(op, qubit, clbit)
             Args:
                 op (str): the operator label
-                qubit (tuple(QuantumRegister, int)): measured qubit
-                clbit (tuple(ClassicalRegister, int)): measurement clbit
+                qubit (Qubit): measured qubit
+                clbit (Clbit): measurement clbit
             Returns:
                 A QuantumCircuit object for the measurement.
 
@@ -232,7 +233,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         prep_circuit_fn(op, qubit)
             Args:
                 op (str): the operator label
-                qubit (tuple(QuantumRegister, int)): measured qubit
+                qubit (Qubit): measured qubit
             Returns:
                 A QuantumCircuit object for the preparation gates.
 
@@ -445,7 +446,7 @@ def _format_registers(*registers):
     for tuple_element in registers:
         if isinstance(tuple_element, QuantumRegister):
             for j in range(tuple_element.size):
-                qubits.append((tuple_element, j))
+                qubits.append(tuple_element[j])
         else:
             qubits.append(tuple_element)
     # Check registers are unique
