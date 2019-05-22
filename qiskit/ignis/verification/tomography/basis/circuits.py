@@ -24,7 +24,6 @@ from qiskit import QuantumRegister
 from qiskit import ClassicalRegister
 from qiskit import QuantumCircuit
 from qiskit import QiskitError
-from qiskit.circuit import Qubit, Clbit
 from qiskit.circuit.measure import Measure
 from qiskit.circuit.reset import Reset
 

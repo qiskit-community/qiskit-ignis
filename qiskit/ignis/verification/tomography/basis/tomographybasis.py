@@ -16,8 +16,6 @@
 TomographyBasis class
 """
 
-from qiskit import QuantumRegister
-from qiskit import ClassicalRegister
 from qiskit import QiskitError
 from qiskit.circuit import Qubit, Clbit
 
