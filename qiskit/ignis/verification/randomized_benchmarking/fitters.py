@@ -296,7 +296,6 @@ class RBFitter:
 
             fit_guess[0] = ((y0 - fit_guess[2]) /
                             fit_guess[1]**self._cliff_lengths[patt_ind][0])
-            print('l')
             self.fit_data_pattern(patt_ind, tuple(fit_guess))
 
     def plot_rb_data(self, pattern_index=0, ax=None,
