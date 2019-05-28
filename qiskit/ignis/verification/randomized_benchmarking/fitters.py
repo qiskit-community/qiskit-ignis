@@ -50,7 +50,7 @@ class RBFitter:
         self._rb_pattern = rb_pattern
         self._raw_data = []
         self._ydata = []
-        self._fit = []
+        self._fit = [{} for e in rb_pattern]
         self._nseeds = 0
 
         self._result_list = []
@@ -216,11 +216,14 @@ class RBFitter:
             else:
                 self._ydata[-1]['std'] = np.std(self._raw_data[patt_ind], 0)
 
-    def fit_data(self):
+    def fit_data_pattern(self, patt_ind, fit_guess):
         """
-        Fit the RB results to an exponential curve.
+        Fit the RB results of a particular pattern
+        to an exponential curve.
 
-        Fit each of the patterns
+        Args:
+            patt_ind: index of the data to fit
+            fit_guess: guess values for the fit
 
         Puts the results into a list of fit dictionaries:
             where each dictionary corresponds to a pattern and has fields:
@@ -230,32 +233,70 @@ class RBFitter:
             'epc' - error per Clifford
         """
 
-        self._fit = []
-        for patt_ind, (lens, qubits) in enumerate(zip(self._cliff_lengths,
-                                                      self._rb_pattern)):
-            # if at least one of the std values is zero, then sigma is replaced
-            # by None
-            if not self._ydata[patt_ind]['std'] is None:
-                sigma = self._ydata[patt_ind]['std'].copy()
-                if len(sigma) - np.count_nonzero(sigma) > 0:
-                    sigma = None
-            else:
+        lens = self._cliff_lengths[patt_ind]
+        qubits = self._rb_pattern[patt_ind]
+
+        # if at least one of the std values is zero, then sigma is replaced
+        # by None
+        if not self._ydata[patt_ind]['std'] is None:
+            sigma = self._ydata[patt_ind]['std'].copy()
+            if len(sigma) - np.count_nonzero(sigma) > 0:
                 sigma = None
-            params, pcov = curve_fit(self._rb_fit_fun, lens,
-                                     self._ydata[patt_ind]['mean'],
-                                     sigma=sigma,
-                                     p0=(1.0, 0.95, 0.0),
-                                     bounds=([-2, 0, -2], [2, 1, 2]))
-            alpha = params[1]  # exponent
-            params_err = np.sqrt(np.diag(pcov))
-            alpha_err = params_err[1]
+        else:
+            sigma = None
+        params, pcov = curve_fit(self._rb_fit_fun, lens,
+                                 self._ydata[patt_ind]['mean'],
+                                 sigma=sigma,
+                                 p0=fit_guess,
+                                 bounds=([-2, 0, -2], [2, 1, 2]))
+        alpha = params[1]  # exponent
+        params_err = np.sqrt(np.diag(pcov))
+        alpha_err = params_err[1]
 
-            nrb = 2 ** len(qubits)
-            epc = (nrb-1)/nrb*(1-alpha)
-            epc_err = epc*alpha_err/alpha
+        nrb = 2 ** len(qubits)
+        epc = (nrb-1)/nrb*(1-alpha)
+        epc_err = epc*alpha_err/alpha
 
-            self._fit.append({'params': params, 'params_err': params_err,
-                              'epc': epc, 'epc_err': epc_err})
+        self._fit[patt_ind] = {'params': params, 'params_err': params_err,
+                               'epc': epc, 'epc_err': epc_err}
+
+    def fit_data(self):
+        """
+        Fit the RB results to an exponential curve.
+
+        Fit each of the patterns. Use the data to construct guess values
+        for the fits
+
+        Puts the results into a list of fit dictionaries:
+            where each dictionary corresponds to a pattern and has fields:
+            'params' - three parameters of rb_fit_fun. The middle one is the
+                       exponent.
+            'err' - the error limits of the parameters.
+            'epc' - error per Clifford
+        """
+
+        for patt_ind, _ in enumerate(self._rb_pattern):
+
+            qubits = self._rb_pattern[patt_ind]
+            fit_guess = [0.95, 0.99, 0.0]
+            fit_guess[0] = self._ydata[patt_ind]['mean'][0]
+            # Should decay to 1/2^n
+            fit_guess[2] = 1/2**len(qubits)
+
+            # Use the first two points to guess the decay param
+            y0 = self._ydata[patt_ind]['mean'][0]
+            y1 = self._ydata[patt_ind]['mean'][1]
+            dcliff = (self._cliff_lengths[patt_ind][1] -
+                      self._cliff_lengths[patt_ind][0])
+            dy = ((y1 - fit_guess[2]) /
+                  (y0 - fit_guess[2]))
+            alpha_guess = dy**(1/dcliff)
+            if alpha_guess < 1.0:
+                fit_guess[1] = alpha_guess
+
+            fit_guess[0] = ((y0 - fit_guess[2]) /
+                            fit_guess[1]**self._cliff_lengths[patt_ind][0])
+            self.fit_data_pattern(patt_ind, tuple(fit_guess))
 
     def plot_rb_data(self, pattern_index=0, ax=None,
                      add_label=True, show_plt=True):
