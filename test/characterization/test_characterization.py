@@ -303,14 +303,14 @@ class TestCals(unittest.TestCase):
         noise_model = NoiseModel()
         noise_model.add_all_qubit_quantum_error(error, 'u2')
 
-        initial_theta = 0.02
+        initial_theta = 0.18
         initial_c = 0.5
 
         fit = AmpCalFitter(self.run_sim(noise_model), xdata, self._qubits,
                            fit_p0=[initial_theta, initial_c],
                            fit_bounds=([-np.pi, -1],
                                        [np.pi, 1]))
-
+        print(fit.angle_err(0))
         self.assertAlmostEqual(fit.angle_err(0), 0.1, 2)
 
     def test_anglecal1Q(self):
@@ -322,7 +322,7 @@ class TestCals(unittest.TestCase):
         self._circs, xdata = anglecal_1Q_circuits(self._maxrep, self._qubits,
                                                   angleerr=0.1)
 
-        initial_theta = 0.02
+        initial_theta = 0.18
         initial_c = 0.5
 
         fit = AngleCalFitter(self.run_sim([]), xdata, self._qubits,
@@ -353,7 +353,7 @@ class TestCals(unittest.TestCase):
         noise_model = NoiseModel()
         noise_model.add_nonlocal_quantum_error(error, 'cx', [1, 0], [0, 1])
 
-        initial_theta = 0.02
+        initial_theta = 0.18
         initial_c = 0.5
 
         fit = AmpCalCXFitter(self.run_sim(noise_model), xdata, self._qubits,
@@ -375,7 +375,7 @@ class TestCals(unittest.TestCase):
                                                   self._controls,
                                                   angleerr=0.1)
 
-        initial_theta = 0.02
+        initial_theta = 0.18
         initial_c = 0.5
 
         fit = AngleCalCXFitter(self.run_sim([]), xdata, self._qubits,

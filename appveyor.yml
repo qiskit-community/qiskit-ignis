@@ -13,10 +13,10 @@ environment:
 #      PYTHON_VERSION: "3.7.0"
 #      PYTHON_ARCH: "64"
 #      TOX_ENV: "py37"
-#    - PYTHON: "C:\\Miniconda35-x64"
-#      PYTHON_VERSION: "3.5.3"
-#      PYTHON_ARCH: "64"
-#      TOX_ENV: "py35"
+    - PYTHON: "C:\\Miniconda35-x64"
+      PYTHON_VERSION: "3.5.3"
+      PYTHON_ARCH: "64"
+      TOX_ENV: "py35"
     - PYTHON: "C:\\Miniconda36-x64"
       PYTHON_VERSION: "3.6.1"
       PYTHON_ARCH: "64"
@@ -49,7 +49,7 @@ install:
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   - "python -m pip install --disable-pip-version-check --upgrade pip"
-  - "pip install tox"
+  - "pip install --ignore-installed tox"
 
 build: off
 
