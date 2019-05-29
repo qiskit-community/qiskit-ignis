@@ -118,9 +118,8 @@ class TestFitters(unittest.TestCase):
             rb_fit = RBFitter(results_list[0], tst['rb_opts']['xdata'],
                               tst['rb_opts']['rb_pattern'])
 
-
-            #add the seeds in reverse order
-            for seedind in range(len(results_list)-1,0,-1):
+            # add the seeds in reverse order
+            for seedind in range(len(results_list)-1, 0, -1):
                 rb_fit.add_data([results_list[seedind]])
 
             ydata = rb_fit.ydata
