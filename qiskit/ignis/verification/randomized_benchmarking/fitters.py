@@ -51,7 +51,7 @@ class RBFitter:
         self._raw_data = []
         self._ydata = []
         self._fit = [{} for e in rb_pattern]
-        self._nseeds = 0
+        self._nseeds = []
 
         self._result_list = []
         self.add_data(backend_result)
@@ -114,8 +114,8 @@ class RBFitter:
             # cliffords
             for rbcirc in result.results:
                 nseeds_circ = int(rbcirc.header.name.split('_')[-1])
-                if (nseeds_circ+1) > self._nseeds:
-                    self._nseeds = nseeds_circ+1
+                if nseeds_circ not in self._nseeds:
+                    self._nseeds.append(nseeds_circ)
 
         for result in self._result_list:
             if not len(result.results) == len(self._cliff_lengths[0]):
@@ -149,9 +149,9 @@ class RBFitter:
 
         circ_counts = {}
         circ_shots = {}
-        for seedidx in range(self._nseeds):
+        for seed in self._nseeds:
             for circ, _ in enumerate(self._cliff_lengths[0]):
-                circ_name = 'rb_length_%d_seed_%d' % (circ, seedidx)
+                circ_name = 'rb_length_%d_seed_%d' % (circ, seed)
                 count_list = []
                 for result in self._result_list:
                     try:
@@ -175,15 +175,15 @@ class RBFitter:
             self._raw_data.append([])
             endind = startind+len(self._rb_pattern[patt_ind])
 
-            for i in range(self._nseeds):
+            for seedidx, seed in enumerate(self._nseeds):
 
                 self._raw_data[-1].append([])
                 for k, _ in enumerate(self._cliff_lengths[patt_ind]):
-                    circ_name = 'rb_length_%d_seed_%d' % (k, i)
+                    circ_name = 'rb_length_%d_seed_%d' % (k, seed)
                     counts_subspace = marginal_counts(
                         circ_counts[circ_name],
                         np.arange(startind, endind))
-                    self._raw_data[-1][i].append(
+                    self._raw_data[-1][seedidx].append(
                         counts_subspace.get(string_of_0s, 0)
                         / circ_shots[circ_name])
             startind += (endind)
