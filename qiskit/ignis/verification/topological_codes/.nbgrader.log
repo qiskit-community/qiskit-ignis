@@ -1,0 +1,30 @@
+[NotebookApp | WARNING] No nbgrader_config.py file found (rerun with --debug to see where nbgrader is looking)
+[NotebookApp | INFO] Loading the validate_assignment nbgrader serverextension
+[NotebookApp | INFO] Serving notebooks from local directory: /Users/jwo/qiskit-ignis-internal/error_correction_codes/toplogical_codes
+[NotebookApp | INFO] The Jupyter Notebook is running at:
+[NotebookApp | INFO] http://localhost:8890/?token=00c0e4beba23819b6aff3a27b3864bc8c724f1f625e7f405
+[NotebookApp | INFO] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[NotebookApp | CRITICAL] 
+    
+    Copy/paste this URL into your browser when you connect for the first time,
+    to login with a token:
+        http://localhost:8890/?token=00c0e4beba23819b6aff3a27b3864bc8c724f1f625e7f405
+[NotebookApp | INFO] Accepting one-time-token-authenticated connection from ::1
+[NotebookApp | INFO] Kernel started: 99bb470f-b470-4564-91a7-8b7e20fb3fac
+[NotebookApp | INFO] Adapting to protocol v5.1 for kernel 99bb470f-b470-4564-91a7-8b7e20fb3fac
+[NotebookApp | INFO] Starting buffering for 99bb470f-b470-4564-91a7-8b7e20fb3fac:df3e61c9034d4d0189ab9da0b894406e
+[NotebookApp | INFO] Kernel restarted: 99bb470f-b470-4564-91a7-8b7e20fb3fac
+[NotebookApp | INFO] Adapting to protocol v5.1 for kernel 99bb470f-b470-4564-91a7-8b7e20fb3fac
+[NotebookApp | INFO] Restoring connection for 99bb470f-b470-4564-91a7-8b7e20fb3fac:df3e61c9034d4d0189ab9da0b894406e
+[NotebookApp | INFO] Replaying 5 buffered messages
+[NotebookApp | INFO] Kernel interrupted: 99bb470f-b470-4564-91a7-8b7e20fb3fac
+[NotebookApp | INFO] Starting buffering for 99bb470f-b470-4564-91a7-8b7e20fb3fac:df3e61c9034d4d0189ab9da0b894406e
+[NotebookApp | INFO] Kernel restarted: 99bb470f-b470-4564-91a7-8b7e20fb3fac
+[NotebookApp | INFO] Adapting to protocol v5.1 for kernel 99bb470f-b470-4564-91a7-8b7e20fb3fac
+[NotebookApp | INFO] Restoring connection for 99bb470f-b470-4564-91a7-8b7e20fb3fac:df3e61c9034d4d0189ab9da0b894406e
+[NotebookApp | INFO] Replaying 6 buffered messages
+[NotebookApp | INFO] Saving file at /examples/repetition_code_tutorial.ipynb
+[NotebookApp | INFO] interrupted
+[NotebookApp | CRITICAL] received signal 2, stopping
+[NotebookApp | INFO] Shutting down 1 kernel
+[NotebookApp | INFO] Kernel shutdown: 99bb470f-b470-4564-91a7-8b7e20fb3fac
