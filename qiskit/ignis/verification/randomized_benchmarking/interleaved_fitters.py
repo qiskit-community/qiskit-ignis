@@ -52,7 +52,7 @@ class InterleavedRBFitter():
         self.rbfit_original = RBFitter(
             original_result, cliff_lengths, rb_pattern)
         self.rbfit_interleaved = RBFitter(
-            interleaved_result, cliff_lengths, rb_pattern)
+            interleaved_result, cliff_lengths, rb_pattern, is_interleaved=True)
 
         self._raw_original_data = self.rbfit_original.raw_data
         self._raw_interleaved_data = self.rbfit_interleaved.raw_data
@@ -63,6 +63,9 @@ class InterleavedRBFitter():
         self._interleaved_fit_function = self.rbfit_interleaved.rb_fit_fun
         self._original_fit = self.rbfit_original.fit
         self._interleaved_fit = self.rbfit_interleaved.fit
+
+        self.rbfit_original.add_data(original_result)
+        self.rbfit_interleaved.add_data(interleaved_result)
 
     @property
     def cliff_lengths(self):
@@ -224,37 +227,32 @@ class InterleavedRBFitter():
 
         # Plot the original and interleaved result for each sequence
         for one_seed_data in self._raw_original_data[pattern_index]:
-            ax.plot(xdata, one_seed_data, color='gray', linestyle='none',
+            ax.plot(xdata, one_seed_data, color='blue', linestyle='none',
                     marker='x')
         for one_seed_data in self._raw_interleaved_data[pattern_index]:
-            ax.plot(xdata, one_seed_data, color='black', linestyle='none',
+            ax.plot(xdata, one_seed_data, color='red', linestyle='none',
                     marker='+')
-
-        # Plot the mean with error bars
-        ax.errorbar(xdata, self._ydata_original[pattern_index]['mean'],
-                    yerr=self._ydata_original[pattern_index]['std'],
-                    color='r', linestyle='--', linewidth=3)
-        ax.errorbar(xdata, self._ydata_interleaved[pattern_index]['mean'],
-                    yerr=self._ydata_interleaved[pattern_index]['std'],
-                    color='g', linestyle=':', linewidth=3)
 
         # Plot the fit
         ax.plot(xdata,
                 self._original_fit_function(xdata,
                                             *self._original_fit
                                             [pattern_index]['params']),
-                color='blue', linestyle='-', linewidth=2)
+                color='blue', linestyle='-', linewidth=2,
+                label='Standard RB')
         ax.tick_params(labelsize=14)
         ax.plot(xdata,
                 self._interleaved_fit_function(xdata,
                                                *self._interleaved_fit
                                                [pattern_index]['params']),
-                color='c', linestyle='-', linewidth=2)
+                color='red', linestyle='-', linewidth=2,
+                label='Interleaved RB')
         ax.tick_params(labelsize=14)
 
         ax.set_xlabel('Clifford Length', fontsize=16)
         ax.set_ylabel('Ground State Population', fontsize=16)
         ax.grid(True)
+        ax.legend(loc='lower left')
 
         if add_label:
             bbox_props = dict(boxstyle="round,pad=0.3",
@@ -262,16 +260,13 @@ class InterleavedRBFitter():
 
             ax.text(0.6, 0.9,
                     "alpha: %.3f(%.1e) alpha_c: %.3e(%.1e) \n \
-                    EPC_est: %.3e(%.1e) \n \
-                    estimated range [%.3e, %.3e]" %
+                    EPC_est: %.3e(%.1e)" %
                     (self._fit_interleaved[pattern_index]['alpha'],
                      self._fit_interleaved[pattern_index]['alpha_err'],
                      self._fit_interleaved[pattern_index]['alpha_c'],
                      self._fit_interleaved[pattern_index]['alpha_c_err'],
                      self._fit_interleaved[pattern_index]['epc_est'],
-                     self._fit_interleaved[pattern_index]['epc_est_err'],
-                     self._fit_interleaved[pattern_index]['systematic_err_L'],
-                     self._fit_interleaved[pattern_index]['systematic_err_R']),
+                     self._fit_interleaved[pattern_index]['epc_est_err']),
                     ha="center", va="center", size=14,
                     bbox=bbox_props, transform=ax.transAxes)
 
