@@ -35,7 +35,7 @@ class RBFitter:
     """
 
     def __init__(self, backend_result, cliff_lengths,
-                 rb_pattern=None):
+                 rb_pattern=None, is_interleaved=False):
         """
         Args:
             backend_result: list of results (qiskit.Result).
@@ -52,6 +52,10 @@ class RBFitter:
         self._ydata = []
         self._fit = [{} for e in rb_pattern]
         self._nseeds = []
+        self._is_interleaved = is_interleaved
+        self._circ_name_type = 'rb'
+        if self._is_interleaved:
+            self._circ_name_type = 'rb_interleaved'
 
         self._result_list = []
         self.add_data(backend_result)
@@ -156,7 +160,8 @@ class RBFitter:
         circ_shots = {}
         for seed in self._nseeds:
             for circ, _ in enumerate(self._cliff_lengths[0]):
-                circ_name = 'rb_length_%d_seed_%d' % (circ, seed)
+                circ_name = self._circ_name_type + '_length_%d_seed_%d' \
+                            % (circ, seed)
                 count_list = []
                 for result in self._result_list:
                     try:
@@ -184,7 +189,8 @@ class RBFitter:
 
                 self._raw_data[-1].append([])
                 for k, _ in enumerate(self._cliff_lengths[patt_ind]):
-                    circ_name = 'rb_length_%d_seed_%d' % (k, seed)
+                    circ_name = self._circ_name_type +'_length_%d_seed_%d' \
+                                % (k, seed)
                     counts_subspace = marginal_counts(
                         circ_counts[circ_name],
                         np.arange(startind, endind))
