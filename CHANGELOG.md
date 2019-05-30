@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Updates for Terra Qubit class
 - Added the ability to add arbitrary seeds to RB (not just in order)
 - Fix bug in the characterization fitter when selecting a qubit index to fit
 - Improved guess values for RB fitters and enabled the user to input their own guess values
