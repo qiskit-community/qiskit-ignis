@@ -38,15 +38,18 @@ class IgnisLogger(logging.getLoggerClass()):
         self._conf_file_exists = False
         self._warning_omitted = False
 
-    def configure(self, fh, conf_file_exists):
+    def configure(self, fh, sh, conf_file_exists):
         """
         Internal configuration method of IgnisLogger. Should only be called
         by IgnisLogger
 
         :param fh: FileHandler object
-        :param conf_file_exists: Wheter or not a file config exists
+        :param sh: StreamHandler object
+        :param conf_file_exists: Whether or not a file config exists
         """
         self._file_handler = fh
+        self._stream_handler = sh
+        self.addHandler(sh)
         self._conf_file_exists = conf_file_exists
 
     def log_to_file(self, **kargs):
@@ -68,6 +71,7 @@ class IgnisLogger(logging.getLoggerClass()):
                 self._warning_omitted = True
             return
 
+        Logger.removeHandler(self, self._stream_handler)
         Logger.addHandler(self, self._file_handler)
         logstr = ""
         for k, v in kargs.items():
@@ -76,6 +80,7 @@ class IgnisLogger(logging.getLoggerClass()):
         Logger.log(self, 100, logstr)
 
         Logger.removeHandler(self, self._file_handler)
+        Logger.addHandler(self, self._stream_handler)
 
     def enable_file_logging(self):
         """
@@ -186,6 +191,11 @@ class IgnisLogging:
         return logger
 
     def _configure_logger(self, logger):
+        # Configuring the stream handler
+        sh = logging.StreamHandler()
+        sh.setLevel(logging.NOTSET)
+        sh.setFormatter(logging.Formatter('%(levelname)s: %(name)s - %(message)s'))
+CRITICAL 
         # This will enable limiting file size and rotating once file size
         # is exhausted
         fh = logging.handlers.RotatingFileHandler(
@@ -197,7 +207,7 @@ class IgnisLogging:
             '%(asctime)s {} %(message)s'.format(IgnisLogging._log_label),
             datefmt=IgnisLogging._default_datefmt)
         fh.setFormatter(formatter)
-        logger.configure(fh, IgnisLogging._config_file_exists)
+        logger.configure(fh, sh, IgnisLogging._config_file_exists)
 
         if IgnisLogging._file_logging_enabled:
             logger.enable_file_logging()
@@ -250,7 +260,7 @@ class IgnisLogReader:
             time (optional)
         :param to_datetime_format: datetime format string. If not specified
             will assume "%Y/%m/%d %H:%M:%S" (optional)
-        :return: A list containing the retrieved rows and key pair values
+        :return: A list containing the retrieved rows of key pair values
         """
 
         if log_files is not None:
