@@ -194,8 +194,8 @@ class IgnisLogging:
         # Configuring the stream handler
         sh = logging.StreamHandler()
         sh.setLevel(logging.NOTSET)
-        sh.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
-
+        sh.setFormatter(logging.Formatter('%(levelname)s: %(name)s - %(message)s'))
+CRITICAL 
         # This will enable limiting file size and rotating once file size
         # is exhausted
         fh = logging.handlers.RotatingFileHandler(
