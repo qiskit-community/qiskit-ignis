@@ -18,21 +18,26 @@ Generates quantum volume circuits
 
 import numpy as np
 import qiskit
+from qiskit import QiskitError
 from qiskit.quantum_info.random import random_unitary
 
 
-def qv_circuits(qubit_lists=None, ntrials=1,
+def qv_circuits(qubit_lists=None, width_list=None, ntrials=1,
                 qr=None, cr=None):
     """
     Return a list of square quantum volume circuits (depth=width)
 
+    Either a set of qubit_lists or width_list is specified.
     The qubit_lists is specified as a list of qubit lists. For each
     set of qubits, circuits the depth as the number of qubits in the list
-    are generated
+    are generated. If width_list is specified then circuits equal
+    to those widths are created (started at Q0)
 
     Args:
         qubit_lists: list of list of qubits to apply qv circuits to. Assume
         the list is ordered in increasing number of qubits
+        width_list: list of widths (either qubit_lists or width_list is
+        specified)
         ntrials: number of random iterations
         qr: quantum register to act on (if None one is created)
         cr: classical register to measure to (if None one is created)
@@ -44,19 +49,30 @@ def qv_circuits(qubit_lists=None, ntrials=1,
         simulation
     """
 
+    if qubit_lists is None and width_list is None:
+        raise QiskitError("Must specified qubit_lists or width_list")
+
+    if (qubit_lists is not None) and (width_list is not None):
+        raise QiskitError("Only specified one of qubit_lists or width_list")
+
+    if qubit_lists is not None:
+        # popuplate the width_list from the specified
+        # qubit_lists
+        width_list = [len(l) for l in qubit_lists]
+
+    else:
+        # if the width list is specified populate the
+        # qubit lists
+        qubit_lists = [list(range(l)) for l in width_list]
+
     circuits = [[] for e in range(ntrials)]
     circuits_nomeas = [[] for e in range(ntrials)]
-
-    # get the largest qubit number out of all the lists (for setting the
-    # register)
-
-    depth_list = [len(l) for l in qubit_lists]
 
     # go through for each trial
     for trial in range(ntrials):
 
         # go through for each depth in the depth list
-        for depthidx, depth in enumerate(depth_list):
+        for depthidx, depth in enumerate(width_list):
 
             n_q_max = np.max(qubit_lists[depthidx])
 
@@ -92,3 +108,26 @@ def qv_circuits(qubit_lists=None, ntrials=1,
             circuits[trial].append(qc)
 
     return circuits, circuits_nomeas
+
+
+def rotate_qv_circ_list(qv_circs):
+    """
+    rotate the list of circuits so that each sublist is a single
+    qubit set vs the trials
+
+    Args:
+        qv_circs: list of lists of circuits for the qv sequences
+        (separate list for each trial)
+
+    Returns:
+        qv_circs2: list of lists of circuits for the qv sequences
+        (separate list for each subset)
+    """
+
+    qv_circs2 = []
+    for jj, _ in enumerate(qv_circs[0]):
+        qv_circs2.append([])
+        for ii, _ in enumerate(qv_circs):
+            qv_circs2[-1].append(qv_circs[ii][jj])
+
+    return qv_circs2

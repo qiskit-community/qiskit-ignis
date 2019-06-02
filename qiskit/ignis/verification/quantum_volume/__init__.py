@@ -19,4 +19,5 @@ Quantum volume module
 
 # Quantum volume functions
 from .circuits import qv_circuits
+from .circuits import rotate_qv_circ_list
 from .fitters import QVFitter
