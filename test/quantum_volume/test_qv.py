@@ -34,7 +34,8 @@ class TestQV(unittest.TestCase):
         qubit_lists = [[0, 1, 2], [0, 1, 2, 4], [0, 1, 2, 4, 7]]
         ntrials = 5
 
-        qv_circs, _ = qv.qv_circuits(qubit_lists, ntrials)
+        qv_circs, _ = qv.qv_circuits(qubit_lists=qubit_lists,
+                                     ntrials=ntrials)
 
         self.assertEqual(len(qv_circs), ntrials,
                          "Error: Not enough trials")
