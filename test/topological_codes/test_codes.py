@@ -110,13 +110,25 @@ class TestCodes(unittest.TestCase):
 
                 m_error = "Error: Matching decoder does not improve "\
                     + "logical error rate between repetition codes"\
-                    + " of distance " + str(d) + " and " + str(d + 1) + "."
-                l_error = "Error: Matching decoder does not improve "\
+                    + " of distance " + str(d) + " and " + str(d + 1) + ".\n"\
+                    + "For d="+str(d)+": " + str(matching_probs[(d, log)])\
+                    + ".\n"\
+                    + "For d="+str(d+1)+": " + str(matching_probs[(d+1, log)])\
+                    + "."
+                l_error = "Error: Lookup decoder does not improve "\
                     + "logical error rate between repetition codes"\
-                    + " of distance " + str(d) + " and " + str(d + 1) + "."
-                p_error = "Error: Matching decoder does not improve "\
+                    + " of distance " + str(d) + " and " + str(d + 1) + ".\n"\
+                    + "For d="+str(d)+": " + str(lookup_probs[(d, log)])\
+                    + ".\n"\
+                    + "For d="+str(d+1)+": " + str(lookup_probs[(d+1, log)])\
+                    + "."
+                p_error = "Error: Postselection decoder does not improve "\
                     + "logical error rate between repetition codes"\
-                    + " of distance " + str(d) + " and " + str(d + 1) + "."
+                    + " of distance " + str(d) + " and " + str(d + 1) + ".\n"\
+                    + "For d="+str(d)+": " + str(post_probs[(d, log)])\
+                    + ".\n"\
+                    + "For d="+str(d+1)+": " + str(post_probs[(d+1, log)])\
+                    + "."
 
                 self.assertTrue(
                     m_down or matching_probs[(d, log)] == 0.0, m_error)
