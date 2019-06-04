@@ -1,3 +1,21 @@
+# -*- coding: utf-8 -*-
+
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2019.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+'''
+Run codes and decoders
+'''
+
 import unittest
 
 from qiskit.ignis.verification.topological_codes import RepetitionCode
@@ -10,7 +28,9 @@ from qiskit.providers.aer.noise.errors import pauli_error, depolarizing_error
 
 
 def get_syndrome(code, noise_model, shots=1014):
-
+    '''
+    Runs a code to get required results.
+    '''
     circuits = [code.circuit[log] for log in ['0', '1']]
 
     job = execute(
@@ -26,7 +46,9 @@ def get_syndrome(code, noise_model, shots=1014):
 
 
 def get_noise(p_meas, p_gate):
-
+    '''
+    Define a noise model.
+    '''
     error_meas = pauli_error([('X', p_meas), ('I', 1 - p_meas)])
     error_gate1 = depolarizing_error(p_gate, 1)
     error_gate2 = error_gate1.tensor(error_gate1)
@@ -42,18 +64,20 @@ def get_noise(p_meas, p_gate):
     return noise_model
 
 
-noise_model = get_noise(0.04, 0.04)
-
-
 class TestCodes(unittest.TestCase):
     """ The test class """
 
     def test_rep(self):
+        """
+        Repetition code test.
+        """
         matching_probs = {}
         lookup_probs = {}
         post_probs = {}
 
         max_dist = 4
+
+        noise_model = get_noise(0.04, 0.04)
 
         for d in range(3, max_dist + 1):
 

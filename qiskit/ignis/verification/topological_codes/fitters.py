@@ -12,6 +12,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+'''
+Decoders for quantum error correction codes.
+
+Specifically, this class contains decoders that can be expressed as solving
+a graph-theoretic problem.
+'''
+
 import copy
 import warnings
 import networkx as nx
@@ -156,8 +163,8 @@ class GraphDecoder():
             for source in E[subgraph]:
                 for target in E[subgraph]:
                     if target != (source):
-                        distance = nx.shortest_path_length(
-                            self.S, source, target)
+                        distance = int(nx.shortest_path_length(
+                            self.S, source, target))
                         E[subgraph].add_edge(source, target, weight=-distance)
 
         return E

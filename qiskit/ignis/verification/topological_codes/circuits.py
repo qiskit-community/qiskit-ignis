@@ -12,6 +12,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+'''
+Generates circuits for quantum error correction
+'''
+
 from qiskit import QuantumRegister, ClassicalRegister
 from qiskit import QuantumCircuit
 
@@ -71,9 +75,9 @@ class RepetitionCode():
         if T != 0:
             self.readout()
 
-    def x(self, logs=['0', '1']):
+    def x(self, logs=('0', '1')):
         '''
-        Applies a logical x to the circuits in the list `log`.
+        Applies a logical x to the circuits in the list or tuple `log`.
         '''
         for log in logs:
             for j in range(self.d):

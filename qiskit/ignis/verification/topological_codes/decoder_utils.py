@@ -13,6 +13,11 @@
 # that they have been altered from the originals.
 
 
+'''
+Simple and generally applicable decoders for quantum error correction codes.
+'''
+
+
 def postselection_decoding(results):
     '''
     Given a dictionary of results, as produced by a code object, the
