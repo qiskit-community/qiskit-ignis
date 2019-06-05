@@ -353,5 +353,6 @@ class TestFitters(unittest.TestCase):
                     'Incorrect fit parameter systematic_err_L '
                     'in test no. ' + str(tst_index))
 
+
 if __name__ == '__main__':
     unittest.main()
