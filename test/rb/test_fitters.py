@@ -22,7 +22,8 @@ import unittest
 
 import numpy as np
 
-from qiskit.ignis.verification.randomized_benchmarking import RBFitter
+from qiskit.ignis.verification.randomized_benchmarking import \
+    RBFitter, InterleavedRBFitter
 
 
 class TestFitters(unittest.TestCase):
@@ -157,6 +158,200 @@ class TestFitters(unittest.TestCase):
                     np.isclose(fit[i]['epc_err'],
                                tst['expected']['fit'][i]['epc_err']),
                     'Incorrect EPC error in test no. ' + str(tst_index))
+
+    def test_interleaved_fitters(self):
+        """ Test the interleaved fitters """
+
+        # Use pickled results files
+
+        tests_interleaved = \
+            [{
+                'rb_opts': {
+                    'xdata': np.array([[1, 11, 21, 31, 41,
+                                        51, 61, 71, 81, 91],
+                                       [3, 33, 63, 93, 123,
+                                        153, 183, 213, 243, 273]]),
+                    'rb_pattern': [[0, 2], [1]],
+                    'shots': 200},
+                'original_results_file':
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        'test_fitter_original_results.pkl'),
+                'interleaved_results_file':
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        'test_fitter_interleaved_results.pkl'),
+                'expected': {
+                    'original_ydata':
+                        [{'mean': np.array([0.9775, 0.79, 0.66,
+                                            0.5775, 0.5075, 0.4825,
+                                            0.4075, 0.3825,
+                                            0.3925, 0.325]),
+                          'std': np.array([0.0125, 0.02, 0.01,
+                                           0.0125, 0.0025,
+                                           0.0125, 0.0225, 0.0325,
+                                           0.0425, 0.])},
+                         {'mean': np.array([0.985, 0.9425, 0.8875,
+                                            0.8225, 0.775, 0.7875,
+                                            0.7325, 0.705,
+                                            0.69, 0.6175]),
+                          'std': np.array([0.005, 0.0125, 0.0025,
+                                           0.0025, 0.015, 0.0125,
+                                           0.0075, 0.01,
+                                           0.02, 0.0375])}],
+                    'interleaved_ydata':
+                        [{'mean': np.array([0.955, 0.7425, 0.635,
+                                            0.4875, 0.44, 0.3625,
+                                            0.3575, 0.2875,
+                                            0.2975, 0.3075]),
+                          'std': np.array([0., 0.0025, 0.015,
+                                           0.0075, 0.055,
+                                           0.0075, 0.0075, 0.0025,
+                                           0.0025, 0.0075])},
+                         {'mean': np.array([0.9775, 0.85, 0.77,
+                                            0.7775, 0.6325,
+                                            0.615, 0.64, 0.6125,
+                                            0.535, 0.55]),
+                          'std': np.array([0.0075, 0.005, 0.01,
+                                           0.0025, 0.0175, 0.005,
+                                           0.01, 0.0075,
+                                           0.01, 0.005])}],
+                    'joint_fit': [
+                        {'alpha': 0.9707393978697902,
+                         'alpha_err': 0.0028343593038762326,
+                         'alpha_c': 0.9661036105117012,
+                         'alpha_c_err': 0.003096602375173838,
+                         'epc_est': 0.003581641505636224,
+                         'epc_est_err': 0.0032362911276774308,
+                         'systematic_err': 0.04030926168967841,
+                         'systematic_err_L': -0.03672762018404219,
+                         'systematic_err_R': 0.043890903195314634},
+                        {'alpha': 0.9953124384370953,
+                         'alpha_err': 0.0014841466685991903,
+                         'alpha_c': 0.9955519189829325,
+                         'alpha_c_err': 0.002194868426034655,
+                         'epc_est': -0.00012030420629183247,
+                         'epc_est_err': 0.001331116936065506,
+                         'systematic_err': 0.004807865769196562,
+                         'systematic_err_L': -0.0049281699754883945,
+                         'systematic_err_R': 0.00468756156290473}]
+                }}]
+
+        for tst_index, tst in enumerate(tests_interleaved):
+            fo = open(tst['original_results_file'], 'rb')
+            original_result_list = pickle.load(fo)
+            fo.close()
+
+            fo = open(tst['interleaved_results_file'], 'rb')
+            interleaved_result_list = pickle.load(fo)
+            fo.close()
+
+            # InterleavedRBFitter class
+            joint_rb_fit = InterleavedRBFitter(
+                original_result_list, interleaved_result_list,
+                tst['rb_opts']['xdata'], tst['rb_opts']['rb_pattern'])
+            joint_rb_fit.fit_interleaved_data()
+
+            joint_fit = joint_rb_fit.fit_interleaved
+            ydata_original = joint_rb_fit.ydata_original
+            ydata_interleaved = joint_rb_fit.ydata_interleaved
+
+            for i, _ in enumerate(ydata_original):
+                self.assertTrue(all(np.isclose(a, b) for a, b in
+                                    zip(ydata_original[i]['mean'],
+                                        tst['expected']['original_ydata']
+                                        [i]['mean'])),
+                                'Incorrect mean in original data test no. '
+                                + str(tst_index))
+                if tst['expected']['original_ydata'][i]['std'] is None:
+                    self.assertIsNone(
+                        ydata_original[i]['std'],
+                        'Incorrect std in original data test no. ' +
+                        str(tst_index))
+                else:
+                    self.assertTrue(
+                        all(np.isclose(a, b) for a, b in zip(
+                            ydata_original[i]['std'],
+                            tst['expected']['original_ydata'][i]['std'])),
+                        'Incorrect std in original data test no. ' +
+                        str(tst_index))
+
+            for i, _ in enumerate(ydata_interleaved):
+                self.assertTrue(all(np.isclose(a, b) for a, b in
+                                    zip(ydata_interleaved[i]['mean'],
+                                        tst['expected']['interleaved_ydata']
+                                        [i]['mean'])),
+                                'Incorrect mean in interleaved data test no. '
+                                + str(tst_index))
+                if tst['expected']['interleaved_ydata'][i]['std'] is None:
+                    self.assertIsNone(
+                        ydata_interleaved[i]['std'],
+                        'Incorrect std in interleaved data test no. '
+                        + str(tst_index))
+                else:
+                    self.assertTrue(
+                        all(np.isclose(a, b) for a, b in zip(
+                            ydata_interleaved[i]['std'],
+                            tst['expected']['interleaved_ydata']
+                            [i]['std'])),
+                        'Incorrect std in interleaved data test no. '
+                        + str(tst_index))
+
+            for i, _ in enumerate(joint_fit):
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['alpha'],
+                               tst['expected']['joint_fit']
+                               [i]['alpha']),
+                    'Incorrect fit parameter alpha in test no. '
+                    + str(tst_index))
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['alpha_err'],
+                               tst['expected']['joint_fit']
+                               [i]['alpha_err']),
+                    'Incorrect fit parameter alpha_err in test no. '
+                    + str(tst_index))
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['alpha_c'],
+                               tst['expected']['joint_fit']
+                               [i]['alpha_c']),
+                    'Incorrect fit parameter alpha_c in test no. '
+                    + str(tst_index))
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['alpha_c_err'],
+                               tst['expected']['joint_fit']
+                               [i]['alpha_c_err']),
+                    'Incorrect fit parameter alpha_c_err in test no. '
+                    + str(tst_index))
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['epc_est'],
+                               tst['expected']['joint_fit']
+                               [i]['epc_est']),
+                    'Incorrect fit parameter epc_est in test no. '
+                    + str(tst_index))
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['epc_est_err'],
+                               tst['expected']['joint_fit']
+                               [i]['epc_est_err']),
+                    'Incorrect fit parameter epc_est_err in test no. '
+                    + str(tst_index))
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['systematic_err'],
+                               tst['expected']['joint_fit']
+                               [i]['systematic_err']),
+                    'Incorrect fit parameter systematic_err in test no. '
+                    + str(tst_index))
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['systematic_err_R'],
+                               tst['expected']['joint_fit']
+                               [i]['systematic_err_R']),
+                    'Incorrect fit parameter systematic_err_R in '
+                    'test no. ' + str(tst_index))
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['systematic_err_L'],
+                               tst['expected']['joint_fit']
+                               [i]['systematic_err_L']),
+                    'Incorrect fit parameter systematic_err_L '
+                    'in test no. ' + str(tst_index))
 
 
 if __name__ == '__main__':
