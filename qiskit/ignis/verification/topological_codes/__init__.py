@@ -17,6 +17,7 @@
 Error correction benchmarking module
 """
 
-# Measurement correction functions
 from .circuits import RepetitionCode
-from .fitters import GraphDecoder, lookuptable_decoding, postselection_decodin
+from .fitters import GraphDecoder
+from .fitters import lookuptable_decoding
+from .fitters import postselection_decoding

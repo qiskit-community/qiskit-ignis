@@ -46,12 +46,12 @@ class RepetitionCode():
         '''
         Creates the circuits corresponding to a logical 0 and 1 encoded
         using a repetition code.
-        
+
         Args:
             d: Number of code qubits (and hence repetitions) used.
             T: Number of rounds of ancilla-assited syndrome measurement.
-        
-        
+
+
         Additional information:
             No measurements are added to the circuit if `T=0`. Otherwise
             `T` rounds are added, followed by measurement of the code
@@ -85,7 +85,7 @@ class RepetitionCode():
     def x(self, logs=('0', '1')):
         '''
         Applies a logical x to the circuits for the given logical values.
-        
+
         Args:
             logs: List or tuple of logical values expressed as strings.
         '''
@@ -144,12 +144,12 @@ class RepetitionCode():
             raw_results: A dictionary whose keys are logical values, and whose
             values are standard counts dictionaries, (as obtained from the
             `get_counts` method of a qiskit.Result object).
-            
+
         Returns:
             results: Dictionary with the same structure as the input, but with
             the bit strings used as keys in the counts dictionaries converted
             to the form required by the decoder.
-        
+
         Additional information:
             The circuits must be executed outside of this class, so that
             their is full freedom to compile, choose a backend, use a

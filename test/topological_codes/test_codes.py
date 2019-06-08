@@ -20,7 +20,8 @@ import unittest
 
 from qiskit.ignis.verification.topological_codes import RepetitionCode
 from qiskit.ignis.verification.topological_codes import GraphDecoder
-from qiskit.ignis.verification.topological_codes.decoder_utils import *
+from qiskit.ignis.verification.topological_codes import lookuptable_decoding
+from qiskit.ignis.verification.topological_codes import postselection_decoding
 
 from qiskit import execute, Aer
 from qiskit.providers.aer.noise import NoiseModel
