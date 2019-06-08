@@ -24,22 +24,6 @@ class RepetitionCode():
     '''
     Implementation of a distance d repetition code, implemented over
     T syndrome measurement rounds.
-
-    Attributes
-    * `d`: Code distance.
-    * `T`: Number of syndrome measurement rounds.
-    * `code_qubit` and `link_qubit`: Register used for code qubits and
-    ancillae, respectively.
-    * `qubit_registers`: Strings that can be used to reference the qubit
-    registers.
-    * `link_bits`: List of classical registers, with the jth being used
-    for the jth measurement round.
-    * `code_bit`: Classical register used for readout of code qubits.
-    * `self.circuit`: A dictionary of two quantum circuits: one for the
-    encoded logical bit value 0 and the other for 1, with corresponding
-    keys `'0'` and `'1'`.
-
-    See below for an explanation of each method.
     '''
 
     def __init__(self, d, T=0):
