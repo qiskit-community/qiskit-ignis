@@ -82,6 +82,16 @@ class RepetitionCode():
         if T != 0:
             self.readout()
 
+    def get_circuit_list(self):
+        '''
+        Returns:
+            circuit_list: self.circuit as a list, with
+            circuit_list[0] = circuit['0']
+            circuit_list[1] = circuit['1']
+        '''
+        circuit_list = [self.circuit[log] for log in ['0', '1']]
+        return circuit_list
+
     def x(self, logs=('0', '1')):
         '''
         Applies a logical x to the circuits for the given logical values.
