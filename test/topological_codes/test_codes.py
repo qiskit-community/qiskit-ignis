@@ -76,11 +76,11 @@ class TestCodes(unittest.TestCase):
         lookup_probs = {}
         post_probs = {}
 
-        max_dist = 4
+        max_dist = 5
 
-        noise_model = get_noise(0.04, 0.04)
+        noise_model = get_noise(0.02, 0.02)
 
-        for d in range(3, max_dist + 1):
+        for d in range(3, max_dist + 1, 2):
 
             code = RepetitionCode(d, 2)
 
@@ -100,35 +100,35 @@ class TestCodes(unittest.TestCase):
                 lookup_probs[(d, log)] = logical_prob_lookup[log]
                 post_probs[(d, log)] = logical_prob_post[log]
 
-        for d in range(3, max_dist):
+        for d in range(3, max_dist-1, 2):
             for log in ['0', '1']:
                 m_down = matching_probs[(d, log)] \
-                    > matching_probs[(d + 1, log)]
+                    > matching_probs[(d + 2, log)]
                 l_down = lookup_probs[(d, log)] \
-                    > lookup_probs[(d + 1, log)]
+                    > lookup_probs[(d + 2, log)]
                 p_down = post_probs[(d, log)] \
-                    > post_probs[(d + 1, log)]
+                    > post_probs[(d + 2, log)]
 
                 m_error = "Error: Matching decoder does not improve "\
                     + "logical error rate between repetition codes"\
-                    + " of distance " + str(d) + " and " + str(d + 1) + ".\n"\
+                    + " of distance " + str(d) + " and " + str(d + 2) + ".\n"\
                     + "For d="+str(d)+": " + str(matching_probs[(d, log)])\
                     + ".\n"\
-                    + "For d="+str(d+1)+": " + str(matching_probs[(d+1, log)])\
+                    + "For d="+str(d+2)+": " + str(matching_probs[(d+2, log)])\
                     + "."
                 l_error = "Error: Lookup decoder does not improve "\
                     + "logical error rate between repetition codes"\
-                    + " of distance " + str(d) + " and " + str(d + 1) + ".\n"\
+                    + " of distance " + str(d) + " and " + str(d + 2) + ".\n"\
                     + "For d="+str(d)+": " + str(lookup_probs[(d, log)])\
                     + ".\n"\
-                    + "For d="+str(d+1)+": " + str(lookup_probs[(d+1, log)])\
+                    + "For d="+str(d+2)+": " + str(lookup_probs[(d+2, log)])\
                     + "."
                 p_error = "Error: Postselection decoder does not improve "\
                     + "logical error rate between repetition codes"\
-                    + " of distance " + str(d) + " and " + str(d + 1) + ".\n"\
+                    + " of distance " + str(d) + " and " + str(d + 2) + ".\n"\
                     + "For d="+str(d)+": " + str(post_probs[(d, log)])\
                     + ".\n"\
-                    + "For d="+str(d+1)+": " + str(post_probs[(d+1, log)])\
+                    + "For d="+str(d+2)+": " + str(post_probs[(d+2, log)])\
                     + "."
 
                 self.assertTrue(
