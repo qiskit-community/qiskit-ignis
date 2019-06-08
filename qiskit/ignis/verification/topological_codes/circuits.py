@@ -44,12 +44,19 @@ class RepetitionCode():
 
     def __init__(self, d, T=0):
         '''
-        Initializes all attributes according to the given code distance
-        `d` and number of measurement round `T`.
-
-        No measurements are added to the circuit if `T=0`. Otherwise `T` rounds
-        are added, followed by measurement of the code qubits (corresponding to
-        a logical measurement and final syndrome measurement round).
+        Creates the circuits corresponding to a logical 0 and 1 encoded
+        using a repetition code.
+        
+        Args:
+            d: Number of code qubits (and hence repetitions) used.
+            T: Number of rounds of ancilla-assited syndrome measurement.
+        
+        
+        Additional information:
+            No measurements are added to the circuit if `T=0`. Otherwise
+            `T` rounds are added, followed by measurement of the code
+            qubits (corresponding to a logical measurement and final
+            syndrome measurement round).
         '''
 
         self.d = d
@@ -77,7 +84,10 @@ class RepetitionCode():
 
     def x(self, logs=('0', '1')):
         '''
-        Applies a logical x to the circuits in the list or tuple `log`.
+        Applies a logical x to the circuits for the given logical values.
+        
+        Args:
+            logs: List or tuple of logical values expressed as strings.
         '''
         for log in logs:
             for j in range(self.d):
@@ -130,12 +140,21 @@ class RepetitionCode():
 
     def process_results(self, raw_results):
         '''
-        The circuits must be executed outside of this class, so that the user
-        has full freedom to compile, choose their backend, use a noise model,
-        etc.
-
-        Once the circuits have been executed, this method transforms the output
-        bit strings to the form required by to set up a decoder.
+        Args:
+            raw_results: A dictionary whose keys are logical values, and whose
+            values are standard counts dictionaries, (as obtained from the
+            `get_counts` method of a qiskit.Result object).
+            
+        Returns:
+            results: Dictionary with the same structure as the input, but with
+            the bit strings used as keys in the counts dictionaries converted
+            to the form required by the decoder.
+        
+        Additional information:
+            The circuits must be executed outside of this class, so that
+            their is full freedom to compile, choose a backend, use a
+            noise model, etc. The results from these executions should then
+            be used to create the input for this method.
         '''
         results = {}
         for log in raw_results:
