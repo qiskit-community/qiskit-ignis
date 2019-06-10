@@ -53,14 +53,20 @@ def handle_length_multiplier(length_multiplier, len_pattern):
     return length_multiplier
 
 
-def check_pattern(pattern):
+def check_pattern(pattern, is_purity=False):
     """
     Verifies that the input pattern is valid
     i.e., that each qubit appears at most once
 
+    In case of Purity RB, checkes that all
+    simultaneous sequences have the same dimension
+    (e.g. only 1-qubit squences, or only 2-qubits
+    sequences etc.)
+
     Args:
         pattern: RB pattern
         n_qubits: number of qubits
+        is_purity: True only for purity RB (default is False)
 
     Raises:
         ValueError: if the pattern is not valid
@@ -71,12 +77,21 @@ def check_pattern(pattern):
     """
 
     pattern_flat = []
+    pattern_dim = []
     for pat in pattern:
         pattern_flat.extend(pat)
+        pattern_dim.append(len(pat))
 
     _, uni_counts = np.unique(np.array(pattern_flat), return_counts=True)
     if (uni_counts > 1).any():
         raise ValueError("Invalid pattern. Duplicate qubit index.")
+
+    dim_distinct = np.unique(pattern_dim)
+    if is_purity:
+        if len(dim_distinct) > 1:
+            raise ValueError("Invalid pattern for purity RB. \
+            All simultaneous sequences should have the \
+            same dimension.")
 
     return pattern_flat, np.max(pattern_flat).item()
 
@@ -144,7 +159,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 rb_pattern=None,
                                 length_multiplier=1, seed_offset=0,
                                 align_cliffs=False,
-                                interleaved_gates=None):
+                                interleaved_gates=None,
+                                is_purity=False):
     """
     Get a generic randomized benchmarking sequence
 
@@ -172,6 +188,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         interleaved_gates: A list of gates of Clifford elements that
         will be interleaved (for interleaved randomized benchmarking)
         The length of the list would equal the length of the rb_pattern.
+        is_purity: True only for purity RB (default is False)
 
     Returns:
         circuits: list of lists of circuits for the rb sequences (separate list
@@ -186,7 +203,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     if length_vector is None:
         length_vector = [1, 10, 20]
 
-    qlist_flat, n_q_max = check_pattern(rb_pattern)
+    qlist_flat, n_q_max = check_pattern(rb_pattern, is_purity)
     length_multiplier = handle_length_multiplier(length_multiplier,
                                                  len(rb_pattern))
 
