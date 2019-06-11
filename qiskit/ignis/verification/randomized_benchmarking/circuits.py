@@ -101,8 +101,7 @@ def check_pattern(pattern, is_purity=False):
             All simultaneous sequences should have the \
             same dimension.")
 
-    return pattern_flat, np.max(pattern_flat).item(), \
-           np.max(pattern_dim)
+    return pattern_flat, np.max(pattern_flat).item(), np.max(pattern_dim)
 
 
 def calc_xdata(length_vector, length_multiplier):
@@ -344,32 +343,37 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                         ind_d = d
                         count_name = 0
                         while True:
-                            # Per each qubit: do nothing or rx(pi/2) or ry(pi/2)
+                            # Per each qubit:
+                            # do nothing or rx(pi/2) or ry(pi/2)
                             purity_qubit_rot = np.mod(ind_d, 3)
                             ind_d = np.floor_divide(ind_d, 3)
                             purity_qubit_num = int(np.ceil
-                                                   (np.log(ind_d+1) / np.log(3)))
-                            if purity_qubit_rot == 0: # do nothing
+                                                   (np.log(ind_d+1) /
+                                                    np.log(3)))
+                            if purity_qubit_rot == 0:  # do nothing
                                 circ_purity[d].name += 'Z'
                                 count_name += 1
-                            if purity_qubit_rot == 1: # add rx(pi/2)
+                            if purity_qubit_rot == 1:  # add rx(pi/2)
                                 for pat in rb_pattern:
                                     circ_purity[d].rx(np.pi / 2,
-                                                      qr[pat[purity_qubit_num]])
+                                                      qr[pat
+                                                      [purity_qubit_num]])
                                 circ_purity[d].name += 'X'
                                 count_name += 1
-                            if purity_qubit_rot == 2: # add ry(pi/2)
+                            if purity_qubit_rot == 2:  # add ry(pi/2)
                                 for pat in rb_pattern:
                                     circ_purity[d].ry(np.pi / 2,
-                                                      qr[pat[purity_qubit_num]])
+                                                      qr[pat
+                                                      [purity_qubit_num]])
                                 circ_purity[d].name += 'Y'
                                 count_name += 1
                             if ind_d == 0:
                                 break
-                        # padding the circuit name with Z's so that all circuits
-                        # will have names with the same length
+                        # padding the circuit name with Z's so that
+                        # all circuits will have names of the same length
                         for _ in range(int(np.ceil(np.log(npurity)
-                                                   / np.log(3)))-count_name):
+                                                   / np.log(3)))
+                                       - count_name):
                             circ_purity[d].name += 'Z'
                         # add measurement for purity rb
                         for qind, qb in enumerate(qlist_flat):
