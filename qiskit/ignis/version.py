@@ -12,6 +12,9 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Functions for getting version information about ignis."""
+
+
 import os
 import subprocess
 
@@ -61,7 +64,8 @@ def get_version_info():
     # up the build under Python 3.
     full_version = VERSION
 
-    if not os.path.exists(os.path.join(os.path.dirname(os.path.dirname(ROOT_DIR)), '.git')):
+    if not os.path.exists(os.path.join(os.path.dirname(
+            os.path.dirname(ROOT_DIR)), '.git')):
         return full_version
     try:
         release = _minimal_ext_cmd(['git', 'tag', '-l', '--points-at', 'HEAD'])
