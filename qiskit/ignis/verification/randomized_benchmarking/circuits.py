@@ -356,15 +356,15 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                             if purity_qubit_rot == 1:  # add rx(pi/2)
                                 for pat in rb_pattern:
                                     circ_purity[d].rx(np.pi / 2,
-                                                      qr[pat
-                                                      [purity_qubit_num]])
+                                                      qr[pat[
+                                                          purity_qubit_num]])
                                 circ_purity[d].name += 'X'
                                 count_name += 1
                             if purity_qubit_rot == 2:  # add ry(pi/2)
                                 for pat in rb_pattern:
                                     circ_purity[d].ry(np.pi / 2,
-                                                      qr[pat
-                                                      [purity_qubit_num]])
+                                                      qr[pat[
+                                                          purity_qubit_num]])
                                 circ_purity[d].name += 'Y'
                                 count_name += 1
                             if ind_d == 0:
