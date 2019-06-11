@@ -15,6 +15,7 @@
 import os
 import inspect
 import setuptools
+import sys
 
 
 requirements = [
