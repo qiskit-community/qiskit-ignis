@@ -14,7 +14,7 @@
 
 import os
 import inspect
-from setuptools import setup, find_namespace_packages
+import setuptools
 
 
 requirements = [
@@ -42,7 +42,7 @@ version_path = os.path.abspath(
 with open(version_path, 'r') as fd:
     version = fd.read().rstrip()
 
-setup(
+setuptools.setup(
     name="qiskit-ignis",
     version=version,
     description="Qiskit tools for quantum information science",
@@ -64,7 +64,7 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     keywords="qiskit sdk quantum",
-    packages=find_namespace_packages(exclude=['test*']),
+    packages=setuptools.find_namespace_packages(exclude=['test*']),
     install_requires=requirements,
     include_package_data=True,
     python_requires=">=3.5",
