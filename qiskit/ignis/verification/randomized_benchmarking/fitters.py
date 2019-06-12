@@ -16,6 +16,7 @@
 Functions used for the analysis of randomized benchmarking results.
 """
 
+from abc import ABC, abstractmethod
 from scipy.optimize import curve_fit
 import numpy as np
 from qiskit import QiskitError
@@ -28,8 +29,99 @@ try:
 except ImportError:
     HAS_MATPLOTLIB = False
 
+class RBFitterBase(ABC):
+    """
+        Abstract base class (ABS) for fitters for randomized benchmarking
+    """
 
-class RBFitter:
+    @abstractmethod
+    def raw_data(self):
+        """Return raw data."""
+        return
+
+    @abstractmethod
+    def cliff_lengths(self):
+        """Return clifford lengths."""
+        return
+
+    @abstractmethod
+    def ydata(self):
+        """Return ydata (means and std devs)."""
+        return
+
+    @abstractmethod
+    def fit(self):
+        """Return fit."""
+        return
+
+    @abstractmethod
+    def rb_fit_fun(self):
+        """Return the function rb_fit_fun."""
+        return
+
+    @abstractmethod
+    def seeds(self):
+        """Return the number of loaded seeds."""
+        return
+
+    @abstractmethod
+    def results(self):
+        """Return all the results."""
+        return
+
+    @abstractmethod
+    def add_data(self):
+        """
+        Add a new result. Re calculate the raw data, means and
+        fit.
+        """
+
+        return
+
+    @abstractmethod
+    def calc_data(self):
+        """
+        Retrieve probabilities of success from execution results.
+        """
+
+        return
+
+    @abstractmethod
+    def calc_statistics(self):
+        """
+        Extract averages and std dev from the raw data
+        """
+
+        return
+
+    @abstractmethod
+    def fit_data_pattern(self):
+        """
+        Fit the RB results of a particular pattern
+        to an exponential curve.
+        """
+
+        return
+
+    @abstractmethod
+    def fit_data(self):
+        """
+        Fit the RB results to an exponential curve.
+        """
+
+        return
+
+    @abstractmethod
+    def plot_rb_data(self):
+        """
+        Plot randomized benchmarking data of a single pattern.
+
+        """
+
+        return
+
+
+class RBFitter(RBFitterBase):
     """
         Class for fitters for randomized benchmarking
     """
@@ -375,10 +467,12 @@ class RBFitter:
             plt.show()
 
 
-class InterleavedRBFitter():
+class InterleavedRBFitter(RBFitterBase):
     """
         Class for fitters for interleaved RB
-        Derived from RBFitter class
+        Derived from RBFitterBase class
+
+        Contains two RBFitter objects
     """
 
     def __init__(self, original_result, interleaved_result,
@@ -393,27 +487,29 @@ class InterleavedRBFitter():
                 number of patterns, j is the number of cliffords lengths
             rb_pattern: the pattern for the rb sequences.
         """
+
         self._cliff_lengths = cliff_lengths
         self._rb_pattern = rb_pattern
         self._fit_interleaved = []
 
-        self.rbfit_original = RBFitter(
+        self._rbfit_original = RBFitter(
             original_result, cliff_lengths, rb_pattern)
-        self.rbfit_interleaved = RBFitter(
+        self._rbfit_interleaved = RBFitter(
             interleaved_result, cliff_lengths, rb_pattern)
 
-        self._raw_original_data = self.rbfit_original.raw_data
-        self._raw_interleaved_data = self.rbfit_interleaved.raw_data
-        self._ydata_original = self.rbfit_original.ydata
-        self._ydata_interleaved = self.rbfit_interleaved.ydata
+        self.rbfit_std.add_data(original_result)
+        self.rbfit_int.add_data(interleaved_result)
+        self.fit_data()
 
-        self._original_fit_function = self.rbfit_original.rb_fit_fun
-        self._interleaved_fit_function = self.rbfit_interleaved.rb_fit_fun
-        self._original_fit = self.rbfit_original.fit
-        self._interleaved_fit = self.rbfit_interleaved.fit
+    @property
+    def rbfit_std(self):
+        """Return the original RB fitter."""
+        return self._rbfit_original
 
-        self.rbfit_original.add_data(original_result)
-        self.rbfit_interleaved.add_data(interleaved_result)
+    @property
+    def rbfit_int(self):
+        """Return the interleaved RB fitter."""
+        return self._rbfit_interleaved
 
     @property
     def cliff_lengths(self):
@@ -421,31 +517,44 @@ class InterleavedRBFitter():
         return self.cliff_lengths
 
     @property
-    def fit_interleaved(self):
-        """Return fit."""
+    def fit(self):
+        """Return fit as a 2 element list."""
+        return [self.rbfit_std.fit, self.rbfit_int.fit]
+
+    @property
+    def fit_int(self):
+        """Return interleaved fit parameters"""
         return self._fit_interleaved
 
     @property
-    def ydata_original(self):
-        """Return ydata_original (means and std devs)."""
-        return self._ydata_original
+    def rb_fit_fun(self):
+        """Return the function rb_fit_fun."""
+        return self.rbfit_std.rb_fit_fun
 
     @property
-    def ydata_interleaved(self):
-        """Return ydata_interleaved (means and std devs)."""
-        return self._ydata_interleaved
+    def seeds(self):
+        """Return the number of loaded seeds as a
+        2 element list."""
+        return [self.rbfit_std.seeds, self.rbfit_int.seeds]
 
     @property
-    def raw_original_data(self):
-        """Return raw original_data."""
-        return self._raw_original_data
+    def results(self):
+        """Return all the results as a 2 element list."""
+        return [self.rbfit_std.results, self.rbfit_int.results]
 
     @property
-    def raw_interleaved_data(self):
-        """Return raw interleaved_data."""
-        return self._raw_interleaved_data
+    def ydata(self):
+        """Return ydata (means and std devs).
+        2 element list [ydata_original, ydata_inteleaved]"""
+        return [self.rbfit_std.ydata, self.rbfit_int.ydata]
 
-    def add_interleaved_data(self, new_original_result,
+    @property
+    def raw_data(self):
+        """Return raw_data as 2 element list
+        [raw_original_data, raw_interleaved_data]."""
+        return [self.rbfit_std.raw_data, self.rbfit_int.raw_data]
+
+    def add_data(self, new_original_result,
                              new_interleaved_result,
                              rerun_fit=True):
         """
@@ -462,28 +571,50 @@ class InterleavedRBFitter():
             Assumes that 'result' was executed is
             the output of circuits generated by randomized_becnhmarking_seq
         """
-        self.rbfit_original.add_data(new_original_result, rerun_fit)
-        self.rbfit_interleaved.add_data(new_interleaved_result, rerun_fit)
+        self.rbfit_std.add_data(new_original_result, rerun_fit)
+        self.rbfit_int.add_data(new_interleaved_result, rerun_fit)
 
-    def calc_interleaved_data(self):
+        if rerun_fit:
+            self.fit_data()
+
+    def calc_data(self):
         """
         Retrieve probabilities of success from execution results. Outputs
         results into an internal variables: _raw_original_data and
         _raw_interleaved_data
         """
-        self.rbfit_original.calc_data()
-        self.rbfit_interleaved.calc_data()
+        self.rbfit_std.calc_data()
+        self.rbfit_int.calc_data()
 
-    def calc_interleaved_statistics(self):
+    def calc_statistics(self):
         """
         Extract averages and std dev.
         Output into internal variables:
         _ydata_original and _ydata_interleaved
         """
-        self.rbfit_original.calc_statistics()
-        self.rbfit_interleaved.calc_statistics()
+        self.rbfit_std.calc_statistics()
+        self.rbfit_int.calc_statistics()
 
-    def fit_interleaved_data(self):
+    def fit_data_pattern(self, patt_ind, fit_guess, fit_index=0):
+        """
+        Fit the RB results of a particular pattern
+        to an exponential curve.
+
+        Args:
+            patt_ind: index of the data to fit
+            fit_guess: guess values for the fit
+            fit_index: 0 fit the standard data, 1 fit the
+            interleaved data
+
+        """
+
+        if fit_index==0:
+            self.rbfit_std.fit_data_pattern(patt_ind, fit_guess)
+        else:
+            self.rbfit_int.fit_data_pattern(patt_ind, fit_guess)
+
+
+    def fit_data(self):
         """
         Fit the interleaved RB results
         Fit each of the patterns
@@ -500,8 +631,8 @@ class InterleavedRBFitter():
             'systematic_err_L' = epc_est - systematic_err (left error bound)
             'systematic_err_R' = epc_est + systematic_err (right error bound)
         """
-        self.rbfit_original.fit_data()
-        self.rbfit_interleaved.fit_data()
+        self.rbfit_std.fit_data()
+        self.rbfit_int.fit_data()
         self._fit_interleaved = []
 
         for patt_ind, (_, qubits) in enumerate(zip(self._cliff_lengths,
@@ -510,11 +641,11 @@ class InterleavedRBFitter():
             nrb = 2 ** len(qubits)
 
             # Calculate alpha (=p) and alpha_c (=p_c):
-            alpha = self.rbfit_original.fit[patt_ind]['params'][1]
-            alpha_c = self.rbfit_interleaved.fit[patt_ind]['params'][1]
+            alpha = self.rbfit_std.fit[patt_ind]['params'][1]
+            alpha_c = self.rbfit_int.fit[patt_ind]['params'][1]
             # Calculate their errors:
-            alpha_err = self.rbfit_original.fit[patt_ind]['params_err'][1]
-            alpha_c_err = self.rbfit_interleaved.fit[patt_ind]['params_err'][1]
+            alpha_err = self.rbfit_std.fit[patt_ind]['params_err'][1]
+            alpha_c_err = self.rbfit_int.fit[patt_ind]['params_err'][1]
 
             # Calculate epc_est (=r_c^est) - Eq. (4):
             epc_est = (nrb - 1) * (1 - alpha_c / alpha) / nrb
@@ -548,7 +679,7 @@ class InterleavedRBFitter():
                                           'systematic_err_R':
                                               systematic_err_R})
 
-    def plot_interleaved_rb_data(self, pattern_index=0, ax=None,
+    def plot_rb_data(self, pattern_index=0, ax=None,
                                  add_label=True, show_plt=True):
         """
         Plot interleaved randomized benchmarking data of a single pattern.
@@ -574,24 +705,24 @@ class InterleavedRBFitter():
         xdata = self._cliff_lengths[pattern_index]
 
         # Plot the original and interleaved result for each sequence
-        for one_seed_data in self._raw_original_data[pattern_index]:
+        for one_seed_data in self.raw_data[0][pattern_index]:
             ax.plot(xdata, one_seed_data, color='blue', linestyle='none',
                     marker='x')
-        for one_seed_data in self._raw_interleaved_data[pattern_index]:
+        for one_seed_data in self.raw_data[1][pattern_index]:
             ax.plot(xdata, one_seed_data, color='red', linestyle='none',
                     marker='+')
 
         # Plot the fit
         ax.plot(xdata,
-                self._original_fit_function(xdata,
-                                            *self._original_fit
+                self.rbfit_std.rb_fit_fun(xdata,
+                                            *self.fit[0]
                                             [pattern_index]['params']),
                 color='blue', linestyle='-', linewidth=2,
                 label='Standard RB')
         ax.tick_params(labelsize=14)
         ax.plot(xdata,
-                self._interleaved_fit_function(xdata,
-                                               *self._interleaved_fit
+                self.rbfit_int.rb_fit_fun(xdata,
+                                               *self.fit[1]
                                                [pattern_index]['params']),
                 color='red', linestyle='-', linewidth=2,
                 label='Interleaved RB')
