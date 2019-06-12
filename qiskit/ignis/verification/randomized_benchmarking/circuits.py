@@ -398,6 +398,9 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     # output of interleaved rb
     if interleaved_gates is not None:
         return circuits, xdata, circuits_interleaved
+    # output of purity rb
+    if is_purity:
+        return circuits_purity, xdata
     # output of standard (simultaneous) rb
     return circuits, xdata
 
