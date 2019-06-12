@@ -207,6 +207,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         rb sequences (separate list for each seed)
         circuits_purity: list of lists of circuits for purity rb
         (separate list for each seed and each of the 3^n circuits)
+        npurity: the number of purity rb circuits (per seed)
+        which equals to 3^n, where n is the dimension
     """
     if rb_pattern is None:
         rb_pattern = [[0]]
@@ -400,7 +402,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         return circuits, xdata, circuits_interleaved
     # output of purity rb
     if is_purity:
-        return circuits_purity, xdata
+        return circuits_purity, xdata, npurity
     # output of standard (simultaneous) rb
     return circuits, xdata
 
