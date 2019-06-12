@@ -250,11 +250,10 @@ class TestFitters(unittest.TestCase):
             joint_rb_fit = InterleavedRBFitter(
                 original_result_list, interleaved_result_list,
                 tst['rb_opts']['xdata'], tst['rb_opts']['rb_pattern'])
-            joint_rb_fit.fit_interleaved_data()
 
-            joint_fit = joint_rb_fit.fit_interleaved
-            ydata_original = joint_rb_fit.ydata_original
-            ydata_interleaved = joint_rb_fit.ydata_interleaved
+            joint_fit = joint_rb_fit.fit_int
+            ydata_original = joint_rb_fit.ydata[0]
+            ydata_interleaved = joint_rb_fit.ydata[1]
 
             for i, _ in enumerate(ydata_original):
                 self.assertTrue(all(np.isclose(a, b) for a, b in
