@@ -29,6 +29,7 @@ try:
 except ImportError:
     HAS_MATPLOTLIB = False
 
+
 class RBFitterBase(ABC):
     """
         Abstract base class (ABS) for fitters for randomized benchmarking
@@ -555,8 +556,7 @@ class InterleavedRBFitter(RBFitterBase):
         return [self.rbfit_std.raw_data, self.rbfit_int.raw_data]
 
     def add_data(self, new_original_result,
-                             new_interleaved_result,
-                             rerun_fit=True):
+                 new_interleaved_result, rerun_fit=True):
         """
         Add a new result.
 
@@ -608,11 +608,10 @@ class InterleavedRBFitter(RBFitterBase):
 
         """
 
-        if fit_index==0:
+        if fit_index == 0:
             self.rbfit_std.fit_data_pattern(patt_ind, fit_guess)
         else:
             self.rbfit_int.fit_data_pattern(patt_ind, fit_guess)
-
 
     def fit_data(self):
         """
@@ -680,7 +679,7 @@ class InterleavedRBFitter(RBFitterBase):
                                               systematic_err_R})
 
     def plot_rb_data(self, pattern_index=0, ax=None,
-                                 add_label=True, show_plt=True):
+                     add_label=True, show_plt=True):
         """
         Plot interleaved randomized benchmarking data of a single pattern.
 
@@ -715,15 +714,15 @@ class InterleavedRBFitter(RBFitterBase):
         # Plot the fit
         ax.plot(xdata,
                 self.rbfit_std.rb_fit_fun(xdata,
-                                            *self.fit[0]
-                                            [pattern_index]['params']),
+                                          *self.fit[0]
+                                          [pattern_index]['params']),
                 color='blue', linestyle='-', linewidth=2,
                 label='Standard RB')
         ax.tick_params(labelsize=14)
         ax.plot(xdata,
                 self.rbfit_int.rb_fit_fun(xdata,
-                                               *self.fit[1]
-                                               [pattern_index]['params']),
+                                          *self.fit[1]
+                                          [pattern_index]['params']),
                 color='red', linestyle='-', linewidth=2,
                 label='Interleaved RB')
         ax.tick_params(labelsize=14)
