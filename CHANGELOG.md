@@ -19,12 +19,28 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Interleaved RB
+- Repetition Code for Verification
+
 ### Changed
+
+- Updates for Terra Qubit class
+- Added the ability to add arbitrary seeds to RB (not just in order)
+- Fix bug in the characterization fitter when selecting a qubit index to fit
+- Improved guess values for RB fitters and enabled the user to input their own guess values
 
 ### Removed
 
+## [0.1.1] - 2019-05-02
 
-## [0.1.0] - 2019-TBD
+### Added
+
+- Tensored Measurement Mitigation
+- Align cliffs option to RB
+- Quantum Volume
+- Subset measurement mitigation
+
+## [0.1.0] - 2019-03-04
 
 ### Added
 
@@ -32,4 +48,4 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 
 [UNRELEASED]: TBD
-[0.1.0]: TBD
+[0.1.0]: March 4, 2019

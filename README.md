@@ -6,6 +6,7 @@
 
 Qiskit is made up of elements that each work together to enable quantum computing. This element is **Ignis**, which provides tools for quantum hardware verification, noise characterization, and error correction.
 
+
 ## Installation
 
 We encourage installing Qiskit via the PIP tool (a python package manager), which installs all Qiskit elements, including this one.
@@ -32,9 +33,9 @@ from qiskit import QuantumRegister, QuantumCircuit, ClassicalRegister
 from qiskit.providers.aer import noise # import AER noise model
 
 # Measurement error mitigation functions
-from qiskit.ignis.error_mitigation.measurement import (complete_meas_cal,
-                                                       CompleteMeasFitter, 
-                                                       MeasurementFilter)
+from qiskit.ignis.mitigation.measurement import (complete_meas_cal,
+                                                 CompleteMeasFitter, 
+                                                 MeasurementFilter)
 
 # Generate a noise model for the qubits
 noise_model = noise.NoiseModel()
@@ -78,13 +79,13 @@ meas_filter = meas_fitter.filter
 # Apply the filter to the raw counts to mitigate 
 # the measurement errors
 mitigated_counts = meas_filter.apply(raw_counts)
-print("Results with mitigation:", mitigated_counts)
+print("Results with mitigation:", {l:int(mitigated_counts[l]) for l in mitigated_counts})
 ```
 
 ```
 Results without mitigation: {'000': 181, '001': 83, '010': 59, '011': 65, '100': 101, '101': 48, '110': 72, '111': 391}
 
-Results with mitigation: {'000': 420.866934, '001': 2.1002, '011': 1.30314, '100': 53.0165, '110': 13.1834, '111': 509.5296}
+Results with mitigation: {'000': 421, '001': 2, '011': 1, '100': 53, '110': 13, '111': 510}
 ```
 
 ## Contribution guidelines
