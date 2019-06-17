@@ -205,7 +205,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         rb_opts_dict: option dictionary back out with default options appended
         circuits_interleaved: list of lists of circuits for the interleaved
         rb sequences (separate list for each seed)
-        circuits_purity: list of lists of circuits for purity rb
+        circuits_purity: list of lists of lists of circuits for purity rb
         (separate list for each seed and each of the 3^n circuits)
         npurity: the number of purity rb circuits (per seed)
         which equals to 3^n, where n is the dimension
