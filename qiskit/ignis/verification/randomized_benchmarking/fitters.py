@@ -780,13 +780,13 @@ class PurityRBFitter(RBFitterBase):
             self._rbfit_purity[d] = RBFitter(
                 purity_result[d], cliff_lengths, rb_pattern)
 
-        #self.add_data(purity_result)
+        # self.add_data(purity_result)
         self.fit_data()
 
     @property
     def rbfit_purity(self):
         """Return the purity RB fitter."""
-        #return [self.rbfit_purity[d] for d in range(self._npurity)]
+        # return [self.rbfit_purity[d] for d in range(self._npurity)]
         return self.rbfit_purity
 
     @property
@@ -798,38 +798,38 @@ class PurityRBFitter(RBFitterBase):
     def fit(self):
         """Return the fit."""
         return self.rbfit_purity.fit
-        #return [self.rbfit_purity[d].fit for d in range(self._npurity)]
+        # return [self.rbfit_purity[d].fit for d in range(self._npurity)]
 
     @property
     def rb_fit_fun(self):
         """Return the function rb_fit_fun."""
         return self.rbfit_purity.rb_fit_fun
-        #return [self.rbfit_purity[d].rb_fit_fun for d in range(self._npurity)]
+        # return [self.rbfit_purity[d].rb_fit_fun for d in range(self._npurity)]
 
     @property
     def seeds(self):
         """Return the number of loaded seeds as a
         3^n element list."""
         return self.rbfit_purity.seeds
-        #return [self.rbfit_purity[d].seeds for d in range(self._npurity)]
+        # return [self.rbfit_purity[d].seeds for d in range(self._npurity)]
 
     @property
     def results(self):
         """Return all the results as a 3^n element list."""
-        #return [self.rbfit_purity[d].results for d in range(self._npurity)]
+        # return [self.rbfit_purity[d].results for d in range(self._npurity)]
         return self.rbfit_purity.results
 
     @property
     def ydata(self):
         """Return ydata (means and std devs).
         3^n element list"""
-        #return [self.rbfit_purity[d].ydata for d in range(self._npurity)]
+        # return [self.rbfit_purity[d].ydata for d in range(self._npurity)]
         return self.rbfit_purity.ydata
 
     @property
     def raw_data(self):
         """Return raw_data"""
-        #return [self.rbfit_purity[d].raw_data for d in range(self._npurity)]
+        # return [self.rbfit_purity[d].raw_data for d in range(self._npurity)]
         return self.rbfit_purity.raw_data
 
     def add_data(self, new_purity_result, rerun_fit=True):
