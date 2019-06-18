@@ -28,6 +28,8 @@ from qiskit.validation.base import Obj
 from qiskit import QiskitError
 from ...verification.tomography import count_keys
 
+import os
+from qiskit.tools import parallel_map
 
 class MeasurementFilter():
     """
@@ -141,13 +143,28 @@ class MeasurementFilter():
             # extract out all the counts, re-call the function with the
             # counts and push back into the new result
             new_result = deepcopy(raw_data)
+            if os.environ.get('IGNIS_NUM_PROCESSES') is not None:
+                ignis_num_processes = int(os.environ.get('IGNIS_NUM_PROCESSES'))
 
-            for resultidx, _ in enumerate(raw_data.results):
-                new_counts = self.apply(
-                    raw_data.get_counts(resultidx), method=method)
-                new_result.results[resultidx].data.counts = \
-                    new_result.results[resultidx]. \
-                    data.counts.from_dict(new_counts)
+                # in: resultidx, raw_data, method
+                # out: resultidx, new_counts
+                new_counts_list = parallel_map(self._apply_correction,
+                                          [resultidx for resultidx, _ in enumerate(raw_data.results)],
+                                          task_args=(raw_data, method),
+                                          num_processes=ignis_num_processes)
+
+                for resultidx, new_counts in new_counts_list:
+                    new_result.results[resultidx].data.counts = \
+                                 new_result.results[resultidx]. \
+                                 data.counts.from_dict(new_counts)
+            else:
+                # Serial
+                for resultidx, _ in enumerate(raw_data.results):
+                    new_counts = self.apply(
+                        raw_data.get_counts(resultidx), method=method)
+                    new_result.results[resultidx].data.counts = \
+                        new_result.results[resultidx]. \
+                        data.counts.from_dict(new_counts)
 
             return new_result
 
@@ -199,6 +216,10 @@ class MeasurementFilter():
             raw_data2 = raw_data2[0]
         return raw_data2
 
+    def _apply_correction(self, resultidx, raw_data, method):
+        new_counts = self.apply(
+            raw_data.get_counts(resultidx), method=method)
+        return resultidx, new_counts
 
 class TensoredFilter():
     """
