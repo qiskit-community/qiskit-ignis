@@ -777,14 +777,14 @@ class PurityRBFitter(RBFitterBase):
         self._rb_pattern = rb_pattern
         self._npurity = npurity
         self._ydata = []
-        self._fit_purity = []
+        self._fit = [{} for e in rb_pattern]
 
         self._rbfit_purity = [[] for _ in range(npurity)]
         for d in range(self._npurity):
             self._rbfit_purity[d] = RBFitter(
                 purity_result[d], cliff_lengths, rb_pattern)
 
-        self.fit_data()
+        # self.fit_data()
 
     @property
     def rbfit_pur(self):
@@ -798,14 +798,14 @@ class PurityRBFitter(RBFitterBase):
 
     @property
     def fit(self):
-        """Return the fit as a 3^n element list."""
-        return [self.rbfit_pur[d].fit for
-                d in range(self._npurity)]
+        """Return the purity fit parameters."""
+        return self.rbfit_pur[0].fit
 
     @property
     def fit_pur(self):
-        """Return the purity fit parameters."""
-        return self._fit_purity
+        """Return the fit as a 3^n element list."""
+        return [self.rbfit_pur[d].fit for
+                d in range(self._npurity)]
 
     @property
     def rb_fit_fun(self):
@@ -897,16 +897,28 @@ class PurityRBFitter(RBFitterBase):
 
     def fit_data_pattern(self, patt_ind, fit_guess):
         """
-        Fit the sum the results of all correlators
+        Fit the sum of the results of all correlators
         of a particular pattern, to an exponential curve.
         Args:
             patt_ind: index of the data to fit
             fit_guess: guess values for the fit
         """
-        pass
+        self.rbfit_pur[0].fit_data_pattern(patt_ind, fit_guess)
 
     def fit_data(self):
-        pass
+        """
+         Fit the sum of the results of all correlators
+         to an exponential curve. Fit each of the patterns.
+         Puts the results into a list of fit dictionaries:
+         where each dictionary corresponds to a pattern and has fields:
+             'params' - three parameters of rb_fit_fun. The middle one is the
+                        exponent.
+             'err' - the error limits of the parameters.
+             'epc' - error per Clifford
+         """
+        self.rbfit_pur[0]._ydata = self._ydata
+        # print(self.rbfit_pur[0]._ydata)
+        self.rbfit_pur[0].fit_data()
 
     def plot_rb_data(self, pattern_index=0, ax=None,
                      add_label=True, show_plt=True):
