@@ -142,7 +142,7 @@ class RBFitter(RBFitterBase):
         self._cliff_lengths = cliff_lengths
         self._rb_pattern = rb_pattern
         self._raw_data = []
-        self._ydata = []
+        # self._ydata = []
         self._fit = [{} for e in rb_pattern]
         self._nseeds = []
         self._circ_name_type = ''
@@ -588,9 +588,8 @@ class InterleavedRBFitter(RBFitterBase):
 
     def calc_statistics(self):
         """
-        Extract averages and std dev.
-        Output into internal variables:
-        _ydata_original and _ydata_interleaved
+        Extract averages and std dev. Output
+        [ydata_original, ydata_inteleaved]
         """
         self.rbfit_std.calc_statistics()
         self.rbfit_int.calc_statistics()
@@ -754,11 +753,14 @@ class InterleavedRBFitter(RBFitterBase):
 
 class PurityRBFitter(RBFitterBase):
     """
-        Class for fitters for interleaved RB
+        Class for fitters for purity RB
         Derived from RBFitterBase class
 
-        Contains 3^n RBFitter objects,
-        where n is the dimension
+        Contains 3^n+1 RBFitter objects:
+        3^n RBFitter objects:
+        to calculate the ydata from the results
+        and another RBFitter object:
+        calculates their sum and does the fit
     """
 
     def __init__(self, purity_result, npurity, cliff_lengths,
@@ -776,15 +778,15 @@ class PurityRBFitter(RBFitterBase):
         self._cliff_lengths = cliff_lengths
         self._rb_pattern = rb_pattern
         self._npurity = npurity
-        self._ydata = []
         self._fit = [{} for e in rb_pattern]
 
-        self._rbfit_purity = [[] for _ in range(npurity)]
+        self._rbfit_purity = [[] for _ in range(npurity+1)]
         for d in range(self._npurity):
             self._rbfit_purity[d] = RBFitter(
                 purity_result[d], cliff_lengths, rb_pattern)
-
-        # self.fit_data()
+        # The last fitter is the sum of 3^n correlators
+        self._rbfit_purity[self._npurity] = RBFitter(
+            None, cliff_lengths, rb_pattern)
 
     @property
     def rbfit_pur(self):
@@ -799,7 +801,7 @@ class PurityRBFitter(RBFitterBase):
     @property
     def fit(self):
         """Return the purity fit parameters."""
-        return self.rbfit_pur[0].fit
+        return self.rbfit_pur[self._npurity].fit
 
     @property
     def fit_pur(self):
@@ -810,7 +812,8 @@ class PurityRBFitter(RBFitterBase):
     @property
     def rb_fit_fun(self):
         """Return the function rb_fit_fun."""
-        return self.rbfit_pur[0].rb_fit_fun
+        return self.rbfit_pur[self._npurity] \
+            .rb_fit_fun
 
     @property
     def seeds(self):
@@ -842,7 +845,7 @@ class PurityRBFitter(RBFitterBase):
     def ydata(self):
         """Return ydata (means and std devs)
         of the sum of 3^n correlators"""
-        return self._ydata
+        return self.rbfit_pur[self._npurity].ydata
 
     def add_data(self, new_purity_result, rerun_fit=True):
         """
@@ -872,17 +875,15 @@ class PurityRBFitter(RBFitterBase):
     def calc_statistics(self):
         """
          Extract averages and std dev.
-         Output into internal variable _ydata.
-
          Calculates the average and std from the
          3^n correlators, and then add them.
          """
         for d in range(self._npurity):
             self.rbfit_pur[d].calc_statistics()
 
-        self._ydata = []
+        self.rbfit_pur[self._npurity]._ydata = []
         for patt_ind in range(len(self._rb_pattern)):
-            self._ydata.append({})
+            self.rbfit_pur[self._npurity]._ydata.append({})
             qubits = self._rb_pattern[patt_ind]
             new_ydata_mean = np.zeros(len(self._cliff_lengths[patt_ind]))
             new_ydata_std = np.zeros(len(self._cliff_lengths[patt_ind]))
@@ -892,8 +893,10 @@ class PurityRBFitter(RBFitterBase):
                                  self.ydata_pur[d][patt_ind]['std']
             new_ydata_mean = new_ydata_mean / (2 ** len(qubits))
             new_ydata_std = np.sqrt(new_ydata_std)
-            self._ydata[-1]['mean'] = new_ydata_mean
-            self._ydata[-1]['std'] = new_ydata_std
+            self.rbfit_pur[self._npurity]._ydata[-1]['mean'] = \
+                new_ydata_mean
+            self.rbfit_pur[self._npurity]._ydata[-1]['std'] = \
+                new_ydata_std
 
     def fit_data_pattern(self, patt_ind, fit_guess):
         """
@@ -903,7 +906,8 @@ class PurityRBFitter(RBFitterBase):
             patt_ind: index of the data to fit
             fit_guess: guess values for the fit
         """
-        self.rbfit_pur[0].fit_data_pattern(patt_ind, fit_guess)
+        self.rbfit_pur[self._npurity].fit_data_pattern(
+            patt_ind, fit_guess)
 
     def fit_data(self):
         """
@@ -916,10 +920,14 @@ class PurityRBFitter(RBFitterBase):
              'err' - the error limits of the parameters.
              'epc' - error per Clifford
          """
-        self.rbfit_pur[0]._ydata = self._ydata
-        # print(self.rbfit_pur[0]._ydata)
-        self.rbfit_pur[0].fit_data()
+        self.rbfit_pur[self._npurity].fit_data()
 
     def plot_rb_data(self, pattern_index=0, ax=None,
                      add_label=True, show_plt=True):
+        """
+          Plot purity rb data of a single pattern.
+        """
         pass
+        # self.rbfit_pur[self._npurity].plot_rb_data(pattern_index, ax,
+        #                                           add_label, show_plt)
+
