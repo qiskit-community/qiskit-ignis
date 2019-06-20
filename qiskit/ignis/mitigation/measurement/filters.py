@@ -143,11 +143,10 @@ class MeasurementFilter():
             # counts and push back into the new result
             new_result = deepcopy(raw_data)
             if os.environ.get('IGNIS_NUM_PROCESSES') is not None:
+                # Parallel
                 ignis_num_processes = \
                     int(os.environ.get('IGNIS_NUM_PROCESSES'))
 
-                # in: resultidx, raw_data, method
-                # out: resultidx, new_counts
                 new_counts_list = parallel_map(
                     self._apply_correction,
                     [resultidx for resultidx,
