@@ -889,8 +889,7 @@ class PurityRBFitter(RBFitterBase):
             new_ydata_std = np.zeros(len(self._cliff_lengths[patt_ind]))
             for d in range(self._npurity):
                 new_ydata_mean += self.ydata_pur[d][patt_ind]['mean']
-                new_ydata_std += self.ydata_pur[d][patt_ind]['std'] * \
-                                 self.ydata_pur[d][patt_ind]['std']
+                new_ydata_std += (self.ydata_pur[d][patt_ind]['std'] ** 2)
             new_ydata_mean = new_ydata_mean / (2 ** len(qubits))
             new_ydata_std = np.sqrt(new_ydata_std)
             self.rbfit_pur[self._npurity]._ydata[-1]['mean'] = \
@@ -930,4 +929,3 @@ class PurityRBFitter(RBFitterBase):
         pass
         # self.rbfit_pur[self._npurity].plot_rb_data(pattern_index, ax,
         #                                           add_label, show_plt)
-
