@@ -224,6 +224,7 @@ class MeasurementFilter():
             raw_data.get_counts(resultidx), method=method)
         return resultidx, new_counts
 
+
 class TensoredFilter():
     """
     Tensored measurement error mitigation filter
