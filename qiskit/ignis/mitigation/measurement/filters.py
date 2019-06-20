@@ -30,6 +30,7 @@ from qiskit import QiskitError
 from qiskit.tools import parallel_map
 from ...verification.tomography import count_keys
 
+
 class MeasurementFilter():
     """
     Measurement error mitigation filter
@@ -142,6 +143,7 @@ class MeasurementFilter():
             # extract out all the counts, re-call the function with the
             # counts and push back into the new result
             new_result = deepcopy(raw_data)
+
             if os.environ.get('IGNIS_NUM_PROCESSES') is not None:
                 # Parallel
                 ignis_num_processes = \
