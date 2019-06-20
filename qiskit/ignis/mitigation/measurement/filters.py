@@ -20,16 +20,15 @@ Measurement correction filters.
 
 """
 from copy import deepcopy
+import os
 from scipy.optimize import minimize
 import scipy.linalg as la
 import numpy as np
 import qiskit
 from qiskit.validation.base import Obj
 from qiskit import QiskitError
-from ...verification.tomography import count_keys
-
-import os
 from qiskit.tools import parallel_map
+from ...verification.tomography import count_keys
 
 class MeasurementFilter():
     """
@@ -144,14 +143,17 @@ class MeasurementFilter():
             # counts and push back into the new result
             new_result = deepcopy(raw_data)
             if os.environ.get('IGNIS_NUM_PROCESSES') is not None:
-                ignis_num_processes = int(os.environ.get('IGNIS_NUM_PROCESSES'))
+                ignis_num_processes = \
+                    int(os.environ.get('IGNIS_NUM_PROCESSES'))
 
                 # in: resultidx, raw_data, method
                 # out: resultidx, new_counts
-                new_counts_list = parallel_map(self._apply_correction,
-                                          [resultidx for resultidx, _ in enumerate(raw_data.results)],
-                                          task_args=(raw_data, method),
-                                          num_processes=ignis_num_processes)
+                new_counts_list = parallel_map(
+                    self._apply_correction,
+                    [resultidx for resultidx,
+                     _ in enumerate(raw_data.results)],
+                    task_args=(raw_data, method),
+                    num_processes=ignis_num_processes)
 
                 for resultidx, new_counts in new_counts_list:
                     new_result.results[resultidx].data.counts = \
