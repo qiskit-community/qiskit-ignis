@@ -142,7 +142,7 @@ class RBFitter(RBFitterBase):
         self._cliff_lengths = cliff_lengths
         self._rb_pattern = rb_pattern
         self._raw_data = []
-        # self._ydata = []
+        self._ydata = []
         self._fit = [{} for e in rb_pattern]
         self._nseeds = []
         self._circ_name_type = ''
@@ -164,6 +164,13 @@ class RBFitter(RBFitterBase):
     def ydata(self):
         """Return ydata (means and std devs)."""
         return self._ydata
+
+    @ydata.setter
+    def ydata(self, ydata):
+        if ydata is None:
+            self._ydata = []
+        else:
+            self._ydata = ydata
 
     @property
     def fit(self):
@@ -881,9 +888,9 @@ class PurityRBFitter(RBFitterBase):
         for d in range(self._npurity):
             self.rbfit_pur[d].calc_statistics()
 
-        self.rbfit_pur[self._npurity]._ydata = []
+        self.rbfit_pur[self._npurity].ydata = []
         for patt_ind in range(len(self._rb_pattern)):
-            self.rbfit_pur[self._npurity]._ydata.append({})
+            self.rbfit_pur[self._npurity].ydata.append({})
             qubits = self._rb_pattern[patt_ind]
             new_ydata_mean = np.zeros(len(self._cliff_lengths[patt_ind]))
             new_ydata_std = np.zeros(len(self._cliff_lengths[patt_ind]))
@@ -892,9 +899,9 @@ class PurityRBFitter(RBFitterBase):
                 new_ydata_std += (self.ydata_pur[d][patt_ind]['std'] ** 2)
             new_ydata_mean = new_ydata_mean / (2 ** len(qubits))
             new_ydata_std = np.sqrt(new_ydata_std)
-            self.rbfit_pur[self._npurity]._ydata[-1]['mean'] = \
+            self.rbfit_pur[self._npurity].ydata[-1]['mean'] = \
                 new_ydata_mean
-            self.rbfit_pur[self._npurity]._ydata[-1]['std'] = \
+            self.rbfit_pur[self._npurity].ydata[-1]['std'] = \
                 new_ydata_std
 
     def fit_data_pattern(self, patt_ind, fit_guess):
@@ -926,6 +933,6 @@ class PurityRBFitter(RBFitterBase):
         """
           Plot purity rb data of a single pattern.
         """
-        pass
         # self.rbfit_pur[self._npurity].plot_rb_data(pattern_index, ax,
         #                                           add_label, show_plt)
+        pass
