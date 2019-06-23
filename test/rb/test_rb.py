@@ -69,7 +69,7 @@ class TestRB(unittest.TestCase):
             split_loc = 2
             res = [shuffled_bits[:split_loc], shuffled_bits[split_loc:]]
             # since we only have 1-qubit and 2-qubit Cliffords
-            if ((split_loc > 2) | (nq-split_loc > 2)):
+            if (split_loc > 2) | (nq-split_loc > 2):
                 return None
 
         return res
