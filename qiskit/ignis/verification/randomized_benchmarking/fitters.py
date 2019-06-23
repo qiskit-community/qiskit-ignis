@@ -155,6 +155,13 @@ class RBFitter(RBFitterBase):
         """Return raw data."""
         return self._raw_data
 
+    @raw_data.setter
+    def raw_data(self, raw_data):
+        if raw_data is None:
+            self._raw_data = []
+        else:
+            self._raw_data = raw_data
+
     @property
     def cliff_lengths(self):
         """Return clifford lengths."""
@@ -419,7 +426,7 @@ class RBFitter(RBFitterBase):
         Args:
             pattern_index: which RB pattern to plot
             ax (Axes or None): plot axis (if passed in).
-            add_label (bool): Add an EPC label
+            add_label (bool): Add an EPC label.
             show_plt (bool): display the plot.
 
         Raises:
@@ -836,10 +843,17 @@ class PurityRBFitter(RBFitterBase):
                 d in range(self._npurity)]
 
     @property
-    def raw_data(self):
-        """Return raw_data"""
+    def raw_data_pur(self):
+        """Return raw_data as a
+        3^n element list."""
         return [self.rbfit_pur[d].raw_data for
                 d in range(self._npurity)]
+
+    @property
+    def raw_data(self):
+        """Return raw_data of the sum of 3^n
+        correlators"""
+        return self.rbfit_pur[self._npurity].raw_data
 
     @property
     def ydata_pur(self):
@@ -879,6 +893,20 @@ class PurityRBFitter(RBFitterBase):
         for d in range(self._npurity):
             self.rbfit_pur[d].calc_data()
 
+        # Update the raw_data of the sum of correlators
+        self.rbfit_pur[self._npurity].raw_data = [
+            [[] for _ in range(len(self.seeds[0]))]
+            for _ in range(len(self._rb_pattern))]
+        for patt_ind in range(len(self._rb_pattern)):
+            for seed_ind in range(len(self.seeds[0])):
+                qubits = self._rb_pattern[patt_ind]
+                new_raw_data = np.zeros(len(self._cliff_lengths[patt_ind]))
+                for d in range(self._npurity):
+                    new_raw_data += self.raw_data_pur[d][patt_ind][seed_ind]
+                new_raw_data = new_raw_data / (2 ** len(qubits))
+                self.rbfit_pur[self._npurity].raw_data[patt_ind][seed_ind] = \
+                    new_raw_data
+
     def calc_statistics(self):
         """
          Extract averages and std dev.
@@ -887,22 +915,7 @@ class PurityRBFitter(RBFitterBase):
          """
         for d in range(self._npurity):
             self.rbfit_pur[d].calc_statistics()
-
-        self.rbfit_pur[self._npurity].ydata = []
-        for patt_ind in range(len(self._rb_pattern)):
-            self.rbfit_pur[self._npurity].ydata.append({})
-            qubits = self._rb_pattern[patt_ind]
-            new_ydata_mean = np.zeros(len(self._cliff_lengths[patt_ind]))
-            new_ydata_std = np.zeros(len(self._cliff_lengths[patt_ind]))
-            for d in range(self._npurity):
-                new_ydata_mean += self.ydata_pur[d][patt_ind]['mean']
-                new_ydata_std += (self.ydata_pur[d][patt_ind]['std'] ** 2)
-            new_ydata_mean = new_ydata_mean / (2 ** len(qubits))
-            new_ydata_std = np.sqrt(new_ydata_std)
-            self.rbfit_pur[self._npurity].ydata[-1]['mean'] = \
-                new_ydata_mean
-            self.rbfit_pur[self._npurity].ydata[-1]['std'] = \
-                new_ydata_std
+        self.rbfit_pur[self._npurity].calc_statistics()
 
     def fit_data_pattern(self, patt_ind, fit_guess):
         """
@@ -933,6 +946,5 @@ class PurityRBFitter(RBFitterBase):
         """
           Plot purity rb data of a single pattern.
         """
-        # self.rbfit_pur[self._npurity].plot_rb_data(pattern_index, ax,
-        #                                           add_label, show_plt)
-        pass
+        self.rbfit_pur[self._npurity].plot_rb_data(pattern_index, ax,
+                                                   add_label, show_plt)
