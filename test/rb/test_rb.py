@@ -53,6 +53,8 @@ class TestRB(unittest.TestCase):
 
         if pattern_type == 0:
             res = [list(range(nq))]
+            if nq > 2: # since we only have 1-qubit and 2-qubit Cliffords
+                return None
         elif pattern_type == 1:
             if nq == 1:
                 return None
@@ -64,6 +66,9 @@ class TestRB(unittest.TestCase):
             random.shuffle(shuffled_bits)
             split_loc = random.randint(1, nq-1)
             res = [shuffled_bits[:split_loc], shuffled_bits[split_loc:]]
+            # since we only have 1-qubit and 2-qubit Cliffords
+            if ((split_loc > 2) | (nq-split_loc > 2)):
+                return None
 
         return res
 
@@ -274,14 +279,14 @@ class TestRB(unittest.TestCase):
         # Load simulator
         backend = qiskit.Aer.get_backend('qasm_simulator')
 
-        # Test up to 2 qubits
-        nq_list = [1, 2]
+        # Test up to 4 qubits (only 1-qubit and 2-qubit RB)
+        nq_list = [1, 2, 3, 4]
 
         for nq in nq_list:
 
             print("Testing %d qubit RB" % nq)
 
-            for pattern_type in range(2):
+            for pattern_type in range(3):
                 for multiplier_type in range(2):
                     # See documentation of choose_pattern for the meaning of
                     # the different pattern types
@@ -300,6 +305,7 @@ class TestRB(unittest.TestCase):
                     rb_opts_interleaved = rb_opts.copy()
                     rb_opts_interleaved['interleaved_gates'] = \
                         self.choose_interleaved_gates(rb_opts['rb_pattern'])
+                    print ('rb_opts:', rb_opts_interleaved)
 
                     # Generate the sequences
                     try:
