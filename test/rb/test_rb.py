@@ -38,8 +38,9 @@ class TestRB(unittest.TestCase):
                              1 - a list of lists of single qubits, for nq=5
                                  it is [[1], [2], [3], [4], [5]]
                              2 - randomly choose a pattern which is a list of
-                                 two lists, for example for nq=5 it can be
-                                 [[4, 1, 2], [5, 3]]
+                                 two lists where the first one has 2 elements,
+                                 for example for nq=5 it can be
+                                 [[4, 1], [2, 5, 3]]
         :param nq: number of qubits
         :return: the pattern or None
                  Returns None if the pattern type is not relevant to the
@@ -53,7 +54,7 @@ class TestRB(unittest.TestCase):
 
         if pattern_type == 0:
             res = [list(range(nq))]
-            if nq > 2: # since we only have 1-qubit and 2-qubit Cliffords
+            if nq > 2:  # since we only have 1-qubit and 2-qubit Cliffords
                 return None
         elif pattern_type == 1:
             if nq == 1:
@@ -64,7 +65,8 @@ class TestRB(unittest.TestCase):
                 return None
             shuffled_bits = list(range(nq))
             random.shuffle(shuffled_bits)
-            split_loc = random.randint(1, nq-1)
+            # split_loc = random.randint(1, nq-1)
+            split_loc = 2
             res = [shuffled_bits[:split_loc], shuffled_bits[split_loc:]]
             # since we only have 1-qubit and 2-qubit Cliffords
             if ((split_loc > 2) | (nq-split_loc > 2)):
@@ -118,7 +120,6 @@ class TestRB(unittest.TestCase):
         :param pattern: pattern of indexes (from rb_pattern)
         :return: updated_gatelist: list of Clifford gates
         after the following updates:
-        - replace v, w gates
         - change the indexes from [0,1,...]
         according to the pattern
         '''
@@ -305,7 +306,7 @@ class TestRB(unittest.TestCase):
                     rb_opts_interleaved = rb_opts.copy()
                     rb_opts_interleaved['interleaved_gates'] = \
                         self.choose_interleaved_gates(rb_opts['rb_pattern'])
-                    print ('rb_opts:', rb_opts_interleaved)
+                    print('rb_opts:', rb_opts_interleaved)
 
                     # Generate the sequences
                     try:
