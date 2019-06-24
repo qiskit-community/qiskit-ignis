@@ -10,9 +10,15 @@
 #
 # If you don't like the way your name is cited by qiskit, please feel free to
 # open a pull request against this file to set your preferred naming.
+#
+# Note that each qiskit element uses its own mailmap so it may be necessary to
+# propagate changes in other repos for consistency.
+#
 Ali Javadi-Abhari <ali.javadi@ibm.com> <ajavadia@users.noreply.github.com>
 Ali Javadi-Abhari <ali.javadi@ibm.com> <ajavadia@princeton.edu>
-Gadi Aleksandrowicz <gadial@gmail.com> <gadia@il.ibm.com>
+Christopher J. Wood <cjwood@us.ibm.com>
+Gadi Aleksandrowicz <gadia@il.ibm.com> <gadial@gmail.com>
+Gadi Aleksandrowicz <gadia@il.ibm.com>
 Jay M. Gambetta <jay.gambetta@us.ibm.com>
 Shelly Garion <shelly@il.ibm.com> <46566946+ShellyGarion@users.noreply.github.com>
 Yael Ben-Haim <yaelbh@il.ibm.com>
