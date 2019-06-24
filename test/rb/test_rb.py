@@ -321,8 +321,8 @@ class TestRB(unittest.TestCase):
                                      %d qubit interleaved RB are not the same \
                                      as given in interleaved_gates input" % nq)
 
-    def compare_purity_circuits(self, original_circ, purity_circ,
-                                nq, purity_ind, npurity, rb_opts_purity, vec_len):
+    def compare_purity_circuits(self, original_circ, purity_circ, nq,
+                                purity_ind, npurity, rb_opts_purity, vec_len):
         '''
         Verifies that purity RB circuits meet the requirements:
         - The Clifford gates are the same as the original Clifford gates.
@@ -403,7 +403,6 @@ class TestRB(unittest.TestCase):
         self.assertEqual(original_gatelist, purity_gatelist,
                          "Error: The last purity gates in the \
                          %d qubit purity RB are wrong" % nq)
-
 
     def test_rb(self):
         """ Main function of the test """
@@ -525,7 +524,8 @@ class TestRB(unittest.TestCase):
                             if is_purity:
                                 for d in range(npurity):
                                     name_type, _ = self.update_purity_gates(
-                                        npurity, d, rb_opts_purity['rb_pattern'])
+                                        npurity, d, rb_opts_purity
+                                        ['rb_pattern'])
                                     self.assertEqual(
                                         rb_purity_circs[seed][d]
                                         [circ_index].name,
