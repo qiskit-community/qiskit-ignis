@@ -20,6 +20,7 @@ and that it returns the identity
 """
 
 import unittest
+import numpy as np
 import random
 import qiskit
 import qiskit.ignis.verification.randomized_benchmarking as rb
@@ -139,6 +140,33 @@ class TestRB(unittest.TestCase):
             updated_gatelist += [op_names + ' ' +
                                  (' '.join(op_qubits))]
         return updated_gatelist
+
+    @staticmethod
+    def update_purity_gates(npurity, d):
+
+        name_type = ''
+        ind_d = d
+        purity_qubit_num = 0
+        while True:
+            purity_qubit_rot = np.mod(ind_d, 3)
+            ind_d = np.floor_divide(ind_d, 3)
+            if purity_qubit_rot == 0:
+                name_type += 'Z'
+            if purity_qubit_rot == 1:
+                name_type += 'X'
+            if purity_qubit_rot == 2:
+                name_type += 'Y'
+
+            purity_qubit_num = purity_qubit_num + 1
+            if ind_d == 0:
+             break
+        # padding the circuit name with Z's so that
+        # all circuits will have names of the same length
+        for _ in range(int(np.log(npurity)/np.log(3)) -
+                       purity_qubit_num):
+                name_type += 'Z'
+
+        return name_type
 
     def verify_circuit(self, circ, nq, rb_opts, vec_len, result, shots,
                        is_interleaved=False):
@@ -368,21 +396,19 @@ class TestRB(unittest.TestCase):
                                            backend=backend,
                                            basis_gates=basis_gates,
                                            shots=shots).result())
-                        for d in range(npurity):
-                            result_purity[d].append(qiskit.execute(
-                                rb_purity_circs[seed][d],
-                                backend=backend,
-                                basis_gates=basis_gates,
-                                shots=shots).result())
-
-                        # if is_purity:
-
+                        if is_purity:
+                            for d in range(npurity):
+                                result_purity[d].append(qiskit.execute(
+                                    rb_purity_circs[seed][d],
+                                    backend=backend,
+                                    basis_gates=basis_gates,
+                                    shots=shots).result())
 
                     # Verify the generated sequences
                     for seed in range(rb_opts['nseeds']):
                         length_vec = rb_opts['length_vector']
                         for circ_index, vec_len in enumerate(length_vec):
-
+                            # Verify circuits names
                             self.assertEqual(
                                 rb_circs[seed][circ_index].name,
                                 'rb_length_%d_seed_%d' % (
@@ -397,7 +423,17 @@ class TestRB(unittest.TestCase):
                                 rb_interleaved_circs[seed][circ_index].name,
                                 'rb_interleaved_length_%d_seed_%d' % (
                                     circ_index, seed),
-                                'Error: incorrect circuit name')
+                                'Error: incorrect interleaved circuit name')
+                            if is_purity:
+                                for d in range(npurity):
+                                    name_type = self.update_purity_gates(
+                                        npurity, d)
+                                    self.assertEqual(
+                                        rb_purity_circs[seed][d]
+                                        [circ_index].name,
+                                        'rb_purity_%s_length_%d_seed_%d' % (
+                                            name_type, circ_index, seed),
+                                        'Error: incorrect purity circuit name')
 
                             self.verify_circuit(rb_circs[seed][circ_index],
                                                 nq, rb_opts,
@@ -414,6 +450,12 @@ class TestRB(unittest.TestCase):
                                                 result_interleaved[seed],
                                                 shots,
                                                 is_interleaved=True)
+                            if is_purity:
+                                self.verify_circuit(rb_purity_circs[seed][0]
+                                                    [circ_index],
+                                                    nq, rb_opts,
+                                                    vec_len, result_purity
+                                                    [0][seed], shots)
                             # compare the interleaved RB circuits with
                             # the original RB circuits
                             self.compare_interleaved_circuit(
