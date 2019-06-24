@@ -1,17 +1,18 @@
-# For documentation see: https://github.com/git/git/blob/master/Documentation/mailmap.txt
-# Full names and mail addresses are taken from the Github contributor profile page, or from 
-# https://api.github.com/users/xxxxx/events/public when the info does not show in the public profile page
-# Individual contributors should check and see if all their names/emails are aliased correctly
-
-Gadi Aleksandrowicz <gadial@gmail.com>
+# Entries in this file are made for two reasons:
+# 1) to merge multiple git commit authors that correspond to a single author
+# 2) to change the canonical name and/or email address of an author.
+#
+# Format is:
+#     Canonical Name <Canonical@email> commit name <commit@email>
+#     \--------------+---------------/ \----------+-------------/
+#                 replace                       find
+# See also: 'git shortlog --help' and 'git check-mailmap --help'.
+#
+# If you don't like the way your name is cited by qiskit, please feel free to
+# open a pull request against this file to set your preferred naming.
+Ali Javadi-Abhari <ali.javadi@ibm.com> <ajavadia@users.noreply.github.com>
+Ali Javadi-Abhari <ali.javadi@ibm.com> <ajavadia@princeton.edu>
+Gadi Aleksandrowicz <gadial@gmail.com> <gadia@il.ibm.com>
+Jay M. Gambetta <jay.gambetta@us.ibm.com>
+Shelly Garion <shelly@il.ibm.com> <46566946+ShellyGarion@users.noreply.github.com>
 Yael Ben-Haim <yaelbh@il.ibm.com>
-Shaohan Hu <hushaohan@gmail.com>
-Jay Gambetta <jay.gambetta@us.ibm.com>
-Shelly Garion <shelly@il.ibm.com>
-Ali Javadi-Abhari <ali.javadi@ibm.com>
-David McKay <dcmckay@us.ibm.com>
-Paul Nation <nonhermitian@gmail.com>
-Yehuda Naveh <naveh@il.ibm.com>
-Matthew Treinish <mtreinish@kortar.org>
-Christopher J. Wood <cjwood@us.ibm.com>
-James Wootton <jwo@zurich.ibm.com>
