@@ -772,7 +772,7 @@ class PurityRBFitter(RBFitterBase):
 
         Contains 3^n+1 RBFitter objects:
         3^n RBFitter objects:
-        to calculate the ydata from the results
+        to calculate the raw_data from the results
         and another RBFitter object:
         calculates their sum and does the fit
     """
@@ -795,10 +795,11 @@ class PurityRBFitter(RBFitterBase):
         self._fit = [{} for e in rb_pattern]
 
         self._rbfit_purity = [[] for _ in range(npurity+1)]
+        # 3^n RBFitter objects
         for d in range(self._npurity):
             self._rbfit_purity[d] = RBFitter(
                 purity_result[d], cliff_lengths, rb_pattern)
-        # The last fitter is the sum of 3^n correlators
+        # The last RBFitter is the sum of 3^n correlators
         self._rbfit_purity[self._npurity] = RBFitter(
             None, cliff_lengths, rb_pattern)
 
@@ -883,12 +884,16 @@ class PurityRBFitter(RBFitterBase):
             self.rbfit_pur[d].add_data(new_purity_result[d], rerun_fit)
 
         if rerun_fit:
+            self.calc_data()
+            self.calc_statistics()
             self.fit_data()
 
     def calc_data(self):
         """
         Retrieve probabilities of success from execution results.
         Outputs results into an internal variables _raw_data.
+        Calculates the sum of the raw_data from the 3^n
+        correlators.
         """
         for d in range(self._npurity):
             self.rbfit_pur[d].calc_data()
@@ -897,6 +902,7 @@ class PurityRBFitter(RBFitterBase):
         self.rbfit_pur[self._npurity].raw_data = [
             [[] for _ in range(len(self.seeds[0]))]
             for _ in range(len(self._rb_pattern))]
+
         for patt_ind in range(len(self._rb_pattern)):
             for seed_ind in range(len(self.seeds[0])):
                 qubits = self._rb_pattern[patt_ind]
@@ -910,8 +916,8 @@ class PurityRBFitter(RBFitterBase):
     def calc_statistics(self):
         """
          Extract averages and std dev.
-         Calculates the average and std from the
-         3^n correlators, and then add them.
+         Calculates the average and std of the
+         sum of the 3^n correlators.
          """
         for d in range(self._npurity):
             self.rbfit_pur[d].calc_statistics()
