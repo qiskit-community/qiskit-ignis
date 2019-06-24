@@ -320,7 +320,7 @@ class TestRB(unittest.TestCase):
                     if multiplier_type > 0:
                         is_purity = False
                     if is_purity:
-                        print ('Testing purity')
+                        print('Testing purity RB')
 
                     # Generate the sequences
                     try:
@@ -332,8 +332,13 @@ class TestRB(unittest.TestCase):
                                 **rb_opts_interleaved)
                         # Purity RB sequences:
                         if is_purity:
-                            rb_purity_circs, _ , npurity = \
-                                rb.randomized_benchmarking_seq(**rb_opts_purity)
+                            rb_purity_circs, _, npurity = \
+                                rb.randomized_benchmarking_seq(
+                                    **rb_opts_purity)
+                            # verify npurity = 3^n
+                            self.assertEqual(
+                                npurity, 3 ** len(rb_opts['rb_pattern'][0]),
+                                'Error: npurity does not equal to 3^n')
 
                     except OSError:
                         skip_msg = ('Skipping tests for %s qubits because '
@@ -347,6 +352,7 @@ class TestRB(unittest.TestCase):
                     result = []
                     result_original = []
                     result_interleaved = []
+                    result_purity = [[] for d in range(npurity)]
                     for seed in range(rb_opts['nseeds']):
                         result.append(
                             qiskit.execute(rb_circs[seed], backend=backend,
@@ -362,6 +368,15 @@ class TestRB(unittest.TestCase):
                                            backend=backend,
                                            basis_gates=basis_gates,
                                            shots=shots).result())
+                        for d in range(npurity):
+                            result_purity[d].append(qiskit.execute(
+                                rb_purity_circs[seed][d],
+                                backend=backend,
+                                basis_gates=basis_gates,
+                                shots=shots).result())
+
+                        # if is_purity:
+
 
                     # Verify the generated sequences
                     for seed in range(rb_opts['nseeds']):
