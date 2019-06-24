@@ -50,29 +50,35 @@ class TestRB(unittest.TestCase):
                                                - for nq=2 this implies
                                                  [[1], [2]], which is already
                                                  tested when pattern_type = 1
+                 is_purity = True if the pattern fits for purity rb
+                 (namely, all the patterns have the same dimension:
+                 only 1-qubit, only 2-qubits etc.).
         '''
 
+        is_purity = True
         if pattern_type == 0:
             res = [list(range(nq))]
             if nq > 2:  # since we only have 1-qubit and 2-qubit Cliffords
-                return None
+                return None, None
         elif pattern_type == 1:
             if nq == 1:
-                return None
+                return None, None
             res = [[x] for x in range(nq)]
         else:
             if nq <= 2:
-                return None
+                return None, None
             shuffled_bits = list(range(nq))
             random.shuffle(shuffled_bits)
             # split_loc = random.randint(1, nq-1)
-            split_loc = 2
+            split_loc = 2  # deterministic test
             res = [shuffled_bits[:split_loc], shuffled_bits[split_loc:]]
             # since we only have 1-qubit and 2-qubit Cliffords
             if (split_loc > 2) | (nq-split_loc > 2):
-                return None
+                return None, None
+            if 2*split_loc != nq:
+                is_purity = False
 
-        return res
+        return res, is_purity
 
     @staticmethod
     def choose_multiplier(mult_opt, len_pattern):
@@ -295,11 +301,12 @@ class TestRB(unittest.TestCase):
                     rb_opts = {}
                     rb_opts['nseeds'] = 3
                     rb_opts['length_vector'] = [1, 3, 4, 7]
-                    rb_opts['rb_pattern'] = self.choose_pattern(
-                        pattern_type, nq)
+                    rb_opts['rb_pattern'], is_purity = \
+                        self.choose_pattern(pattern_type, nq)
                     # if the pattern type is not relevant for nq
                     if rb_opts['rb_pattern'] is None:
                         continue
+                    rb_opts_purity = rb_opts.copy()
                     rb_opts['length_multiplier'] = self.choose_multiplier(
                         multiplier_type, len(rb_opts['rb_pattern']))
                     # Choose options for interleaved RB:
@@ -307,6 +314,13 @@ class TestRB(unittest.TestCase):
                     rb_opts_interleaved['interleaved_gates'] = \
                         self.choose_interleaved_gates(rb_opts['rb_pattern'])
                     print('rb_opts:', rb_opts_interleaved)
+                    # Choose options for purity rb
+                    # no length_multiplier
+                    rb_opts_purity['is_purity'] = is_purity
+                    if multiplier_type > 0:
+                        is_purity = False
+                    if is_purity:
+                        print ('Testing purity')
 
                     # Generate the sequences
                     try:
@@ -316,6 +330,10 @@ class TestRB(unittest.TestCase):
                         rb_original_circs, _, rb_interleaved_circs = \
                             rb.randomized_benchmarking_seq(
                                 **rb_opts_interleaved)
+                        # Purity RB sequences:
+                        if is_purity:
+                            rb_purity_circs, _ , npurity = \
+                                rb.randomized_benchmarking_seq(**rb_opts_purity)
 
                     except OSError:
                         skip_msg = ('Skipping tests for %s qubits because '
