@@ -181,6 +181,27 @@ class TestRB(unittest.TestCase):
 
         return name_type, gate_list
 
+    @staticmethod
+    def ops_to_gates(ops, op_index, stop_gate='barrier'):
+        '''
+        :param ops: of the form circ.data
+        :param op_index: int, the operation index
+        :param stop_gate: the gate to stop
+        (e.g. barrier or measure)
+        :return: gatelist: a list of gates
+        :return: op_index: int, updated index
+        '''
+        gatelist = []
+        while ops[op_index][0].name != stop_gate:
+            gate = ops[op_index][0].name
+            for x in ops[op_index][1]:
+                gate += ' ' + str(x[1])
+            gatelist.append(gate)
+            op_index += 1
+        # increment because of the barrier gate
+        op_index += 1
+        return gatelist, op_index
+
     def verify_circuit(self, circ, nq, rb_opts, vec_len, result, shots,
                        is_interleaved=False):
         '''
@@ -276,29 +297,17 @@ class TestRB(unittest.TestCase):
                 for _ in range(rb_opts_interleaved['length_multiplier']
                                [pat_index]):
                     # original RB sequence
-                    original_gate_list = []
-                    while original_ops[original_op_index][0].name != 'barrier':
-                        gate = original_ops[original_op_index][0].name
-                        for x in original_ops[original_op_index][1]:
-                            gate += ' ' + str(x[1])
-                        original_gate_list.append(gate)
-                        original_op_index += 1
-                    original_op_index += 1
-
+                    original_gatelist, original_op_index = \
+                        self.ops_to_gates(original_ops,
+                                          original_op_index)
                     # interleaved RB sequence
-                    compared_gate_list = []
-                    while interleaved_ops[interleaved_op_index][0].name \
-                            != 'barrier':
-                        gate = interleaved_ops[interleaved_op_index][0].name
-                        for x in interleaved_ops[interleaved_op_index][1]:
-                            gate += ' ' + str(x[1])
-                        compared_gate_list.append(gate)
-                        interleaved_op_index += 1
-                    interleaved_op_index += 1
+                    compared_gatelist, interleaved_op_index = \
+                        self.ops_to_gates(interleaved_ops,
+                                          interleaved_op_index)
 
                     # Clifford gates in the interleaved RB sequence
                     # should be equal to original gates
-                    self.assertEqual(original_gate_list, compared_gate_list,
+                    self.assertEqual(original_gatelist, compared_gatelist,
                                      "Error: The gates in the %d qubit  \
                                      interleaved RB are not the same as \
                                      in the original RB circuits" % nq)
@@ -306,15 +315,9 @@ class TestRB(unittest.TestCase):
                     # should be equal to the given gates in
                     # rb_opts_interleaved['interleaved_gates']
                     # (after updating them)
-                    interleaved_gatelist = []
-                    while interleaved_ops[interleaved_op_index][0].name != \
-                            'barrier':
-                        gate = interleaved_ops[interleaved_op_index][0].name
-                        for x in interleaved_ops[interleaved_op_index][1]:
-                            gate += ' ' + str(x[1])
-                        interleaved_gatelist.append(gate)
-                        interleaved_op_index += 1
-                    interleaved_op_index += 1
+                    interleaved_gatelist, interleaved_op_index = \
+                        self.ops_to_gates(interleaved_ops,
+                                          interleaved_op_index)
 
                     self.assertEqual(interleaved_gatelist, updated_gatelist,
                                      "Error: The interleaved gates in the \
@@ -351,25 +354,11 @@ class TestRB(unittest.TestCase):
                 # for each Clifford...
                 for _ in range(rb_opts_purity['length_multiplier'][pat_index]):
                     # original RB sequence
-                    original_gatelist = []
-                    while original_ops[op_index][0].name != 'barrier':
-                        gate = original_ops[op_index][0].name
-                        for x in original_ops[op_index][1]:
-                            gate += ' ' + str(x[1])
-                        original_gatelist.append(gate)
-                        op_index += 1
-                    # increment because of the barrier gate
-                    op_index += 1
+                    original_gatelist, op_index = \
+                        self.ops_to_gates(original_ops, op_index)
                     # purity RB sequence
-                    purity_gatelist = []
-                    while purity_ops[pur_index][0].name != 'barrier':
-                        gate = purity_ops[pur_index][0].name
-                        for x in purity_ops[pur_index][1]:
-                            gate += ' ' + str(x[1])
-                        purity_gatelist.append(gate)
-                        pur_index += 1
-                    # increment because of the barrier gate
-                    pur_index += 1
+                    purity_gatelist, pur_index = \
+                        self.ops_to_gates(purity_ops, pur_index)
                     # Clifford gates in the purity RB sequence
                     # should be equal to original gates
                     self.assertEqual(original_gatelist, purity_gatelist,
@@ -379,27 +368,16 @@ class TestRB(unittest.TestCase):
 
         # The last gate in the purity RB sequence
         # should be equal to the inverse clifford
-        # with either Rx or Ry or nothing
-        # (depend on d)
-        original_gatelist = []
-        while original_ops[op_index][0].name != 'measure':
-            gate = original_ops[op_index][0].name
-            for x in original_ops[op_index][1]:
-                gate += ' ' + str(x[1])
-            original_gatelist.append(gate)
-            op_index += 1
+        # with either Rx or Ry or nothing (depend on d)
+        # original last gate
+        original_gatelist, op_index = \
+            self.ops_to_gates(original_ops, op_index, 'measure')
         _, purity_gates = self.update_purity_gates(
             npurity, purity_ind, rb_opts_purity['rb_pattern'])
         original_gatelist = original_gatelist + purity_gates
-
-        purity_gatelist = []
-        while purity_ops[pur_index][0].name != 'measure':
-            gate = purity_ops[pur_index][0].name
-            for x in purity_ops[pur_index][1]:
-                gate += ' ' + str(x[1])
-            purity_gatelist.append(gate)
-            pur_index += 1
-
+        # purity last gate
+        purity_gatelist, pur_index = \
+            self.ops_to_gates(purity_ops, pur_index, 'measure')
         self.assertEqual(original_gatelist, purity_gatelist,
                          "Error: The last purity gates in the \
                          %d qubit purity RB are wrong" % nq)
