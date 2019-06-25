@@ -28,7 +28,7 @@ steps:
     displayName: Create Anaconda environment
   - script: |
       call activate qiskit-ignis
-      conda install --yes --quiet --name myEnvironment python=%PYTHON_VERSION% mkl
+      conda install --yes --quiet --name qiskit-ignis python=%PYTHON_VERSION% mkl
     displayName: Install Anaconda packages
   - task: UsePythonVersion@0
     inputs:
