@@ -803,6 +803,8 @@ class PurityRBFitter(RBFitterBase):
         self._rbfit_purity[self._npurity] = RBFitter(
             None, cliff_lengths, rb_pattern)
 
+        self.add_data(purity_result)
+
     @property
     def rbfit_pur(self):
         """Return the purity RB fitter."""
@@ -855,13 +857,6 @@ class PurityRBFitter(RBFitterBase):
         """Return raw_data of the sum of 3^n
         correlators"""
         return self.rbfit_pur[self._npurity].raw_data
-
-    @property
-    def ydata_pur(self):
-        """Return ydata (means and std devs) as a
-        3^n element list"""
-        return [self.rbfit_pur[d].ydata for
-                d in range(self._npurity)]
 
     @property
     def ydata(self):

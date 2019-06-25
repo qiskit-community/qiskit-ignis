@@ -23,7 +23,7 @@ import unittest
 import numpy as np
 
 from qiskit.ignis.verification.randomized_benchmarking import \
-    RBFitter, InterleavedRBFitter
+    RBFitter, InterleavedRBFitter, PurityRBFitter
 
 
 class TestFitters(unittest.TestCase):
@@ -351,6 +351,115 @@ class TestFitters(unittest.TestCase):
                                [i]['systematic_err_L']),
                     'Incorrect fit parameter systematic_err_L '
                     'in test no. ' + str(tst_index))
+
+    def test_purity_fitters(self):
+        """ Test the purity fitters """
+
+        # Use pickled results files
+
+        tests_purity = \
+            [{
+                'npurity': 9,
+                'rb_opts': {
+                    'xdata': np.array([[1, 21, 41, 61, 81, 101, 121, 141,
+                                        161, 181],
+                                       [1, 21, 41, 61, 81, 101, 121, 141,
+                                         161, 181]]),
+                    'rb_pattern': [[0, 1], [2, 3]],
+                    'shots': 200},
+                'results_file': os.path.join(
+                    os.path.dirname(__file__),
+                    'test_fitter_purity_results.pkl'),
+                'expected': {
+                    'ydata': [{
+                        'mean': np.array([0.97403971, 0.81974284,
+                                           0.70686849, 0.64778646,
+                                           0.62304688, 0.59863281,
+                                           0.58919271, 0.57983398,
+                                           0.5769043 , 0.56494141]),
+                        'std': np.array([0.00249241, 0.00984734,
+                                         0.0041448 , 0.0099117,
+                                         0.01122516, 0.00328155,
+                                         0.00988158, 0.01153936,
+                                         0.00798107, 0.00392148])},
+                        {'mean': np.array([0.98160807, 0.83422852,
+                                           0.72989909, 0.67114258,
+                                           0.62084961, 0.60807292,
+                                           0.59082031, 0.57413737,
+                                           0.57503255, 0.56697591]),
+                         'std': np.array([0.01023128, 0.0061988,
+                                          0.00720479, 0.00530784,
+                                          0.00318944, 0.00498483,
+                                          0.01244878, 0.0053871,
+                                          0.00769291, 0.01433909])}],
+                    'fit': [{
+                        'params': np.array([0.41936958, 0.97446439,
+                                            0.56540676]),
+                        'params_err': np.array([0.00336635, 0.00068497,
+                                                0.00283721]),
+                        'epc': 0.019151710904078967,
+                        'epc_err': 1.3462165151208548e-05},
+                        {'params': np.array([0.43926476, 0.97715223,
+                                             0.55906891]),
+                         'params_err': np.array([0.00910053, 0.00108428,
+                                                 0.00564976]),
+                         'epc': 0.017135828225276373,
+                         'epc_err': 1.9014553169357974e-05}]
+                }}]
+
+        for tst_index, tst in enumerate(tests_purity):
+            fo = open(tst['results_file'], 'rb')
+            purity_result_list = pickle.load(fo)
+            fo.close()
+
+            # PurityRBFitter class
+            rbfit_purity = PurityRBFitter(purity_result_list,
+                                          tst['npurity'],
+                                          tst['rb_opts']['xdata'],
+                                          tst['rb_opts']['rb_pattern'])
+
+            ydata = rbfit_purity.ydata
+            fit = rbfit_purity.fit
+
+            for i, _ in enumerate(ydata):
+                self.assertTrue(all(np.isclose(a, b) for a, b in
+                                    zip(ydata[i]['mean'],
+                                        tst['expected']['ydata'][i]['mean'])),
+                                'Incorrect mean in purity data test no. '
+                                + str(tst_index))
+                if tst['expected']['ydata'][i]['std'] is None:
+                    self.assertIsNone(
+                        ydata[i]['std'],
+                        'Incorrect std in purity data test no. '
+                        + str(tst_index))
+                else:
+                    self.assertTrue(
+                        all(np.isclose(a, b) for a, b in zip(
+                            ydata[i]['std'],
+                            tst['expected']['ydata'][i]['std'])),
+                        'Incorrect std in purity data test no. '
+                        + str(tst_index))
+                self.assertTrue(
+                    all(np.isclose(a, b) for a, b in zip(
+                        fit[i]['params'],
+                        tst['expected']['fit'][i]['params'])),
+                    'Incorrect fit parameters in purity data test no. '
+                    + str(tst_index))
+                self.assertTrue(
+                    all(np.isclose(a, b) for a, b in zip(
+                        fit[i]['params_err'],
+                        tst['expected']['fit'][i]['params_err'])),
+                    'Incorrect fit error in purity data test no. '
+                    + str(tst_index))
+                self.assertTrue(np.isclose(fit[i]['epc'],
+                                           tst['expected']['fit'][i]['epc']),
+                                'Incorrect EPC in purity data test no. '
+                                + str(tst_index))
+                self.assertTrue(
+                    np.isclose(fit[i]['epc_err'],
+                               tst['expected']['fit'][i]['epc_err']),
+                    'Incorrect EPC error in purity data test no. '
+                    + str(tst_index))
 
 
 if __name__ == '__main__':
