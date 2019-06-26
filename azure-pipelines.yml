@@ -1,0 +1,38 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+- master
+- stable
+
+pool:
+  vmImage: 'vs2017-win2016'
+strategy:
+  matrix:
+    Python35:
+      python.version: '3.5'
+      TOXENV: py35
+    Python36:
+      python.version: '3.6'
+      TOXENV: py36
+    Python37:
+      python.version: '3.7'
+      TOXENV: py37
+
+steps:
+  - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+    displayName: Add conda to PATH
+  - script: conda create --yes --quiet --name qiskit-ignis
+    displayName: Create Anaconda environment
+  - script: |
+      call activate qiskit-ignis
+      conda install --yes --quiet --name qiskit-ignis python=%PYTHON_VERSION% mkl
+    displayName: Install Anaconda packages
+  - script: |
+      call activate qiskit-ignis
+      python -m pip install --upgrade pip
+      pip install tox
+      tox -e%TOXENV%
+    displayName: 'Install dependencies and run tests'
