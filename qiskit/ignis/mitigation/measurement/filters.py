@@ -20,7 +20,6 @@ Measurement correction filters.
 
 """
 from copy import deepcopy
-import os
 from scipy.optimize import minimize
 import scipy.linalg as la
 import numpy as np
@@ -144,30 +143,15 @@ class MeasurementFilter():
             # counts and push back into the new result
             new_result = deepcopy(raw_data)
 
-            if os.environ.get('IGNIS_NUM_PROCESSES') is not None:
-                # Parallel
-                ignis_num_processes = \
-                    int(os.environ.get('IGNIS_NUM_PROCESSES'))
+            new_counts_list = parallel_map(
+                self._apply_correction,
+                [resultidx for resultidx, _ in enumerate(raw_data.results)],
+                task_args=(raw_data, method))
 
-                new_counts_list = parallel_map(
-                    self._apply_correction,
-                    [resultidx for resultidx, _
-                     in enumerate(raw_data.results)],
-                    task_args=(raw_data, method),
-                    num_processes=ignis_num_processes)
-
-                for resultidx, new_counts in new_counts_list:
-                    new_result.results[resultidx].data.counts = \
-                                 new_result.results[resultidx]. \
-                                 data.counts.from_dict(new_counts)
-            else:
-                # Serial
-                for resultidx, _ in enumerate(raw_data.results):
-                    new_counts = self.apply(
-                        raw_data.get_counts(resultidx), method=method)
-                    new_result.results[resultidx].data.counts = \
-                        new_result.results[resultidx]. \
-                        data.counts.from_dict(new_counts)
+            for resultidx, new_counts in new_counts_list:
+                new_result.results[resultidx].data.counts = \
+                    new_result.results[resultidx]. \
+                    data.counts.from_dict(new_counts)
 
             return new_result
 
