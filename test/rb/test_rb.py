@@ -250,8 +250,8 @@ class TestRB(unittest.TestCase):
                                 # of the correct sub-sequences,
                                 # as specified by vec_len and rb_opts
                                 self.assertTrue(
-                                    all(x[1] in rb_opts['rb_pattern']
-                                    [pat_index]
+                                    all(x[1] in rb_opts['rb_pattern'][
+                                        pat_index]
                                         for x in ops[op_index][1]),
                                     "Error: operation acts on \
                                     incorrect qubits")
