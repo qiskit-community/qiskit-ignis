@@ -219,6 +219,8 @@ class TestRB(unittest.TestCase):
         :param result: the output of the simulator
                        when executing all the sequences on the ground state
         :param shots: the number of shots in the simulator execution
+        :param: align_cliffs: If true adds a barrier across all qubits
+        in rb_pattern after each set of cliffords
         :param is_interleaved: True if this is an interleaved circuit
         '''
 
@@ -239,18 +241,20 @@ class TestRB(unittest.TestCase):
                     # then it has twice as many Cliffords
                     for _ in range(is_interleaved+1):
                         # for each basis gate...
-                        while ops[op_index][0].name != 'barrier':
-                            # Verify that the gate acts on the correct qubits
-                            # This happens if the sequence is composed of the
-                            # correct sub-sequences, as specified by vec_len
-                            # and rb_opts
-                            self.assertTrue(
-                                all(x[1] in rb_opts['rb_pattern'][pat_index]
-                                    for x in ops[op_index][1]),
-                                "Error: operation acts on incorrect qubits")
+                        # in case of align_cliffs we may have extra barriers
+                        if ops[op_index][0].name != 'barrier':
+                            while ops[op_index][0].name != 'barrier':
+                                # Verify that the gate acts on the correct qubits
+                                # This happens if the sequence is composed of the
+                                # correct sub-sequences, as specified by vec_len
+                                # and rb_opts
+                                self.assertTrue(
+                                    all(x[1] in rb_opts['rb_pattern'][pat_index]
+                                        for x in ops[op_index][1]),
+                                    "Error: operation acts on incorrect qubits")
+                                op_index += 1
+                            # increment because of the barrier gate
                             op_index += 1
-                        # increment because of the barrier gate
-                        op_index += 1
         # check if the ground state returns
         self.assertEqual(result.
                          get_counts(circ)['{0:b}'.format(0).zfill(nq)], shots,
@@ -424,6 +428,9 @@ class TestRB(unittest.TestCase):
                         is_purity = False
                     if is_purity:
                         print('Testing purity RB')
+                    # Adding seed_offset and align_cliffs
+                    rb_opts['seed_offset'] = 10
+                    rb_opts['align_cliffs'] = True
 
                     # Generate the sequences
                     try:
@@ -487,7 +494,8 @@ class TestRB(unittest.TestCase):
                             self.assertEqual(
                                 rb_circs[seed][circ_index].name,
                                 'rb_length_%d_seed_%d' % (
-                                    circ_index, seed),
+                                    circ_index, seed +
+                                    rb_opts['seed_offset']),
                                 'Error: incorrect circuit name')
                             self.assertEqual(
                                 rb_original_circs[seed][circ_index].name,
