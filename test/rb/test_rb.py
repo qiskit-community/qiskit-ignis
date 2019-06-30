@@ -244,14 +244,17 @@ class TestRB(unittest.TestCase):
                         # in case of align_cliffs we may have extra barriers
                         if ops[op_index][0].name != 'barrier':
                             while ops[op_index][0].name != 'barrier':
-                                # Verify that the gate acts on the correct qubits
-                                # This happens if the sequence is composed of the
-                                # correct sub-sequences, as specified by vec_len
-                                # and rb_opts
+                                # Verify that the gate acts
+                                # on the correct qubits
+                                # This happens if the sequence is composed
+                                # of the correct sub-sequences,
+                                # as specified by vec_len and rb_opts
                                 self.assertTrue(
-                                    all(x[1] in rb_opts['rb_pattern'][pat_index]
+                                    all(x[1] in rb_opts['rb_pattern']
+                                    [pat_index]
                                         for x in ops[op_index][1]),
-                                    "Error: operation acts on incorrect qubits")
+                                    "Error: operation acts on \
+                                    incorrect qubits")
                                 op_index += 1
                             # increment because of the barrier gate
                             op_index += 1
