@@ -242,6 +242,7 @@ class TestRB(unittest.TestCase):
                     for _ in range(is_interleaved+1):
                         # for each basis gate...
                         # in case of align_cliffs we may have extra barriers
+                        # (after another barrier)
                         if ops[op_index][0].name != 'barrier':
                             while ops[op_index][0].name != 'barrier':
                                 # Verify that the gate acts
