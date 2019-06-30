@@ -219,8 +219,6 @@ class TestRB(unittest.TestCase):
         :param result: the output of the simulator
                        when executing all the sequences on the ground state
         :param shots: the number of shots in the simulator execution
-        :param: align_cliffs: If true adds a barrier across all qubits
-        in rb_pattern after each set of cliffords
         :param is_interleaved: True if this is an interleaved circuit
         '''
 
