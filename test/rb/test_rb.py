@@ -244,7 +244,7 @@ class TestRB(unittest.TestCase):
                         if ops[op_index][0].name != 'barrier':
                             while ops[op_index][0].name != 'barrier':
                                 # Verify that the gate acts
-                                # on the correct qubits
+                                # on the correct qubits.
                                 # This happens if the sequence is composed
                                 # of the correct sub-sequences,
                                 # as specified by vec_len and rb_opts
