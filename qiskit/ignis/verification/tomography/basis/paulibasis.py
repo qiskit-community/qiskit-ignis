@@ -41,7 +41,7 @@ def pauli_measurement_circuit(op, qubit, clbit):
         A QuantumCircuit object.
     """
 
-    circ = QuantumCircuit(qubit[0], clbit[0])
+    circ = QuantumCircuit(qubit.register, clbit.register)
     if op == 'X':
         circ.h(qubit)
         circ.measure(qubit, clbit)
@@ -68,7 +68,7 @@ def pauli_preparation_circuit(op, qubit):
         A QuantumCircuit object.
     """
 
-    circ = QuantumCircuit(qubit[0])
+    circ = QuantumCircuit(qubit.register)
     if op == 'Xp':
         circ.h(qubit)
     if op == 'Xm':
