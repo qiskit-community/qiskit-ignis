@@ -938,8 +938,8 @@ class PurityRBFitter(RBFitterBase):
 
             for seedind, seed in enumerate(self._nseeds):
 
-                self._circ_name_type = self._result_list[result_count].results[0]. \
-                    header.name.split("_length")[0]
+                self._circ_name_type = self._result_list[result_count]. \
+                    results[0].header.name.split("_length")[0]
 
                 result_count += 1
                 for circ, _ in enumerate(self._cliff_lengths[0]):
@@ -954,8 +954,10 @@ class PurityRBFitter(RBFitterBase):
 
                     circ_name = 'rb_purity_' + str(pur) + \
                                 '_length_%d_seed_%d' % (circ, seed)
-                    circ_counts[circ_name] = build_counts_dict_from_list(count_list)
-                    circ_shots[circ_name] = sum(circ_counts[circ_name].values())
+                    circ_counts[circ_name] = build_counts_dict_from_list(
+                        count_list)
+                    circ_shots[circ_name] = sum(circ_counts[circ_name].
+                                                values())
 
         # Calculating raw_data
         startind = 0
@@ -1008,20 +1010,20 @@ class PurityRBFitter(RBFitterBase):
 
     def calc_statistics(self):
         """
-          Extract averages and std dev from the raw data (self._raw_data).
-          Assumes that self._calc_data has been run. Output into internal
-          _ydata variable:
-              ydata is a list of dictionaries (length number of patterns).
-              Dictionary ydata[i]:
-              ydata[i]['mean'] is a numpy_array of length n;
-                          entry j of this array contains the mean probability of
-                          success over seeds, for vector length
-                          self._cliff_lengths[i][j].
-              And ydata[i]['std'] is a numpy_array of length n;
-                          entry j of this array contains the std
-                          of the probability of success over seeds,
-                          for vector length self._cliff_lengths[i][j].
-          """
+        Extract averages and std dev from the raw data (self._raw_data).
+        Assumes that self._calc_data has been run. Output into internal
+        _ydata variable:
+            ydata is a list of dictionaries (length number of patterns).
+            Dictionary ydata[i]:
+            ydata[i]['mean'] is a numpy_array of length n;
+                        entry j of this array contains the mean probability of
+                        success over seeds, for vector length
+                        self._cliff_lengths[i][j].
+            And ydata[i]['std'] is a numpy_array of length n;
+                        entry j of this array contains the std
+                        of the probability of success over seeds,
+                        for vector length self._cliff_lengths[i][j].
+        """
 
         self._ydata = []
         for patt_ind in range(len(self._rb_pattern)):
@@ -1032,7 +1034,6 @@ class PurityRBFitter(RBFitterBase):
                 self._ydata[-1]['std'] = None
             else:
                 self._ydata[-1]['std'] = np.std(self._raw_data[patt_ind], 0)
-
 
     def fit_data_pattern(self, patt_ind, fit_guess):
         """
@@ -1066,7 +1067,7 @@ class PurityRBFitter(RBFitterBase):
 
         params_err = np.sqrt(np.diag(pcov))
         self._fit[patt_ind] = {'params': params, 'params_err': params_err}
-        print (params)
+        print(params)
         print(params_err)
 
     def fit_data(self):
