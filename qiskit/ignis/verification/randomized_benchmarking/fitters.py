@@ -20,6 +20,7 @@ from abc import ABC, abstractmethod
 from scipy.optimize import curve_fit
 import numpy as np
 from qiskit import QiskitError
+from qiskit.quantum_info.analyzation.average import average_data
 from ..tomography import marginal_counts
 from ...characterization.fitters import build_counts_dict_from_list
 
@@ -769,19 +770,13 @@ class PurityRBFitter(RBFitterBase):
     """
         Class for fitters for purity RB
         Derived from RBFitterBase class
-
-        Contains 3^n+1 RBFitter objects:
-        3^n RBFitter objects:
-        to calculate the raw_data from the results
-        and another RBFitter object:
-        calculates their sum and does the fit
     """
 
     def __init__(self, purity_result, npurity, cliff_lengths,
                  rb_pattern=None):
         """
         Args:
-            purity_result: list of lists of results of the
+            purity_result: list of results of the
             3^n purity RB sequences per seed (qiskit.Result).
             npurity: equals 3^n (where n is the dimension)
             cliff_lengths: the Clifford lengths, 2D list i x j where i is the
@@ -792,77 +787,102 @@ class PurityRBFitter(RBFitterBase):
         self._cliff_lengths = cliff_lengths
         self._rb_pattern = rb_pattern
         self._npurity = npurity
-        self._fit = [{} for e in rb_pattern]
+        self._nq = len(rb_pattern[0])  # all patterns have same length
 
-        self._rbfit_purity = [[] for _ in range(npurity+1)]
-        # 3^n RBFitter objects
-        for d in range(self._npurity):
-            self._rbfit_purity[d] = RBFitter(
-                purity_result[d], cliff_lengths, rb_pattern)
-        # The last RBFitter is the sum of 3^n correlators
-        self._rbfit_purity[self._npurity] = RBFitter(
-            None, cliff_lengths, rb_pattern)
+        self._result_list = []
+        self._raw_data = []
+        self._ydata = []
+        self._fit = [{} for e in rb_pattern]
+        self._nseeds = []
+
+        self._zdict_ops = []
+        self.add_zdict_ops()
 
         self.add_data(purity_result)
 
     @property
-    def rbfit_pur(self):
-        """Return the purity RB fitter."""
-        return self._rbfit_purity
+    def raw_data(self):
+        """Return raw data."""
+        return self._raw_data
 
     @property
     def cliff_lengths(self):
         """Return clifford lengths."""
-        return self._cliff_lengths
+        return self.cliff_lengths
+
+    @property
+    def ydata(self):
+        """Return ydata (means and std devs)."""
+        return self._ydata
 
     @property
     def fit(self):
         """Return the purity fit parameters."""
-        return self.rbfit_pur[self._npurity].fit
-
-    @property
-    def fit_pur(self):
-        """Return the fit as a 3^n element list."""
-        return [self.rbfit_pur[d].fit for
-                d in range(self._npurity)]
+        return self._fit
 
     @property
     def rb_fit_fun(self):
         """Return the function rb_fit_fun."""
-        return self.rbfit_pur[self._npurity] \
-            .rb_fit_fun
+        return self._rb_fit_fun
 
     @property
     def seeds(self):
-        """Return the number of loaded seeds as a
-        3^n element list."""
-        return [self.rbfit_pur[d].seeds for
-                d in range(self._npurity)]
+        """Return the number of loaded seeds."""
+        return self._nseeds
 
     @property
     def results(self):
-        """Return all the results as a 3^n element list."""
-        return [self.rbfit_pur[d].results for
-                d in range(self._npurity)]
+        """Return all the results."""
+        return self._result_list
 
-    @property
-    def raw_data_pur(self):
-        """Return raw_data as a
-        3^n element list."""
-        return [self.rbfit_pur[d].raw_data for
-                d in range(self._npurity)]
+    @staticmethod
+    def _rb_fit_fun(x, a, alpha, b):
+        """Function used to fit rb."""
+        # pylint: disable=invalid-name
+        return a * alpha ** x + b
 
-    @property
-    def raw_data(self):
-        """Return raw_data of the sum of 3^n
-        correlators"""
-        return self.rbfit_pur[self._npurity].raw_data
+    @staticmethod
+    def F234(n, a, b):
+        """Function than maps:
+        2^n x 3^n --> 4^n
+        namely:
+        (a,b) --> c where
+        a in 2^n, b in 3^n, c in 4^n
 
-    @property
-    def ydata(self):
-        """Return ydata (means and std devs)
-        of the sum of 3^n correlators"""
-        return self.rbfit_pur[self._npurity].ydata
+        0 <--> I
+        1 <--> X
+        2 <--> Y
+        3 <--> Z
+        """
+        LUT = [[0, 0, 0], [3, 1, 2]]
+
+        # compute bits
+        aseq = []
+        bseq = []
+
+        aa = a
+        bb = b
+        for i in range(n):
+            aseq.append(np.mod(aa, 2))
+            bseq.append(np.mod(bb, 3))
+            aa = np.floor_divide(aa, 2)
+            bb = np.floor_divide(bb, 3)
+
+        c = 0
+        for i in range(n):
+            c += (4 ** i) * LUT[aseq[i]][bseq[i]]
+        return c
+
+    def add_zdict_ops(self):
+        """Creating all Z-correlators"""
+        statedict = {("{0:0%db}" % self._nq).format(i): 1 for i in
+                     range(2 ** self._nq)}
+
+        for i in range(2 ** self._nq):
+            self._zdict_ops.append(statedict.copy())
+            for j in range(2 ** self._nq):
+                if bin(i & j).count('1') % 2 != 0:
+                    self._zdict_ops[-1][("{0:0%db}" % self._nq).format(j)] = -1
 
     def add_data(self, new_purity_result, rerun_fit=True):
         """
@@ -875,8 +895,22 @@ class PurityRBFitter(RBFitterBase):
             the output of circuits generated by randomized_becnhmarking_seq
             where is_purity = True.
         """
-        for d in range(self._npurity):
-            self.rbfit_pur[d].add_data(new_purity_result[d], rerun_fit)
+        if new_purity_result is None:
+            return
+
+        if not isinstance(new_purity_result, list):
+            new_purity_result = [new_purity_result]
+
+        for result in new_purity_result:
+            self._result_list.append(result)
+
+            # update the number of seeds *if* new ones
+            # added. Note, no checking if we've done all the
+            # cliffords
+            for rbcirc in result.results:
+                nseeds_circ = int(rbcirc.header.name.split('_')[-1])
+                if nseeds_circ not in self._nseeds:
+                    self._nseeds.append(nseeds_circ)
 
         if rerun_fit:
             self.calc_data()
@@ -885,67 +919,194 @@ class PurityRBFitter(RBFitterBase):
 
     def calc_data(self):
         """
-        Retrieve probabilities of success from execution results.
-        Outputs results into an internal variables _raw_data.
-        Calculates the sum of the raw_data from the 3^n
-        correlators.
+        Measure the purity calculation into an internal variable _raw_data
+        which is a 3-dimensional list, where item (i,j,k) is the purity
+        of the set of qubits in pattern "i"
+        for seed no. j and vector length self._cliff_lengths[i][k].
+        Additional information:
+        Assumes that 'result' was executed is
+        the output of circuits generated by randomized_becnhmarking_seq,
         """
-        for d in range(self._npurity):
-            self.rbfit_pur[d].calc_data()
 
-        # Update the raw_data of the sum of correlators
-        self.rbfit_pur[self._npurity].raw_data = [
-            [[] for _ in range(len(self.seeds[0]))]
-            for _ in range(len(self._rb_pattern))]
+        circ_counts = {}
+        circ_shots = {}
+        result_count = 0
+        self._raw_data = []
 
-        for patt_ind in range(len(self._rb_pattern)):
-            for seed_ind in range(len(self.seeds[0])):
-                qubits = self._rb_pattern[patt_ind]
-                new_raw_data = np.zeros(len(self._cliff_lengths[patt_ind]))
-                for d in range(self._npurity):
-                    new_raw_data += self.raw_data_pur[d][patt_ind][seed_ind]
-                new_raw_data = new_raw_data / (2 ** len(qubits))
-                self.rbfit_pur[self._npurity].raw_data[patt_ind][seed_ind] = \
-                    new_raw_data
+        # Calculating the result output
+        for pur in range(self._npurity):
+
+            for seedind, seed in enumerate(self._nseeds):
+
+                self._circ_name_type = self._result_list[result_count].results[0]. \
+                    header.name.split("_length")[0]
+
+                result_count += 1
+                for circ, _ in enumerate(self._cliff_lengths[0]):
+                    circ_name = self._circ_name_type + '_length_%d_seed_%d' \
+                                % (circ, seed)
+                    count_list = []
+                    for result in self._result_list:
+                        try:
+                            count_list.append(result.get_counts(circ_name))
+                        except (QiskitError, KeyError):
+                            pass
+
+                    circ_name = 'rb_purity_' + str(pur) + \
+                                '_length_%d_seed_%d' % (circ, seed)
+                    circ_counts[circ_name] = build_counts_dict_from_list(count_list)
+                    circ_shots[circ_name] = sum(circ_counts[circ_name].values())
+
+        # Calculating raw_data
+        startind = 0
+        # for each pattern
+        for patt_ind, patt in enumerate(self._rb_pattern):
+
+            endind = startind + len(self._rb_pattern[patt_ind])
+            self._raw_data.append([])
+
+            # for each seed
+            for seedidx, seed in enumerate(self._nseeds):
+                self._raw_data[-1].append([])
+
+                # for each length
+                for k, _ in enumerate(self._cliff_lengths[0]):
+
+                    # vector of the 4^n correlators and counts
+                    corr_vec = [0] * (4 ** self._nq)
+                    count_vec = [0] * (4 ** self._nq)
+
+                    for pur in range(self._npurity):
+
+                        circ_name = 'rb_purity_' + str(pur) + \
+                                    '_length_%d_seed_%d' % (k, seed)
+
+                        # marginal counts for the pattern
+                        counts_subspace = marginal_counts(
+                            circ_counts[circ_name],
+                            np.arange(startind, endind))
+
+                        # calculating the vector of 4^n correlators
+                        for indcorr in range(2 ** self._nq):
+                            zcorr = average_data(counts_subspace,
+                                                 self._zdict_ops[indcorr])
+                            zind = self.F234(self._nq, indcorr, pur)
+
+                            corr_vec[zind] += zcorr
+                            count_vec[zind] += 1
+
+                    # calculating the purity
+                    purity = 0
+                    for idx, corr in enumerate(corr_vec):
+                        purity += (corr_vec[idx]/count_vec[idx]) ** 2
+                    purity = purity / (2 ** self._nq)
+                    print(purity)
+
+                    self._raw_data[-1][seedidx].append(purity)
+
+            startind = endind
 
     def calc_statistics(self):
         """
-         Extract averages and std dev.
-         Calculates the average and std of the
-         sum of the 3^n correlators.
-         """
-        for d in range(self._npurity):
-            self.rbfit_pur[d].calc_statistics()
-        self.rbfit_pur[self._npurity].calc_statistics()
+          Extract averages and std dev from the raw data (self._raw_data).
+          Assumes that self._calc_data has been run. Output into internal
+          _ydata variable:
+              ydata is a list of dictionaries (length number of patterns).
+              Dictionary ydata[i]:
+              ydata[i]['mean'] is a numpy_array of length n;
+                          entry j of this array contains the mean probability of
+                          success over seeds, for vector length
+                          self._cliff_lengths[i][j].
+              And ydata[i]['std'] is a numpy_array of length n;
+                          entry j of this array contains the std
+                          of the probability of success over seeds,
+                          for vector length self._cliff_lengths[i][j].
+          """
+
+        self._ydata = []
+        for patt_ind in range(len(self._rb_pattern)):
+            self._ydata.append({})
+            self._ydata[-1]['mean'] = np.mean(self._raw_data[patt_ind], 0)
+
+            if len(self._raw_data[patt_ind]) == 1:  # 1 seed
+                self._ydata[-1]['std'] = None
+            else:
+                self._ydata[-1]['std'] = np.std(self._raw_data[patt_ind], 0)
+
 
     def fit_data_pattern(self, patt_ind, fit_guess):
         """
-        Fit the sum of the results of all correlators
-        of a particular pattern, to an exponential curve.
+        Fit the RB results of a particular pattern
+        to an exponential curve.
         Args:
-            patt_ind: index of the data to fit
+            patt_ind: index of the subsystem to fit
             fit_guess: guess values for the fit
+        Puts the results into a list of fit dictionaries:
+            where each dictionary corresponds to a pattern and has fields:
+            'params' - three parameters of rb_fit_fun. The middle one is the
+                       exponent.
+            'err' - the error limits of the parameters.
         """
-        self.rbfit_pur[self._npurity].fit_data_pattern(
-            patt_ind, fit_guess)
+
+        lens = self._cliff_lengths[0]
+
+        # if at least one of the std values is zero, then sigma is replaced
+        # by None
+        if not self._ydata[patt_ind]['std'] is None:
+            sigma = self._ydata[patt_ind]['std'].copy()
+            if len(sigma) - np.count_nonzero(sigma) > 0:
+                sigma = None
+        else:
+            sigma = None
+        params, pcov = curve_fit(self._rb_fit_fun, lens,
+                                 self._ydata[patt_ind]['mean'],
+                                 sigma=sigma,
+                                 p0=fit_guess,
+                                 bounds=([-2, 0, -2], [2, 1, 2]))
+
+        params_err = np.sqrt(np.diag(pcov))
+        self._fit[patt_ind] = {'params': params, 'params_err': params_err}
+        print (params)
+        print(params_err)
 
     def fit_data(self):
         """
-         Fit the sum of the results of all correlators
-         to an exponential curve. Fit each of the patterns.
-         Puts the results into a list of fit dictionaries:
-         where each dictionary corresponds to a pattern and has fields:
-             'params' - three parameters of rb_fit_fun. The middle one is the
-                        exponent.
-             'err' - the error limits of the parameters.
-             'epc' - error per Clifford
-         """
-        self.rbfit_pur[self._npurity].fit_data()
+        Fit the Purity RB results to an exponential curve.
+        Use the data to construct guess values
+        for the fits
+        Puts the results into a list of fit dictionaries:
+            where each dictionary corresponds to a pattern and has fields:
+            'params' - three parameters of rb_fit_fun. The middle one is the
+                       exponent.
+            'err' - the error limits of the parameters.
+            'epc' - error per Clifford
+        """
+
+        for patt_ind, _ in enumerate(self._rb_pattern):
+
+            fit_guess = [0.95, 0.99, 0.0]
+            fit_guess[0] = self._ydata[patt_ind]['mean'][0]
+            # Should decay to 1/2^n
+            fit_guess[2] = 0
+
+            # Use the first two points to guess the decay param
+            y0 = self._ydata[patt_ind]['mean'][0]
+            y1 = self._ydata[patt_ind]['mean'][1]
+            dcliff = (self._cliff_lengths[0][1] -
+                      self._cliff_lengths[0][0])
+            dy = ((y1 - fit_guess[2]) /
+                  (y0 - fit_guess[2]))
+            alpha_guess = dy**(1/dcliff)
+            if alpha_guess < 1.0:
+                fit_guess[1] = alpha_guess
+
+            fit_guess[0] = ((y0 - fit_guess[2]) /
+                            fit_guess[1]**self._cliff_lengths[0][0])
+            self.fit_data_pattern(patt_ind, tuple(fit_guess))
 
     def plot_rb_data(self, pattern_index=0, ax=None,
                      add_label=True, show_plt=True):
         """
           Plot purity rb data of a single pattern.
         """
-        self.rbfit_pur[self._npurity].plot_rb_data(pattern_index, ax,
-                                                   add_label, show_plt)
+        pass
