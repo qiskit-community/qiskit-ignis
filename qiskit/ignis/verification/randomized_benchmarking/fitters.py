@@ -794,6 +794,7 @@ class PurityRBFitter(RBFitterBase):
         self._ydata = []
         self._fit = [{} for e in rb_pattern]
         self._nseeds = []
+        self._circ_name_type = ''
 
         self._zdict_ops = []
         self.add_zdict_ops()
@@ -936,7 +937,7 @@ class PurityRBFitter(RBFitterBase):
         # Calculating the result output
         for pur in range(self._npurity):
 
-            for seedind, seed in enumerate(self._nseeds):
+            for _, seed in enumerate(self._nseeds):
 
                 self._circ_name_type = self._result_list[result_count]. \
                     results[0].header.name.split("_length")[0]
@@ -962,7 +963,7 @@ class PurityRBFitter(RBFitterBase):
         # Calculating raw_data
         startind = 0
         # for each pattern
-        for patt_ind, patt in enumerate(self._rb_pattern):
+        for patt_ind, _ in enumerate(self._rb_pattern):
 
             endind = startind + len(self._rb_pattern[patt_ind])
             self._raw_data.append([])
@@ -999,7 +1000,7 @@ class PurityRBFitter(RBFitterBase):
 
                     # calculating the purity
                     purity = 0
-                    for idx, corr in enumerate(corr_vec):
+                    for idx, _ in enumerate(corr_vec):
                         purity += (corr_vec[idx]/count_vec[idx]) ** 2
                     purity = purity / (2 ** self._nq)
                     print(purity)
