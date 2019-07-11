@@ -195,7 +195,7 @@ class TestRB(unittest.TestCase):
         while ops[op_index][0].name != stop_gate:
             gate = ops[op_index][0].name
             for x in ops[op_index][1]:
-                gate += ' ' + str(x[1])
+                gate += ' ' + str(x.index)
             gatelist.append(gate)
             op_index += 1
         # increment because of the barrier gate
@@ -249,7 +249,7 @@ class TestRB(unittest.TestCase):
                                 # of the correct sub-sequences,
                                 # as specified by vec_len and rb_opts
                                 self.assertTrue(
-                                    all(x[1] in rb_opts['rb_pattern'][
+                                    all(x.index in rb_opts['rb_pattern'][
                                         pat_index]
                                         for x in ops[op_index][1]),
                                     "Error: operation acts on \

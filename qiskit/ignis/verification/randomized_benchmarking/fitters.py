@@ -307,7 +307,7 @@ class RBFitter(RBFitterBase):
                     self._raw_data[-1][seedidx].append(
                         counts_subspace.get(string_of_0s, 0)
                         / circ_shots[circ_name])
-            startind += (endind)
+            startind = endind
 
     def calc_statistics(self):
         """
