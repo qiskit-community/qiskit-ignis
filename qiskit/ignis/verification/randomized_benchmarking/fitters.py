@@ -835,7 +835,7 @@ class PurityRBFitter(RBFitterBase):
     @property
     def rb_fit_fun(self):
         """Return the function rb_fit_fun."""
-        return self.rbfit_pur.rb_fit_fun
+        return self._rb_fit_fun
 
     @property
     def seeds(self):
@@ -846,6 +846,12 @@ class PurityRBFitter(RBFitterBase):
     def results(self):
         """Return all the results."""
         return self.rbfit_pur.results
+
+    @staticmethod
+    def _rb_fit_fun(x, a, alpha, b):
+        """Function used to fit rb."""
+        # pylint: disable=invalid-name
+        return a * alpha ** (2 * x) + b
 
     @staticmethod
     def F234(n, a, b):
@@ -891,7 +897,7 @@ class PurityRBFitter(RBFitterBase):
                 if bin(i & j).count('1') % 2 != 0:
                     self._zdict_ops[-1][("{0:0%db}" % self._nq)
                         .format(j)] = -1
-        #print (self._zdict_ops)
+        # print (self._zdict_ops)
 
     def add_data(self, new_purity_result, rerun_fit=True):
         """
@@ -930,8 +936,9 @@ class PurityRBFitter(RBFitterBase):
 
             for pur in range(self._npurity):
 
-                self._circ_name_type = self.rbfit_pur._result_list[result_count]. \
-                    results[0].header.name.split("_length")[0]
+                self._circ_name_type = self.rbfit_pur._result_list[
+                    result_count].results[0].header.name.split(
+                    "_length")[0]
                 result_count += 1
 
                 for circ, _ in enumerate(self._cliff_lengths[0]):
@@ -941,7 +948,7 @@ class PurityRBFitter(RBFitterBase):
                     for result in self.rbfit_pur._result_list:
                         try:
                             count_list.append(result.get_counts(circ_name))
-                            #print(pur, seed, circ, circ_name,
+                            # print(pur, seed, circ, circ_name,
                             # result.get_counts(circ_name))
                         except (QiskitError, KeyError):
                             pass
@@ -953,7 +960,7 @@ class PurityRBFitter(RBFitterBase):
                         count_list)
                     circ_shots[circ_name] = sum(circ_counts[circ_name].
                                                 values())
-                    #print(pur, seed, circ_name, circ_shots[circ_name],
+                    # print(pur, seed, circ_name, circ_shots[circ_name],
                     # circ_counts[circ_name])
 
         # Calculating raw_data
@@ -987,8 +994,8 @@ class PurityRBFitter(RBFitterBase):
                             circ_counts[circ_name],
                             np.arange(startind, endind))
 
-                        #print (circ_counts[circ_name])
-                        #print (patt_ind, patt, seedidx, k, pur,
+                        # print (circ_counts[circ_name])
+                        # print (patt_ind, patt, seedidx, k, pur,
                         # circ_name, counts_subspace)
 
                         # calculating the vector of 4^n correlators
@@ -997,22 +1004,22 @@ class PurityRBFitter(RBFitterBase):
                                                  self._zdict_ops[indcorr])
                             zind = self.F234(self._nq, indcorr, pur)
 
-                            #print (indcorr, pur, zcorr, zind)
+                            # print (indcorr, pur, zcorr, zind)
                             corr_vec[zind] += zcorr
                             count_vec[zind] += 1
                             corr_list[zind].append(zcorr)
-                    #print(counts_subspace)
-                    #print(corr_vec)
-                    #print(count_vec)
-                    #print(corr_list)
+                    # print(counts_subspace)
+                    # print(corr_vec)
+                    # print(count_vec)
+                    # print(corr_list)
 
                     # calculating the purity
                     purity = 0
                     for idx, _ in enumerate(corr_vec):
                         purity += (corr_vec[idx]/count_vec[idx]) ** 2
                     purity = purity / (2 ** self._nq)
-                    #print(purity)
-                    #print("-------------------------")
+                    # print(purity)
+                    # print("-------------------------")
 
                     self.rbfit_pur.raw_data[-1][seedidx].append(purity)
 
@@ -1068,6 +1075,9 @@ class PurityRBFitter(RBFitterBase):
             'pepc' - Purity Error per Clifford
         """
         print("in fit_data")
+        # print(self.rb_fit_fun)
+        # print(self.rbfit_pur.ydata)
+        # print(self.rbfit_pur.fit)
         for patt_ind, (_, qubits) in enumerate(zip(self._cliff_lengths,
                                                    self._rb_pattern)):
             # Calculate alpha (=p):
@@ -1100,7 +1110,55 @@ class PurityRBFitter(RBFitterBase):
         """
           Plot purity rb data of a single pattern.
         """
-        self.rbfit_pur.plot_rb_data(pattern_index=0,
-                                    ax=None,
-                                    add_label=True,
-                                    show_plt=True)
+        fit_function = self._rb_fit_fun
+
+        if not HAS_MATPLOTLIB:
+            raise ImportError('The function plot_rb_data needs matplotlib. '
+                              'Run "pip install matplotlib" before.')
+
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+
+        xdata = self._cliff_lengths[pattern_index]
+
+        # Plot the result for each sequence
+        for one_seed_data in self.rbfit_pur.raw_data[pattern_index]:
+            ax.plot(xdata, one_seed_data, color='gray', linestyle='none',
+                    marker='x')
+
+        # Plot the mean with error bars
+        ax.errorbar(xdata, self.rbfit_pur.ydata[pattern_index]['mean'],
+                    yerr=self.rbfit_pur.ydata[pattern_index]['std'],
+                    color='r', linestyle='--', linewidth=3)
+
+        # Plot the fit
+        ax.plot(xdata,
+                fit_function(xdata, *self.rbfit_pur.fit[pattern_index][
+                    'params']),
+                color='blue', linestyle='-', linewidth=2)
+        ax.tick_params(labelsize=14)
+
+        ax.set_xlabel('Clifford Length', fontsize=16)
+        ax.set_ylabel('Trace of Rho Square', fontsize=16)
+        ax.grid(True)
+
+        if add_label:
+            bbox_props = dict(boxstyle="round,pad=0.3",
+                              fc="white", ec="black", lw=2)
+
+            ax.text(0.6, 0.9,
+                    "alpha: %.3f(%.1e) PEPC: %.3e(%.1e)" %
+                    (self.rbfit_pur.fit[pattern_index][
+                         'params'][1],
+                     self.rbfit_pur.fit[pattern_index][
+                         'params_err'][1],
+                     self.rbfit_pur.fit[pattern_index][
+                         'pepc'],
+                     self.rbfit_pur.fit[pattern_index][
+                         'pepc_err']),
+                    ha="center", va="center", size=14,
+                    bbox=bbox_props, transform=ax.transAxes)
+
+        if show_plt:
+            plt.show()

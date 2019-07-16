@@ -417,7 +417,7 @@ class TestFitters(unittest.TestCase):
                                           tst['npurity'],
                                           tst['rb_opts']['xdata'],
                                           tst['rb_opts']['rb_pattern'])
-
+            rbfit_purity.add_data(purity_result_list)
             ydata = rbfit_purity.ydata
             fit = rbfit_purity.fit
 
