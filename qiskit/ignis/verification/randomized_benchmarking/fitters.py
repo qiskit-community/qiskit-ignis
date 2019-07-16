@@ -932,20 +932,19 @@ class PurityRBFitter(RBFitterBase):
         result_count = 0
 
         # Calculating the result output
-        for _, seed in enumerate(self.rbfit_pur._nseeds):
+        for _, seed in enumerate(self.rbfit_pur.seeds):
 
             for pur in range(self._npurity):
 
-                self._circ_name_type = self.rbfit_pur._result_list[
-                    result_count].results[0].header.name.split(
-                    "_length")[0]
+                self._circ_name_type = self.rbfit_pur.results[
+                    result_count].results[0].header.name.split("_length")[0]
                 result_count += 1
 
                 for circ, _ in enumerate(self._cliff_lengths[0]):
                     circ_name = self._circ_name_type + '_length_%d_seed_%d' \
                                 % (circ, seed)
                     count_list = []
-                    for result in self.rbfit_pur._result_list:
+                    for result in self.rbfit_pur.results:
                         try:
                             count_list.append(result.get_counts(circ_name))
                             # print(pur, seed, circ, circ_name,
@@ -973,7 +972,7 @@ class PurityRBFitter(RBFitterBase):
             self.rbfit_pur.raw_data.append([])
 
             # for each seed
-            for seedidx, seed in enumerate(self.rbfit_pur._nseeds):
+            for seedidx, seed in enumerate(self.rbfit_pur.seeds):
                 self.rbfit_pur.raw_data[-1].append([])
 
                 # for each length
@@ -1149,14 +1148,10 @@ class PurityRBFitter(RBFitterBase):
 
             ax.text(0.6, 0.9,
                     "alpha: %.3f(%.1e) PEPC: %.3e(%.1e)" %
-                    (self.rbfit_pur.fit[pattern_index][
-                         'params'][1],
-                     self.rbfit_pur.fit[pattern_index][
-                         'params_err'][1],
-                     self.rbfit_pur.fit[pattern_index][
-                         'pepc'],
-                     self.rbfit_pur.fit[pattern_index][
-                         'pepc_err']),
+                    (self.rbfit_pur.fit[pattern_index]['params'][1],
+                     self.rbfit_pur.fit[pattern_index]['params_err'][1],
+                     self.rbfit_pur.fit[pattern_index]['pepc'],
+                     self.rbfit_pur.fit[pattern_index]['pepc_err']),
                     ha="center", va="center", size=14,
                     bbox=bbox_props, transform=ax.transAxes)
 
