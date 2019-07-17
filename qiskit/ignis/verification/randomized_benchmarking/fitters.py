@@ -897,7 +897,7 @@ class PurityRBFitter(RBFitterBase):
             self._zdict_ops.append(statedict.copy())
             for j in range(2 ** self._nq):
                 if bin(i & j).count('1') % 2 != 0:
-                    self._zdict_ops[-1][("{0:0%db}" % self._nq) \
+                    self._zdict_ops[-1][("{0:0%db}" % self._nq)
                         .format(j)] = -1
         # print (self._zdict_ops)
 
