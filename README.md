@@ -17,7 +17,7 @@ pip install qiskit
 
 PIP will handle all dependencies automatically for us and you will always install the latest (and well-tested) version.
 
-To install from source, follow the instructions in the [contribution guidelines](.github/CONTRIBUTING.rst).
+To install from source, follow the instructions in the [contribution guidelines](./CONTRIBUTING.md).
 
 ## Creating your first quantum experiment with Qiskit Ignis
 Now that you have Qiskit Ignis installed, you can start creating experiments, to reveal information about the device quality. Here is a basic example:
@@ -93,7 +93,7 @@ Results with mitigation: {'000': 421, '001': 2, '011': 1, '100': 53, '110': 13, 
 ## Contribution Guidelines
 
 If you'd like to contribute to Qiskit Ignis, please take a look at our
-[contribution guidelines](.github/CONTRIBUTING.md). This project adheres to Qiskit's [code of conduct](.github/CODE_OF_CONDUCT.md). By participating, you are expect to uphold to this code.
+[contribution guidelines](./CONTRIBUTING.md). This project adheres to Qiskit's [code of conduct](./CODE_OF_CONDUCT.md). By participating, you are expect to uphold to this code.
 
 We use [GitHub issues](https://github.com/Qiskit/qiskit-ignis/issues) for tracking requests and bugs. Please use our [slack](https://qiskit.slack.com) for discussion and simple questions. To join our Slack community use the [link](https://join.slack.com/t/qiskit/shared_invite/enQtNDc2NjUzMjE4Mzc0LTMwZmE0YTM4ZThiNGJmODkzN2Y2NTNlMDIwYWNjYzA2ZmM1YTRlZGQ3OGM0NjcwMjZkZGE0MTA4MGQ1ZTVmYzk). For questions that are more suited for a forum we use the Qiskit tag in the [Stack Exchange](https://quantumcomputing.stackexchange.com/questions/tagged/qiskit).
 
