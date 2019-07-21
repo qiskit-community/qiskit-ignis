@@ -20,7 +20,7 @@ from abc import ABC, abstractmethod
 from scipy.optimize import curve_fit
 import numpy as np
 from qiskit import QiskitError
-from qiskit.quantum_info.analyzation.average import average_data
+from qiskit.quantum_info.analysis.average import average_data
 from ..tomography import marginal_counts
 from ...characterization.fitters import build_counts_dict_from_list
 
