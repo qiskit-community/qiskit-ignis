@@ -511,7 +511,8 @@ class TestFitters(unittest.TestCase):
                     + str(tst_index) + ' ' + str(fit[i]['params_err']) +
                     ' ' + str(tst['expected']['fit'][i]['params_err']))
                 self.assertTrue(np.isclose(fit[i]['epc'],
-                                           tst['expected']['fit'][i]['epc']),
+                                           tst['expected']['fit'][i]['epc'],
+                                           atol=0.001),
                                 'Incorrect EPC in purity data test no. '
                                 + str(tst_index))
                 self.assertTrue(
