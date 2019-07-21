@@ -807,6 +807,7 @@ class PurityRBFitter(RBFitterBase):
         # rb purity fitter
         self._rbfit_purity = RBFitter(purity_result, cliff_lengths,
                                       rb_pattern)
+        self.add_data(purity_result)
 
     @property
     def rbfit_pur(self):
@@ -901,7 +902,7 @@ class PurityRBFitter(RBFitterBase):
                         .format(j)] = -1
         # print (self._zdict_ops)
 
-    def add_data(self, rerun_fit=True):
+    def add_data(self, new_purity_result, rerun_fit=True):
         """
         Add a new result.
         Args:
@@ -912,6 +913,8 @@ class PurityRBFitter(RBFitterBase):
             where is_purity = True.
         """
         # print("in add_data")
+        self.rbfit_pur.add_data(new_purity_result, rerun_fit)
+
         if rerun_fit:
             self.calc_data()
             self.calc_statistics()
