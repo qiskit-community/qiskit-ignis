@@ -1099,12 +1099,12 @@ class PurityRBFitter(RBFitterBase):
                 alpha_pur_err
 
             # calcuate purity error per clifford (pepc)
-            pepc = 3/4 * (1 - np.power(alpha_pur, 2 / 3))
+            nrb = 2 ** self._nq
+            pepc = (nrb-1)/nrb * (1-alpha_pur)
             self.rbfit_pur.fit[patt_ind]['pepc'] = \
                 pepc
 
-            pepc_err = 0.5 * alpha_pur_err / np.power(
-                alpha_pur, 1 / 3)
+            pepc_err = (nrb-1)/nrb * alpha_pur_err / alpha_pur
             self.rbfit_pur.fit[patt_ind]['pepc_err'] = \
                 pepc_err
 
