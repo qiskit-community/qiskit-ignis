@@ -497,14 +497,14 @@ class TestFitters(unittest.TestCase):
                         'Incorrect std in purity data test no. '
                         + str(tst_index))
                 self.assertTrue(
-                    all(np.isclose(a, b) for a, b in zip(
+                    all(np.isclose(a, b, atol=0.0001) for a, b in zip(
                         fit[i]['params'],
                         tst['expected']['fit'][i]['params'])),
                     'Incorrect fit parameters in purity data test no. '
                     + str(tst_index) + ' ' + str(fit[i]['params']) + ' ' +
                     str(tst['expected']['fit'][i]['params']))
                 self.assertTrue(
-                    all(np.isclose(a, b) for a, b in zip(
+                    all(np.isclose(a, b, atol=0.0001) for a, b in zip(
                         fit[i]['params_err'],
                         tst['expected']['fit'][i]['params_err'])),
                     'Incorrect fit error in purity data test no. '
