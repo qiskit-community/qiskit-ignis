@@ -501,7 +501,8 @@ class TestFitters(unittest.TestCase):
                         fit[i]['params'],
                         tst['expected']['fit'][i]['params'])),
                     'Incorrect fit parameters in purity data test no. '
-                    + str(tst_index))
+                    + str(tst_index) + ' ' + str(fit[i]['params']) + ' ' +
+                    str(tst['expected']['fit'][i]['params']))
                 self.assertTrue(
                     all(np.isclose(a, b) for a, b in zip(
                         fit[i]['params_err'],
