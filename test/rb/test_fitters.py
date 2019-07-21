@@ -497,14 +497,14 @@ class TestFitters(unittest.TestCase):
                         'Incorrect std in purity data test no. '
                         + str(tst_index))
                 self.assertTrue(
-                    all(np.isclose(a, b, atol=0.001) for a, b in zip(
+                    all(np.isclose(a, b, atol=0.01) for a, b in zip(
                         fit[i]['params'],
                         tst['expected']['fit'][i]['params'])),
                     'Incorrect fit parameters in purity data test no. '
                     + str(tst_index) + ' ' + str(fit[i]['params']) + ' ' +
                     str(tst['expected']['fit'][i]['params']))
                 self.assertTrue(
-                    all(np.isclose(a, b, atol=0.001) for a, b in zip(
+                    all(np.isclose(a, b, atol=0.01) for a, b in zip(
                         fit[i]['params_err'],
                         tst['expected']['fit'][i]['params_err'])),
                     'Incorrect fit error in purity data test no. '
@@ -512,25 +512,25 @@ class TestFitters(unittest.TestCase):
                     ' ' + str(tst['expected']['fit'][i]['params_err']))
                 self.assertTrue(np.isclose(fit[i]['epc'],
                                            tst['expected']['fit'][i]['epc'],
-                                           atol=0.001),
+                                           atol=0.01),
                                 'Incorrect EPC in purity data test no. '
                                 + str(tst_index))
                 self.assertTrue(
                     np.isclose(fit[i]['epc_err'],
                                tst['expected']['fit'][i]['epc_err'],
-                               atol=0.001),
+                               atol=0.01),
                     'Incorrect EPC error in purity data test no. '
                     + str(tst_index))
                 self.assertTrue(
                     np.isclose(fit[i]['pepc'],
                                tst['expected']['fit'][i]['pepc'],
-                               atol=0.001),
+                               atol=0.01),
                     'Incorrect PEPC in purity data test no. '
                     + str(tst_index))
                 self.assertTrue(
                     np.isclose(fit[i]['pepc_err'],
                                tst['expected']['fit'][i]['pepc_err'],
-                               atol=0.001),
+                               atol=0.01),
                     'Incorrect PEPC error in purity data test no. '
                     + str(tst_index))
 
