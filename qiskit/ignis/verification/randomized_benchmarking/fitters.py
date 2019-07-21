@@ -383,7 +383,7 @@ class RBFitter(RBFitterBase):
 
         nrb = 2 ** len(qubits)
         epc = (nrb-1)/nrb*(1-alpha)
-        epc_err = epc*alpha_err/alpha
+        epc_err = (nrb-1)/nrb*alpha_err/alpha
 
         self._fit[patt_ind] = {'params': params, 'params_err': params_err,
                                'epc': epc, 'epc_err': epc_err}
