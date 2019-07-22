@@ -22,16 +22,19 @@ class AbstractDiscriminator(object):
     used for discrimination, e.g. to convert IQ data into 0 and 1's."""
 
     @abstractmethod
-    def __init__(self, result: Result, cal_circuits: list, cal_circuit_expected, **discriminator_parameters):
+    def __init__(self, result: Result, cal_circuits: list, data_circuits: list,
+                 cal_circuit_expected, **discriminator_parameters):
         """
         Args:
             result: the Result obtained from e.g. backend.run().result()
             cal_circuits: a list of str or QuantumCircuit or Schedule or int or None
+            data_circuits: a list of str or QuantumCircuit or Schedule or int or None
             cal_circuits_expected: a list of expected outcomes for the cal_circuits
             discriminator_parameters:
         """
         self.result = result
         self._cal_circuits = cal_circuits
+        self._data_circuits = data_circuits
         self._cal_circuits_expected = cal_circuit_expected
         self._fitted = False
         self.discriminator_parameters = discriminator_parameters
@@ -56,10 +59,7 @@ class AbstractDiscriminator(object):
 
     @abstractmethod
     def fit(self):
-        """
-        Trains the discriminator to the calibration data.
-        :return:
-        """
+        """Trains the discriminator to the calibration data."""
         pass
 
     @abstractmethod
@@ -75,3 +75,7 @@ class AbstractDiscriminator(object):
     def fitted(self):
         """True if the discriminator has been fitted to the calibration data."""
         return self._fitted
+
+    @fitted.setter
+    def fitted(self, value):
+        self._fitted = value
