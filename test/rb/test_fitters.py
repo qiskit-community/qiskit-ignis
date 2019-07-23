@@ -464,7 +464,7 @@ class TestFitters(unittest.TestCase):
                            'pepc_err': 50787.13189860349}]
                  }}]
 
-        for tst_index, tst in enumerate(tests_purity):
+        for tst_index, tst in enumerate(tests_purity[0:1]):
             fo = open(tst['results_file'], 'rb')
             purity_result_list = pickle.load(fo)
             fo.close()
