@@ -78,7 +78,8 @@ class TestT2Star(unittest.TestCase):
         backend_result = qiskit.execute(
             circs, backend, shots=shots,
             backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model).result()
+            noise_model=noise_model,
+            optimization_level=0).result()
 
         initial_t2 = expected_t2
         initial_a = 0.5
@@ -99,7 +100,8 @@ class TestT2Star(unittest.TestCase):
             circs_osc, backend,
             shots=shots,
             backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model).result()
+            noise_model=noise_model,
+            optimization_level=0).result()
 
         initial_a = 0.5
         initial_c = 0.5
@@ -147,7 +149,8 @@ class TestT1(unittest.TestCase):
             circs, backend,
             shots=shots,
             backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model).result()
+            noise_model=noise_model,
+            optimization_level=0).result()
 
         initial_t1 = expected_t1
         initial_a = 1
@@ -190,7 +193,8 @@ class TestT2(unittest.TestCase):
             circs, backend,
             shots=shots,
             backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model).result()
+            noise_model=noise_model,
+            optimization_level=0).result()
 
         initial_t2 = expected_t2
         initial_a = 1
@@ -236,7 +240,8 @@ class TestZZ(unittest.TestCase):
         # For demonstration purposes split the execution into two jobs
         backend_result = qiskit.execute(circs, backend,
                                         shots=shots,
-                                        noise_model=noise_model).result()
+                                        noise_model=noise_model,
+                                        optimization_level=0).result()
 
         initial_a = 0.5
         initial_c = 0.5
@@ -278,7 +283,8 @@ class TestCals(unittest.TestCase):
         # For demonstration purposes split the execution into two jobs
         backend_result = qiskit.execute(self._circs, backend,
                                         shots=shots,
-                                        noise_model=noise).result()
+                                        noise_model=noise,
+                                        optimization_level=0).result()
 
         return backend_result
 

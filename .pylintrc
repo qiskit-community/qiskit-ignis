@@ -1,6 +1,6 @@
 [MASTER]
 
-disable = invalid-name, import-error, too-many-statements, too-many-locals, too-many-branches, too-many-arguments, eval-used, too-many-nested-blocks, too-many-public-methods, redefined-builtin, wildcard-import, function-redefined, unused-wildcard-import, duplicate-code, too-many-instance-attributes, too-few-public-methods, pointless-string-statement, no-name-in-module, no-self-use, arguments-differ
+disable = invalid-name, import-error, too-many-statements, too-many-locals, too-many-branches, too-many-arguments, eval-used, too-many-nested-blocks, too-many-public-methods, redefined-builtin, wildcard-import, function-redefined, unused-wildcard-import, duplicate-code, too-many-instance-attributes, too-few-public-methods, pointless-string-statement, no-name-in-module, no-self-use, arguments-differ, too-many-lines
 
 generated-members = id, x, y, z, h, s, sdg, u1, u2, u3, cx, barrier, binary, measure, append
 

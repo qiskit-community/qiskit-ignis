@@ -27,20 +27,26 @@ from . import Clifford
 from . import clifford_utils as clutils
 
 
-def handle_length_multiplier(length_multiplier, len_pattern):
+def handle_length_multiplier(length_multiplier, len_pattern,
+                             is_purity=False):
     """
     Check validity of length_multiplier.
     In addition, transform it into a vector if it is a constant.
+    In case of purity rb the length multiplier should be None.
 
     Args:
         length_multiplier: length of the multiplier
         len_pattern: length of the RB pattern
+        is_purity: True only for purity rb (default is False)
 
     Returns:
         length_multiplier
     """
 
     if hasattr(length_multiplier, "__len__"):
+        if is_purity:
+            raise ValueError(
+                "In case of Purity RB the length multiplier should be None")
         if len(length_multiplier) != len_pattern:
             raise ValueError(
                 "Length mulitiplier must be the same length as the pattern")
@@ -53,14 +59,20 @@ def handle_length_multiplier(length_multiplier, len_pattern):
     return length_multiplier
 
 
-def check_pattern(pattern):
+def check_pattern(pattern, is_purity=False):
     """
     Verifies that the input pattern is valid
     i.e., that each qubit appears at most once
 
+    In case of purity rb, checkes that all
+    simultaneous sequences have the same dimension
+    (e.g. only 1-qubit squences, or only 2-qubits
+    sequences etc.)
+
     Args:
         pattern: RB pattern
         n_qubits: number of qubits
+        is_purity: True only for purity rb (default is False)
 
     Raises:
         ValueError: if the pattern is not valid
@@ -68,17 +80,28 @@ def check_pattern(pattern):
     Return:
         qlist: flat list of all the qubits in the pattern
         maxqubit: the maximum qubit number
+        maxdim: the maximal dimension (maximal number of qubits
+        in all sequences)
     """
 
     pattern_flat = []
+    pattern_dim = []
     for pat in pattern:
         pattern_flat.extend(pat)
+        pattern_dim.append(len(pat))
 
     _, uni_counts = np.unique(np.array(pattern_flat), return_counts=True)
     if (uni_counts > 1).any():
         raise ValueError("Invalid pattern. Duplicate qubit index.")
 
-    return pattern_flat, np.max(pattern_flat).item()
+    dim_distinct = np.unique(pattern_dim)
+    if is_purity:
+        if len(dim_distinct) > 1:
+            raise ValueError("Invalid pattern for purity RB. \
+            All simultaneous sequences should have the \
+            same dimension.")
+
+    return pattern_flat, np.max(pattern_flat).item(), np.max(pattern_dim)
 
 
 def calc_xdata(length_vector, length_multiplier):
@@ -144,7 +167,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 rb_pattern=None,
                                 length_multiplier=1, seed_offset=0,
                                 align_cliffs=False,
-                                interleaved_gates=None):
+                                interleaved_gates=None,
+                                is_purity=False):
     """
     Get a generic randomized benchmarking sequence
 
@@ -172,6 +196,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         interleaved_gates: A list of gates of Clifford elements that
         will be interleaved (for interleaved randomized benchmarking)
         The length of the list would equal the length of the rb_pattern.
+        is_purity: True only for purity rb (default is False)
 
     Returns:
         circuits: list of lists of circuits for the rb sequences (separate list
@@ -180,15 +205,22 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         rb_opts_dict: option dictionary back out with default options appended
         circuits_interleaved: list of lists of circuits for the interleaved
         rb sequences (separate list for each seed)
+        circuits_purity: list of lists of lists of circuits for purity rb
+        (separate list for each seed and each of the 3^n circuits)
+        npurity: the number of purity rb circuits (per seed)
+        which equals to 3^n, where n is the dimension
     """
     if rb_pattern is None:
         rb_pattern = [[0]]
     if length_vector is None:
         length_vector = [1, 10, 20]
 
-    qlist_flat, n_q_max = check_pattern(rb_pattern)
+    qlist_flat, n_q_max, max_dim = check_pattern(rb_pattern, is_purity)
     length_multiplier = handle_length_multiplier(length_multiplier,
-                                                 len(rb_pattern))
+                                                 len(rb_pattern),
+                                                 is_purity)
+    # number of purity rb circuits per seed
+    npurity = 3**max_dim
 
     xdata = calc_xdata(length_vector, length_multiplier)
 
@@ -199,6 +231,9 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     circuits = [[] for e in range(nseeds)]
     # initialization: interleaved rb sequences
     circuits_interleaved = [[] for e in range(nseeds)]
+    # initialization: purity rb sequences
+    circuits_purity = [[[] for d in range(npurity)]
+                       for e in range(nseeds)]
 
     # go through for each seed
     for seed in range(nseeds):
@@ -300,7 +335,49 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                             clutils.get_quantum_circuit(inv_circuit, rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
 
-                # add measurement
+                # Circuits for purity rb
+                if is_purity:
+                    circ_purity = [[] for d in range(npurity)]
+                    for d in range(npurity):
+                        circ_purity[d] = qiskit.QuantumCircuit(qr, cr)
+                        circ_purity[d] += circ
+                        circ_purity[d].name = 'rb_purity_'
+                        ind_d = d
+                        purity_qubit_num = 0
+                        while True:
+                            # Per each qubit:
+                            # do nothing or rx(pi/2) or ry(pi/2)
+                            purity_qubit_rot = np.mod(ind_d, 3)
+                            ind_d = np.floor_divide(ind_d, 3)
+                            if purity_qubit_rot == 0:  # do nothing
+                                circ_purity[d].name += 'Z'
+                            if purity_qubit_rot == 1:  # add rx(pi/2)
+                                for pat in rb_pattern:
+                                    circ_purity[d].rx(np.pi / 2,
+                                                      qr[pat[
+                                                          purity_qubit_num]])
+                                circ_purity[d].name += 'X'
+                            if purity_qubit_rot == 2:  # add ry(pi/2)
+                                for pat in rb_pattern:
+                                    circ_purity[d].ry(np.pi / 2,
+                                                      qr[pat[
+                                                          purity_qubit_num]])
+                                circ_purity[d].name += 'Y'
+                            purity_qubit_num = purity_qubit_num + 1
+                            if ind_d == 0:
+                                break
+                        # padding the circuit name with Z's so that
+                        # all circuits will have names of the same length
+                        for _ in range(max_dim - purity_qubit_num):
+                            circ_purity[d].name += 'Z'
+                        # add measurement for purity rb
+                        for qind, qb in enumerate(qlist_flat):
+                            circ_purity[d].measure(qr[qb], cr[qind])
+                        circ_purity[d].name += '_length_%d_seed_%d' \
+                                               % (length_index,
+                                                  seed + seed_offset)
+
+                # add measurement for standard rb
                 # qubits measure to the c registers as
                 # they appear in the pattern
                 for qind, qb in enumerate(qlist_flat):
@@ -315,11 +392,17 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
 
                 circuits[seed].append(circ)
                 circuits_interleaved[seed].append(circ_interleaved)
+                if is_purity:
+                    for d in range(npurity):
+                        circuits_purity[seed][d].append(circ_purity[d])
                 length_index += 1
 
     # output of interleaved rb
     if interleaved_gates is not None:
         return circuits, xdata, circuits_interleaved
+    # output of purity rb
+    if is_purity:
+        return circuits_purity, xdata, npurity
     # output of standard (simultaneous) rb
     return circuits, xdata
 
