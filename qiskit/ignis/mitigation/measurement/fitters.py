@@ -25,6 +25,8 @@ import numpy as np
 from qiskit import QiskitError
 from .filters import MeasurementFilter, TensoredFilter
 from ...verification.tomography import count_keys
+from ...characterization.fitters import build_counts_dict_from_list
+
 
 try:
     from matplotlib import pyplot as plt
@@ -58,7 +60,7 @@ class CompleteMeasFitter():
             circlabel: if the qubits were labeled
         """
 
-        self._results = results
+        self._result_list = []
         self._state_labels = state_labels
         self._cal_matrix = None
         self._circlabel = circlabel
@@ -66,8 +68,7 @@ class CompleteMeasFitter():
             qubit_list = range(len(state_labels[0]))
         self._qubit_list = qubit_list
 
-        if self._results is not None:
-            self._build_calibration_matrix()
+        self.add_data(results)
 
     @property
     def cal_matrix(self):
@@ -98,6 +99,27 @@ class CompleteMeasFitter():
     def filter(self):
         """return a measurement filter using the cal matrix"""
         return MeasurementFilter(self._cal_matrix, self._state_labels)
+
+    def add_data(self, new_results, rebuild_cal_matrix=True):
+        """
+        Add measurement calibration data
+
+        Args:
+            new_results: a single result or list of results
+            rebuild_cal_matrix: rebuild the calibration matrix
+        """
+
+        if new_results is None:
+            return
+
+        if not isinstance(new_results, list):
+            new_results = [new_results]
+
+        for result in new_results:
+            self._result_list.append(result)
+
+        if rebuild_cal_matrix:
+            self._build_calibration_matrix()
 
     def subset_fitter(self, qubit_sublist=None):
         """
@@ -231,9 +253,17 @@ class CompleteMeasFitter():
             [len(self._state_labels), len(self._state_labels)], dtype=float)
 
         for stateidx, state in enumerate(self._state_labels):
-            state_cnts = self._results.get_counts('%scal_%s' %
-                                                  (self._circlabel, state))
+            circ_name = '%scal_%s' % (self._circlabel, state)
+            count_list = []
+            for result in self._result_list:
+                try:
+                    count_list.append(result.get_counts(circ_name))
+                except (QiskitError, KeyError):
+                    pass
+
+            state_cnts = build_counts_dict_from_list(count_list)
             shots = sum(state_cnts.values())
+
             for stateidx2, state2 in enumerate(self._state_labels):
                 cal_matrix[stateidx, stateidx2] = state_cnts.get(
                     state2, 0) / shots
@@ -298,7 +328,7 @@ class TensoredMeasFitter():
             If None then the labels are ordered lexicographically
         """
 
-        self._results = results
+        self._result_list = []
         self._cal_matrices = None
         self._circlabel = circlabel
 
@@ -321,8 +351,7 @@ class TensoredMeasFitter():
             self._indices_list.append(
                 {lab: ind for ind, lab in enumerate(sub_labels)})
 
-        if self._results is not None:
-            self._build_calibration_matrices()
+        self.add_data(results)
 
     @property
     def cal_matrices(self):
@@ -348,6 +377,27 @@ class TensoredMeasFitter():
     def nqubits(self):
         """Return _qubit_list_sizes"""
         return sum(self._qubit_list_sizes)
+
+    def add_data(self, new_results, rebuild_cal_matrix=True):
+        """
+        Add measurement calibration data
+
+        Args:
+            new_results: a single result or list of results
+            rebuild_cal_matrix: rebuild the calibration matrix
+        """
+
+        if new_results is None:
+            return
+
+        if not isinstance(new_results, list):
+            new_results = [new_results]
+
+        for result in new_results:
+            self._result_list.append(result)
+
+        if rebuild_cal_matrix:
+            self._build_calibration_matrices()
 
     def readout_fidelity(self, cal_index=0, label_list=None):
         """
@@ -397,31 +447,38 @@ class TensoredMeasFitter():
                                                dtype=float))
 
         # go through for each calibration experiment
-        for experiment in self._results.results:
-            circ_name = experiment.header.name
-            # extract the state from the circuit name
-            # this was the prepared state
-            state = re.search('(?<=' + self._circlabel + 'cal_)\\w+',
-                              circ_name).group(0)
+        for result in self._result_list:
+            for experiment in result.results:
+                circ_name = experiment.header.name
+                # extract the state from the circuit name
+                # this was the prepared state
+                circ_search = re.search('(?<=' + self._circlabel + 'cal_)\\w+',
+                                        circ_name)
 
-            # get the counts from the result
-            state_cnts = self._results.get_counts(circ_name)
-            for measured_state, counts in state_cnts.items():
-                end_index = self.nqubits
-                for cal_ind, cal_mat in enumerate(self._cal_matrices):
+                # this experiment is not one of the calcs so skip
+                if circ_search is None:
+                    continue
 
-                    start_index = end_index - \
-                        self._qubit_list_sizes[cal_ind]
+                state = circ_search.group(0)
 
-                    substate_index = self._indices_list[cal_ind][
-                        state[start_index:end_index]]
-                    measured_substate_index = \
-                        self._indices_list[cal_ind][
-                            measured_state[start_index:end_index]]
-                    end_index = start_index
+                # get the counts from the result
+                state_cnts = result.get_counts(circ_name)
+                for measured_state, counts in state_cnts.items():
+                    end_index = self.nqubits
+                    for cal_ind, cal_mat in enumerate(self._cal_matrices):
 
-                    cal_mat[measured_substate_index][substate_index] += \
-                        counts
+                        start_index = end_index - \
+                            self._qubit_list_sizes[cal_ind]
+
+                        substate_index = self._indices_list[cal_ind][
+                            state[start_index:end_index]]
+                        measured_substate_index = \
+                            self._indices_list[cal_ind][
+                                measured_state[start_index:end_index]]
+                        end_index = start_index
+
+                        cal_mat[measured_substate_index][substate_index] += \
+                            counts
 
         for mat_index, _ in enumerate(self._cal_matrices):
             sums_of_columns = np.sum(self._cal_matrices[mat_index], axis=0)
