@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Add multiple results to measurement mitigation
 - Fixed bug in RB fit error
 - Updates for Terra Qubit class
 - Added the ability to add arbitrary seeds to RB (not just in order)
