@@ -26,6 +26,7 @@ import numpy as np
 import qiskit
 from qiskit.validation.base import Obj
 from qiskit import QiskitError
+from qiskit.tools import parallel_map
 from ...verification.tomography import count_keys
 
 
@@ -142,9 +143,12 @@ class MeasurementFilter():
             # counts and push back into the new result
             new_result = deepcopy(raw_data)
 
-            for resultidx, _ in enumerate(raw_data.results):
-                new_counts = self.apply(
-                    raw_data.get_counts(resultidx), method=method)
+            new_counts_list = parallel_map(
+                self._apply_correction,
+                [resultidx for resultidx, _ in enumerate(raw_data.results)],
+                task_args=(raw_data, method))
+
+            for resultidx, new_counts in new_counts_list:
                 new_result.results[resultidx].data.counts = \
                     new_result.results[resultidx]. \
                     data.counts.from_dict(new_counts)
@@ -198,6 +202,11 @@ class MeasurementFilter():
             # raw_data2 = raw_data2[0].tolist()
             raw_data2 = raw_data2[0]
         return raw_data2
+
+    def _apply_correction(self, resultidx, raw_data, method):
+        new_counts = self.apply(
+            raw_data.get_counts(resultidx), method=method)
+        return resultidx, new_counts
 
 
 class TensoredFilter():
