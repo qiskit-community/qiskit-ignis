@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Apply measurement mitigation in parallel when applied to multiple results
 - Add multiple results to measurement mitigation
 - Fixed bug in RB fit error
 - Updates for Terra Qubit class
