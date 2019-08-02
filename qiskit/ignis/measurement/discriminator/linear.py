@@ -47,12 +47,11 @@ class LinearIQDiscriminationFitter(BaseFitter):
 
         description = 'Linear IQ discriminator for measurement level 1.'
 
-        _expected_state = []
-        if isinstance(expected_states, list):
-            for es in expected_states:
-                _expected_state.append(es)
-        else:
-            _expected_state.append(expected_states)
+        _expected_state = {}
+        for idx in range(len(circuit_names)):
+            circ_name = circuit_names[idx]
+            expected_state = expected_states[idx]
+            _expected_state[circ_name] = expected_state
 
         BaseFitter.__init__(self, description, cal_results, None, qubits, lda, None,
                             None, circuit_names, expected_state=_expected_state)
@@ -81,17 +80,19 @@ class LinearIQDiscriminationFitter(BaseFitter):
             for all the qubits. Each sublist therefore corresponds to an
             expected result stored in self._expected_state.
         """
-        self._xdata = []
+        self._xdata, self._ydata = [], []
         for circuit in self._circuit_names:
-            features = []
             for result in self._backend_result_list:
                 try:
-                    iq_data = result.get_memory(circuit)
-                    features.extend([np.real(iq_data), np.imag(iq_data)])
+                    iq_data = result.get_memory(circuit)[:, self._qubits]
+                    for shot_idx in range(iq_data.shape[0]):
+                        shot_i = list(np.real(iq_data[shot_idx]))
+                        shot_q = list(np.imag(iq_data[shot_idx]))
+                        self._xdata.append(shot_i + shot_q)
+                        self._ydata.append(self._expected_state[circuit])
+
                 except (QiskitError, KeyError):
                     pass
-
-            self._xdata.append(features)
 
     def fit_data(self, qid=-1, p0=None, bounds=None, series=None):
         """
@@ -102,4 +103,4 @@ class LinearIQDiscriminationFitter(BaseFitter):
             bounds: not needed
             series: not needed
         """
-        self._fit_fun.fit(self._xdata, self._expected_state)
+        self._fit_fun.fit(self._xdata, self._ydata)
