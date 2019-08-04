@@ -221,7 +221,7 @@ class TestFileLogging(TestLoggingBase):
         with open(self._default_log, 'r') as file:
             self.assertRegex(
                 file.read(),
-                '\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} ignis_logging \S+')
+                r"\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} ignis_logging \S+")
 
     def test_multiple_lines(self):
         logger = IgnisLogging().get_logger(__name__)

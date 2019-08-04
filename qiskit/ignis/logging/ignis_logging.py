@@ -52,7 +52,6 @@ class IgnisLogger(logging.getLoggerClass()):
         self.addHandler(sh)
         self._conf_file_exists = conf_file_exists
 
-
     def log_to_file(self, **kargs):
         """
         This function logs key:value pairs to a log file.
@@ -199,6 +198,11 @@ class IgnisLogging:
         return logger
 
     def get_file_handler(self):
+        """
+        Configures and retrieves the RotatingFileHandler object. Called on
+        demand the first time IgnisLoggers needs to write to a file
+        :return:
+        """
         # Configuring the file handling aspect
         fh = logging.handlers.RotatingFileHandler(
             IgnisLogging._log_file, maxBytes=IgnisLogging._max_bytes,
@@ -255,8 +259,8 @@ class IgnisLogReader:
         files = sorted(glob.glob(search_path), key=os.path.getmtime)
 
         result = list()
-        m = re.compile(os.path.abspath(os.path.abspath(file_name)) + "$|" +
-                       os.path.abspath(os.path.abspath(file_name)) + ".\d+$")
+        m = re.compile(os.path.abspath(os.path.abspath(file_name)) + r"$|" +
+                       os.path.abspath(os.path.abspath(file_name)) + r".\d+$")
         for f in files:
             if m.match(f):
                 result.append(f)
