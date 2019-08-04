@@ -16,6 +16,7 @@ from logging import Logger
 import os
 import glob
 from datetime import datetime
+import re
 
 
 class IgnisLogger(logging.getLoggerClass()):
@@ -39,19 +40,18 @@ class IgnisLogger(logging.getLoggerClass()):
         self._conf_file_exists = False
         self._warning_omitted = False
 
-    def configure(self, fh, sh, conf_file_exists):
+    def configure(self, sh, conf_file_exists):
         """
         Internal configuration method of IgnisLogger. Should only be called
         by IgnisLogger
 
-        :param fh: FileHandler object
         :param sh: StreamHandler object
         :param conf_file_exists: Whether or not a file config exists
         """
-        self._file_handler = fh
         self._stream_handler = sh
         self.addHandler(sh)
         self._conf_file_exists = conf_file_exists
+
 
     def log_to_file(self, **kargs):
         """
@@ -61,7 +61,6 @@ class IgnisLogger(logging.getLoggerClass()):
         :param kargs: Keyword parameters to be logged (e.g t1=0.02,
         qubits=[1,2,4])
         """
-        assert(self._file_handler is not None), "file_handler is not set"
         if not self._file_logging_enabled:
             if not self._warning_omitted:  # Omitting this warning only once
                 msg = "File logging is disabled"
@@ -71,6 +70,13 @@ class IgnisLogger(logging.getLoggerClass()):
                 logger.warning(msg)
                 self._warning_omitted = True
             return
+
+        # We defer setting up the file handler, since its __init__ method
+        # has the side effect of creating the file
+        if self._file_handler is None:
+            self._file_handler = IgnisLogging().get_file_handler()
+
+        assert(self._file_handler is not None), "file_handler is not set"
 
         Logger.removeHandler(self, self._stream_handler)
         Logger.addHandler(self, self._file_handler)
@@ -109,7 +115,7 @@ class IgnisLogging:
     Config file fields:
     ===================
     file_logging: {true/false}      - Specifies whether file logging is enabled
-    log_file_path: <path>           - path to the log file. If not specified,
+    log_file: <path>                - path to the log file. If not specified,
                                         ignis.log will be used
     max_size:  <# bytes>            - maximum size limit for a given log file.
                                         If not specified file size is unlimited
@@ -149,7 +155,8 @@ class IgnisLogging:
         if os.path.exists(config_file_path):
             with open(config_file_path, "r") as log_file:
                 for line in log_file:
-                    line = line[:line.find('#')]    # removing comments
+                    # removing comments
+                    line = line[:line.find('#') if "#" in line else None]
                     line = line.split(':')  # Splitting to key value
                     if len(line) < 2:
                         continue
@@ -191,14 +198,8 @@ class IgnisLogging:
 
         return logger
 
-    def _configure_logger(self, logger):
-        # Configuring the stream handler
-        sh = logging.StreamHandler()
-        sh.setLevel(logging.NOTSET)
-        stream_fmt = logging.Formatter('%(levelname)s: %(name)s - %(message)s')
-        sh.setFormatter(stream_fmt)
-        # This will enable limiting file size and rotating once file size
-        # is exhausted
+    def get_file_handler(self):
+        # Configuring the file handling aspect
         fh = logging.handlers.RotatingFileHandler(
             IgnisLogging._log_file, maxBytes=IgnisLogging._max_bytes,
             backupCount=IgnisLogging._max_rotations)
@@ -208,7 +209,19 @@ class IgnisLogging:
             '%(asctime)s {} %(message)s'.format(IgnisLogging._log_label),
             datefmt=IgnisLogging._default_datefmt)
         fh.setFormatter(formatter)
-        logger.configure(fh, sh, IgnisLogging._config_file_exists)
+
+        return fh
+
+    def _configure_logger(self, logger):
+        # Configuring the stream handler
+        sh = logging.StreamHandler()
+        sh.setLevel(logging.NOTSET)
+        stream_fmt = logging.Formatter('%(levelname)s: %(name)s - %(message)s')
+        sh.setFormatter(stream_fmt)
+        # This will enable limiting file size and rotating once file size
+        # is exhausted
+
+        logger.configure(sh, IgnisLogging._config_file_exists)
 
         if IgnisLogging._file_logging_enabled:
             logger.enable_file_logging()
@@ -235,13 +248,20 @@ class IgnisLogReader:
     def get_log_files(self):
         """
         :return: Names of all log files (several may be present due to logging
-        file rotation). File names are sorted by
-        modification time.
+        file rotation). File names are sorted by modification time.
         """
         file_name = IgnisLogging().get_log_file()
         search_path = os.path.abspath(os.path.abspath(file_name + "*"))
+        files = sorted(glob.glob(search_path), key=os.path.getmtime)
 
-        return sorted(glob.glob(search_path), key=os.path.getmtime)
+        result = list()
+        m = re.compile(os.path.abspath(os.path.abspath(file_name)) + "$|" +
+                       os.path.abspath(os.path.abspath(file_name)) + ".\d+$")
+        for f in files:
+            if m.match(f):
+                result.append(f)
+
+        return result
 
     def read_values(self, log_files=None, keys=None, from_datetime=None,
                     from_datetime_format=None, to_datetime=None,
