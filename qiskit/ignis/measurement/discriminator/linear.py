@@ -25,25 +25,28 @@ class LinearIQDiscriminationFitter(BaseFitter):
                  qubits, circuit_names, expected_states):
         """
         Args:
-            cal_results: calibration results, list of qiskit.Result or qiskit.Result
+            cal_results: calibration results, list of qiskit.Result or
+            qiskit.Result
             discriminator_parameters: parameters for the discriminator.
             qubits: the qubits for which we want to discriminate.
             circuit_names: The names of the circuits in cal_results.
-            expected_states: a list that should have the same length as cal_results.
-                If cal_results is a Result and not a list then exoected_states should
-                be a string or a float or an int.
+            expected_states: a list that should have the same length as
+                cal_results. If cal_results is a Result and not a list then
+                expected_states should be a string or a float or an int.
         """
+        solver = discriminator_parameters.get('solver', 'svd')
+        shrink = discriminator_parameters.get('shrinkage', None)
+        store_cov = discriminator_parameters.get('store_covariance', False)
+        tol = discriminator_parameters.get('tol', 1.0e-4)
 
-        lda = LinearDiscriminantAnalysis(
-            solver=discriminator_parameters.get('solver', 'svd'),
-            shrinkage=discriminator_parameters.get('shrinkage', None),
-            store_covariance=discriminator_parameters.get('store_covariance', False),
-            tol=discriminator_parameters.get('tol', 1.0e-4))
+        lda = LinearDiscriminantAnalysis(solver=solver, shrinkage=shrink,
+                                         store_covariance=store_cov, tol=tol)
 
         # Sanity checks
         if isinstance(cal_results, list) and isinstance(expected_states, list):
             if len(cal_results) != len(expected_states):
-                raise QiskitError('Inconsistent number of results and expected results.')
+                msg = 'Inconsistent number of results and expected results.'
+                raise QiskitError(msg)
 
         description = 'Linear IQ discriminator for measurement level 1.'
 
@@ -53,15 +56,17 @@ class LinearIQDiscriminationFitter(BaseFitter):
             expected_state = expected_states[idx]
             _expected_state[circ_name] = expected_state
 
-        BaseFitter.__init__(self, description, cal_results, None, qubits, lda, None,
-                            None, circuit_names, expected_state=_expected_state)
+        BaseFitter.__init__(self, description, cal_results, None, qubits,
+                            lda, None, None, circuit_names,
+                            expected_state=_expected_state)
 
     def add_data(self, result, recalc=True, refit=True, expected_state=None):
         """
         Overrides method of base class.
         Args:
             result: the Result obtained from e.g. backend.run().result()
-            recalc: this parameter is irrelevant and only needed for Liskov principle
+            recalc: this parameter is irrelevant and only needed for Liskov
+            principle.
             refit: refit the discriminator if True.
             expected_state: the expected state of the discriminator.
         """
