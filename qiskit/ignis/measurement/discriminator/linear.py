@@ -14,41 +14,34 @@
 
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 
 from qiskit.ignis.characterization.fitters import BaseFitter
 from qiskit.exceptions import QiskitError
 
 
-class LinearIQDiscriminationFitter(BaseFitter):
+class IQDiscriminationFitter(BaseFitter):
 
-    def __init__(self, cal_results, discriminator_parameters,
-                 qubits, circuit_names, expected_states):
+    def __init__(self, cal_results, qubits, circuit_names, expected_states,
+                 discriminant,  description):
         """
         Args:
             cal_results: calibration results, list of qiskit.Result or
             qiskit.Result
-            discriminator_parameters: parameters for the discriminator.
             qubits: the qubits for which we want to discriminate.
             circuit_names: The names of the circuits in cal_results.
             expected_states: a list that should have the same length as
                 cal_results. If cal_results is a Result and not a list then
                 expected_states should be a string or a float or an int.
+            discriminant: a discriminant from e.g. scikit learn.
+            description: a string describing the discriminator.
         """
-        solver = discriminator_parameters.get('solver', 'svd')
-        shrink = discriminator_parameters.get('shrinkage', None)
-        store_cov = discriminator_parameters.get('store_covariance', False)
-        tol = discriminator_parameters.get('tol', 1.0e-4)
-
-        lda = LinearDiscriminantAnalysis(solver=solver, shrinkage=shrink,
-                                         store_covariance=store_cov, tol=tol)
 
         # Sanity checks
         if isinstance(cal_results, list) and isinstance(expected_states, list):
             if len(cal_results) != len(expected_states):
                 msg = 'Inconsistent number of results and expected results.'
                 raise QiskitError(msg)
-
-        description = 'Linear IQ discriminator for measurement level 1.'
 
         _expected_state = {}
         for idx in range(len(circuit_names)):
@@ -57,7 +50,7 @@ class LinearIQDiscriminationFitter(BaseFitter):
             _expected_state[circ_name] = expected_state
 
         BaseFitter.__init__(self, description, cal_results, None, qubits,
-                            lda, None, None, circuit_names,
+                            discriminant, None, None, circuit_names,
                             expected_state=_expected_state)
 
     def add_data(self, result, recalc=True, refit=True, expected_state=None):
@@ -109,3 +102,63 @@ class LinearIQDiscriminationFitter(BaseFitter):
             series: not needed
         """
         self._fit_fun.fit(self._xdata, self._ydata)
+
+
+class LinearIQDiscriminationFitter(IQDiscriminationFitter):
+
+    def __init__(self, cal_results, discriminator_parameters,
+                 qubits, circuit_names, expected_states):
+        """
+        Args:
+            cal_results: calibration results, list of qiskit.Result or
+            qiskit.Result
+            discriminator_parameters: parameters for the discriminator.
+            qubits: the qubits for which we want to discriminate.
+            circuit_names: The names of the circuits in cal_results.
+            expected_states: a list that should have the same length as
+                cal_results. If cal_results is a Result and not a list then
+                expected_states should be a string or a float or an int.
+        """
+
+        solver = discriminator_parameters.get('solver', 'svd')
+        shrink = discriminator_parameters.get('shrinkage', None)
+        store_cov = discriminator_parameters.get('store_covariance', False)
+        tol = discriminator_parameters.get('tol', 1.0e-4)
+
+        lda = LinearDiscriminantAnalysis(solver=solver, shrinkage=shrink,
+                                         store_covariance=store_cov, tol=tol)
+
+        description = 'Linear IQ discriminator for measurement level 1.'
+
+        IQDiscriminationFitter.__init__(self, cal_results, qubits,
+                                        circuit_names, expected_states,
+                                        lda, description)
+
+
+class QuadraticIQDiscriminationFitter(IQDiscriminationFitter):
+
+    def __init__(self, cal_results, discriminator_parameters,
+                 qubits, circuit_names, expected_states):
+        """
+        Args:
+            cal_results: calibration results, list of qiskit.Result or
+            qiskit.Result
+            discriminator_parameters: parameters for the discriminator.
+            qubits: the qubits for which we want to discriminate.
+            circuit_names: The names of the circuits in cal_results.
+            expected_states: a list that should have the same length as
+                cal_results. If cal_results is a Result and not a list then
+                expected_states should be a string or a float or an int.
+        """
+
+        store_cov = discriminator_parameters.get('store_covariance', False)
+        tol = discriminator_parameters.get('tol', 1.0e-4)
+
+        qda = QuadraticDiscriminantAnalysis(
+            store_covariance=store_cov, tol=tol)
+
+        description = 'Quadratic IQ discriminator for measurement level 1.'
+
+        IQDiscriminationFitter.__init__(self, cal_results, qubits,
+                                        circuit_names, expected_states,
+                                        qda, description)
