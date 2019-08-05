@@ -16,6 +16,9 @@ test/python/*.prof
 # dotenv
 .env
 
+# Jupyter notebooks checkpoints
+qiskit/ignis/examples/.ipynb_checkpoints/
+
 # virtualenv
 .venv
 venv/
