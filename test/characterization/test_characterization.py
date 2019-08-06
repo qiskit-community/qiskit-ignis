@@ -283,8 +283,7 @@ class TestCals(unittest.TestCase):
         # For demonstration purposes split the execution into two jobs
         backend_result = qiskit.execute(self._circs, backend,
                                         shots=shots,
-                                        noise_model=noise,
-                                        optimization_level=0).result()
+                                        noise_model=noise).result()
 
         return backend_result
 
