@@ -83,6 +83,11 @@ def qv_circuits(qubit_lists=None, ntrials=1,
                     qc2.append(U, [qr2[pair[0]],
                                    qr2[pair[1]]])
 
+            # append an id to all the qubits in the ideal circuits
+            # to prevent a truncation error in the statevector
+            # simulators
+            qc2.u1(0, qr2)
+
             circuits_nomeas[trial].append(qc2)
 
             # add measurement
