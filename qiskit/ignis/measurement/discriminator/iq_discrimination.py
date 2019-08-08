@@ -18,6 +18,8 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 
 from qiskit.ignis.characterization.fitters import BaseFitter
 from qiskit.exceptions import QiskitError
+from qiskit.result.models import ExperimentResult
+from qiskit.result import postprocess
 
 
 class IQDiscriminationFitter(BaseFitter):
@@ -102,6 +104,31 @@ class IQDiscriminationFitter(BaseFitter):
             series: not needed
         """
         self._fit_fun.fit(self._xdata, self._ydata)
+
+    def extract_xdata(self, result: ExperimentResult):
+        """
+        Takes a result (ExperimentResult) and extracts the data into a form
+        that can be used by the fitter.
+
+        Args:
+            result (ExperimentResult): result from a Qiskit backend.
+        Returns:
+            A list of shots where each entry is a list of IQ points.
+        """
+
+        if result.meas_level == 1:
+            iq_data = postprocess.format_level_1_memory(result.data.memory)
+            iq_data = iq_data[:, self._qubits]
+            xdata = []
+            for shot_idx in range(iq_data.shape[0]):
+                shot_i = list(np.real(iq_data[shot_idx]))
+                shot_q = list(np.imag(iq_data[shot_idx]))
+                xdata.append(shot_i + shot_q)
+
+            return xdata
+        else:
+            raise QiskitError('Cannot extract IQ data for %s' %
+                              result.meas_level)
 
 
 class LinearIQDiscriminationFitter(IQDiscriminationFitter):

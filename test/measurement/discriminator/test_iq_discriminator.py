@@ -3,7 +3,8 @@ import random
 
 import qiskit
 from qiskit import Aer
-from qiskit.ignis.measurement.discriminator.linear import \
+from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
+from qiskit.ignis.measurement.discriminator.iq_discrimination import \
     LinearIQDiscriminationFitter
 from qiskit.ignis.mitigation.measurement import circuits
 from qiskit.result.models import ExperimentResultData
@@ -12,7 +13,7 @@ from qiskit.result.models import ExperimentResultData
 class TestLinearIQDiscriminator(unittest.TestCase):
 
     def setUp(self):
-        self.shots = 512
+        self.shots = 52
         self.qubits = [0, 1]
 
     def test_discrimination(self):
@@ -63,11 +64,26 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         self.assertEqual(excited_predicted[0], '11')
         self.assertEqual(ground_predicted[0], '00')
 
+        self.qubits = [0]
+
         discriminator = LinearIQDiscriminationFitter(cal_results,
                                                      discriminator_params,
-                                                     [0],
+                                                     self.qubits,
                                                      ['cal_00', 'cal_11'],
                                                      ['0', '1'])
 
         self.assertEqual(discriminator.fit_fun.predict([[i0, q0]])[0], '0')
         self.assertEqual(discriminator.fit_fun.predict([[i1, q1]])[0], '1')
+
+        iq_filter = DiscriminationFilter(discriminator)
+
+        new_result = iq_filter.apply(cal_results)
+
+        for nr in new_result.results:
+            self.assertEqual(nr.meas_level, 2)
+
+        for state in new_result.results[0].data.memory:
+            self.assertEqual(state, '0')
+
+        for state in new_result.results[1].data.memory:
+            self.assertEqual(state, '1')
