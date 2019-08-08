@@ -370,7 +370,7 @@ class RBFitter(RBFitterBase):
                                  self._ydata[patt_ind]['mean'],
                                  sigma=sigma,
                                  p0=fit_guess,
-                                 bounds=([-2, 0, -2], [2, 1, 2]))
+                                 bounds=([0, 0, 0], [1, 1, 1]))
         alpha = params[1]  # exponent
         params_err = np.sqrt(np.diag(pcov))
         alpha_err = params_err[1]
