@@ -400,10 +400,9 @@ class RBFitter(RBFitterBase):
         for patt_ind, _ in enumerate(self._rb_pattern):
 
             qubits = self._rb_pattern[patt_ind]
-            fit_guess = [0.95, 0.99, 0.0]
-            fit_guess[0] = self._ydata[patt_ind]['mean'][0]
+
             # Should decay to 1/2^n
-            fit_guess[2] = 1/2**len(qubits)
+            fit_guess = [0.95, 0.99, 1/2**len(qubits)]
 
             # Use the first two points to guess the decay param
             y0 = self._ydata[patt_ind]['mean'][0]
@@ -416,8 +415,10 @@ class RBFitter(RBFitterBase):
             if alpha_guess < 1.0:
                 fit_guess[1] = alpha_guess
 
-            fit_guess[0] = ((y0 - fit_guess[2]) /
-                            fit_guess[1]**self._cliff_lengths[patt_ind][0])
+            if y0 > fit_guess[2]:
+                fit_guess[0] = ((y0 - fit_guess[2]) /
+                                fit_guess[1]**self._cliff_lengths[patt_ind][0])
+                
             self.fit_data_pattern(patt_ind, tuple(fit_guess))
 
     def plot_rb_data(self, pattern_index=0, ax=None,
