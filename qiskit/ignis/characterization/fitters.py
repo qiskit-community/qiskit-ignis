@@ -18,9 +18,9 @@ Fitters of characteristic times
 
 from scipy.optimize import curve_fit
 import numpy as np
+from qiskit.result.models import ExperimentResult
 from qiskit import QiskitError
 from ..verification.tomography import marginal_counts
-from qiskit.result.models import ExperimentResult
 
 
 class BaseFitter:
@@ -256,7 +256,6 @@ class BaseFitter:
     def extract_xdata(self, result: ExperimentResult):
         """Extracts the xdata from the results and packages the xdata in
         a format that the fitter can understand."""
-        pass
 
     def fit_data(self, qid=-1, p0=None, bounds=None, series=None):
         """

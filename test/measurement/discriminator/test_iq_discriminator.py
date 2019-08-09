@@ -64,6 +64,19 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         self.assertEqual(excited_predicted[0], '11')
         self.assertEqual(ground_predicted[0], '00')
 
+        iq_filter = DiscriminationFilter(discriminator)
+
+        new_result = iq_filter.apply(cal_results)
+
+        for nr in new_result.results:
+            self.assertEqual(nr.meas_level, 2)
+
+        for state in new_result.get_memory('cal_00'):
+            self.assertEqual(state, '00')
+
+        for state in new_result.get_memory('cal_11'):
+            self.assertEqual(state, '11')
+
         self.qubits = [0]
 
         discriminator = LinearIQDiscriminationFitter(cal_results,
@@ -74,16 +87,3 @@ class TestLinearIQDiscriminator(unittest.TestCase):
 
         self.assertEqual(discriminator.fit_fun.predict([[i0, q0]])[0], '0')
         self.assertEqual(discriminator.fit_fun.predict([[i1, q1]])[0], '1')
-
-        iq_filter = DiscriminationFilter(discriminator)
-
-        new_result = iq_filter.apply(cal_results)
-
-        for nr in new_result.results:
-            self.assertEqual(nr.meas_level, 2)
-
-        for state in new_result.results[0].data.memory:
-            self.assertEqual(state, '0')
-
-        for state in new_result.results[1].data.memory:
-            self.assertEqual(state, '1')
