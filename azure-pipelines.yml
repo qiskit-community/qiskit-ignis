@@ -26,12 +26,14 @@ steps:
     displayName: Add conda to PATH
   - script: conda create --yes --quiet --name qiskit-ignis
     displayName: Create Anaconda environment
-  - script: |
-      call activate qiskit-ignis
+  - bash: |
+      set -e
+      activate qiskit-ignis
       conda install --yes --quiet --name qiskit-ignis python=%PYTHON_VERSION% mkl
     displayName: Install Anaconda packages
-  - script: |
-      call activate qiskit-ignis
+  - bash: |
+      set -e
+      activate qiskit-ignis
       python -m pip install --upgrade pip
       pip install tox
       tox -e%TOXENV%
