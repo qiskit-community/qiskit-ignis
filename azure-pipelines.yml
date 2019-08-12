@@ -29,12 +29,12 @@ steps:
   - bash: |
       set -e
       activate qiskit-ignis
-      conda install --yes --quiet --name qiskit-ignis python=%PYTHON_VERSION% mkl
+      conda install --yes --quiet --name qiskit-ignis python=$PYTHON_VERSION mkl
     displayName: Install Anaconda packages
   - bash: |
       set -e
       activate qiskit-ignis
       python -m pip install --upgrade pip
       pip install tox
-      tox -e%TOXENV%
+      tox -e$TOXENV
     displayName: 'Install dependencies and run tests'
