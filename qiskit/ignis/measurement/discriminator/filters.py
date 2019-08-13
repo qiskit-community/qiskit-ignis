@@ -42,6 +42,8 @@ class DiscriminationFilter:
         Args:
             discriminator (BaseFitter): a discriminator that maps level 1 data
             to level 2 data.
+            - Level 1 data may correspond to, e. g., IQ data.
+            - Level 2 data is the state counts.
         """
         self.discriminator = discriminator
 

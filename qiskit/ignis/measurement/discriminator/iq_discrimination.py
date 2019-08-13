@@ -11,6 +11,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+from typing import Union, List
 
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
@@ -19,40 +20,49 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from qiskit.ignis.characterization.fitters import BaseFitter
 from qiskit.exceptions import QiskitError
 from qiskit.result.models import ExperimentResult
-from qiskit.result import postprocess
+from qiskit.result import postprocess, Result
+from qiskit.pulse.schedule import Schedule
 
 
-class IQDiscriminationFitter(BaseFitter):
+class ScikitIQDiscriminationFitter(BaseFitter):
+    """
+    IQDiscriminatorFitter takes IQ level 1 data produced by calibration
+    measurements with a known expected state to train a discriminator
+    that can be used to produce level 2 data, i.e. counts of quantum states.
+    """
 
-    def __init__(self, cal_results, qubits, circuit_names, expected_states,
-                 discriminant,  description):
+    def __init__(self, cal_results: Union[Result, List[Result]],
+                 qubits: List[int],
+                 schedules: Union[List[str], List[Schedule]],
+                 expected_states: Union[List[str], str], discriminant):
         """
         Args:
-            cal_results: calibration results, list of qiskit.Result or
-            qiskit.Result
-            qubits: the qubits for which we want to discriminate.
-            circuit_names: The names of the circuits in cal_results.
+            cal_results: calibration results, Result or list of Result
+            qubits: the qubits for which to discriminate.
+            schedules: The schedules in cal_results or their names.
             expected_states: a list that should have the same length as
                 cal_results. If cal_results is a Result and not a list then
-                expected_states should be a string or a float or an int.
+                expected_states should be a string or a schedule.
             discriminant: a discriminant from e.g. scikit learn.
-            description: a string describing the discriminator.
         """
 
         # Sanity checks
         if isinstance(cal_results, list) and isinstance(expected_states, list):
             if len(cal_results) != len(expected_states):
-                msg = 'Inconsistent number of results and expected results.'
-                raise QiskitError(msg)
+                raise QiskitError('Number of input results and assigned '
+                                  'states must be equal.')
 
         _expected_state = {}
-        for idx in range(len(circuit_names)):
-            circ_name = circuit_names[idx]
+        for idx, schedule in enumerate(schedules):
+            if isinstance(schedule, Schedule):
+                name = schedule.name
+            else:
+                name = schedule
             expected_state = expected_states[idx]
-            _expected_state[circ_name] = expected_state
+            _expected_state[name] = expected_state
 
-        BaseFitter.__init__(self, description, cal_results, None, qubits,
-                            discriminant, None, None, circuit_names,
+        BaseFitter.__init__(self, None, cal_results, None, qubits,
+                            discriminant, None, None, schedules,
                             expected_state=_expected_state)
 
     def add_data(self, result, recalc=True, refit=True, expected_state=None):
@@ -131,17 +141,17 @@ class IQDiscriminationFitter(BaseFitter):
                               result.meas_level)
 
 
-class LinearIQDiscriminationFitter(IQDiscriminationFitter):
+class LinearScikitIQDiscriminationFitter(ScikitIQDiscriminationFitter):
 
     def __init__(self, cal_results, discriminator_parameters,
-                 qubits, circuit_names, expected_states):
+                 qubits, schedules, expected_states):
         """
         Args:
             cal_results: calibration results, list of qiskit.Result or
             qiskit.Result
             discriminator_parameters: parameters for the discriminator.
             qubits: the qubits for which we want to discriminate.
-            circuit_names: The names of the circuits in cal_results.
+            schedules: The names of the circuits in cal_results.
             expected_states: a list that should have the same length as
                 cal_results. If cal_results is a Result and not a list then
                 expected_states should be a string or a float or an int.
@@ -155,24 +165,24 @@ class LinearIQDiscriminationFitter(IQDiscriminationFitter):
         lda = LinearDiscriminantAnalysis(solver=solver, shrinkage=shrink,
                                          store_covariance=store_cov, tol=tol)
 
-        description = 'Linear IQ discriminator for measurement level 1.'
+        ScikitIQDiscriminationFitter.__init__(self, cal_results, qubits,
+                                              schedules, expected_states,
+                                              lda)
 
-        IQDiscriminationFitter.__init__(self, cal_results, qubits,
-                                        circuit_names, expected_states,
-                                        lda, description)
+        self._description = 'Linear IQ discriminator for measurement level 1.'
 
 
-class QuadraticIQDiscriminationFitter(IQDiscriminationFitter):
+class QuadraticScikitIQDiscriminationFitter(ScikitIQDiscriminationFitter):
 
     def __init__(self, cal_results, discriminator_parameters,
-                 qubits, circuit_names, expected_states):
+                 qubits, schedules, expected_states):
         """
         Args:
             cal_results: calibration results, list of qiskit.Result or
             qiskit.Result
             discriminator_parameters: parameters for the discriminator.
             qubits: the qubits for which we want to discriminate.
-            circuit_names: The names of the circuits in cal_results.
+            schedules: The names of the circuits in cal_results.
             expected_states: a list that should have the same length as
                 cal_results. If cal_results is a Result and not a list then
                 expected_states should be a string or a float or an int.
@@ -184,8 +194,9 @@ class QuadraticIQDiscriminationFitter(IQDiscriminationFitter):
         qda = QuadraticDiscriminantAnalysis(
             store_covariance=store_cov, tol=tol)
 
-        description = 'Quadratic IQ discriminator for measurement level 1.'
+        ScikitIQDiscriminationFitter.__init__(self, cal_results, qubits,
+                                              schedules, expected_states,
+                                              qda)
 
-        IQDiscriminationFitter.__init__(self, cal_results, qubits,
-                                        circuit_names, expected_states,
-                                        qda, description)
+        self._description = 'Quadratic IQ discriminator for measurement ' \
+                            'level 1.'

@@ -1,13 +1,13 @@
 import unittest
-import random
 
 import qiskit
 from qiskit import Aer
 from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
 from qiskit.ignis.measurement.discriminator.iq_discrimination import \
-    LinearIQDiscriminationFitter
+    LinearScikitIQDiscriminationFitter
 from qiskit.ignis.mitigation.measurement import circuits
 from qiskit.result.models import ExperimentResultData
+import qiskit.ignis.utils as utils
 
 
 class TestLinearIQDiscriminator(unittest.TestCase):
@@ -25,25 +25,9 @@ class TestLinearIQDiscriminator(unittest.TestCase):
 
         cal_results = job.result()
 
-        # Make up some fake data for the qubits
-        def qubit_shot(i_center, q_center, std):
-            return [i_center + random.gauss(0, std),
-                    q_center + random.gauss(0, std)]
-
-        def create_shots(i_center, q_center):
-            """Creates data where all qubits are centered around i0 and q0"""
-            data = []
-            for ii in range(self.shots):
-                shot = []
-                for _ in self.qubits:
-                    shot.append(qubit_shot(i_center, q_center, 0.1))
-                data.append(shot)
-
-            return data
-
         i0, q0, i1, q1 = 0., -1., 0., 1.
-        ground = create_shots(i0, q0)
-        excited = create_shots(i1, q1)
+        ground = utils.create_shots(i0, q0, 0.1, 0.1, self.shots, self.qubits)
+        excited = utils.create_shots(i1, q1, 0.1, 0.1, self.shots, self.qubits)
 
         cal_results.results[0].meas_level = 1
         cal_results.results[1].meas_level = 1
@@ -52,11 +36,11 @@ class TestLinearIQDiscriminator(unittest.TestCase):
 
         discriminator_params = {'solver': 'svd'}
 
-        discriminator = LinearIQDiscriminationFitter(cal_results,
-                                                     discriminator_params,
-                                                     self.qubits,
-                                                     ['cal_00', 'cal_11'],
-                                                     ['00', '11'])
+        discriminator = LinearScikitIQDiscriminationFitter(cal_results,
+                                                           discriminator_params,
+                                                           self.qubits,
+                                                           ['cal_00', 'cal_11'],
+                                                           ['00', '11'])
 
         excited_predicted = discriminator.fit_fun.predict([[i1, q1, i1, q1]])
         ground_predicted = discriminator.fit_fun.predict([[i0, q0, i0, q0]])
@@ -79,11 +63,11 @@ class TestLinearIQDiscriminator(unittest.TestCase):
 
         self.qubits = [0]
 
-        discriminator = LinearIQDiscriminationFitter(cal_results,
-                                                     discriminator_params,
-                                                     self.qubits,
-                                                     ['cal_00', 'cal_11'],
-                                                     ['0', '1'])
+        discriminator = LinearScikitIQDiscriminationFitter(cal_results,
+                                                           discriminator_params,
+                                                           self.qubits,
+                                                           ['cal_00', 'cal_11'],
+                                                           ['0', '1'])
 
         self.assertEqual(discriminator.fit_fun.predict([[i0, q0]])[0], '0')
         self.assertEqual(discriminator.fit_fun.predict([[i1, q1]])[0], '1')
