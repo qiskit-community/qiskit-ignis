@@ -117,8 +117,7 @@ class BConfig:
         return newcxlengthdict
     
     
-    def child_sorter(self,children,parent):
-        
+    def child_sorter(self,children,parent):       
         '''
         Sorts children nodes based on error/length
         '''
@@ -130,8 +129,7 @@ class BConfig:
         newchildrenlist=[a[0][0] for a in ss]
         return newchildrenlist
 
-    def get_tier_dict(self):
-        
+    def get_tier_dict(self):      
         '''
         Take the nodes of the BConfig to create a Tier Dictionary, where keys are the steps in the process,
         and the values are the connections following pattern of: [controlled qubit, NOT qubit]. Thus the 
@@ -195,6 +193,7 @@ class BConfig:
         Can also toggle on/off transpilation,
         which is useful for Tomography. Also, the barriered argument barriers each "step" of CNOT gates
         '''
+        
         tierdict = self.get_tier_dict()
         q  = QuantumRegister(n,'q')
         circ = QuantumCircuit(q)
@@ -237,6 +236,7 @@ class BConfig:
         Creates a measurement circuit that can toggle between measuring the control qubit 
         or measuring all qubits. The default is measurement of all qubits.
         '''
+        
         q = QuantumRegister(n,'q')
         if extent == 'one':
             cla = ClassicalRegister(1,'c')  
@@ -257,6 +257,7 @@ class BConfig:
         '''
         Get MQC circuit
         '''
+        
         circ, initial_layout = self.get_ghz_layout(n)
         q  = QuantumRegister(n,'q')
         rotate = QuantumCircuit(q)
@@ -286,6 +287,7 @@ class BConfig:
         '''
         Get a parametrized MQC circuit. Remember that get_counts() method accepts an index now, not a circuit
         '''
+        
         circ, initial_layout = self.get_ghz_layout(n)
         q  = QuantumRegister(n,'q')
         rotate = QuantumCircuit(q)
@@ -316,6 +318,7 @@ class BConfig:
         '''
         Get Parity Oscillation circuit
         '''
+        
         if extent != 'full':
             raise Exception("Only 'full' argument can be accepted for extent in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)
@@ -346,6 +349,7 @@ class BConfig:
         Get a parametrized PO circuit. Remember that get_counts() method accepts an index now, not a circuit.
         The two phase parameters are a quirk of the Parameter module
         '''
+        
         if extent != 'full':
             raise Exception("Only 'full' argument can be accepted for extent in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)

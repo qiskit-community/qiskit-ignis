@@ -27,7 +27,7 @@ def get_ghz_measurement(n,extent):
         raise Exception("Extent arguments must be 'full' or 'one'")
 
         
-def ghz_checker_simple(n,obs=True, extent = 'full'):
+def get_ghz_simple(n,obs=True, extent = 'full'):
     '''
     Creates a "dummy" linear GHZ state with the option of measurement
     '''
@@ -46,12 +46,12 @@ def ghz_checker_simple(n,obs=True, extent = 'full'):
         
         
         
-def ghz_checker_mqc(n,delta, extent = 'full'):
+def get_ghz_mqc(n,delta, extent = 'full'):
     '''
     This function creates an MQC circuit with n qubits, where the middle phase rotation around the z axis is by delta 
     '''
     q = QuantumRegister(n,'q')
-    circ = ghz_checker_simple(n,obs=False)
+    circ = get_ghz_simple(n,obs=False)
     circinv = circ.inverse()
     circ.barrier()
     circ.u1(delta,q)
@@ -63,7 +63,25 @@ def ghz_checker_mqc(n,delta, extent = 'full'):
     circ.draw()
     return circ
 
-def ghz_checker_po(n,delta, extent = 'full'): #n is number of qubits, delta is phase to rotate about x-y axis
+def get_ghz_mqc_para(n,extent = 'full'):
+    '''
+    This function creates an MQC circuit with n qubits, where the middle phase rotation around the z axis is by delta 
+    '''
+    q = QuantumRegister(n,'q')
+    circ = get_ghz_simple(n,obs=False)
+    delta = Parameter('t')
+    circinv = circ.inverse()
+    circ.barrier()
+    circ.u1(delta,q)
+    circ.x(q)
+    circ.barrier()
+    circ += circinv                
+    meas = get_ghz_measurement(n, extent)
+    circ = circ + meas
+    circ.draw()
+    return circ, delta
+
+def get_ghz_po(n,delta, extent = 'full'): #n is number of qubits, delta is phase to rotate about x-y axis
     '''
     This function creates an Parity Oscillation circuit with n qubits, where the middle superposition rotation around 
     the x and y axes is by delta
@@ -71,7 +89,7 @@ def ghz_checker_po(n,delta, extent = 'full'): #n is number of qubits, delta is p
     if extent != 'full':
         raise Exception("Only 'full' argument can be accepted for extent in Parity Oscillation circuit")
     q = QuantumRegister(n,'q')
-    circ = ghz_checker_simple(n,obs=False)
+    circ = get_ghz_simple(n,obs=False)
     circinv = circ.inverse()
     circ.barrier()
     circ.u2(delta,-delta,q)
@@ -80,3 +98,23 @@ def ghz_checker_po(n,delta, extent = 'full'): #n is number of qubits, delta is p
     circ = circ + meas
     circ.draw()
     return circ
+
+def get_ghz_po_para(n, extent = 'full'): #n is number of qubits, delta is phase to rotate about x-y axis
+    '''
+    This function creates an Parity Oscillation circuit with n qubits, where the middle superposition rotation around 
+    the x and y axes is by delta
+    '''
+    if extent != 'full':
+        raise Exception("Only 'full' argument can be accepted for extent in Parity Oscillation circuit")
+    q = QuantumRegister(n,'q')
+    delta = Parameter('t')
+    deltaneg = Parameter('-t')
+    circ = get_ghz_simple(n,obs=False)
+    circinv = circ.inverse()
+    circ.barrier()
+    circ.u2(delta,deltaneg,q)
+    circ.barrier()
+    meas = get_ghz_measurement(n, extent)
+    circ = circ + meas
+    circ.draw()
+    return circ, [delta, deltaneg]

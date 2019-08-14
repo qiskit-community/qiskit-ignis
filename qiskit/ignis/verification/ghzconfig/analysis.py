@@ -96,8 +96,7 @@ class Plotter:
                       round(.01*UB,3)," || ", round(LB,3), " +/- ",round(.01*LB,3))
                 print("Upper/Lower error mitigated fidelity bounds = ", round(UB_m,3)," +/- ",
                       round(.01*UB_m,3)," || ", round(LB_m,3), " +/- ",round(.01*LB_m,3))
-                F, F_m = .5*(P0em + P1em) + np.sqrt(np.absolute(a[qn])),
-                .5*(P0em + P1em) + np.sqrt(np.absolute(a_m[qn]))
+                F, F_m = .5*(P0_m + P1_m) + np.sqrt(np.absolute(fft[qn])), .5*(P0_m + P1_m) + np.sqrt(np.absolute(fft_m[qn]))
                 print("Raw fidelity = ",round(F,3)," +/- ",round(.01*F,3))
                 print("Mitigated fidelity = ",round(F_m,3)," +/- ",round(.01*F_m,3))
                 
