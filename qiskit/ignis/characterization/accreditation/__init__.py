@@ -17,5 +17,11 @@
 ACCREDITING OUTPUTS OF NISQ COMPUTING DEVICES (arXiv.1811.09709)
 """
 
-from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, execute, BasicAer, IBMQ,
+from qiskit import (QuantumCircuit,
+                    QuantumRegister,
+                    ClassicalRegister,
+                    execute,
+                    BasicAer,
+                    IBMQ,
+                    )
 from accreditation import accreditation
