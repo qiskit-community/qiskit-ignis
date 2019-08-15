@@ -37,10 +37,9 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         discriminator_params = {'solver': 'svd'}
 
         discriminator = LinearScikitIQDiscriminationFitter(cal_results,
-                                                           discriminator_params,
                                                            self.qubits,
-                                                           ['cal_00', 'cal_11'],
-                                                           ['00', '11'])
+                                                           ['00', '11'],
+                                                           discriminator_parameters=discriminator_params)
 
         excited_predicted = discriminator.fit_fun.predict([[i1, q1, i1, q1]])
         ground_predicted = discriminator.fit_fun.predict([[i0, q0, i0, q0]])
@@ -64,10 +63,9 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         self.qubits = [0]
 
         discriminator = LinearScikitIQDiscriminationFitter(cal_results,
-                                                           discriminator_params,
                                                            self.qubits,
-                                                           ['cal_00', 'cal_11'],
-                                                           ['0', '1'])
+                                                           ['0', '1'],
+                                                           discriminator_parameters=discriminator_params)
 
         self.assertEqual(discriminator.fit_fun.predict([[i0, q0]])[0], '0')
         self.assertEqual(discriminator.fit_fun.predict([[i1, q1]])[0], '1')
