@@ -32,19 +32,22 @@ class ScikitIQDiscriminationFitter(BaseFitter):
     """
 
     def __init__(self, cal_results: Union[Result, List[Result]],
-                 qubits: List[int],
-                 schedules: Union[List[str], List[Schedule]],
-                 expected_states: Union[List[str], str], discriminant):
+                 qubits: List[int], expected_states: Union[List[str], str],
+                 discriminant,
+                 schedules: Union[List[str], List[Schedule]] = None):
         """
         Args:
             cal_results: calibration results, Result or list of Result
             qubits: the qubits for which to discriminate.
-            schedules: The schedules in cal_results or their names.
             expected_states: a list that should have the same length as
                 cal_results. If cal_results is a Result and not a list then
                 expected_states should be a string or a schedule.
             discriminant: a discriminant from e.g. scikit learn.
+            schedules: The schedules in cal_results or their names. If None
+            all schedules will be used.
         """
+        if not schedules:
+            schedules = [_.header.name for _ in cal_results.results]
 
         # Sanity checks
         if isinstance(cal_results, list) and isinstance(expected_states, list):
@@ -91,15 +94,19 @@ class ScikitIQDiscriminationFitter(BaseFitter):
             expected result stored in self._expected_state.
         """
         self._xdata, self._ydata = [], []
-        for circuit in self._circuit_names:
+        for schedule in self._circuit_names:
             for result in self._backend_result_list:
                 try:
-                    iq_data = result.get_memory(circuit)[:, self._qubits]
+                    iq_data = result.get_memory(schedule)[:, self._qubits]
                     for shot_idx in range(iq_data.shape[0]):
                         shot_i = list(np.real(iq_data[shot_idx]))
                         shot_q = list(np.imag(iq_data[shot_idx]))
                         self._xdata.append(shot_i + shot_q)
-                        self._ydata.append(self._expected_state[circuit])
+                        if isinstance(schedule, Schedule):
+                            self._ydata.append(
+                                self._expected_state[schedule.name])
+                        else:
+                            self._ydata.append(self._expected_state[schedule])
 
                 except (QiskitError, KeyError):
                     pass
@@ -143,19 +150,24 @@ class ScikitIQDiscriminationFitter(BaseFitter):
 
 class LinearScikitIQDiscriminationFitter(ScikitIQDiscriminationFitter):
 
-    def __init__(self, cal_results, discriminator_parameters,
-                 qubits, schedules, expected_states):
+    def __init__(self, cal_results: Union[Result, List[Result]],
+                 qubits: List[int], expected_states: Union[List[str], str],
+                 schedules: Union[List[str], List[Schedule]] = None,
+                 discriminator_parameters: dict = None):
         """
         Args:
             cal_results: calibration results, list of qiskit.Result or
             qiskit.Result
-            discriminator_parameters: parameters for the discriminator.
-            qubits: the qubits for which we want to discriminate.
-            schedules: The names of the circuits in cal_results.
+            qubits: the qubits for which to discriminate.
             expected_states: a list that should have the same length as
                 cal_results. If cal_results is a Result and not a list then
                 expected_states should be a string or a float or an int.
+            schedules: The schedules in cal_results or their names. If None
+                all schedules will be used.
+            discriminator_parameters: parameters for the discriminator.
         """
+        if not discriminator_parameters:
+            discriminator_parameters = {}
 
         solver = discriminator_parameters.get('solver', 'svd')
         shrink = discriminator_parameters.get('shrinkage', None)
@@ -166,27 +178,33 @@ class LinearScikitIQDiscriminationFitter(ScikitIQDiscriminationFitter):
                                          store_covariance=store_cov, tol=tol)
 
         ScikitIQDiscriminationFitter.__init__(self, cal_results, qubits,
-                                              schedules, expected_states,
-                                              lda)
+                                              expected_states, lda,
+                                              schedules=schedules)
 
         self._description = 'Linear IQ discriminator for measurement level 1.'
 
 
 class QuadraticScikitIQDiscriminationFitter(ScikitIQDiscriminationFitter):
 
-    def __init__(self, cal_results, discriminator_parameters,
-                 qubits, schedules, expected_states):
+    def __init__(self, cal_results: Union[Result, List[Result]],
+                 qubits: List[int], expected_states: Union[List[str], str],
+                 schedules: Union[List[str], List[Schedule]] = None,
+                 discriminator_parameters: dict = None):
         """
         Args:
             cal_results: calibration results, list of qiskit.Result or
             qiskit.Result
-            discriminator_parameters: parameters for the discriminator.
-            qubits: the qubits for which we want to discriminate.
-            schedules: The names of the circuits in cal_results.
+            qubits: the qubits for which to discriminate.
             expected_states: a list that should have the same length as
                 cal_results. If cal_results is a Result and not a list then
                 expected_states should be a string or a float or an int.
+            schedules: The schedules in cal_results or their names. If None
+                all schedules will be used.
+            discriminator_parameters: parameters for the discriminator.
+
         """
+        if not discriminator_parameters:
+            discriminator_parameters = {}
 
         store_cov = discriminator_parameters.get('store_covariance', False)
         tol = discriminator_parameters.get('tol', 1.0e-4)
@@ -195,8 +213,8 @@ class QuadraticScikitIQDiscriminationFitter(ScikitIQDiscriminationFitter):
             store_covariance=store_cov, tol=tol)
 
         ScikitIQDiscriminationFitter.__init__(self, cal_results, qubits,
-                                              schedules, expected_states,
-                                              qda)
+                                              expected_states, qda,
+                                              schedules=schedules)
 
         self._description = 'Quadratic IQ discriminator for measurement ' \
                             'level 1.'
