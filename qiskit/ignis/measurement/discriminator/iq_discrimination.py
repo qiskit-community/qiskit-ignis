@@ -16,6 +16,7 @@ from typing import Union, List
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.preprocessing import StandardScaler
 
 from qiskit.ignis.characterization.fitters import BaseFitter
 from qiskit.exceptions import QiskitError
@@ -35,7 +36,7 @@ class ScikitIQDiscriminationFitter(BaseFitter):
                  qubits: List[int], expected_states: Union[List[str], str],
                  discriminant,
                  schedules: Union[List[str], List[Schedule]] = None,
-                 normalize: bool = False):
+                 standardize: bool = False):
         """
         Args:
             cal_results: calibration results, Result or list of Result
@@ -66,9 +67,8 @@ class ScikitIQDiscriminationFitter(BaseFitter):
             _expected_state[name] = expected_state
 
         # Used to rescale the IQ data qubit by qubit.
-        self._normalize = normalize
-        self._scaling = {'mean': np.zeros(len(qubits)),
-                         'std': np.ones(len(qubits))}
+        self._standardize = standardize
+        self._scaler = None
 
         BaseFitter.__init__(self, None, cal_results, None, qubits,
                             discriminant, None, None, schedules,
@@ -90,28 +90,26 @@ class ScikitIQDiscriminationFitter(BaseFitter):
         if refit:
             self.fit_data()
 
-    def _calc_scaling(self):
+    def _scale_data(self, xdata: List[List[float]] = None):
         """
-        Calculates parameters to rescale the IQ points of each qubit,
-         independently of the schedule, so that they are centered around
-         zero and have approximately unit variance.
+        Scales the features of xdata to have mean zero and unit variance.
+        Args:
+            xdata:
+        Returns:
+            data scaled to have zero mean and unit variance.
         """
-        mean, std = [], []
-        for qubit in self._qubits:
-            data = ()
-            for schedule in self._circuit_names:
-                for result in self._backend_result_list:
-                    try:
-                        iq_data = result.get_memory(schedule)[:, qubit]
-                        data = np.hstack(iq_data + [data])
-                    except QiskitError:
-                        pass
+        if not self._standardize:
+            return xdata
 
-            mean.append(np.average(data))
-            std.append(np.std(data))
+        if not self._scaler:
+            self._scaler = StandardScaler(with_std=True)
+            self._scaler.fit(self._xdata)
 
-        self._scaling['mean'] = np.array(mean)
-        self._scaling['std'] = np.array(std)
+        if not xdata:
+            self._xdata = self._scaler.transform(self._xdata)
+            return
+
+        return self._scaler.transform(xdata)
 
     def _calc_data(self):
         """
@@ -122,9 +120,6 @@ class ScikitIQDiscriminationFitter(BaseFitter):
             for all the qubits. Each sublist therefore corresponds to an
             expected result stored in self._expected_state.
         """
-        if self._normalize:
-            self._calc_scaling()
-
         self._xdata, self._ydata = [], []
         for schedule in self._circuit_names:
             for result in self._backend_result_list:
@@ -132,8 +127,6 @@ class ScikitIQDiscriminationFitter(BaseFitter):
                     iq_data = result.get_memory(schedule)[:, self._qubits]
                     for shot_idx in range(iq_data.shape[0]):
                         shot = np.array(iq_data[shot_idx])
-                        shot -= self._scaling['mean']
-                        shot /= self._scaling['std']
 
                         iq_shot = zip(list(np.real(shot)), list(np.imag(shot)))
                         self._xdata.append([val for pair in iq_shot
@@ -147,6 +140,8 @@ class ScikitIQDiscriminationFitter(BaseFitter):
 
                 except (QiskitError, KeyError):
                     pass
+
+        self._scale_data()
 
     def fit_data(self, qid=-1, p0=None, bounds=None, series=None):
         """
@@ -187,7 +182,7 @@ class ScikitIQDiscriminationFitter(BaseFitter):
                 shot_q = list(np.imag(iq_data[shot_idx]))
                 xdata.append(shot_i + shot_q)
 
-            return xdata
+            return self._scale_data(xdata)
         else:
             raise QiskitError('Cannot extract IQ data for %s' %
                               result.meas_level)
@@ -199,7 +194,7 @@ class LinearIQDiscriminator(ScikitIQDiscriminationFitter):
                  qubits: List[int], expected_states: Union[List[str], str],
                  schedules: Union[List[str], List[Schedule]] = None,
                  discriminator_parameters: dict = None,
-                 normalize: bool = False):
+                 standardize: bool = False):
         """
         Args:
             cal_results: calibration results, list of qiskit.Result or
@@ -226,7 +221,7 @@ class LinearIQDiscriminator(ScikitIQDiscriminationFitter):
         ScikitIQDiscriminationFitter.__init__(self, cal_results, qubits,
                                               expected_states, lda,
                                               schedules=schedules,
-                                              normalize=normalize)
+                                              standardize=standardize)
 
         self._description = 'Linear IQ discriminator for measurement level 1.'
 
@@ -237,7 +232,7 @@ class QuadraticIQDiscriminator(ScikitIQDiscriminationFitter):
                  qubits: List[int], expected_states: Union[List[str], str],
                  schedules: Union[List[str], List[Schedule]] = None,
                  discriminator_parameters: dict = None,
-                 normalize: bool = False):
+                 standardize: bool = False):
         """
         Args:
             cal_results: calibration results, list of qiskit.Result or
@@ -263,7 +258,7 @@ class QuadraticIQDiscriminator(ScikitIQDiscriminationFitter):
         ScikitIQDiscriminationFitter.__init__(self, cal_results, qubits,
                                               expected_states, qda,
                                               schedules=schedules,
-                                              normalize=normalize)
+                                              standardize=standardize)
 
         self._description = 'Quadratic IQ discriminator for measurement ' \
                             'level 1.'
