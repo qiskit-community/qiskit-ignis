@@ -159,6 +159,14 @@ class ScikitIQDiscriminationFitter(BaseFitter):
         """
         self._fit_fun.fit(self._xdata, self._ydata)
 
+    def discriminate(self, x_data: List[List[float]]) -> List[str]:
+        """
+        Use the trained discriminator to discriminate the given data.
+        :param x_data: data properly formatted for the discriminator.
+        :return: the properly classified data.
+        """
+        return self._fit_fun.predict(x_data)
+
     def extract_xdata(self, result: ExperimentResult):
         """
         Takes a result (ExperimentResult) and extracts the data into a form
