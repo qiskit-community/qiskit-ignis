@@ -65,7 +65,10 @@ class ScikitIQDiscriminationFitter(BaseFitter):
             expected_state = expected_states[idx]
             _expected_state[name] = expected_state
 
+        # Used to rescale the IQ data qubit by qubit.
         self._normalize = normalize
+        self._scaling = {'mean': np.zeros(len(qubits)),
+                         'std': np.ones(len(qubits))}
 
         BaseFitter.__init__(self, None, cal_results, None, qubits,
                             discriminant, None, None, schedules,
@@ -87,6 +90,29 @@ class ScikitIQDiscriminationFitter(BaseFitter):
         if refit:
             self.fit_data()
 
+    def _calc_scaling(self):
+        """
+        Calculates parameters to rescale the IQ points of each qubit,
+         independently of the schedule, so that they are centered around
+         zero and have approximately unit variance.
+        """
+        mean, std = [], []
+        for qubit in self._qubits:
+            data = ()
+            for schedule in self._circuit_names:
+                for result in self._backend_result_list:
+                    try:
+                        iq_data = result.get_memory(schedule)[:, qubit]
+                        data = np.hstack(iq_data + [data])
+                    except QiskitError:
+                        pass
+
+            mean.append(np.average(data))
+            std.append(np.std(data))
+
+        self._scaling['mean'] = np.array(mean)
+        self._scaling['std'] = np.array(std)
+
     def _calc_data(self):
         """
         Extract the measured IQ points (i.e. features) from the list of
@@ -96,23 +122,8 @@ class ScikitIQDiscriminationFitter(BaseFitter):
             for all the qubits. Each sublist therefore corresponds to an
             expected result stored in self._expected_state.
         """
-        scaling = {'mean': [], 'std': []}
-        for qubit in self._qubits:
-            if self._normalize:
-                data = ()
-                for result in self._backend_result_list:
-                    data = np.hstack([result.get_memory(schedule)[:, qubit]
-                                      for schedule in self._circuit_names] +
-                                     [data])
-
-                scaling['mean'].append(np.average(data))
-                scaling['std'].append(np.std(data))
-            else:
-                scaling['mean'].append(0.0)
-                scaling['std'].append(1.0)
-
-        for moment in ['mean', 'std']:
-            scaling[moment] = np.array(scaling[moment])
+        if self._normalize:
+            self._calc_scaling()
 
         self._xdata, self._ydata = [], []
         for schedule in self._circuit_names:
@@ -120,8 +131,9 @@ class ScikitIQDiscriminationFitter(BaseFitter):
                 try:
                     iq_data = result.get_memory(schedule)[:, self._qubits]
                     for shot_idx in range(iq_data.shape[0]):
-                        shot = np.array(iq_data[shot_idx]) - scaling['mean']
-                        shot /= scaling['std']
+                        shot = np.array(iq_data[shot_idx])
+                        shot -= self._scaling['mean']
+                        shot /= self._scaling['std']
 
                         iq_shot = zip(list(np.real(shot)), list(np.imag(shot)))
                         self._xdata.append([val for pair in iq_shot
