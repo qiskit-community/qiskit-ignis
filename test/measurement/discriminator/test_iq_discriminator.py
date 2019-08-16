@@ -4,7 +4,7 @@ import qiskit
 from qiskit import Aer
 from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
 from qiskit.ignis.measurement.discriminator.iq_discrimination import \
-    LinearScikitIQDiscriminationFitter
+    LinearIQDiscriminator
 from qiskit.ignis.mitigation.measurement import circuits
 from qiskit.result.models import ExperimentResultData
 import qiskit.ignis.utils as utils
@@ -36,10 +36,10 @@ class TestLinearIQDiscriminator(unittest.TestCase):
 
         discriminator_params = {'solver': 'svd'}
 
-        discriminator = LinearScikitIQDiscriminationFitter(cal_results,
-                                                           self.qubits,
-                                                           ['00', '11'],
-                                                           discriminator_parameters=discriminator_params)
+        discriminator = LinearIQDiscriminator(cal_results,
+                                              self.qubits,
+                                              ['00', '11'],
+                                              discriminator_parameters=discriminator_params)
 
         excited_predicted = discriminator.fit_fun.predict([[i1, q1, i1, q1]])
         ground_predicted = discriminator.fit_fun.predict([[i0, q0, i0, q0]])
@@ -62,10 +62,10 @@ class TestLinearIQDiscriminator(unittest.TestCase):
 
         self.qubits = [0]
 
-        discriminator = LinearScikitIQDiscriminationFitter(cal_results,
-                                                           self.qubits,
-                                                           ['0', '1'],
-                                                           discriminator_parameters=discriminator_params)
+        discriminator = LinearIQDiscriminator(cal_results,
+                                              self.qubits,
+                                              ['0', '1'],
+                                              discriminator_parameters=discriminator_params)
 
         self.assertEqual(discriminator.fit_fun.predict([[i0, q0]])[0], '0')
         self.assertEqual(discriminator.fit_fun.predict([[i1, q1]])[0], '1')
