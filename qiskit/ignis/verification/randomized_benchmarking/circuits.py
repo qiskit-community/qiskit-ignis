@@ -218,7 +218,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
                 for _ in range(length_multiplier[rb_pattern_index]):
 
-                    new_cliff_gatelist = clutils.random_clifford_gates(
+                    new_cliff_gatelist = clutils.random_gates(
                         rb_q_num)
                     Cliffs[rb_pattern_index] = clutils.compose_gates(
                         Cliffs[rb_pattern_index], new_cliff_gatelist)
@@ -278,7 +278,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
 
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
                     inv_key = Cliffs[rb_pattern_index].index()
-                    inv_circuit = clutils.find_inverse_clifford_gates(
+                    inv_circuit = clutils.find_inverse_gates(
                         rb_q_num,
                         clifford_tables[rb_q_num-1][inv_key])
                     circ += replace_q_indices(
@@ -288,7 +288,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     # for interleaved rb
                     if interleaved_gates is not None:
                         inv_key = Cliffs_interleaved[rb_pattern_index].index()
-                        inv_circuit = clutils.find_inverse_clifford_gates(
+                        inv_circuit = clutils.find_inverse_gates(
                             rb_q_num,
                             clifford_tables[rb_q_num - 1][inv_key])
                         circ_interleaved += replace_q_indices(

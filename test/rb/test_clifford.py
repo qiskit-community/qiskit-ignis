@@ -87,12 +87,12 @@ class TestClifford(unittest.TestCase):
                 test_random_file_content.append(
                     "test: generating a pseudo-random clifford using the "
                     "tables - %d qubit - seed=%d:\n" % (nq, my_seed))
-                cliff_nq = clutils.random_clifford_gates(nq)
+                cliff_nq = clutils.random_gates(nq)
                 test_random_file_content.append(str(cliff_nq) + '\n')
                 test_random_file_content.append(
                     "test: inverting a pseudo-random clifford using the "
                     "tables - %d qubit - seed=%d:\n" % (nq, my_seed))
-                inv_cliff_nq = clutils.find_inverse_clifford_gates(
+                inv_cliff_nq = clutils.find_inverse_gates(
                     nq, cliff_nq)
                 test_random_file_content.append(str(inv_cliff_nq) + '\n')
                 test_random_file_content.append(

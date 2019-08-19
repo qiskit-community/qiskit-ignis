@@ -356,7 +356,7 @@ def load_tables(max_nrb=2):
 # --------------------------------------------------------
 # Main function that generates a random clifford gate
 # --------------------------------------------------------
-def random_clifford_gates(num_qubits):
+def random_gates(num_qubits):
     """
     Pick a random Clifford gate.
 
@@ -377,7 +377,7 @@ def random_clifford_gates(num_qubits):
 # --------------------------------------------------------
 # Main function that calculates an inverse of a clifford gate
 # --------------------------------------------------------
-def find_inverse_clifford_gates(num_qubits, gatelist):
+def find_inverse_gates(num_qubits, gatelist):
     """
     Find the inverse of a Clifford gate.
 
