@@ -211,11 +211,11 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         # rb_pattern
         Cliffs = []
         for rb_q_num in pattern_sizes:
-            Cliffs.append(fgroup(rb_q_num))
+            Cliffs.append(Ggroup(rb_q_num))
         # Clifford sequences for interleaved rb sequences
         Cliffs_interleaved = []
         for rb_q_num in pattern_sizes:
-            Cliffs_interleaved.append(fgroup(rb_q_num))
+            Cliffs_interleaved.append(Ggroup(rb_q_num))
 
         # go through and add Cliffords
         length_index = 0
