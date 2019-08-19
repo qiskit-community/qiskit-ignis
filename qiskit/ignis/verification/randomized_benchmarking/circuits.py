@@ -151,9 +151,9 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         want to add more seeds later)
         align_cliffs: If true adds a barrier across all qubits in rb_pattern
         after each set of elements, not necessarily Cliffords
-        (note: aligns after each increment of elements including the length multiplier
-        so if the multiplier is [1,3] it will barrier after 1 element for the
-        first pattern and 3 for the second).
+        (note: aligns after each increment of elements including the
+        length multiplier so if the multiplier is [1,3] it will barrier
+        after 1 element for the first pattern and 3 for the second).
         interleaved_gates: A list of gates of elements that
         will be interleaved (for interleaved randomized benchmarking)
         The length of the list would equal the length of the rb_pattern.

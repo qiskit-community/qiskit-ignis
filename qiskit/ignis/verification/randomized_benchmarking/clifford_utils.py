@@ -353,6 +353,7 @@ def load_tables(max_nrb=2):
 
     return clifford_tables
 
+
 # --------------------------------------------------------
 # Main function that generates a random clifford gate
 # --------------------------------------------------------
