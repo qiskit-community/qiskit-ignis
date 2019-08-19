@@ -208,7 +208,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         general_circ = qiskit.QuantumCircuit(qr, cr)
         interleaved_circ = qiskit.QuantumCircuit(qr, cr)
 
-        # make Clifford sequences for each of the separate sequences in
+        # make sequences for each of the separate sequences in
         # rb_pattern
         Cliffs = []
         for rb_q_num in pattern_sizes:
