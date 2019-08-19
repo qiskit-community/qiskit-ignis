@@ -17,8 +17,6 @@ Advanced Clifford operations needed for randomized benchmarking
 """
 
 import numpy as np
-import qiskit
-
 from . import Clifford
 
 try:
