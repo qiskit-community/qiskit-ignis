@@ -401,39 +401,3 @@ def find_inverse_clifford_gates(num_qubits, gatelist):
                 inv_gatelist[i] = 'v ' + split[1]
         return inv_gatelist
     raise ValueError("The number of qubits should be only 1 or 2")
-
-
-# --------------------------------------------------------
-# Returns the Clifford circuit in the form of a QuantumCircuit object
-# --------------------------------------------------------
-def get_quantum_circuit(gatelist, num_qubits):
-    """
-    Returns the Clifford circuit in the form of a QuantumCircuit object.
-
-    Args:
-        num_qubits: the dimension of the Clifford.
-        gatelist: a Clifford gate.
-
-    Returns:
-        A QuantumCircuit object.
-    """
-    qr = qiskit.QuantumRegister(num_qubits)
-    qc = qiskit.QuantumCircuit(qr)
-
-    for op in gatelist:
-        split = op.split()
-        op_names = [split[0]]
-
-        # temporary correcting the ops name since QuantumCircuit has no
-        # attributes 'v' or 'w' yet:
-        if op_names == ['v']:
-            op_names = ['sdg', 'h']
-        elif op_names == ['w']:
-            op_names = ['h', 's']
-
-        qubits = [qr[int(x)] for x in split[1:]]
-        for sub_op in op_names:
-            operation = eval('qiskit.QuantumCircuit.' + sub_op)
-            operation(qc, *qubits)
-
-    return qc

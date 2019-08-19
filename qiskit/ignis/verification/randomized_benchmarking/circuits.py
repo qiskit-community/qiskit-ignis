@@ -223,8 +223,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     Cliffs[rb_pattern_index] = clutils.compose_gates(
                         Cliffs[rb_pattern_index], new_cliff_gatelist)
                     general_circ += replace_q_indices(
-                        clutils.get_quantum_circuit(new_cliff_gatelist,
-                                                    rb_q_num),
+                        get_quantum_circuit(new_cliff_gatelist,
+                                            rb_q_num),
                         rb_pattern[rb_pattern_index], qr)
 
                     # add a barrier
@@ -242,16 +242,16 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 Cliffs_interleaved[rb_pattern_index],
                                 interleaved_gates[rb_pattern_index])
                         interleaved_circ += replace_q_indices(
-                            clutils.get_quantum_circuit(new_cliff_gatelist,
-                                                        rb_q_num),
+                            get_quantum_circuit(new_cliff_gatelist,
+                                                rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
                             *[qr[x] for x in rb_pattern[rb_pattern_index]])
                         interleaved_circ += replace_q_indices(
-                            clutils.get_quantum_circuit(interleaved_gates
-                                                        [rb_pattern_index],
-                                                        rb_q_num),
+                            get_quantum_circuit(interleaved_gates
+                                                [rb_pattern_index],
+                                                rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
@@ -282,7 +282,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                         rb_q_num,
                         clifford_tables[rb_q_num-1][inv_key])
                     circ += replace_q_indices(
-                        clutils.get_quantum_circuit(inv_circuit, rb_q_num),
+                        get_quantum_circuit(inv_circuit, rb_q_num),
                         rb_pattern[rb_pattern_index], qr)
                     # calculate the inverse and produce the circuit
                     # for interleaved rb
@@ -292,7 +292,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                             rb_q_num,
                             clifford_tables[rb_q_num - 1][inv_key])
                         circ_interleaved += replace_q_indices(
-                            clutils.get_quantum_circuit(inv_circuit, rb_q_num),
+                            get_quantum_circuit(inv_circuit, rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
 
                 # Circuits for purity rb
@@ -388,3 +388,36 @@ def replace_q_indices(circuit, q_nums, qr):
         new_circuit.data.append(new_op)
 
     return new_circuit
+
+
+def get_quantum_circuit(gatelist, num_qubits):
+    """
+    Returns the circuit in the form of a QuantumCircuit object.
+
+    Args:
+        num_qubits: the number of qubits (dimension).
+        gatelist: a list of gates.
+
+    Returns:
+        A QuantumCircuit object.
+    """
+    qr = qiskit.QuantumRegister(num_qubits)
+    qc = qiskit.QuantumCircuit(qr)
+
+    for op in gatelist:
+        split = op.split()
+        op_names = [split[0]]
+
+        # temporary correcting the ops name since QuantumCircuit has no
+        # attributes 'v' or 'w' yet:
+        if op_names == ['v']:
+            op_names = ['sdg', 'h']
+        elif op_names == ['w']:
+            op_names = ['h', 's']
+
+        qubits = [qr[int(x)] for x in split[1:]]
+        for sub_op in op_names:
+            operation = eval('qiskit.QuantumCircuit.' + sub_op)
+            operation(qc, *qubits)
+
+    return qc
