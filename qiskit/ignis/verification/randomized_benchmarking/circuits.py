@@ -158,6 +158,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         will be interleaved (for interleaved randomized benchmarking)
         The length of the list would equal the length of the rb_pattern.
         is_purity: True only for purity rb (default is False)
+        group_gates: On which group (or gate set) we perform RB
+        (default is the Clifford group)
 
     Returns:
         circuits: list of lists of circuits for the rb sequences (separate list
