@@ -135,7 +135,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
 
     Args:
         nseeds: number of seeds
-        length_vector: 'm' length vector of Clifford lengths. Must be in
+        length_vector: 'm' length vector of sequence lengths. Must be in
         ascending order. RB sequences of increasing length grow on top of the
         previous sequences.
         rb_pattern: A list of the form [[i,j],[k],...] which will make
@@ -150,11 +150,11 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         seed_offset: What to start the seeds at (e.g. if we
         want to add more seeds later)
         align_cliffs: If true adds a barrier across all qubits in rb_pattern
-        after each set of cliffords (note: aligns after each increment
-        of cliffords including the length multiplier so if the multiplier
-        is [1,3] it will barrier after 1 clifford for the first pattern
-        and 3 for the second)
-        interleaved_gates: A list of gates of Clifford elements that
+        after each set of elements, not necessarily Cliffords
+        (note: aligns after each increment of elements including the length multiplier
+        so if the multiplier is [1,3] it will barrier after 1 element for the
+        first pattern and 3 for the second).
+        interleaved_gates: A list of gates of elements that
         will be interleaved (for interleaved randomized benchmarking)
         The length of the list would equal the length of the rb_pattern.
         is_purity: True only for purity rb (default is False)
@@ -162,7 +162,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     Returns:
         circuits: list of lists of circuits for the rb sequences (separate list
         for each seed)
-        xdata: the Clifford lengths (with multiplier if applicable)
+        xdata: the sequences lengths (with multiplier if applicable)
         rb_opts_dict: option dictionary back out with default options appended
         circuits_interleaved: list of lists of circuits for the interleaved
         rb sequences (separate list for each seed)
@@ -171,6 +171,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         npurity: the number of purity rb circuits (per seed)
         which equals to 3^n, where n is the dimension
     """
+    # Set modules (default is Clifford)
     if group_gates is None or 'Clifford':
         Gutils = clutils
         Ggroup = Clifford
@@ -190,7 +191,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     xdata = calc_xdata(length_vector, length_multiplier)
 
     pattern_sizes = [len(pat) for pat in rb_pattern]
-    clifford_tables = Gutils.load_tables(np.max(pattern_sizes))
+    group_tables = Gutils.load_tables(np.max(pattern_sizes))
 
     # initialization: rb sequences
     circuits = [[] for e in range(nseeds)]
@@ -212,12 +213,12 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         Cliffs = []
         for rb_q_num in pattern_sizes:
             Cliffs.append(Ggroup(rb_q_num))
-        # Clifford sequences for interleaved rb sequences
+        # Sequences for interleaved rb sequences
         Cliffs_interleaved = []
         for rb_q_num in pattern_sizes:
             Cliffs_interleaved.append(Ggroup(rb_q_num))
 
-        # go through and add Cliffords
+        # go through and add elements to RB sequences
         length_index = 0
         for cliff_index in range(length_vector[-1]):
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
@@ -263,7 +264,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                             *[qr[x] for x in rb_pattern[rb_pattern_index]])
 
             if align_cliffs:
-                # if align cliffords at a barrier across all patterns
+                # if align at a barrier across all patterns
                 general_circ.barrier(
                     *[qr[x] for x in qlist_flat])
                 # align for interleaved rb
@@ -271,7 +272,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     interleaved_circ.barrier(
                         *[qr[x] for x in qlist_flat])
 
-            # if the number of cliffords matches one of the sequence lengths
+            # if the number of elements matches one of the sequence lengths
             # then calculate the inverse and produce the circuit
             if (cliff_index+1) == length_vector[length_index]:
                 # circ for rb:
@@ -285,7 +286,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     inv_key = Cliffs[rb_pattern_index].index()
                     inv_circuit = Gutils.find_inverse_gates(
                         rb_q_num,
-                        clifford_tables[rb_q_num-1][inv_key])
+                        group_tables[rb_q_num-1][inv_key])
                     circ += replace_q_indices(
                         get_quantum_circuit(inv_circuit, rb_q_num),
                         rb_pattern[rb_pattern_index], qr)
@@ -295,7 +296,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                         inv_key = Cliffs_interleaved[rb_pattern_index].index()
                         inv_circuit = Gutils.find_inverse_gates(
                             rb_q_num,
-                            clifford_tables[rb_q_num - 1][inv_key])
+                            group_tables[rb_q_num - 1][inv_key])
                         circ_interleaved += replace_q_indices(
                             get_quantum_circuit(inv_circuit, rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
