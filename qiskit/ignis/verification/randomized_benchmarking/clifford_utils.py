@@ -314,6 +314,45 @@ def load_clifford_table(picklefile='cliffords2.pickle'):
         return pickle.load(pf)
 
 
+def load_tables(max_nrb=2):
+    """
+    Returns the needed Clifford tables
+
+    Args:
+        max_nrb: maximal number of qubits for the largest required table
+
+    Returns:
+        A table of Clifford objects
+    """
+
+    clifford_tables = [[] for i in range(max_nrb)]
+    for rb_num in range(max_nrb):
+        # load the clifford tables, but only if we're using that particular rb
+        # number
+        if rb_num == 0:
+            # 1Q Cliffords, load table programmatically
+            clifford_tables[0] = clifford1_gates_table()
+        elif rb_num == 1:
+            # 2Q Cliffords
+            # Try to load the table in from file. If it doesn't exist then make
+            # the file
+            try:
+                clifford_tables[rb_num] = load_clifford_table(
+                    picklefile='cliffords%d.pickle' % (rb_num + 1))
+            except OSError:
+                # table doesn't exist, so save it
+                # this will save time next run
+                print('Making the n=%d Clifford Table' % (rb_num + 1))
+                pickle_clifford_table(
+                    picklefile='cliffords%d.pickle' % (rb_num + 1),
+                    num_qubits=(rb_num+1))
+                clifford_tables[rb_num] = load_clifford_table(
+                    picklefile='cliffords%d.pickle' % (rb_num + 1))
+        else:
+            raise ValueError("The number of qubits should be only 1 or 2")
+
+    return clifford_tables
+
 # --------------------------------------------------------
 # Main function that generates a random clifford gate
 # --------------------------------------------------------
