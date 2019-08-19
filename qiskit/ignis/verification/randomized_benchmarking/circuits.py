@@ -129,7 +129,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 align_cliffs=False,
                                 interleaved_gates=None,
                                 is_purity=False,
-                                group_gates = None):
+                                group_gates=None):
     """
     Get a generic randomized benchmarking sequence
 
