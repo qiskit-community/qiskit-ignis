@@ -181,7 +181,6 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         Ggroup = Clifford
     else:
         raise ValueError("Unknown group or set of gates.")
-        return
 
     if rb_pattern is None:
         rb_pattern = [[0]]
