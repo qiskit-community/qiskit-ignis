@@ -162,21 +162,26 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         (default is the Clifford group)
 
     Returns:
-        circuits: list of lists of circuits for the rb sequences (separate list
-        for each seed)
+        circuits: list of lists of circuits for the rb sequences
+        (separate list for each seed)
         xdata: the sequences lengths (with multiplier if applicable)
-        rb_opts_dict: option dictionary back out with default options appended
-        circuits_interleaved: list of lists of circuits for the interleaved
-        rb sequences (separate list for each seed)
-        circuits_purity: list of lists of lists of circuits for purity rb
+        circuits_interleaved (only if interleaved_gates is not None):
+        list of lists of circuits for the interleaved rb sequences
+        (separate list for each seed)
+        circuits_purity (only if is_purity=True):
+        list of lists of lists of circuits for purity rb
         (separate list for each seed and each of the 3^n circuits)
-        npurity: the number of purity rb circuits (per seed)
+        npurity (only if is_purity=True):
+        the number of purity rb circuits (per seed)
         which equals to 3^n, where n is the dimension
     """
     # Set modules (default is Clifford)
-    if group_gates is None or 'Clifford':
+    if group_gates is None or 'Clifford' or 'clifford':
         Gutils = clutils
         Ggroup = Clifford
+    else:
+        raise ValueError("Unknown group or set of gates.")
+        return
 
     if rb_pattern is None:
         rb_pattern = [[0]]
@@ -212,26 +217,26 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
 
         # make sequences for each of the separate sequences in
         # rb_pattern
-        Cliffs = []
+        Elmnts = []
         for rb_q_num in pattern_sizes:
-            Cliffs.append(Ggroup(rb_q_num))
+            Elmnts.append(Ggroup(rb_q_num))
         # Sequences for interleaved rb sequences
-        Cliffs_interleaved = []
+            Elmnts_interleaved = []
         for rb_q_num in pattern_sizes:
-            Cliffs_interleaved.append(Ggroup(rb_q_num))
+            Elmnts_interleaved.append(Ggroup(rb_q_num))
 
         # go through and add elements to RB sequences
         length_index = 0
-        for cliff_index in range(length_vector[-1]):
+        for elmnts_index in range(length_vector[-1]):
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
                 for _ in range(length_multiplier[rb_pattern_index]):
 
-                    new_cliff_gatelist = Gutils.random_gates(
+                    new_elmnt_gatelist = Gutils.random_gates(
                         rb_q_num)
-                    Cliffs[rb_pattern_index] = Gutils.compose_gates(
-                        Cliffs[rb_pattern_index], new_cliff_gatelist)
+                    Elmnts[rb_pattern_index] = Gutils.compose_gates(
+                        Elmnts[rb_pattern_index], new_elmnt_gatelist)
                     general_circ += replace_q_indices(
-                        get_quantum_circuit(new_cliff_gatelist,
+                        get_quantum_circuit(new_elmnt_gatelist,
                                             rb_q_num),
                         rb_pattern[rb_pattern_index], qr)
 
@@ -241,16 +246,16 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
 
                     # interleaved rb sequences
                     if interleaved_gates is not None:
-                        Cliffs_interleaved[rb_pattern_index] = \
+                        Elmnts_interleaved[rb_pattern_index] = \
                             Gutils.compose_gates(
-                                Cliffs_interleaved[rb_pattern_index],
-                                new_cliff_gatelist)
-                        Cliffs_interleaved[rb_pattern_index] = \
+                                Elmnts_interleaved[rb_pattern_index],
+                                new_elmnt_gatelist)
+                        Elmnts_interleaved[rb_pattern_index] = \
                             Gutils.compose_gates(
-                                Cliffs_interleaved[rb_pattern_index],
+                                Elmnts_interleaved[rb_pattern_index],
                                 interleaved_gates[rb_pattern_index])
                         interleaved_circ += replace_q_indices(
-                            get_quantum_circuit(new_cliff_gatelist,
+                            get_quantum_circuit(new_elmnt_gatelist,
                                                 rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
                         # add a barrier - interleaved rb
@@ -276,7 +281,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
 
             # if the number of elements matches one of the sequence lengths
             # then calculate the inverse and produce the circuit
-            if (cliff_index+1) == length_vector[length_index]:
+            if (elmnts_index+1) == length_vector[length_index]:
                 # circ for rb:
                 circ = qiskit.QuantumCircuit(qr, cr)
                 circ += general_circ
@@ -285,7 +290,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                 circ_interleaved += interleaved_circ
 
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
-                    inv_key = Cliffs[rb_pattern_index].index()
+                    inv_key = Elmnts[rb_pattern_index].index()
                     inv_circuit = Gutils.find_inverse_gates(
                         rb_q_num,
                         group_tables[rb_q_num-1][inv_key])
@@ -295,7 +300,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     # calculate the inverse and produce the circuit
                     # for interleaved rb
                     if interleaved_gates is not None:
-                        inv_key = Cliffs_interleaved[rb_pattern_index].index()
+                        inv_key = Elmnts_interleaved[rb_pattern_index].index()
                         inv_circuit = Gutils.find_inverse_gates(
                             rb_q_num,
                             group_tables[rb_q_num - 1][inv_key])
