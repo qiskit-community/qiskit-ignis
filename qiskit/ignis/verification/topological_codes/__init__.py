@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # This code is part of Qiskit.
 #
 # (C) Copyright IBM 2019.
@@ -10,6 +12,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Qiskit Ignis Root."""
 
-from .version import __version__
+"""
+Error correction benchmarking module
+"""
+
+from .circuits import RepetitionCode
+from .fitters import GraphDecoder
+from .fitters import lookuptable_decoding
+from .fitters import postselection_decoding

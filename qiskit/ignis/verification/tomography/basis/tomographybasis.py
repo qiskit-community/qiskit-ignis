@@ -16,9 +16,8 @@
 TomographyBasis class
 """
 
-from qiskit import QuantumRegister
-from qiskit import ClassicalRegister
 from qiskit import QiskitError
+from qiskit.circuit import Qubit, Clbit
 
 
 class TomographyBasis:
@@ -85,12 +84,10 @@ class TomographyBasis:
             raise QiskitError(
                 "{} is not a measurement basis".format(self._name))
 
-        if not (isinstance(qubit, tuple) and isinstance(qubit[0],
-                                                        QuantumRegister)):
+        if not isinstance(qubit, Qubit):
             raise QiskitError('Input must be a qubit in a QuantumRegister')
 
-        if not (isinstance(clbit, tuple) and isinstance(clbit[0],
-                                                        ClassicalRegister)):
+        if not isinstance(clbit, Clbit):
             raise QiskitError('Input must be a bit in a ClassicalRegister')
 
         if op not in self._measurement_labels:
@@ -108,8 +105,7 @@ class TomographyBasis:
             raise QiskitError("{} is not a preparation basis".format(
                 self._name))
 
-        if not (isinstance(qubit, tuple) and isinstance(qubit[0],
-                                                        QuantumRegister)):
+        if not isinstance(qubit, Qubit):
             raise QiskitError('Input must be a qubit in a QuantumRegister')
 
         if op not in self._preparation_labels:

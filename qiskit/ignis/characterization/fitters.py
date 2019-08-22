@@ -270,7 +270,7 @@ class BaseFitter:
             series = [series]
 
         if qid == -1:
-            qfit = self._qubits.copy()
+            qfit = range(len(self._qubits))
         else:
             qfit = [qid]
 
@@ -281,7 +281,7 @@ class BaseFitter:
             p0 = self._defaultp0
 
         for _, serieslbl in enumerate(series):
-            for qind, _ in enumerate(qfit):
+            for qind in qfit:
                 tmp_params, fcov = \
                      curve_fit(self._fit_fun, self._xdata,
                                self._ydata[serieslbl][qind]['mean'],

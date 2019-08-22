@@ -181,75 +181,76 @@ class TestMeasCal(unittest.TestCase):
         """
         print("Testing measurement calibration on a circuit")
 
-        # Choose all triples from 5 qubits
-        for q1 in range(5):
-            for q2 in range(q1+1, 5):
-                for q3 in range(q2+1, 5):
-                    # Generate the quantum register according to the pattern
-                    qr = qiskit.QuantumRegister(5)
-                    # Generate the calibration circuits
-                    meas_calibs, state_labels = \
-                        complete_meas_cal(qubit_list=[1, 2, 3],
-                                          qr=qr)
+        # Choose 3 qubits
+        q1 = 1
+        q2 = 2
+        q3 = 3
 
-                    # Run the calibration circuits
-                    backend = Aer.get_backend('qasm_simulator')
-                    job = qiskit.execute(meas_calibs, backend=backend,
-                                         shots=self.shots)
-                    cal_results = job.result()
+        # Generate the quantum register according to the pattern
+        qr = qiskit.QuantumRegister(5)
+        # Generate the calibration circuits
+        meas_calibs, state_labels = \
+            complete_meas_cal(qubit_list=[1, 2, 3],
+                              qr=qr)
 
-                    # Make a calibration matrix
-                    meas_cal = CompleteMeasFitter(cal_results, state_labels)
-                    # Calculate the fidelity
-                    fidelity = meas_cal.readout_fidelity()
+        # Run the calibration circuits
+        backend = Aer.get_backend('qasm_simulator')
+        job = qiskit.execute(meas_calibs, backend=backend,
+                             shots=self.shots)
+        cal_results = job.result()
 
-                    # Make a 3Q GHZ state
-                    cr = ClassicalRegister(3)
-                    ghz = QuantumCircuit(qr, cr)
-                    ghz.h(qr[q1])
-                    ghz.cx(qr[q1], qr[q2])
-                    ghz.cx(qr[q2], qr[q3])
-                    ghz.measure(qr[q1], cr[0])
-                    ghz.measure(qr[q2], cr[1])
-                    ghz.measure(qr[q3], cr[2])
+        # Make a calibration matrix
+        meas_cal = CompleteMeasFitter(cal_results, state_labels)
+        # Calculate the fidelity
+        fidelity = meas_cal.readout_fidelity()
 
-                    job = qiskit.execute([ghz], backend=backend,
-                                         shots=self.shots)
-                    results = job.result()
+        # Make a 3Q GHZ state
+        cr = ClassicalRegister(3)
+        ghz = QuantumCircuit(qr, cr)
+        ghz.h(qr[q1])
+        ghz.cx(qr[q1], qr[q2])
+        ghz.cx(qr[q2], qr[q3])
+        ghz.measure(qr[q1], cr[0])
+        ghz.measure(qr[q2], cr[1])
+        ghz.measure(qr[q3], cr[2])
 
-                    # Predicted equally distributed results
-                    predicted_results = {'000': 0.5,
-                                         '111': 0.5}
+        job = qiskit.execute([ghz], backend=backend,
+                             shots=self.shots)
+        results = job.result()
 
-                    meas_filter = meas_cal.filter
+        # Predicted equally distributed results
+        predicted_results = {'000': 0.5,
+                             '111': 0.5}
 
-                    # Calculate the results after mitigation
-                    output_results_pseudo_inverse = meas_filter.apply(
-                        results, method='pseudo_inverse').get_counts(0)
-                    output_results_least_square = meas_filter.apply(
-                        results, method='least_squares').get_counts(0)
+        meas_filter = meas_cal.filter
 
-                    # Compare with expected fidelity and expected results
-                    self.assertAlmostEqual(fidelity, 1.0)
-                    self.assertAlmostEqual(
-                        output_results_pseudo_inverse['000']/self.shots,
-                        predicted_results['000'],
-                        places=1)
+        # Calculate the results after mitigation
+        output_results_pseudo_inverse = meas_filter.apply(
+            results, method='pseudo_inverse').get_counts(0)
+        output_results_least_square = meas_filter.apply(
+            results, method='least_squares').get_counts(0)
 
-                    self.assertAlmostEqual(
-                        output_results_least_square['000']/self.shots,
-                        predicted_results['000'],
-                        places=1)
+        # Compare with expected fidelity and expected results
+        self.assertAlmostEqual(fidelity, 1.0)
+        self.assertAlmostEqual(
+            output_results_pseudo_inverse['000']/self.shots,
+            predicted_results['000'],
+            places=1)
 
-                    self.assertAlmostEqual(
-                        output_results_pseudo_inverse['111']/self.shots,
-                        predicted_results['111'],
-                        places=1)
+        self.assertAlmostEqual(
+            output_results_least_square['000']/self.shots,
+            predicted_results['000'],
+            places=1)
 
-                    self.assertAlmostEqual(
-                        output_results_least_square['111']/self.shots,
-                        predicted_results['111'],
-                        places=1)
+        self.assertAlmostEqual(
+            output_results_pseudo_inverse['111']/self.shots,
+            predicted_results['111'],
+            places=1)
+
+        self.assertAlmostEqual(
+            output_results_least_square['111']/self.shots,
+            predicted_results['111'],
+            places=1)
 
     def test_meas_fitter_with_noise(self):
         """
