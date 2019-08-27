@@ -289,7 +289,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                 circ_interleaved += interleaved_circ
 
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
-                    inv_key = Elmnts[rb_pattern_index].index()
+                    inv_key = Gutils.find_key(Elmnts[rb_pattern_index])
                     inv_circuit = Gutils.find_inverse_gates(
                         rb_q_num,
                         group_tables[rb_q_num-1][inv_key])
@@ -299,7 +299,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     # calculate the inverse and produce the circuit
                     # for interleaved rb
                     if interleaved_gates is not None:
-                        inv_key = Elmnts_interleaved[rb_pattern_index].index()
+                        inv_key = Gutils.find_key(Elmnts_interleaved
+                                                  [rb_pattern_index])
                         inv_circuit = Gutils.find_inverse_gates(
                             rb_q_num,
                             group_tables[rb_q_num - 1][inv_key])
