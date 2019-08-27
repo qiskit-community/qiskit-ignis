@@ -401,6 +401,7 @@ def find_inverse_gates(num_qubits, gatelist):
         return inv_gatelist
     raise ValueError("The number of qubits should be only 1 or 2")
 
+
 def find_key(cliff):
     """
     Find the Clifford index.
