@@ -100,7 +100,7 @@ We use [GitHub issues](https://github.com/Qiskit/qiskit-ignis/issues) for tracki
 ## Next Steps
 
 Now you're set up and ready to check out some of the other examples from our
-[Qiskit Tutorials](https://github.com/Qiskit/qiskit-tutorials/tree/master/qiskit/ignis) repository.
+[Qiskit Tutorials](https://github.com/Qiskit/qiskit-iqx-tutorials/tree/master/qiskit/advanced/ignis) repository.
 
 ## Authors and Citation
 
