@@ -24,7 +24,7 @@ import numpy as np
 import qiskit
 
 from . import Clifford
-from . import clifford_utils as clutils
+from . import CliffordUtils as clutils
 
 
 def handle_length_multiplier(length_multiplier, len_pattern,
@@ -177,7 +177,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     """
     # Set modules (default is Clifford)
     if group_gates is None or 'Clifford' or 'clifford':
-        Gutils = clutils
+        Gutils = clutils()
         Ggroup = Clifford
     else:
         raise ValueError("Unknown group or set of gates.")
@@ -197,7 +197,12 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     xdata = calc_xdata(length_vector, length_multiplier)
 
     pattern_sizes = [len(pat) for pat in rb_pattern]
-    group_tables = Gutils.load_tables(np.max(pattern_sizes))
+    max_nrb = np.max(pattern_sizes)
+
+    # load group tables
+    group_tables = [[] for _ in range(max_nrb)]
+    for rb_num in range(max_nrb):
+        group_tables[rb_num] = Gutils.load_tables(rb_num+1)
 
     # initialization: rb sequences
     circuits = [[] for e in range(nseeds)]
