@@ -24,7 +24,7 @@ import numpy as np
 import qiskit
 
 from . import Clifford
-from . import clifford_utils as clutils
+from . import CliffordUtils as clutils
 
 
 def handle_length_multiplier(length_multiplier, len_pattern,
@@ -123,58 +123,19 @@ def calc_xdata(length_vector, length_multiplier):
     return np.array(xdata)
 
 
-def load_tables(max_nrb=2):
-    """
-    Returns the needed Clifford tables
-
-    Args:
-        max_nrb: maximal number of qubits for the largest required table
-
-    Returns:
-        A table of Clifford objects
-    """
-
-    clifford_tables = [[] for i in range(max_nrb)]
-    for rb_num in range(max_nrb):
-        # load the clifford tables, but only if we're using that particular rb
-        # number
-        if rb_num == 0:
-            # 1Q Cliffords, load table programmatically
-            clifford_tables[0] = clutils.clifford1_gates_table()
-        elif rb_num == 1:
-            # 2Q Cliffords
-            # Try to load the table in from file. If it doesn't exist then make
-            # the file
-            try:
-                clifford_tables[rb_num] = clutils.load_clifford_table(
-                    picklefile='cliffords%d.pickle' % (rb_num + 1))
-            except OSError:
-                # table doesn't exist, so save it
-                # this will save time next run
-                print('Making the n=%d Clifford Table' % (rb_num + 1))
-                clutils.pickle_clifford_table(
-                    picklefile='cliffords%d.pickle' % (rb_num + 1),
-                    num_qubits=(rb_num+1))
-                clifford_tables[rb_num] = clutils.load_clifford_table(
-                    picklefile='cliffords%d.pickle' % (rb_num + 1))
-        else:
-            raise ValueError("The number of qubits should be only 1 or 2")
-
-    return clifford_tables
-
-
 def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 rb_pattern=None,
                                 length_multiplier=1, seed_offset=0,
                                 align_cliffs=False,
                                 interleaved_gates=None,
-                                is_purity=False):
+                                is_purity=False,
+                                group_gates=None):
     """
     Get a generic randomized benchmarking sequence
 
     Args:
         nseeds: number of seeds
-        length_vector: 'm' length vector of Clifford lengths. Must be in
+        length_vector: 'm' length vector of sequence lengths. Must be in
         ascending order. RB sequences of increasing length grow on top of the
         previous sequences.
         rb_pattern: A list of the form [[i,j],[k],...] which will make
@@ -189,27 +150,38 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         seed_offset: What to start the seeds at (e.g. if we
         want to add more seeds later)
         align_cliffs: If true adds a barrier across all qubits in rb_pattern
-        after each set of cliffords (note: aligns after each increment
-        of cliffords including the length multiplier so if the multiplier
-        is [1,3] it will barrier after 1 clifford for the first pattern
-        and 3 for the second)
-        interleaved_gates: A list of gates of Clifford elements that
+        after each set of elements, not necessarily Cliffords
+        (note: aligns after each increment of elements including the
+        length multiplier so if the multiplier is [1,3] it will barrier
+        after 1 element for the first pattern and 3 for the second).
+        interleaved_gates: A list of gates of elements that
         will be interleaved (for interleaved randomized benchmarking)
         The length of the list would equal the length of the rb_pattern.
         is_purity: True only for purity rb (default is False)
+        group_gates: On which group (or gate set) we perform RB
+        (default is the Clifford group)
 
     Returns:
-        circuits: list of lists of circuits for the rb sequences (separate list
-        for each seed)
-        xdata: the Clifford lengths (with multiplier if applicable)
-        rb_opts_dict: option dictionary back out with default options appended
-        circuits_interleaved: list of lists of circuits for the interleaved
-        rb sequences (separate list for each seed)
-        circuits_purity: list of lists of lists of circuits for purity rb
+        circuits: list of lists of circuits for the rb sequences
+        (separate list for each seed)
+        xdata: the sequences lengths (with multiplier if applicable)
+        circuits_interleaved (only if interleaved_gates is not None):
+        list of lists of circuits for the interleaved rb sequences
+        (separate list for each seed)
+        circuits_purity (only if is_purity=True):
+        list of lists of lists of circuits for purity rb
         (separate list for each seed and each of the 3^n circuits)
-        npurity: the number of purity rb circuits (per seed)
+        npurity (only if is_purity=True):
+        the number of purity rb circuits (per seed)
         which equals to 3^n, where n is the dimension
     """
+    # Set modules (default is Clifford)
+    if group_gates is None or 'Clifford' or 'clifford':
+        Gutils = clutils()
+        Ggroup = Clifford
+    else:
+        raise ValueError("Unknown group or set of gates.")
+
     if rb_pattern is None:
         rb_pattern = [[0]]
     if length_vector is None:
@@ -225,7 +197,12 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     xdata = calc_xdata(length_vector, length_multiplier)
 
     pattern_sizes = [len(pat) for pat in rb_pattern]
-    clifford_tables = load_tables(np.max(pattern_sizes))
+    max_nrb = np.max(pattern_sizes)
+
+    # load group tables
+    group_tables = [[] for _ in range(max_nrb)]
+    for rb_num in range(max_nrb):
+        group_tables[rb_num] = Gutils.load_tables(rb_num+1)
 
     # initialization: rb sequences
     circuits = [[] for e in range(nseeds)]
@@ -242,29 +219,29 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         general_circ = qiskit.QuantumCircuit(qr, cr)
         interleaved_circ = qiskit.QuantumCircuit(qr, cr)
 
-        # make Clifford sequences for each of the separate sequences in
+        # make sequences for each of the separate sequences in
         # rb_pattern
-        Cliffs = []
+        Elmnts = []
         for rb_q_num in pattern_sizes:
-            Cliffs.append(Clifford(rb_q_num))
-        # Clifford sequences for interleaved rb sequences
-        Cliffs_interleaved = []
+            Elmnts.append(Ggroup(rb_q_num))
+        # Sequences for interleaved rb sequences
+            Elmnts_interleaved = []
         for rb_q_num in pattern_sizes:
-            Cliffs_interleaved.append(Clifford(rb_q_num))
+            Elmnts_interleaved.append(Ggroup(rb_q_num))
 
-        # go through and add Cliffords
+        # go through and add elements to RB sequences
         length_index = 0
-        for cliff_index in range(length_vector[-1]):
+        for elmnts_index in range(length_vector[-1]):
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
                 for _ in range(length_multiplier[rb_pattern_index]):
 
-                    new_cliff_gatelist = clutils.random_clifford_gates(
+                    new_elmnt_gatelist = Gutils.random_gates(
                         rb_q_num)
-                    Cliffs[rb_pattern_index] = clutils.compose_gates(
-                        Cliffs[rb_pattern_index], new_cliff_gatelist)
+                    Elmnts[rb_pattern_index] = Gutils.compose_gates(
+                        Elmnts[rb_pattern_index], new_elmnt_gatelist)
                     general_circ += replace_q_indices(
-                        clutils.get_quantum_circuit(new_cliff_gatelist,
-                                                    rb_q_num),
+                        get_quantum_circuit(new_elmnt_gatelist,
+                                            rb_q_num),
                         rb_pattern[rb_pattern_index], qr)
 
                     # add a barrier
@@ -273,32 +250,32 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
 
                     # interleaved rb sequences
                     if interleaved_gates is not None:
-                        Cliffs_interleaved[rb_pattern_index] = \
-                            clutils.compose_gates(
-                                Cliffs_interleaved[rb_pattern_index],
-                                new_cliff_gatelist)
-                        Cliffs_interleaved[rb_pattern_index] = \
-                            clutils.compose_gates(
-                                Cliffs_interleaved[rb_pattern_index],
+                        Elmnts_interleaved[rb_pattern_index] = \
+                            Gutils.compose_gates(
+                                Elmnts_interleaved[rb_pattern_index],
+                                new_elmnt_gatelist)
+                        Elmnts_interleaved[rb_pattern_index] = \
+                            Gutils.compose_gates(
+                                Elmnts_interleaved[rb_pattern_index],
                                 interleaved_gates[rb_pattern_index])
                         interleaved_circ += replace_q_indices(
-                            clutils.get_quantum_circuit(new_cliff_gatelist,
-                                                        rb_q_num),
+                            get_quantum_circuit(new_elmnt_gatelist,
+                                                rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
                             *[qr[x] for x in rb_pattern[rb_pattern_index]])
                         interleaved_circ += replace_q_indices(
-                            clutils.get_quantum_circuit(interleaved_gates
-                                                        [rb_pattern_index],
-                                                        rb_q_num),
+                            get_quantum_circuit(interleaved_gates
+                                                [rb_pattern_index],
+                                                rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
                             *[qr[x] for x in rb_pattern[rb_pattern_index]])
 
             if align_cliffs:
-                # if align cliffords at a barrier across all patterns
+                # if align at a barrier across all patterns
                 general_circ.barrier(
                     *[qr[x] for x in qlist_flat])
                 # align for interleaved rb
@@ -306,9 +283,9 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     interleaved_circ.barrier(
                         *[qr[x] for x in qlist_flat])
 
-            # if the number of cliffords matches one of the sequence lengths
+            # if the number of elements matches one of the sequence lengths
             # then calculate the inverse and produce the circuit
-            if (cliff_index+1) == length_vector[length_index]:
+            if (elmnts_index+1) == length_vector[length_index]:
                 # circ for rb:
                 circ = qiskit.QuantumCircuit(qr, cr)
                 circ += general_circ
@@ -317,22 +294,23 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                 circ_interleaved += interleaved_circ
 
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
-                    inv_key = Cliffs[rb_pattern_index].index()
-                    inv_circuit = clutils.find_inverse_clifford_gates(
+                    inv_key = Gutils.find_key(Elmnts[rb_pattern_index])
+                    inv_circuit = Gutils.find_inverse_gates(
                         rb_q_num,
-                        clifford_tables[rb_q_num-1][inv_key])
+                        group_tables[rb_q_num-1][inv_key])
                     circ += replace_q_indices(
-                        clutils.get_quantum_circuit(inv_circuit, rb_q_num),
+                        get_quantum_circuit(inv_circuit, rb_q_num),
                         rb_pattern[rb_pattern_index], qr)
                     # calculate the inverse and produce the circuit
                     # for interleaved rb
                     if interleaved_gates is not None:
-                        inv_key = Cliffs_interleaved[rb_pattern_index].index()
-                        inv_circuit = clutils.find_inverse_clifford_gates(
+                        inv_key = Gutils.find_key(Elmnts_interleaved
+                                                  [rb_pattern_index])
+                        inv_circuit = Gutils.find_inverse_gates(
                             rb_q_num,
-                            clifford_tables[rb_q_num - 1][inv_key])
+                            group_tables[rb_q_num - 1][inv_key])
                         circ_interleaved += replace_q_indices(
-                            clutils.get_quantum_circuit(inv_circuit, rb_q_num),
+                            get_quantum_circuit(inv_circuit, rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
 
                 # Circuits for purity rb
@@ -428,3 +406,36 @@ def replace_q_indices(circuit, q_nums, qr):
         new_circuit.data.append(new_op)
 
     return new_circuit
+
+
+def get_quantum_circuit(gatelist, num_qubits):
+    """
+    Returns the circuit in the form of a QuantumCircuit object.
+
+    Args:
+        num_qubits: the number of qubits (dimension).
+        gatelist: a list of gates.
+
+    Returns:
+        A QuantumCircuit object.
+    """
+    qr = qiskit.QuantumRegister(num_qubits)
+    qc = qiskit.QuantumCircuit(qr)
+
+    for op in gatelist:
+        split = op.split()
+        op_names = [split[0]]
+
+        # temporary correcting the ops name since QuantumCircuit has no
+        # attributes 'v' or 'w' yet:
+        if op_names == ['v']:
+            op_names = ['sdg', 'h']
+        elif op_names == ['w']:
+            op_names = ['h', 's']
+
+        qubits = [qr[int(x)] for x in split[1:]]
+        for sub_op in op_names:
+            operation = eval('qiskit.QuantumCircuit.' + sub_op)
+            operation(qc, *qubits)
+
+    return qc
