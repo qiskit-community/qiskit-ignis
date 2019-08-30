@@ -17,8 +17,8 @@ Advanced Clifford operations needed for randomized benchmarking
 """
 
 import numpy as np
-from . import Clifford
-from . import BasicUtils
+from .Clifford import Clifford
+from .basic_utils import BasicUtils
 
 try:
     import cPickle as pickle
@@ -112,7 +112,6 @@ class CliffordUtils(BasicUtils):
         self._elmnt = cliff
         return cliff
 
-
     def clifford_from_gates(self, num_qubits, gatelist):
         """
         Generates a Clifford object from a list of gates.
@@ -128,7 +127,6 @@ class CliffordUtils(BasicUtils):
         new_cliff = self.compose_gates(cliff, gatelist)
         return new_cliff
 
-
     # --------------------------------------------------------
     # Add gates to Cliffords
     # --------------------------------------------------------
@@ -142,12 +140,10 @@ class CliffordUtils(BasicUtils):
         elif pauli == 1:
             gatelist.append('z ' + str(q))
 
-
     def h_gates(self, gatelist, q, h):
         """adds a hadamard gate or not on qubit q"""
         if h == 1:
             gatelist.append('h ' + str(q))
-
 
     def v_gates(self, gatelist, q, v):
         """adds an axis-swap-gates on qubit q"""
@@ -159,11 +155,9 @@ class CliffordUtils(BasicUtils):
         elif v == 2:
             gatelist.append('w ' + str(q))
 
-
     def cx_gates(self, gatelist, ctrl, tgt):
         """adds a controlled=x gates"""
         gatelist.append('cx ' + str(ctrl) + ' ' + str(tgt))
-
 
     # --------------------------------------------------------
     # Create a 1 or 2 Qubit Clifford based on a unique index
@@ -194,7 +188,6 @@ class CliffordUtils(BasicUtils):
         self.pauli_gates(gatelist, 0, pauli)
 
         return gatelist
-
 
     def clifford2_gates(self, idx: int):
         """
@@ -281,7 +274,6 @@ class CliffordUtils(BasicUtils):
 
         return gatelist
 
-
     # --------------------------------------------------------
     # Create a 1 or 2 Qubit Clifford tables
     # --------------------------------------------------------
@@ -302,7 +294,6 @@ class CliffordUtils(BasicUtils):
             cliffords2[key] = circ
         return cliffords2
 
-
     def clifford1_gates_table(self):
         """
         Generate a table of all 1-qubit Clifford gates.
@@ -320,8 +311,8 @@ class CliffordUtils(BasicUtils):
             cliffords1[key] = circ
         return cliffords1
 
-
-    def pickle_clifford_table(self, picklefile='cliffords2.pickle', num_qubits=2):
+    def pickle_clifford_table(self, picklefile='cliffords2.pickle',
+                              num_qubits=2):
         """
          Create pickled versions of the 1 and 2 qubit Clifford tables.
 
@@ -344,7 +335,6 @@ class CliffordUtils(BasicUtils):
         with open(picklefile, "wb") as pf:
             pickle.dump(cliffords, pf)
 
-
     def load_clifford_table(self, picklefile='cliffords2.pickle'):
         """
           Load pickled files of the tables of 1 and 2 qubit Clifford tables.
@@ -357,7 +347,6 @@ class CliffordUtils(BasicUtils):
           """
         with open(picklefile, "rb") as pf:
             return pickle.load(pf)
-
 
     def load_tables(self, num_qubits):
         """
@@ -397,7 +386,6 @@ class CliffordUtils(BasicUtils):
 
         return clifford_tables
 
-
     # --------------------------------------------------------
     # Main function that generates a random clifford gate
     # --------------------------------------------------------
@@ -421,7 +409,6 @@ class CliffordUtils(BasicUtils):
 
         self._gatelist = cliff_gatelist
         return cliff_gatelist
-
 
     # --------------------------------------------------------
     # Main function that calculates an inverse of a clifford gate
@@ -450,7 +437,6 @@ class CliffordUtils(BasicUtils):
                     inv_gatelist[i] = 'v ' + split[1]
             return inv_gatelist
         raise ValueError("The number of qubits should be only 1 or 2")
-
 
     def find_key(self, cliff):
         """

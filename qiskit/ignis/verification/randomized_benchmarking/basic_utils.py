@@ -18,6 +18,7 @@ A basic utils class for different groups for randomized benchmarking.
 
 from abc import ABC, abstractmethod
 
+
 class BasicUtils(ABC):
     """
         Abstract base class (ABS) for utils for
@@ -64,5 +65,3 @@ class BasicUtils(ABC):
     def find_inverse_gates(self):
         """Compute the inverse group element."""
         return
-
-

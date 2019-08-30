@@ -23,8 +23,8 @@ import copy
 import numpy as np
 import qiskit
 
-from . import Clifford
-from . import CliffordUtils as clutils
+from .Clifford import Clifford
+from .clifford_utils import CliffordUtils as clutils
 
 
 def handle_length_multiplier(length_multiplier, len_pattern,
