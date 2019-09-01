@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2019, IBM.
+# This code is part of Qiskit.
 #
-# This source code is licensed under the Apache License, Version 2.0 found in
-# the LICENSE.txt file in the root directory of this source tree.
+# (C) Copyright IBM 2019.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 """
 Circuit generation for measuring gate errors
@@ -46,6 +53,7 @@ def ampcal_1Q_circuits(max_reps, qubits):
         for qind, qubit in enumerate(qubits):
             circ.u2(0.0, 0.0, qr[qubit])
             for _ in range(circ_length):
+                circ.barrier(qr[qubit])
                 circ.u2(0.0, 0.0, qr[qubit])
 
         for qind, qubit in enumerate(qubits):
@@ -88,10 +96,12 @@ def anglecal_1Q_circuits(max_reps, qubits, angleerr=0.0):
                 if angleerr != 0:
                     circ.u1(-2*angleerr, qr[qubit])
                 for _ in range(2):
+                    circ.barrier(qr[qubit])
                     circ.u2(-np.pi/2, np.pi/2, qr[qubit])  # Xp
                 if angleerr != 0:
                     circ.u1(2*angleerr, qr[qubit])
                 for _ in range(2):
+                    circ.barrier(qr[qubit])
                     circ.u2(0.0, 0.0, qr[qubit])  # Yp
 
             if angleerr != 0:
@@ -143,6 +153,7 @@ def ampcal_cx_circuits(max_reps, qubits, control_qubits):
             circ.x(qr[control_qubits[qind]])
             circ.u2(-np.pi/2, np.pi/2, qr[qubit])  # X90p
             for _ in range(circ_length):
+                circ.barrier([qr[control_qubits[qind]], qr[qubit]])
                 circ.cx(qr[control_qubits[qind]], qr[qubit])
 
         for qind, qubit in enumerate(qubits):
@@ -194,6 +205,7 @@ def anglecal_cx_circuits(max_reps, qubits, control_qubits, angleerr=0.0):
             for _ in range(circ_length):
                 if angleerr != 0:
                     circ.u1(-angleerr, qr[qubit])
+                circ.barrier([qr[control_qubits[qind]], qr[qubit]])
                 circ.cx(qr[control_qubits[qind]], qr[qubit])
                 if angleerr != 0:
                     circ.u1(angleerr, qr[qubit])

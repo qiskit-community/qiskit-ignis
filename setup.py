@@ -1,33 +1,51 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2017, IBM.
+# This code is part of Qiskit.
 #
-# This source code is licensed under the Apache License, Version 2.0 found in
-# the LICENSE.txt file in the root directory of this source tree.
+# (C) Copyright IBM 2019.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
-from setuptools import setup, find_packages
+import os
+import inspect
+import setuptools
+import sys
 
 
 requirements = [
     "numpy>=1.13",
-    "qiskit-terra>=0.7.0",
+    "qiskit-terra>=0.8.0",
     "scipy>=0.19,!=0.19.1",
+    "setuptools>=40.1.0",
 ]
 
-def find_qiskit_ignis_packages():
-    location = 'qiskit/ignis'
-    prefix = 'qiskit.ignis'
-    ignis_packages = find_packages(where=location, exclude=['test*'])
-    pkg_list = list(
-        map(lambda package_name: '{}.{}'.format(prefix, package_name),
-            ignis_packages)
-    )
-    return pkg_list
+
+if not hasattr(setuptools,
+               'find_namespace_packages') or not inspect.ismethod(
+                    setuptools.find_namespace_packages):
+    print("Your setuptools version:'{}' does not support PEP 420 "
+          "(find_namespace_packages). Upgrade it to version >='40.1.0' and "
+          "repeat install.".format(setuptools.__version__))
+    sys.exit(1)
 
 
-setup(
+version_path = os.path.abspath(
+    os.path.join(
+        os.path.join(
+            os.path.join(os.path.dirname(__file__), 'qiskit'), 'ignis'),
+        'VERSION.txt'))
+with open(version_path, 'r') as fd:
+    version = fd.read().rstrip()
+
+setuptools.setup(
     name="qiskit-ignis",
-    version="0.1.0",
+    version=version,
     description="Qiskit tools for quantum information science",
     url="https://github.com/Qiskit/qiskit-ignis",
     author="Qiskit Development Team",
@@ -47,8 +65,9 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     keywords="qiskit sdk quantum",
-    packages=find_qiskit_ignis_packages(),
+    packages=setuptools.find_namespace_packages(exclude=['test*']),
     install_requires=requirements,
     include_package_data=True,
-    python_requires=">=3.5"
+    python_requires=">=3.5",
+    zip_safe=False
 )

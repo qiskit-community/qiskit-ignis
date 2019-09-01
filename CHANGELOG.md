@@ -17,14 +17,35 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [UNRELEASED]
 
+## [0.2.0](https://github.com/Qiskit/qiskit/compare/0.1.1...0.2.0)- 2019-08-22
+
 ### Added
 
-- Align cliffs option to RB
+- Logging Module
+- Purity RB
+- Interleaved RB
+- Repetition Code for Verification
 
 ### Changed
 
+- Apply measurement mitigation in parallel when applied to multiple results
+- Add multiple results to measurement mitigation
+- Fixed bug in RB fit error
+- Updates for Terra Qubit class
+- Added the ability to add arbitrary seeds to RB (not just in order)
+- Fix bug in the characterization fitter when selecting a qubit index to fit
+- Improved guess values for RB fitters and enabled the user to input their own guess values
+
 ### Removed
 
+## [0.1.1] - 2019-05-02
+
+### Added
+
+- Tensored Measurement Mitigation
+- Align cliffs option to RB
+- Quantum Volume
+- Subset measurement mitigation
 
 ## [0.1.0] - 2019-03-04
 
