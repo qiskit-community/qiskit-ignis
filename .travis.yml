@@ -83,6 +83,14 @@ matrix:
         - MPLBACKEND=ps
         - PYTHON_VERSION=3.7.2
         - TOXENV=py37
+    - if: tag IS present
+      python: "3.6"
+      env:
+        - TWINE_USERNAME=qiskit
+      install: pip install -U twine
+      script:
+        - python3 setup.py sdist bdist_wheel
+        - twine upload dist/qiskit*
 
 language: python
 install: pip install -U tox pip

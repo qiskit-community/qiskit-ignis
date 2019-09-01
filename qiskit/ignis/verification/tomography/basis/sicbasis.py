@@ -41,7 +41,7 @@ def sicpovm_preparation_circuit(op, qubit):
     Returns:
         A QuantumCircuit object.
     """
-    circ = QuantumCircuit(qubit[0])
+    circ = QuantumCircuit(qubit.register)
     theta = -2 * np.arctan(np.sqrt(2))
     if op == 'S1':
         circ.u3(theta, np.pi, 0.0, qubit)

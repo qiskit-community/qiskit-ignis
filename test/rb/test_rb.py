@@ -21,6 +21,7 @@ and that it returns the identity
 
 import unittest
 import random
+import numpy as np
 import qiskit
 import qiskit.ignis.verification.randomized_benchmarking as rb
 
@@ -38,8 +39,9 @@ class TestRB(unittest.TestCase):
                              1 - a list of lists of single qubits, for nq=5
                                  it is [[1], [2], [3], [4], [5]]
                              2 - randomly choose a pattern which is a list of
-                                 two lists, for example for nq=5 it can be
-                                 [[4, 1, 2], [5, 3]]
+                                 two lists where the first one has 2 elements,
+                                 for example for nq=5 it can be
+                                 [[4, 1], [2, 5, 3]]
         :param nq: number of qubits
         :return: the pattern or None
                  Returns None if the pattern type is not relevant to the
@@ -49,23 +51,35 @@ class TestRB(unittest.TestCase):
                                                - for nq=2 this implies
                                                  [[1], [2]], which is already
                                                  tested when pattern_type = 1
+                 is_purity = True if the pattern fits for purity rb
+                 (namely, all the patterns have the same dimension:
+                 only 1-qubit, only 2-qubits etc.).
         '''
 
+        is_purity = True
         if pattern_type == 0:
             res = [list(range(nq))]
+            if nq > 2:  # since we only have 1-qubit and 2-qubit Cliffords
+                return None, None
         elif pattern_type == 1:
             if nq == 1:
-                return None
+                return None, None
             res = [[x] for x in range(nq)]
         else:
             if nq <= 2:
-                return None
+                return None, None
             shuffled_bits = list(range(nq))
             random.shuffle(shuffled_bits)
-            split_loc = random.randint(1, nq-1)
+            # split_loc = random.randint(1, nq-1)
+            split_loc = 2  # deterministic test
             res = [shuffled_bits[:split_loc], shuffled_bits[split_loc:]]
+            # since we only have 1-qubit and 2-qubit Cliffords
+            if (split_loc > 2) | (nq-split_loc > 2):
+                return None, None
+            if 2*split_loc != nq:
+                is_purity = False
 
-        return res
+        return res, is_purity
 
     @staticmethod
     def choose_multiplier(mult_opt, len_pattern):
@@ -113,7 +127,6 @@ class TestRB(unittest.TestCase):
         :param pattern: pattern of indexes (from rb_pattern)
         :return: updated_gatelist: list of Clifford gates
         after the following updates:
-        - replace v, w gates
         - change the indexes from [0,1,...]
         according to the pattern
         '''
@@ -127,6 +140,67 @@ class TestRB(unittest.TestCase):
             updated_gatelist += [op_names + ' ' +
                                  (' '.join(op_qubits))]
         return updated_gatelist
+
+    @staticmethod
+    def update_purity_gates(npurity, purity_ind, rb_pattern):
+        '''
+        :param npurity: equals to 3^n
+        :param purity_ind: purity index in [0,3^n-1]
+        :param rb_pattern: rb pattern
+        :return: name_type: type of name for rb_circuit
+        (e.g. XY, ZZ etc.)
+        :return: gate_list: list of purity gates
+        (e.g 'rx 0', 'ry 1' etc.) according to rb_pattern
+        '''
+        name_type = ''
+        ind_d = purity_ind
+        purity_qubit_num = 0
+        gate_list = []
+        while True:
+            purity_qubit_rot = np.mod(ind_d, 3)
+            ind_d = np.floor_divide(ind_d, 3)
+            if purity_qubit_rot == 0:
+                name_type += 'Z'
+            if purity_qubit_rot == 1:
+                name_type += 'X'
+                for pat in rb_pattern:
+                    gate_list.append('rx ' + str(pat[purity_qubit_num]))
+            if purity_qubit_rot == 2:
+                name_type += 'Y'
+                for pat in rb_pattern:
+                    gate_list.append('ry ' + str(pat[purity_qubit_num]))
+
+            purity_qubit_num = purity_qubit_num + 1
+            if ind_d == 0:
+                break
+        # padding the circuit name with Z's so that
+        # all circuits will have names of the same length
+        for _ in range(int(np.log(npurity)/np.log(3)) -
+                       purity_qubit_num):
+            name_type += 'Z'
+
+        return name_type, gate_list
+
+    @staticmethod
+    def ops_to_gates(ops, op_index, stop_gate='barrier'):
+        '''
+        :param ops: of the form circ.data
+        :param op_index: int, the operation index
+        :param stop_gate: the gate to stop
+        (e.g. barrier or measure)
+        :return: gatelist: a list of gates
+        :return: op_index: int, updated index
+        '''
+        gatelist = []
+        while ops[op_index][0].name != stop_gate:
+            gate = ops[op_index][0].name
+            for x in ops[op_index][1]:
+                gate += ' ' + str(x.index)
+            gatelist.append(gate)
+            op_index += 1
+        # increment because of the barrier gate
+        op_index += 1
+        return gatelist, op_index
 
     def verify_circuit(self, circ, nq, rb_opts, vec_len, result, shots,
                        is_interleaved=False):
@@ -165,18 +239,24 @@ class TestRB(unittest.TestCase):
                     # then it has twice as many Cliffords
                     for _ in range(is_interleaved+1):
                         # for each basis gate...
-                        while ops[op_index][0].name != 'barrier':
-                            # Verify that the gate acts on the correct qubits
-                            # This happens if the sequence is composed of the
-                            # correct sub-sequences, as specified by vec_len
-                            # and rb_opts
-                            self.assertTrue(
-                                all(x[1] in rb_opts['rb_pattern'][pat_index]
-                                    for x in ops[op_index][1]),
-                                "Error: operation acts on incorrect qubits")
+                        # in case of align_cliffs we may have extra barriers
+                        # (after another barrier)
+                        if ops[op_index][0].name != 'barrier':
+                            while ops[op_index][0].name != 'barrier':
+                                # Verify that the gate acts
+                                # on the correct qubits.
+                                # This happens if the sequence is composed
+                                # of the correct sub-sequences,
+                                # as specified by vec_len and rb_opts
+                                self.assertTrue(
+                                    all(x.index in rb_opts['rb_pattern'][
+                                        pat_index]
+                                        for x in ops[op_index][1]),
+                                    "Error: operation acts on \
+                                    incorrect qubits")
+                                op_index += 1
+                            # increment because of the barrier gate
                             op_index += 1
-                        # increment because of the barrier gate
-                        op_index += 1
         # check if the ground state returns
         self.assertEqual(result.
                          get_counts(circ)['{0:b}'.format(0).zfill(nq)], shots,
@@ -223,29 +303,17 @@ class TestRB(unittest.TestCase):
                 for _ in range(rb_opts_interleaved['length_multiplier']
                                [pat_index]):
                     # original RB sequence
-                    original_gate_list = []
-                    while original_ops[original_op_index][0].name != 'barrier':
-                        gate = original_ops[original_op_index][0].name
-                        for x in original_ops[original_op_index][1]:
-                            gate += ' ' + str(x[1])
-                        original_gate_list.append(gate)
-                        original_op_index += 1
-                    original_op_index += 1
-
+                    original_gatelist, original_op_index = \
+                        self.ops_to_gates(original_ops,
+                                          original_op_index)
                     # interleaved RB sequence
-                    compared_gate_list = []
-                    while interleaved_ops[interleaved_op_index][0].name \
-                            != 'barrier':
-                        gate = interleaved_ops[interleaved_op_index][0].name
-                        for x in interleaved_ops[interleaved_op_index][1]:
-                            gate += ' ' + str(x[1])
-                        compared_gate_list.append(gate)
-                        interleaved_op_index += 1
-                    interleaved_op_index += 1
+                    compared_gatelist, interleaved_op_index = \
+                        self.ops_to_gates(interleaved_ops,
+                                          interleaved_op_index)
 
                     # Clifford gates in the interleaved RB sequence
                     # should be equal to original gates
-                    self.assertEqual(original_gate_list, compared_gate_list,
+                    self.assertEqual(original_gatelist, compared_gatelist,
                                      "Error: The gates in the %d qubit  \
                                      interleaved RB are not the same as \
                                      in the original RB circuits" % nq)
@@ -253,20 +321,72 @@ class TestRB(unittest.TestCase):
                     # should be equal to the given gates in
                     # rb_opts_interleaved['interleaved_gates']
                     # (after updating them)
-                    interleaved_gatelist = []
-                    while interleaved_ops[interleaved_op_index][0].name != \
-                            'barrier':
-                        gate = interleaved_ops[interleaved_op_index][0].name
-                        for x in interleaved_ops[interleaved_op_index][1]:
-                            gate += ' ' + str(x[1])
-                        interleaved_gatelist.append(gate)
-                        interleaved_op_index += 1
-                    interleaved_op_index += 1
+                    interleaved_gatelist, interleaved_op_index = \
+                        self.ops_to_gates(interleaved_ops,
+                                          interleaved_op_index)
 
                     self.assertEqual(interleaved_gatelist, updated_gatelist,
                                      "Error: The interleaved gates in the \
                                      %d qubit interleaved RB are not the same \
                                      as given in interleaved_gates input" % nq)
+
+    def compare_purity_circuits(self, original_circ, purity_circ, nq,
+                                purity_ind, npurity, rb_opts_purity, vec_len):
+        '''
+        Verifies that purity RB circuits meet the requirements:
+        - The Clifford gates are the same as the original Clifford gates.
+        - The last gates are either Rx or Ry or nothing
+        (depend on d)
+        :param original_circ: original rb circuits
+        :param purity_circ: purity rb circuits
+        :param nq: number of qubits
+        :param purity_ind: purity index in [0,3^n-1]
+        :param npurity: equal to 3^n
+        :param rb_opts_purity: the specification that
+        generated the set of sequences which includes circ
+        :param vec_len: the expected length vector of circ
+        (one of rb_opts['length_vector'])
+        '''
+
+        original_ops = original_circ.data
+        purity_ops = purity_circ.data
+        op_index = 0
+        pur_index = 0
+
+        # for each cycle (the sequence should consist of vec_len cycles)
+        for _ in range(vec_len):
+            # for each component of the pattern...
+            for pat_index in range(len(rb_opts_purity['rb_pattern'])):
+                # for each Clifford...
+                for _ in range(rb_opts_purity['length_multiplier'][pat_index]):
+                    # original RB sequence
+                    original_gatelist, op_index = \
+                        self.ops_to_gates(original_ops, op_index)
+                    # purity RB sequence
+                    purity_gatelist, pur_index = \
+                        self.ops_to_gates(purity_ops, pur_index)
+                    # Clifford gates in the purity RB sequence
+                    # should be equal to original gates
+                    self.assertEqual(original_gatelist, purity_gatelist,
+                                     "Error: The purity gates in the \
+                                     %d qubit purity RB are not the same \
+                                     as in the original RB circuits" % nq)
+
+        # The last gate in the purity RB sequence
+        # should be equal to the inverse clifford
+        # with either Rx or Ry or nothing (depend on d)
+        # original last gate
+        original_gatelist, op_index = \
+            self.ops_to_gates(original_ops, op_index, 'measure')
+        _, purity_gates = self.update_purity_gates(
+            npurity, purity_ind, rb_opts_purity['rb_pattern'])
+        original_gatelist = original_gatelist + purity_gates
+        # purity last gate
+        purity_gatelist, pur_index = \
+            self.ops_to_gates(purity_ops, pur_index, 'measure')
+        self.assertEqual(original_gatelist, purity_gatelist,
+                         "Error: The last purity gates in the \
+                         %d qubit purity RB are wrong" % nq)
 
     def test_rb(self):
         """ Main function of the test """
@@ -274,14 +394,14 @@ class TestRB(unittest.TestCase):
         # Load simulator
         backend = qiskit.Aer.get_backend('qasm_simulator')
 
-        # Test up to 2 qubits
-        nq_list = [1, 2]
+        # Test up to 4 qubits (only 1-qubit and 2-qubit RB)
+        nq_list = [1, 2, 3, 4]
 
         for nq in nq_list:
 
             print("Testing %d qubit RB" % nq)
 
-            for pattern_type in range(2):
+            for pattern_type in range(3):
                 for multiplier_type in range(2):
                     # See documentation of choose_pattern for the meaning of
                     # the different pattern types
@@ -289,17 +409,30 @@ class TestRB(unittest.TestCase):
                     rb_opts = {}
                     rb_opts['nseeds'] = 3
                     rb_opts['length_vector'] = [1, 3, 4, 7]
-                    rb_opts['rb_pattern'] = self.choose_pattern(
-                        pattern_type, nq)
+                    rb_opts['rb_pattern'], is_purity = \
+                        self.choose_pattern(pattern_type, nq)
                     # if the pattern type is not relevant for nq
                     if rb_opts['rb_pattern'] is None:
                         continue
+                    rb_opts_purity = rb_opts.copy()
                     rb_opts['length_multiplier'] = self.choose_multiplier(
                         multiplier_type, len(rb_opts['rb_pattern']))
                     # Choose options for interleaved RB:
                     rb_opts_interleaved = rb_opts.copy()
                     rb_opts_interleaved['interleaved_gates'] = \
                         self.choose_interleaved_gates(rb_opts['rb_pattern'])
+                    print('rb_opts:', rb_opts_interleaved)
+                    # Choose options for purity rb
+                    # no length_multiplier
+                    rb_opts_purity['length_multiplier'] = 1
+                    rb_opts_purity['is_purity'] = is_purity
+                    if multiplier_type > 0:
+                        is_purity = False
+                    if is_purity:
+                        print('Testing purity RB')
+                    # Adding seed_offset and align_cliffs
+                    rb_opts['seed_offset'] = 10
+                    rb_opts['align_cliffs'] = True
 
                     # Generate the sequences
                     try:
@@ -309,6 +442,15 @@ class TestRB(unittest.TestCase):
                         rb_original_circs, _, rb_interleaved_circs = \
                             rb.randomized_benchmarking_seq(
                                 **rb_opts_interleaved)
+                        # Purity RB sequences:
+                        if is_purity:
+                            rb_purity_circs, _, npurity = \
+                                rb.randomized_benchmarking_seq(
+                                    **rb_opts_purity)
+                            # verify: npurity = 3^n
+                            self.assertEqual(
+                                npurity, 3 ** len(rb_opts['rb_pattern'][0]),
+                                'Error: npurity does not equal to 3^n')
 
                     except OSError:
                         skip_msg = ('Skipping tests for %s qubits because '
@@ -322,6 +464,7 @@ class TestRB(unittest.TestCase):
                     result = []
                     result_original = []
                     result_interleaved = []
+                    result_purity = [[] for d in range(npurity)]
                     for seed in range(rb_opts['nseeds']):
                         result.append(
                             qiskit.execute(rb_circs[seed], backend=backend,
@@ -337,16 +480,24 @@ class TestRB(unittest.TestCase):
                                            backend=backend,
                                            basis_gates=basis_gates,
                                            shots=shots).result())
+                        if is_purity:
+                            for d in range(npurity):
+                                result_purity[d].append(qiskit.execute(
+                                    rb_purity_circs[seed][d],
+                                    backend=backend,
+                                    basis_gates=basis_gates,
+                                    shots=shots).result())
 
                     # Verify the generated sequences
                     for seed in range(rb_opts['nseeds']):
                         length_vec = rb_opts['length_vector']
                         for circ_index, vec_len in enumerate(length_vec):
-
+                            # Verify circuits names
                             self.assertEqual(
                                 rb_circs[seed][circ_index].name,
                                 'rb_length_%d_seed_%d' % (
-                                    circ_index, seed),
+                                    circ_index, seed +
+                                    rb_opts['seed_offset']),
                                 'Error: incorrect circuit name')
                             self.assertEqual(
                                 rb_original_circs[seed][circ_index].name,
@@ -357,7 +508,18 @@ class TestRB(unittest.TestCase):
                                 rb_interleaved_circs[seed][circ_index].name,
                                 'rb_interleaved_length_%d_seed_%d' % (
                                     circ_index, seed),
-                                'Error: incorrect circuit name')
+                                'Error: incorrect interleaved circuit name')
+                            if is_purity:
+                                for d in range(npurity):
+                                    name_type, _ = self.update_purity_gates(
+                                        npurity, d, rb_opts_purity
+                                        ['rb_pattern'])
+                                    self.assertEqual(
+                                        rb_purity_circs[seed][d]
+                                        [circ_index].name,
+                                        'rb_purity_%s_length_%d_seed_%d' % (
+                                            name_type, circ_index, seed),
+                                        'Error: incorrect purity circuit name')
 
                             self.verify_circuit(rb_circs[seed][circ_index],
                                                 nq, rb_opts,
@@ -374,6 +536,20 @@ class TestRB(unittest.TestCase):
                                                 result_interleaved[seed],
                                                 shots,
                                                 is_interleaved=True)
+                            if is_purity:
+                                self.verify_circuit(rb_purity_circs[seed][0]
+                                                    [circ_index],
+                                                    nq, rb_opts_purity,
+                                                    vec_len, result_purity
+                                                    [0][seed], shots)
+                                # compare the purity RB circuits
+                                # with the original circuit
+                                for d in range(1, npurity):
+                                    self.compare_purity_circuits(
+                                        rb_purity_circs[seed][0][circ_index],
+                                        rb_purity_circs[seed][d][circ_index],
+                                        nq, d, npurity, rb_opts_purity,
+                                        vec_len)
                             # compare the interleaved RB circuits with
                             # the original RB circuits
                             self.compare_interleaved_circuit(
