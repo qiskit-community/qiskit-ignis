@@ -158,6 +158,13 @@ class BaseFitter:
         """
         return self._params_err
 
+    @property
+    def expected_state(self):
+        """
+        Return the expected state of the fitter.
+        """
+        return self._expected_state
+
     def _get_param(self, param_ind, qid=-1, series='0', err=False):
         """
         Helper function that gets a parameter (or parameter err)
@@ -476,12 +483,10 @@ class BaseGateFitter(BaseFitter):
 
 
 def build_counts_dict_from_list(count_list):
-
     """
     Add dictionary counts together
 
     """
-
     if len(count_list) == 1:
         return count_list[0]
 

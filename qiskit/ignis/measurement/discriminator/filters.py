@@ -20,11 +20,13 @@ Discrimination filters.
 
 """
 from copy import deepcopy
+from typing import List
 
 from qiskit.exceptions import QiskitError
 from qiskit.ignis.characterization.fitters import BaseFitter
 from qiskit.result.result import Result
 from qiskit.result.models import ExperimentResultData
+from qiskit.validation.base import Obj
 
 
 class DiscriminationFilter:
@@ -37,15 +39,23 @@ class DiscriminationFilter:
         new_result = filter.apply(level_1_data)
     """
 
-    def __init__(self, discriminator: BaseFitter):
+    def __init__(self, discriminator: BaseFitter, base: int = None):
         """
         Args:
             discriminator (BaseFitter): a discriminator that maps level 1 data
-            to level 2 data.
-            - Level 1 data may correspond to, e. g., IQ data.
-            - Level 2 data is the state counts.
+                to level 2 data.
+                - Level 1 data may correspond to, e. g., IQ data.
+                - Level 2 data is the state counts.
+            base: the base of the expected states. If it is not given the base
+                is inferred from the expected_state instance of discriminator.
         """
         self.discriminator = discriminator
+
+        if base:
+            self.base = base
+        else:
+            self.base = DiscriminationFilter.get_base(
+                discriminator.expected_state)
 
     def apply(self, raw_data: Result) -> Result:
         """
@@ -69,12 +79,61 @@ class DiscriminationFilter:
                     y_data = self.discriminator.fit_fun.predict(x_data)
 
                     result.meas_level = 2
-                    result.data = ExperimentResultData(memory=y_data)
+
+                    counts = Obj.from_dict(self.count(y_data))
+                    result.data = ExperimentResultData(counts=counts)
                 elif result.meas_level == 2:
                     pass
-
         else:
             msg = 'raw_data is not of type qiskit.result.result.Result'
             raise QiskitError(msg)
 
         return new_results
+
+    @staticmethod
+    def get_base(expected_states: dict):
+        """
+        Returns the base inferred from expected_states.
+
+        The intent is to allow users to discriminate states higher than 0/1.
+
+        DiscriminationFilter infers the basis from the expected states to allow
+        users to discriminate states outside of the computational sub-space.
+        For example, if the discriminated states are 00, 01, 02, 10, 11, ...,
+        22 the basis will be 3.
+
+        With this implementation the basis can be at most 10.
+        :param expected_states:
+        :return: the base inferred from the expected states
+        """
+        base = 0
+        for key in expected_states:
+            for char in expected_states[key]:
+                try:
+                    value = int(char)
+                except ValueError:
+                    raise QiskitError('Cannot parse character in ' +
+                                      expected_states[key])
+
+                base = base if base > value else value
+
+        return base+1
+
+    def count(self, y_data: List[str]) -> dict:
+        """
+        Converts discriminated results into raw counts.
+        Args:
+            y_data: result of a discrimination.
+        Returns:
+            A dict of raw counts.
+        """
+        raw_counts = {}
+
+        for cnt in y_data:
+            cnt_hex = hex(int(cnt, self.base))
+            if cnt_hex in raw_counts:
+                raw_counts[cnt_hex] += 1
+            else:
+                raw_counts[cnt_hex] = 1
+
+        return raw_counts
