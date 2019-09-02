@@ -28,6 +28,7 @@ def qubit_shot(i_mean, q_mean, i_std, q_std):
     """
     return [random.gauss(i_mean, i_std), random.gauss(q_mean, q_std)]
 
+
 def create_shots(i_mean: float, q_mean: float, i_std: float, q_std: float,
                  shots: int, qubits: List[int]):
     """Creates random IQ points for qubits using a Gaussian distribution.
