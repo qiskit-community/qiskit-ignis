@@ -11,6 +11,10 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
+"""
+Functions of general purpose utility for Ignis.
+"""
 import random
 from typing import List
 
@@ -44,7 +48,7 @@ def create_shots(i_mean: float, q_mean: float, i_std: float, q_std: float,
         a list containing lists representing the IQ data of the qubits.
     """
     data = []
-    for ii in range(shots):
+    for _ in range(shots):
         shot = []
         for _ in qubits:
             shot.append(qubit_shot(i_mean, q_mean, i_std, q_std))
