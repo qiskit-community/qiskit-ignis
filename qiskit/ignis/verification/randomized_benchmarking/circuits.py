@@ -25,6 +25,8 @@ import qiskit
 
 from .Clifford import Clifford
 from .clifford_utils import CliffordUtils as clutils
+from .dihedral import CNOTDihedral
+from .dihedral_utils import DihedralUtils as dutils
 
 
 def handle_length_multiplier(length_multiplier, len_pattern,
@@ -176,9 +178,13 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         which equals to 3^n, where n is the dimension
     """
     # Set modules (default is Clifford)
-    if group_gates is None or 'Clifford' or 'clifford':
+    if group_gates is None or group_gates == 'Clifford' or group_gates == 'clifford':
         Gutils = clutils()
         Ggroup = Clifford
+    elif group_gates == 'Non-Clifford' or group_gates == 'CNOTDihedral' \
+            or group_gates == 'CNOT-Dihedral':
+        Gutils = dutils()
+        Ggroup = CNOTDihedral
     else:
         raise ValueError("Unknown group or set of gates.")
 
@@ -233,14 +239,14 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         length_index = 0
         for elmnts_index in range(length_vector[-1]):
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
-                for _ in range(length_multiplier[rb_pattern_index]):
 
+                for _ in range(length_multiplier[rb_pattern_index]):
                     new_elmnt_gatelist = Gutils.random_gates(
                         rb_q_num)
                     Elmnts[rb_pattern_index] = Gutils.compose_gates(
                         Elmnts[rb_pattern_index], new_elmnt_gatelist)
                     general_circ += replace_q_indices(
-                        get_quantum_circuit(new_elmnt_gatelist,
+                        get_quantum_circuit(Gutils.gatelist(),
                                             rb_q_num),
                         rb_pattern[rb_pattern_index], qr)
 
@@ -259,7 +265,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 Elmnts_interleaved[rb_pattern_index],
                                 interleaved_gates[rb_pattern_index])
                         interleaved_circ += replace_q_indices(
-                            get_quantum_circuit(new_elmnt_gatelist,
+                            get_quantum_circuit(Gutils.gatelist(),
                                                 rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
                         # add a barrier - interleaved rb
@@ -294,7 +300,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                 circ_interleaved += interleaved_circ
 
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
-                    inv_key = Gutils.find_key(Elmnts[rb_pattern_index])
+                    inv_key = Gutils.find_key(Elmnts[rb_pattern_index],
+                                              rb_q_num)
                     inv_circuit = Gutils.find_inverse_gates(
                         rb_q_num,
                         group_tables[rb_q_num-1][inv_key])
@@ -305,7 +312,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     # for interleaved rb
                     if interleaved_gates is not None:
                         inv_key = Gutils.find_key(Elmnts_interleaved
-                                                  [rb_pattern_index])
+                                                  [rb_pattern_index],
+                                                  rb_q_num)
                         inv_circuit = Gutils.find_inverse_gates(
                             rb_q_num,
                             group_tables[rb_q_num - 1][inv_key])
@@ -433,9 +441,17 @@ def get_quantum_circuit(gatelist, num_qubits):
         elif op_names == ['w']:
             op_names = ['h', 's']
 
-        qubits = [qr[int(x)] for x in split[1:]]
+        if op_names == ['u1']:
+            qubits = [qr[int(x)] for x in split[2:]]
+            theta = float(split[1])
+        else:
+            qubits = [qr[int(x)] for x in split[1:]]
+
         for sub_op in op_names:
             operation = eval('qiskit.QuantumCircuit.' + sub_op)
-            operation(qc, *qubits)
+            if sub_op == 'u1':
+                operation(qc, theta, *qubits)
+            else:
+                operation(qc, *qubits)
 
     return qc
