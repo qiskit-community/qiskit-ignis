@@ -59,7 +59,7 @@ class TestRB(unittest.TestCase):
         is_purity = True
         if pattern_type == 0:
             res = [list(range(nq))]
-            if nq > 2:  # since we only have 1-qubit and 2-qubit Cliffords
+            if nq > 2:  # since we only have 1-qubit and 2-qubit RB
                 return None, None
         elif pattern_type == 1:
             if nq == 1:
@@ -73,7 +73,7 @@ class TestRB(unittest.TestCase):
             # split_loc = random.randint(1, nq-1)
             split_loc = 2  # deterministic test
             res = [shuffled_bits[:split_loc], shuffled_bits[split_loc:]]
-            # since we only have 1-qubit and 2-qubit Cliffords
+            # since we only have 1-qubit and 2-qubit RB
             if (split_loc > 2) | (nq-split_loc > 2):
                 return None, None
             if 2*split_loc != nq:
@@ -207,7 +207,7 @@ class TestRB(unittest.TestCase):
         '''
         For a single sequence, verifies that it meets the requirements:
         - Executing it on the ground state ends up in the ground state
-        - It has the correct number of Cliffords
+        - It has the correct number of elements
         - It fulfills the pattern, as specified by rb_patterns and
           length_multiplier
         :param circ: the sequence to check
@@ -233,10 +233,10 @@ class TestRB(unittest.TestCase):
         for _ in range(vec_len):
             # for each component of the pattern...
             for pat_index in range(len(rb_opts['rb_pattern'])):
-                # for each Clifford...
+                # for each element...
                 for _ in range(rb_opts['length_multiplier'][pat_index]):
                     # if it is an interleaved RB circuit,
-                    # then it has twice as many Cliffords
+                    # then it has twice as many elements
                     for _ in range(is_interleaved+1):
                         # for each basis gate...
                         # in case of align_cliffs we may have extra barriers
@@ -267,9 +267,9 @@ class TestRB(unittest.TestCase):
                                     nq, rb_opts_interleaved, vec_len):
         '''
         Verifies that interleaved RB circuits meet the requirements:
-        - The non-interleaved Clifford gates are the same as the
-        original Clifford gates.
-        - The interleaved Clifford gates are the same as the ones
+        - The non-interleaved gates are the same as the
+        original gates.
+        - The interleaved gates are the same as the ones
         given in: rb_opts_interleaved['interleaved_gates'].
         :param original_circ: original rb circuits
         :param interleaved_circ: interleaved rb circuits
@@ -299,7 +299,7 @@ class TestRB(unittest.TestCase):
                 updated_gatelist = self.update_interleaved_gates(
                     rb_opts_interleaved['interleaved_gates']
                     [pat_index], rb_opts_interleaved['rb_pattern'][pat_index])
-                # for each Clifford...
+                # for each element...
                 for _ in range(rb_opts_interleaved['length_multiplier']
                                [pat_index]):
                     # original RB sequence
@@ -311,13 +311,13 @@ class TestRB(unittest.TestCase):
                         self.ops_to_gates(interleaved_ops,
                                           interleaved_op_index)
 
-                    # Clifford gates in the interleaved RB sequence
+                    # Gates in the interleaved RB sequence
                     # should be equal to original gates
                     self.assertEqual(original_gatelist, compared_gatelist,
                                      "Error: The gates in the %d qubit  \
                                      interleaved RB are not the same as \
                                      in the original RB circuits" % nq)
-                    # Clifford gates in the interleaved RB sequence
+                    # Gates in the interleaved RB sequence
                     # should be equal to the given gates in
                     # rb_opts_interleaved['interleaved_gates']
                     # (after updating them)
@@ -334,7 +334,7 @@ class TestRB(unittest.TestCase):
                                 purity_ind, npurity, rb_opts_purity, vec_len):
         '''
         Verifies that purity RB circuits meet the requirements:
-        - The Clifford gates are the same as the original Clifford gates.
+        - The gates are the same as the original gates.
         - The last gates are either Rx or Ry or nothing
         (depend on d)
         :param original_circ: original rb circuits
@@ -357,7 +357,7 @@ class TestRB(unittest.TestCase):
         for _ in range(vec_len):
             # for each component of the pattern...
             for pat_index in range(len(rb_opts_purity['rb_pattern'])):
-                # for each Clifford...
+                # for each element...
                 for _ in range(rb_opts_purity['length_multiplier'][pat_index]):
                     # original RB sequence
                     original_gatelist, op_index = \
@@ -365,7 +365,7 @@ class TestRB(unittest.TestCase):
                     # purity RB sequence
                     purity_gatelist, pur_index = \
                         self.ops_to_gates(purity_ops, pur_index)
-                    # Clifford gates in the purity RB sequence
+                    # Gates in the purity RB sequence
                     # should be equal to original gates
                     self.assertEqual(original_gatelist, purity_gatelist,
                                      "Error: The purity gates in the \
@@ -373,7 +373,7 @@ class TestRB(unittest.TestCase):
                                      as in the original RB circuits" % nq)
 
         # The last gate in the purity RB sequence
-        # should be equal to the inverse clifford
+        # should be equal to the inverse element
         # with either Rx or Ry or nothing (depend on d)
         # original last gate
         original_gatelist, op_index = \
@@ -422,6 +422,10 @@ class TestRB(unittest.TestCase):
                     rb_opts_interleaved['interleaved_gates'] = \
                         self.choose_interleaved_gates(rb_opts['rb_pattern'])
                     print('rb_opts:', rb_opts_interleaved)
+                    # Choose options for Non-Clifford RB:
+                    rb_opts_nonclifford = rb_opts.copy()
+                    rb_opts_nonclifford['group_gates'] = 'Non-Clifford'
+                    print('rb_opts_nonclifford:', rb_opts_nonclifford)
                     # Choose options for purity rb
                     # no length_multiplier
                     rb_opts_purity['length_multiplier'] = 1
@@ -442,6 +446,10 @@ class TestRB(unittest.TestCase):
                         rb_original_circs, _, rb_interleaved_circs = \
                             rb.randomized_benchmarking_seq(
                                 **rb_opts_interleaved)
+                        # Non-Clifford RB sequences:
+                        rb_nonclifford_circs, _ = \
+                            rb.randomized_benchmarking_seq(
+                                **rb_opts_nonclifford)
                         # Purity RB sequences:
                         if is_purity:
                             rb_purity_circs, _, npurity = \
@@ -451,7 +459,6 @@ class TestRB(unittest.TestCase):
                             self.assertEqual(
                                 npurity, 3 ** len(rb_opts['rb_pattern'][0]),
                                 'Error: npurity does not equal to 3^n')
-
                     except OSError:
                         skip_msg = ('Skipping tests for %s qubits because '
                                     'tables are missing' % str(nq))
@@ -464,6 +471,7 @@ class TestRB(unittest.TestCase):
                     result = []
                     result_original = []
                     result_interleaved = []
+                    result_nonclifford = []
                     result_purity = [[] for d in range(npurity)]
                     for seed in range(rb_opts['nseeds']):
                         result.append(
@@ -477,6 +485,11 @@ class TestRB(unittest.TestCase):
                                            shots=shots).result())
                         result_interleaved.append(
                             qiskit.execute(rb_interleaved_circs[seed],
+                                           backend=backend,
+                                           basis_gates=basis_gates,
+                                           shots=shots).result())
+                        result_nonclifford.append(
+                            qiskit.execute(rb_nonclifford_circs[seed],
                                            backend=backend,
                                            basis_gates=basis_gates,
                                            shots=shots).result())
@@ -536,6 +549,11 @@ class TestRB(unittest.TestCase):
                                                 result_interleaved[seed],
                                                 shots,
                                                 is_interleaved=True)
+                            self.verify_circuit(rb_nonclifford_circs[seed]
+                                                [circ_index],
+                                                nq, rb_opts_nonclifford,
+                                                vec_len,
+                                                result_nonclifford[seed], shots)
                             if is_purity:
                                 self.verify_circuit(rb_purity_circs[seed][0]
                                                     [circ_index],
