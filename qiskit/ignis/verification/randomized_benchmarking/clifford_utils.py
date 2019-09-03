@@ -28,7 +28,7 @@ except ImportError:
 
 class CliffordUtils(BasicUtils):
     """
-        Class for util functions for the Clifford group
+        Class for util functions for the Clifford group.
     """
 
     def __init__(self, num_qubits=2, group_tables=None, elmnt=None,
@@ -40,7 +40,7 @@ class CliffordUtils(BasicUtils):
             elmnt: a group element.
             elmnt_key: a unique index of a Clifford object.
             gatelist: a list of gates corresponding to a
-            Cliffor object
+            Clifford object.
         """
 
         self._num_qubits = num_qubits
@@ -384,6 +384,7 @@ class CliffordUtils(BasicUtils):
         else:
             raise ValueError("The number of qubits should be only 1 or 2")
 
+        self._group_tables = clifford_tables
         return clifford_tables
 
     # --------------------------------------------------------
@@ -438,14 +439,18 @@ class CliffordUtils(BasicUtils):
             return inv_gatelist
         raise ValueError("The number of qubits should be only 1 or 2")
 
-    def find_key(self, cliff):
+    def find_key(self, cliff, num_qubits):
         """
         Find the Clifford index.
 
         Args:
             cliff: a Clifford object.
+            num_qubits: the dimension of the Clifford.
 
         Returns:
             Clifford index (an integer).
         """
+        G_table = self.load_tables(num_qubits)
+        assert cliff.index() in G_table, \
+            "inverse not found in lookup table!\n%s" % cliff
         return cliff.index()
