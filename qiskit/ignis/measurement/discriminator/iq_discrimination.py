@@ -28,7 +28,7 @@ from qiskit.pulse.schedule import Schedule
 class ScikitIQDiscriminationFitter(BaseFitter):
     """
     IQDiscriminatorFitter takes IQ level 1 data produced by calibration
-    measurements with a known expected state to train a discriminator
+    measurements with a known expected state. It fits a discriminator
     that can be used to produce level 2 data, i.e. counts of quantum states.
     """
 
