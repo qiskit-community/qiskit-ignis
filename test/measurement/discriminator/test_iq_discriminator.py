@@ -1,3 +1,5 @@
+import copy
+import numpy as np
 import unittest
 
 import qiskit
@@ -16,25 +18,26 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         self.shots = 52
         self.qubits = [0, 1]
 
-    def test_discrimination(self):
         meas_cal, state_labels = circuits.tensored_meas_cal([[0], [1]])
 
         backend = Aer.get_backend('qasm_simulator')
         job = qiskit.execute(meas_cal, backend=backend, shots=self.shots,
                              meas_level=1)
 
-        cal_results = job.result()
+        self.cal_results = job.result()
 
         i0, q0, i1, q1 = 0., -1., 0., 1.
         ground = utils.create_shots(i0, q0, 0.1, 0.1, self.shots, self.qubits)
         excited = utils.create_shots(i1, q1, 0.1, 0.1, self.shots, self.qubits)
 
-        cal_results.results[0].meas_level = 1
-        cal_results.results[1].meas_level = 1
-        cal_results.results[0].data = ExperimentResultData(memory=ground)
-        cal_results.results[1].data = ExperimentResultData(memory=excited)
+        self.cal_results.results[0].meas_level = 1
+        self.cal_results.results[1].meas_level = 1
+        self.cal_results.results[0].data = ExperimentResultData(memory=ground)
+        self.cal_results.results[1].data = ExperimentResultData(memory=excited)
 
-        discriminator = LinearIQDiscriminator(cal_results,
+    def test_discrimination(self):
+        i0, q0, i1, q1 = 0., -1., 0., 1.
+        discriminator = LinearIQDiscriminator(self.cal_results,
                                               self.qubits,
                                               ['00', '11'])
 
@@ -46,7 +49,7 @@ class TestLinearIQDiscriminator(unittest.TestCase):
 
         iq_filter = DiscriminationFilter(discriminator)
 
-        new_result = iq_filter.apply(cal_results)
+        new_result = iq_filter.apply(self.cal_results)
 
         for nr in new_result.results:
             self.assertEqual(nr.meas_level, 2)
@@ -61,9 +64,40 @@ class TestLinearIQDiscriminator(unittest.TestCase):
 
         self.qubits = [0]
 
-        discriminator = LinearIQDiscriminator(cal_results,
+        discriminator = LinearIQDiscriminator(self.cal_results,
                                               self.qubits,
                                               ['0', '1'])
 
         self.assertEqual(discriminator.fit_fun.predict([[i0, q0]])[0], '0')
         self.assertEqual(discriminator.fit_fun.predict([[i1, q1]])[0], '1')
+
+    def test_extract_xdata(self):
+        i0, q0, i1, q1 = 0., -1., 0., 1.
+        ground = utils.create_shots(i0, q0, 0.1, 0.1, self.shots, self.qubits)
+
+        ExperimentResultData(memory=ground)
+
+        discriminator = LinearIQDiscriminator(self.cal_results,
+                                              self.qubits,
+                                              ['00', '11'])
+
+        # Test the formatting if return data is like single-shot data
+        single_shot_result = copy.deepcopy(self.cal_results.results[0])
+
+        x_data = discriminator.extract_xdata(single_shot_result)
+
+        self.assertEqual(len(x_data), self.shots)
+        self.assertEqual(len(x_data[0]), 2*len(self.qubits))
+
+        # Test the shape of the data for the averaged case:
+        # Average over the single shots
+        avg_ground = [list(qubit_iq) for qubit_iq in
+                      list(np.average(ground, axis=0))]
+
+        # Create a new result using the averaged data
+        avg_shot_result = copy.deepcopy(self.cal_results.results[0])
+        avg_shot_result.data = ExperimentResultData(memory=avg_ground)
+
+        x_data = discriminator.extract_xdata(avg_shot_result)
+        self.assertEqual(len(x_data), 1)
+        self.assertEqual(len(x_data[0]), 2*len(self.qubits))
