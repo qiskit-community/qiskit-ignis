@@ -125,24 +125,37 @@ class ScikitIQDiscriminationFitter(BaseFitter):
         for schedule in self._circuit_names:
             for result in self._backend_result_list:
                 try:
-                    iq_data = result.get_memory(schedule)[:, self._qubits]
-                    for shot_idx in range(iq_data.shape[0]):
-                        shot = np.array(iq_data[shot_idx])
+                    iq_data = result.get_memory(schedule)
 
-                        iq_shot = zip(list(np.real(shot)), list(np.imag(shot)))
-                        self._xdata.append([val for pair in iq_shot
-                                            for val in pair])
+                    if len(iq_data.shape) == 2:  # meas return 'single'
+                        for shot in iq_data[:, self._qubits]:
+                            shot_i = list(np.real(shot))
+                            shot_q = list(np.imag(shot))
+                            self._xdata.append(shot_i + shot_q)
+                            self._add_ydata(schedule)
 
-                        if isinstance(schedule, Schedule):
-                            self._ydata.append(
-                                self._expected_state[schedule.name])
-                        else:
-                            self._ydata.append(self._expected_state[schedule])
+                    if len(iq_data.shape) == 1:  # meas return 'avg'
+                        avg_i = list(np.real(iq_data))
+                        avg_q = list(np.imag(iq_data))
+                        self._xdata.append(avg_i + avg_q)
+                        self._add_ydata(schedule)
 
                 except (QiskitError, KeyError):
                     pass
 
         self._scale_data()
+
+    def _add_ydata(self, schedule: Union[Schedule, str]):
+        """
+        Adds the expected state of schedule to self._ydata.
+        Args:
+            schedule: schedule or schedule name.
+            Used to get the expected state.
+        """
+        if isinstance(schedule, Schedule):
+            self._ydata.append(self._expected_state[schedule.name])
+        else:
+            self._ydata.append(self._expected_state[schedule])
 
     def fit_data(self, qid=-1, p0=None, bounds=None, series=None):
         """
@@ -175,22 +188,20 @@ class ScikitIQDiscriminationFitter(BaseFitter):
         """
 
         if result.meas_level == 1:
-            iq_data_ = postprocess.format_level_1_memory(result.data.memory)
+            iq_data = postprocess.format_level_1_memory(result.data.memory)
 
             xdata = []
-            if len(iq_data_.shape) == 2:  # meas_return 'single' case
-                iq_data = iq_data_[:, self._qubits]
+            if len(iq_data.shape) == 2:  # meas_return 'single' case
 
-                for shot in iq_data:
+                for shot in iq_data[:, self._qubits]:
                     shot_i = list(np.real(shot))
                     shot_q = list(np.imag(shot))
                     xdata.append(shot_i + shot_q)
 
-            elif len(iq_data_.shape) == 1:  # meas_return 'avg' case
-                iq_data = iq_data_[self._qubits]
-                shot_i = list(np.real(iq_data))
-                shot_q = list(np.imag(iq_data))
-                xdata.append(shot_i + shot_q)
+            elif len(iq_data.shape) == 1:  # meas_return 'avg' case
+                avg_i = list(np.real(iq_data[self._qubits]))
+                avg_q = list(np.imag(iq_data[self._qubits]))
+                xdata.append(avg_i + avg_q)
 
             else:
                 raise PulseError('Unknown measurement return type.')
