@@ -7,7 +7,7 @@ from qiskit.ignis.measurement.discriminator.iq_discrimination import \
     LinearIQDiscriminator
 from qiskit.ignis.mitigation.measurement import circuits
 from qiskit.result.models import ExperimentResultData
-import qiskit.ignis.utils as utils
+import test.utils as utils
 
 
 class TestLinearIQDiscriminator(unittest.TestCase):

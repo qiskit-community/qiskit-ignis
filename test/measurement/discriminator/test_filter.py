@@ -22,7 +22,7 @@ from qiskit.ignis.characterization.fitters import BaseFitter
 from qiskit.result.models import ExperimentResultData
 from qiskit.ignis.measurement.discriminator.iq_discrimination import \
     LinearIQDiscriminator
-import qiskit.ignis.utils as utils
+import test.utils as utils
 from qiskit.ignis.mitigation.measurement import circuits
 
 
