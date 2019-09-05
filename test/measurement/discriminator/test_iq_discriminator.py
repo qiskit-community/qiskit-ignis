@@ -57,6 +57,8 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         for state in new_result.results[1].data.counts.to_dict():
             self.assertEqual(state, '0x3')
 
+        self.assertEqual(len(new_result.get_memory(0)), self.shots)
+
         self.qubits = [0]
 
         discriminator = LinearIQDiscriminator(cal_results,

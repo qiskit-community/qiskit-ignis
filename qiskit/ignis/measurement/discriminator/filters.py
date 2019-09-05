@@ -81,7 +81,8 @@ class DiscriminationFilter:
                     result.meas_level = 2
 
                     counts = Obj.from_dict(self.count(y_data))
-                    result.data = ExperimentResultData(counts=counts)
+                    result.data = ExperimentResultData(counts=counts,
+                                                       memory=y_data)
                 elif result.meas_level == 2:
                     pass
         else:
