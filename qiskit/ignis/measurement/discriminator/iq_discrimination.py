@@ -178,15 +178,15 @@ class ScikitIQDiscriminationFitter(BaseFitter):
             iq_data_ = postprocess.format_level_1_memory(result.data.memory)
 
             xdata = []
-            if len(iq_data_.shape) == 2:  # meas_return single case
+            if len(iq_data_.shape) == 2:  # meas_return 'single' case
                 iq_data = iq_data_[:, self._qubits]
 
-                for shot_idx in range(iq_data.shape[0]):
-                    shot_i = list(np.real(iq_data[shot_idx]))
-                    shot_q = list(np.imag(iq_data[shot_idx]))
+                for shot in iq_data:
+                    shot_i = list(np.real(shot))
+                    shot_q = list(np.imag(shot))
                     xdata.append(shot_i + shot_q)
 
-            elif len(iq_data_.shape) == 1:  # meas_return avg case
+            elif len(iq_data_.shape) == 1:  # meas_return 'avg' case
                 iq_data = iq_data_[self._qubits]
                 shot_i = list(np.real(iq_data))
                 shot_q = list(np.imag(iq_data))
