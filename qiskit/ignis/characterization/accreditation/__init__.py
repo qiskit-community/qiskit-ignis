@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # This code is part of Qiskit.
 #
 # (C) Copyright IBM 2019.
@@ -17,11 +15,5 @@
 ACCREDITING OUTPUTS OF NISQ COMPUTING DEVICES (arXiv.1811.09709)
 """
 
-from qiskit import (QuantumCircuit,
-                    QuantumRegister,
-                    ClassicalRegister,
-                    execute,
-                    BasicAer,
-                    IBMQ,
-                    )
-from accreditation import accreditation
+from circuits import accreditation_circuits
+from fitters import accreditationFitter
