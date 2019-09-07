@@ -255,12 +255,13 @@ class IgnisLogReader:
         file rotation). File names are sorted by modification time.
         """
         file_name = IgnisLogging().get_log_file()
-        search_path = os.path.abspath(os.path.abspath(file_name + "*"))
+        search_path = os.path.abspath(file_name + "*")
         files = sorted(glob.glob(search_path), key=os.path.getmtime)
 
         result = list()
-        m = re.compile(os.path.abspath(os.path.abspath(file_name)) + r"$|" +
-                       os.path.abspath(os.path.abspath(file_name)) + r".\d+$")
+        m = re.compile(
+            os.path.abspath(file_name).replace('\\', r'\\') + r"$|" +
+            os.path.abspath(file_name).replace('\\', r'\\') + r".\d+$")
         for f in files:
             if m.match(f):
                 result.append(f)
