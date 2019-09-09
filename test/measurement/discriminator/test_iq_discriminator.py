@@ -3,7 +3,7 @@ import unittest
 import qiskit
 from qiskit import Aer
 from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
-from qiskit.ignis.measurement.discriminator.iq_discrimination import \
+from qiskit.ignis.measurement.discriminator.discriminators import \
     LinearIQDiscriminator
 from qiskit.ignis.mitigation.measurement import circuits
 from qiskit.result.models import ExperimentResultData

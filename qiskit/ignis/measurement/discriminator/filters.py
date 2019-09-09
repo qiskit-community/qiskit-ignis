@@ -24,7 +24,7 @@ from typing import List
 
 from qiskit.exceptions import QiskitError
 from qiskit.ignis.characterization.fitters import BaseFitter
-from qiskit.ignis.measurement.discriminator.iq_discrimination import \
+from qiskit.ignis.measurement.discriminator.discriminators import \
     BaseDiscriminationFitter
 from qiskit.result.result import Result
 from qiskit.result.models import ExperimentResultData
