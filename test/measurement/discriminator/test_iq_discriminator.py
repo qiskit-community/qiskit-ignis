@@ -1,5 +1,3 @@
-import copy
-import numpy as np
 import unittest
 
 import qiskit
@@ -35,17 +33,54 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         self.cal_results.results[0].data = ExperimentResultData(memory=ground)
         self.cal_results.results[1].data = ExperimentResultData(memory=excited)
 
+    def test_get_xdata(self):
+        discriminator = LinearIQDiscriminator(self.cal_results,
+                                              self.qubits,
+                                              ['00', '11'])
+
+        xdata = discriminator.get_xdata(self.cal_results)
+
+        self.assertEqual(len(xdata), self.shots*2)
+        self.assertEqual(len(xdata[0]), len(self.qubits) * 2)
+
+        xdata = discriminator.get_xdata(self.cal_results, ['cal_00'])
+
+        self.assertEqual(len(xdata), self.shots)
+        self.assertEqual(len(xdata[0]), 4)
+
+    def test_get_ydata(self):
+        discriminator = LinearIQDiscriminator(self.cal_results,
+                                              self.qubits,
+                                              ['00', '11'])
+
+        xdata = discriminator.get_xdata(self.cal_results)
+        ydata = discriminator.get_ydata(self.cal_results)
+
+        self.assertEqual(len(xdata), len(ydata))
+
+        ydata = discriminator.get_ydata(self.cal_results, ['cal_00'])
+
+        self.assertEqual(len(ydata), self.shots)
+        self.assertEqual(ydata[0], '00')
+
     def test_discrimination(self):
         i0, q0, i1, q1 = 0., -1., 0., 1.
         discriminator = LinearIQDiscriminator(self.cal_results,
                                               self.qubits,
                                               ['00', '11'])
 
-        excited_predicted = discriminator.fit_fun.predict([[i1, q1, i1, q1]])
-        ground_predicted = discriminator.fit_fun.predict([[i0, q0, i0, q0]])
+        excited_predicted = discriminator.discriminate([[i1, q1, i1, q1]])
+        ground_predicted = discriminator.discriminate([[i0, q0, i0, q0]])
 
         self.assertEqual(excited_predicted[0], '11')
         self.assertEqual(ground_predicted[0], '00')
+
+    def filter_and_discriminate(self):
+        i0, q0, i1, q1 = 0., -1., 0., 1.
+
+        discriminator = LinearIQDiscriminator(self.cal_results,
+                                              self.qubits,
+                                              ['00', '11'])
 
         iq_filter = DiscriminationFilter(discriminator)
 
@@ -68,36 +103,5 @@ class TestLinearIQDiscriminator(unittest.TestCase):
                                               self.qubits,
                                               ['0', '1'])
 
-        self.assertEqual(discriminator.fit_fun.predict([[i0, q0]])[0], '0')
-        self.assertEqual(discriminator.fit_fun.predict([[i1, q1]])[0], '1')
-
-    def test_extract_xdata(self):
-        i0, q0, i1, q1 = 0., -1., 0., 1.
-        ground = utils.create_shots(i0, q0, 0.1, 0.1, self.shots, self.qubits)
-
-        ExperimentResultData(memory=ground)
-
-        discriminator = LinearIQDiscriminator(self.cal_results,
-                                              self.qubits,
-                                              ['00', '11'])
-
-        # Test the formatting if return data is like single-shot data
-        single_shot_result = copy.deepcopy(self.cal_results.results[0])
-
-        x_data = discriminator.extract_xdata(single_shot_result)
-
-        self.assertEqual(len(x_data), self.shots)
-        self.assertEqual(len(x_data[0]), 2*len(self.qubits))
-
-        # Test the shape of the data for the averaged case:
-        # Average over the single shots
-        avg_ground = [list(qubit_iq) for qubit_iq in
-                      list(np.average(ground, axis=0))]
-
-        # Create a new result using the averaged data
-        avg_shot_result = copy.deepcopy(self.cal_results.results[0])
-        avg_shot_result.data = ExperimentResultData(memory=avg_ground)
-
-        x_data = discriminator.extract_xdata(avg_shot_result)
-        self.assertEqual(len(x_data), 1)
-        self.assertEqual(len(x_data[0]), 2*len(self.qubits))
+        self.assertEqual(discriminator.discriminate([[i0, q0]])[0], '0')
+        self.assertEqual(discriminator.discriminate([[i1, q1]])[0], '1')

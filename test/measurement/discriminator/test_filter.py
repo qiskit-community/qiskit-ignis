@@ -18,7 +18,6 @@ from operator import getitem
 import qiskit
 from qiskit import Aer
 from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
-from qiskit.ignis.characterization.fitters import BaseFitter
 from qiskit.result.models import ExperimentResultData
 from qiskit.ignis.measurement.discriminator.iq_discrimination import \
     LinearIQDiscriminator
@@ -40,7 +39,7 @@ class TestDiscriminationFilter(unittest.TestCase):
 
     def test_count(self):
 
-        fitter = BaseFitter(None, None, None, [], None, None, None, None)
+        fitter = LinearIQDiscriminator([], [], [], [], None)
         d_filter = DiscriminationFilter(fitter, 2)
 
         raw_counts = d_filter.count(['01', '00', '01', '00', '00', '10'])

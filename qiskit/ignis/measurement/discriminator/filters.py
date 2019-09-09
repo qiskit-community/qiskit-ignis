@@ -24,6 +24,8 @@ from typing import List
 
 from qiskit.exceptions import QiskitError
 from qiskit.ignis.characterization.fitters import BaseFitter
+from qiskit.ignis.measurement.discriminator.iq_discrimination import \
+    BaseDiscriminationFitter
 from qiskit.result.result import Result
 from qiskit.result.models import ExperimentResultData
 from qiskit.validation.base import Obj
@@ -39,7 +41,8 @@ class DiscriminationFilter:
         new_result = filter.apply(level_1_data)
     """
 
-    def __init__(self, discriminator: BaseFitter, base: int = None):
+    def __init__(self, discriminator: BaseDiscriminationFitter,
+                 base: int = None):
         """
         Args:
             discriminator (BaseFitter): a discriminator that maps level 1 data
@@ -55,7 +58,7 @@ class DiscriminationFilter:
             self.base = base
         else:
             self.base = DiscriminationFilter.get_base(
-                discriminator.expected_state)
+                discriminator.expected_states)
 
     def apply(self, raw_data: Result) -> Result:
         """
@@ -67,27 +70,31 @@ class DiscriminationFilter:
         Returns:
             A list of qiskit.Result or qiskit.Result.
         """
-        if isinstance(raw_data, Result):
-            new_results = deepcopy(raw_data)
+        new_results = deepcopy(raw_data)
 
-            for result in new_results.results:
+        to_be_discriminated = []
 
-                if result.meas_level == 0:
-                    raise QiskitError('Cannot discriminate level 0 data.')
-                elif result.meas_level == 1:
-                    x_data = self.discriminator.extract_xdata(result)
-                    y_data = self.discriminator.fit_fun.predict(x_data)
+        # Extract all the meas level 1 data from the Result.
+        shots_per_experiment_result = []
+        for result in new_results.results:
+            if result.meas_level == 1:
+                shots_per_experiment_result.append(result.shots)
+                to_be_discriminated.append(result)
 
-                    result.meas_level = 2
+        new_results.results = to_be_discriminated
 
-                    counts = Obj.from_dict(self.count(y_data))
-                    result.data = ExperimentResultData(counts=counts,
-                                                       memory=y_data)
-                elif result.meas_level == 2:
-                    pass
-        else:
-            msg = 'raw_data is not of type qiskit.result.result.Result'
-            raise QiskitError(msg)
+        x_data = self.discriminator.get_xdata(new_results)
+        y_data = self.discriminator.discriminate(x_data)
+
+        start = 0
+        for idx, n_shots in enumerate(shots_per_experiment_result):
+            counts = Obj.from_dict(self.count(y_data[start:(start+n_shots)]))
+            new_results.results[idx].data = ExperimentResultData(counts=counts,
+                                                                 memory=y_data)
+            start += n_shots
+
+        for result in new_results.results:
+            result.meas_level = 2
 
         return new_results
 

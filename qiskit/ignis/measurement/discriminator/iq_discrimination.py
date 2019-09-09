@@ -48,10 +48,8 @@ class BaseDiscriminationFitter:
             schedules: The schedules in cal_results or their names. If None
             all schedules will be used.
         """
-        if not schedules:
-            self._schedules = [_.header.name for _ in cal_results.results]
-        else:
-            self._schedules = schedules
+        if schedules is None:
+            schedules = [_.header.name for _ in cal_results.results]
 
         # Sanity checks
         if isinstance(cal_results, list) and isinstance(expected_states, list):
@@ -73,7 +71,9 @@ class BaseDiscriminationFitter:
         self._standardize = standardize
         self._scaler = None
         self._qubit_mask = qubit_mask
+        self._schedules = schedules
         self._backend_result_list = []
+        self._fitted = False
 
         if cal_results is not None:
             if isinstance(cal_results, list):
@@ -107,6 +107,15 @@ class BaseDiscriminationFitter:
             expected_state: the expected state of the discriminator.
         """
         pass
+
+    @property
+    def expected_states(self):
+        return self._expected_state
+
+    @property
+    def fitted(self):
+        """True if the discriminator has been fitted to calibration data."""
+        return self._fitted
 
     @abstractmethod
     def _scale_data(self, xdata: List[List[float]], refit=False):
@@ -356,7 +365,11 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
 
     def fit(self):
         """ Fits the discriminator using self._xdata and self._ydata. """
+        if len(self._xdata) == 0:
+            return
+
         self._lda.fit(self._xdata, self._ydata)
+        self._fitted = True
 
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
         """ Applies the discriminator to x_data."""
@@ -402,7 +415,11 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
 
     def fit(self):
         """ Fits the discriminator using self._xdata and self._ydata. """
+        if len(self._xdata) == 0:
+            return
+
         self._qda.fit(self._xdata, self._ydata)
+        self._fitted = True
 
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
         """ Applies the discriminator to x_data."""
