@@ -18,7 +18,6 @@ Fitters of characteristic times
 
 from scipy.optimize import curve_fit
 import numpy as np
-from qiskit.result.models import ExperimentResult
 from qiskit import QiskitError
 from ..verification.tomography import marginal_counts
 
@@ -158,13 +157,6 @@ class BaseFitter:
         """
         return self._params_err
 
-    @property
-    def expected_state(self):
-        """
-        Return the expected state of the fitter.
-        """
-        return self._expected_state
-
     def _get_param(self, param_ind, qid=-1, series='0', err=False):
         """
         Helper function that gets a parameter (or parameter err)
@@ -259,10 +251,6 @@ class BaseFitter:
                     # exactly zero
                     if self._ydata[serieslbl][-1]['std'][-1] == 0:
                         self._ydata[serieslbl][-1]['std'][-1] = 1e-4
-
-    def extract_xdata(self, result: ExperimentResult):
-        """Extracts the xdata from the results and packages the xdata in
-        a format that the fitter can understand."""
 
     def fit_data(self, qid=-1, p0=None, bounds=None, series=None):
         """
