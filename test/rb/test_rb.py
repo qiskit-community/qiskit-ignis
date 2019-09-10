@@ -441,7 +441,8 @@ class TestRB(unittest.TestCase):
                 rb.randomized_benchmarking_seq(
                     **rb_opts_interleaved)
             # Non-Clifford RB sequences:
-            rb_nonclifford_circs, _ = \
+            rb_nonclifford_Z_circs, _, \
+            rb_nonclifford_X_circs = \
                 rb.randomized_benchmarking_seq(
                     **rb_opts_nonclifford)
             # Purity RB sequences:
@@ -465,7 +466,8 @@ class TestRB(unittest.TestCase):
         result = []
         result_original = []
         result_interleaved = []
-        result_nonclifford = []
+        result_nonclifford_Z = []
+        result_nonclifford_X = []
         if is_purity:
             result_purity = [[] for d in range(npurity)]
         for seed in range(rb_opts['nseeds']):
@@ -483,8 +485,13 @@ class TestRB(unittest.TestCase):
                                backend=backend,
                                basis_gates=basis_gates,
                                shots=shots).result())
-            result_nonclifford.append(
-                qiskit.execute(rb_nonclifford_circs[seed],
+            result_nonclifford_Z.append(
+                qiskit.execute(rb_nonclifford_Z_circs[seed],
+                               backend=backend,
+                               basis_gates=basis_gates,
+                               shots=shots).result())
+            result_nonclifford_X.append(
+                qiskit.execute(rb_nonclifford_X_circs[seed],
                                backend=backend,
                                basis_gates=basis_gates,
                                shots=shots).result())
@@ -544,11 +551,16 @@ class TestRB(unittest.TestCase):
                                     result_interleaved[seed],
                                     shots,
                                     is_interleaved=True)
-                self.verify_circuit(rb_nonclifford_circs[seed]
+                self.verify_circuit(rb_nonclifford_Z_circs[seed]
                                     [circ_index],
                                     nq, rb_opts_nonclifford,
                                     vec_len,
-                                    result_nonclifford[seed], shots)
+                                    result_nonclifford_Z[seed], shots)
+                #self.verify_circuit(rb_nonclifford_X_circs[seed]
+                #                    [circ_index],
+                #                    nq, rb_opts_nonclifford,
+                #                    vec_len,
+                #                    result_nonclifford_X[seed], shots)
                 if is_purity:
                     self.verify_circuit(rb_purity_circs[seed][0]
                                         [circ_index],

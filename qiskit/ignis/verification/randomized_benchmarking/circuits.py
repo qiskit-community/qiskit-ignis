@@ -183,6 +183,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         Ggroup = Clifford
     elif group_gates == 'Non-Clifford' or group_gates == 'CNOTDihedral' \
             or group_gates == 'CNOT-Dihedral':
+        group_gates = 'Non-Clifford'
         Gutils = dutils()
         Ggroup = CNOTDihedral
     else:
@@ -214,6 +215,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     circuits = [[] for e in range(nseeds)]
     # initialization: interleaved rb sequences
     circuits_interleaved = [[] for e in range(nseeds)]
+    # initialization: non-clifford rb sequences
+    circuits_nonclifford = [[] for e in range(nseeds)]
     # initialization: purity rb sequences
     circuits_purity = [[[] for d in range(npurity)]
                        for e in range(nseeds)]
@@ -363,6 +366,17 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                                % (length_index,
                                                   seed + seed_offset)
 
+                # add measurement for Non-Clifford rb
+                # measure both the ground state |0...0> (circ)
+                # and the |+...+> state (nonclifford_circ)
+                nonclifford_circ = qiskit.QuantumCircuit(qr, cr)
+                for qind, qb in enumerate(qlist_flat):
+                    nonclifford_circ.h(qr[qb])
+                nonclifford_circ += circ
+                for qind, qb in enumerate(qlist_flat):
+                    nonclifford_circ.h(qr[qb])
+                    nonclifford_circ.measure(qr[qb], cr[qind])
+
                 # add measurement for standard rb
                 # qubits measure to the c registers as
                 # they appear in the pattern
@@ -371,6 +385,13 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     # add measurement for interleaved rb
                     circ_interleaved.measure(qr[qb], cr[qind])
 
+                if group_gates == 'Non-Clifford':
+                    circ.name = 'rb_nonclifford_length_Z_%d_seed_%d' % \
+                                (length_index, seed + seed_offset)
+                nonclifford_circ.name = \
+                    'rb_nonclifford_X_length_%d_seed_%d' % \
+                    (length_index, seed + seed_offset)
+
                 circ.name = 'rb_length_%d_seed_%d' % (length_index,
                                                       seed + seed_offset)
                 circ_interleaved.name = 'rb_interleaved_length_%d_seed_%d' \
@@ -378,6 +399,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
 
                 circuits[seed].append(circ)
                 circuits_interleaved[seed].append(circ_interleaved)
+                circuits_nonclifford[seed].append(nonclifford_circ)
                 if is_purity:
                     for d in range(npurity):
                         circuits_purity[seed][d].append(circ_purity[d])
@@ -386,6 +408,9 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     # output of interleaved rb
     if interleaved_gates is not None:
         return circuits, xdata, circuits_interleaved
+    # output of Non-Clifford rb
+    if group_gates == 'Non-Clifford':
+        return circuits, xdata, circuits_nonclifford
     # output of purity rb
     if is_purity:
         return circuits_purity, xdata, npurity
