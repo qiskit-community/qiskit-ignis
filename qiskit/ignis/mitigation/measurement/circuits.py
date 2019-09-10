@@ -65,29 +65,13 @@ def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
     if qubit_list is None:
         qubit_list = range(len(qr))
 
-    cal_circuits = []
     nqubits = len(qubit_list)
-
-    # create classical bit registers
-    if cr is None:
-        cr = ClassicalRegister(nqubits)
 
     # labels for 2**n qubit states
     state_labels = count_keys(nqubits)
 
-    for basis_state in state_labels:
-        qc_circuit = QuantumCircuit(qr, cr,
-                                    name='%scal_%s' % (circlabel, basis_state))
-        for qind, _ in enumerate(basis_state):
-            if int(basis_state[nqubits-qind-1]):
-                # the index labeling of the label is backwards with
-                # the list
-                qc_circuit.x(qr[qubit_list[qind]])
-
-            # add measurements
-            qc_circuit.measure(qr[qubit_list[qind]], cr[qind])
-
-        cal_circuits.append(qc_circuit)
+    cal_circuits, _ = tensored_meas_cal([qubit_list],
+                                        qr, cr, circlabel)
 
     return cal_circuits, state_labels
 

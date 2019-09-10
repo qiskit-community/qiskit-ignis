@@ -20,6 +20,7 @@ from abc import ABC, abstractmethod
 from scipy.optimize import curve_fit
 import numpy as np
 from qiskit import QiskitError
+from qiskit.quantum_info.analysis.average import average_data
 from ..tomography import marginal_counts
 from ...characterization.fitters import build_counts_dict_from_list
 
@@ -155,20 +156,41 @@ class RBFitter(RBFitterBase):
         """Return raw data."""
         return self._raw_data
 
+    @raw_data.setter
+    def raw_data(self, raw_data):
+        if raw_data is None:
+            self._raw_data = []
+        else:
+            self._raw_data = raw_data
+
     @property
     def cliff_lengths(self):
         """Return clifford lengths."""
-        return self.cliff_lengths
+        return self._cliff_lengths
 
     @property
     def ydata(self):
         """Return ydata (means and std devs)."""
         return self._ydata
 
+    @ydata.setter
+    def ydata(self, ydata):
+        if ydata is None:
+            self._ydata = []
+        else:
+            self._ydata = ydata
+
     @property
     def fit(self):
         """Return fit."""
         return self._fit
+
+    @fit.setter
+    def fit(self, fit):
+        if fit is None:
+            self._fit = []
+        else:
+            self._fit = fit
 
     @property
     def rb_fit_fun(self):
@@ -215,12 +237,6 @@ class RBFitter(RBFitterBase):
                 nseeds_circ = int(rbcirc.header.name.split('_')[-1])
                 if nseeds_circ not in self._nseeds:
                     self._nseeds.append(nseeds_circ)
-
-        for result in self._result_list:
-            if not len(result.results) == len(self._cliff_lengths[0]):
-                raise ValueError(
-                    "The number of clifford lengths must match the number of "
-                    "results")
 
         if rerun_fit:
             self.calc_data()
@@ -292,7 +308,7 @@ class RBFitter(RBFitterBase):
                     self._raw_data[-1][seedidx].append(
                         counts_subspace.get(string_of_0s, 0)
                         / circ_shots[circ_name])
-            startind += (endind)
+            startind = endind
 
     def calc_statistics(self):
         """
@@ -354,14 +370,14 @@ class RBFitter(RBFitterBase):
                                  self._ydata[patt_ind]['mean'],
                                  sigma=sigma,
                                  p0=fit_guess,
-                                 bounds=([-2, 0, -2], [2, 1, 2]))
+                                 bounds=([0, 0, 0], [1, 1, 1]))
         alpha = params[1]  # exponent
         params_err = np.sqrt(np.diag(pcov))
         alpha_err = params_err[1]
 
         nrb = 2 ** len(qubits)
         epc = (nrb-1)/nrb*(1-alpha)
-        epc_err = epc*alpha_err/alpha
+        epc_err = (nrb-1)/nrb*alpha_err/alpha
 
         self._fit[patt_ind] = {'params': params, 'params_err': params_err,
                                'epc': epc, 'epc_err': epc_err}
@@ -384,10 +400,9 @@ class RBFitter(RBFitterBase):
         for patt_ind, _ in enumerate(self._rb_pattern):
 
             qubits = self._rb_pattern[patt_ind]
-            fit_guess = [0.95, 0.99, 0.0]
-            fit_guess[0] = self._ydata[patt_ind]['mean'][0]
+
             # Should decay to 1/2^n
-            fit_guess[2] = 1/2**len(qubits)
+            fit_guess = [0.95, 0.99, 1/2**len(qubits)]
 
             # Use the first two points to guess the decay param
             y0 = self._ydata[patt_ind]['mean'][0]
@@ -400,8 +415,10 @@ class RBFitter(RBFitterBase):
             if alpha_guess < 1.0:
                 fit_guess[1] = alpha_guess
 
-            fit_guess[0] = ((y0 - fit_guess[2]) /
-                            fit_guess[1]**self._cliff_lengths[patt_ind][0])
+            if y0 > fit_guess[2]:
+                fit_guess[0] = ((y0 - fit_guess[2]) /
+                                fit_guess[1]**self._cliff_lengths[patt_ind][0])
+
             self.fit_data_pattern(patt_ind, tuple(fit_guess))
 
     def plot_rb_data(self, pattern_index=0, ax=None,
@@ -412,7 +429,7 @@ class RBFitter(RBFitterBase):
         Args:
             pattern_index: which RB pattern to plot
             ax (Axes or None): plot axis (if passed in).
-            add_label (bool): Add an EPC label
+            add_label (bool): Add an EPC label.
             show_plt (bool): display the plot.
 
         Raises:
@@ -500,7 +517,9 @@ class InterleavedRBFitter(RBFitterBase):
 
         self.rbfit_std.add_data(original_result)
         self.rbfit_int.add_data(interleaved_result)
-        self.fit_data()
+
+        if not (original_result is None and interleaved_result is None):
+            self.fit_data()
 
     @property
     def rbfit_std(self):
@@ -515,7 +534,7 @@ class InterleavedRBFitter(RBFitterBase):
     @property
     def cliff_lengths(self):
         """Return clifford lengths."""
-        return self.cliff_lengths
+        return self._cliff_lengths
 
     @property
     def fit(self):
@@ -588,9 +607,8 @@ class InterleavedRBFitter(RBFitterBase):
 
     def calc_statistics(self):
         """
-        Extract averages and std dev.
-        Output into internal variables:
-        _ydata_original and _ydata_interleaved
+        Extract averages and std dev. Output
+        [ydata_original, ydata_inteleaved]
         """
         self.rbfit_std.calc_statistics()
         self.rbfit_int.calc_statistics()
@@ -745,6 +763,376 @@ class InterleavedRBFitter(RBFitterBase):
                      self._fit_interleaved[pattern_index]['alpha_c_err'],
                      self._fit_interleaved[pattern_index]['epc_est'],
                      self._fit_interleaved[pattern_index]['epc_est_err']),
+                    ha="center", va="center", size=14,
+                    bbox=bbox_props, transform=ax.transAxes)
+
+        if show_plt:
+            plt.show()
+
+
+class PurityRBFitter(RBFitterBase):
+    """
+        Class for fitter for purity RB
+        Derived from RBFitterBase class
+    """
+
+    def __init__(self, purity_result, npurity, cliff_lengths,
+                 rb_pattern=None):
+        """
+        Args:
+            purity_result: list of results of the
+            3^n purity RB sequences per seed (qiskit.Result).
+            npurity: equals 3^n (where n is the dimension)
+            cliff_lengths: the Clifford lengths, 2D list i x j where i is the
+                number of patterns, j is the number of cliffords lengths
+            rb_pattern: the pattern for the rb sequences.
+        """
+        if rb_pattern is None:
+            rb_pattern = [[0]]
+
+        self._cliff_lengths = cliff_lengths
+        self._rb_pattern = rb_pattern
+        self._npurity = npurity
+        self._nq = len(rb_pattern[0])  # all patterns have same length
+
+        self._fit = [{} for e in rb_pattern]
+        self._circ_name_type = ''
+
+        self._zdict_ops = []
+        self.add_zdict_ops()
+
+        # rb purity fitter
+        self._rbfit_purity = RBFitter(purity_result, cliff_lengths,
+                                      rb_pattern)
+        self.add_data(purity_result)
+
+    @property
+    def rbfit_pur(self):
+        """Return the purity RB fitter."""
+        return self._rbfit_purity
+
+    @property
+    def raw_data(self):
+        """Return raw data."""
+        return self.rbfit_pur.raw_data
+
+    @property
+    def cliff_lengths(self):
+        """Return clifford lengths."""
+        return self.cliff_lengths
+
+    @property
+    def ydata(self):
+        """Return ydata (means and std devs)."""
+        return self.rbfit_pur.ydata
+
+    @property
+    def fit(self):
+        """Return the purity fit parameters."""
+        return self.rbfit_pur.fit
+
+    @property
+    def rb_fit_fun(self):
+        """Return the function rb_fit_fun."""
+        return self.rbfit_pur.rb_fit_fun
+
+    @property
+    def seeds(self):
+        """Return the number of loaded seeds."""
+        return self.rbfit_pur.seeds
+
+    @property
+    def results(self):
+        """Return all the results."""
+        return self.rbfit_pur.results
+
+    @staticmethod
+    def _rb_pur_fit_fun(x, a, alpha, b):
+        """Function used to fit purity rb."""
+        # pylint: disable=invalid-name
+        return a * alpha ** (2 * x) + b
+
+    @staticmethod
+    def F234(n, a, b):
+        """Function than maps:
+        2^n x 3^n --> 4^n
+        namely:
+        (a,b) --> c where
+        a in 2^n, b in 3^n, c in 4^n
+
+        0 <--> I
+        1 <--> X
+        2 <--> Y
+        3 <--> Z
+        """
+        LUT = [[0, 0, 0], [3, 1, 2]]
+
+        # compute bits
+        aseq = []
+        bseq = []
+
+        aa = a
+        bb = b
+        for i in range(n):
+            aseq.append(np.mod(aa, 2))
+            bseq.append(np.mod(bb, 3))
+            aa = np.floor_divide(aa, 2)
+            bb = np.floor_divide(bb, 3)
+
+        c = 0
+        for i in range(n):
+            c += (4 ** i) * LUT[aseq[i]][bseq[i]]
+
+        return c
+
+    def add_zdict_ops(self):
+        """Creating all Z-correlators
+        in order to compute the expectation values"""
+        statedict = {("{0:0%db}" % self._nq).format(i): 1 for i in
+                     range(2 ** self._nq)}
+
+        for i in range(2 ** self._nq):
+            self._zdict_ops.append(statedict.copy())
+            for j in range(2 ** self._nq):
+                if bin(i & j).count('1') % 2 != 0:
+                    self._zdict_ops[-1][("{0:0%db}"
+                                         % self._nq).format(j)] = -1
+
+    def add_data(self, new_purity_result, rerun_fit=True):
+        """
+        Add a new result.
+        Args:
+            new_purity_result: list of rb results of the
+            purity rb circuits
+            rerun_fit: re-caculate the means and fit the result
+            Additional information:
+            Assumes that 'result' was executed is
+            the output of circuits generated by randomized_becnhmarking_seq
+            where is_purity = True.
+        """
+
+        if new_purity_result is None:
+            return
+
+        self.rbfit_pur.add_data(new_purity_result, rerun_fit)
+
+        if rerun_fit:
+            self.calc_data()
+            self.calc_statistics()
+            self.fit_data()
+
+    def calc_data(self):
+        """
+        Measure the purity calculation into an internal variable _raw_data
+        which is a 3-dimensional list, where item (i,j,k) is the purity
+        of the set of qubits in pattern "i"
+        for seed no. j and vector length self._cliff_lengths[i][k].
+        Additional information:
+        Assumes that 'result' was executed is
+        the output of circuits generated by randomized_becnhmarking_seq,
+        """
+        circ_counts = {}
+        circ_shots = {}
+        result_count = 0
+
+        # Calculating the result output
+        for _, seed in enumerate(self.rbfit_pur.seeds):
+
+            for pur in range(self._npurity):
+
+                self._circ_name_type = self.rbfit_pur.results[
+                    result_count].results[0].header.name.split("_length")[0]
+                result_count += 1
+
+                for circ, _ in enumerate(self._cliff_lengths[0]):
+                    circ_name = self._circ_name_type + '_length_%d_seed_%d' \
+                                % (circ, seed)
+                    count_list = []
+                    for result in self.rbfit_pur.results:
+                        try:
+                            count_list.append(result.get_counts(circ_name))
+                        except (QiskitError, KeyError):
+                            pass
+
+                    circ_name = 'rb_purity_' + str(pur) + \
+                                '_length_%d_seed_%d' % (circ, seed)
+
+                    circ_counts[circ_name] = build_counts_dict_from_list(
+                        count_list)
+                    circ_shots[circ_name] = sum(circ_counts[circ_name].
+                                                values())
+
+        # Calculating raw_data
+        self.rbfit_pur.raw_data = []
+        startind = 0
+        # for each pattern
+        for patt_ind, _ in enumerate(self._rb_pattern):
+
+            endind = startind + len(self._rb_pattern[patt_ind])
+            self.rbfit_pur.raw_data.append([])
+
+            # for each seed
+            for seedidx, seed in enumerate(self.rbfit_pur.seeds):
+                self.rbfit_pur.raw_data[-1].append([])
+
+                # for each length
+                for k, _ in enumerate(self._cliff_lengths[0]):
+
+                    # vector of the 4^n correlators and counts
+                    corr_vec = [0] * (4 ** self._nq)
+                    count_vec = [0] * (4 ** self._nq)
+                    # corr_list = [[] for e in range(4 ** self._nq)]
+
+                    for pur in range(self._npurity):
+
+                        circ_name = 'rb_purity_' + str(pur) + \
+                                    '_length_%d_seed_%d' % (k, seed)
+
+                        # marginal counts for the pattern
+                        counts_subspace = marginal_counts(
+                            circ_counts[circ_name],
+                            np.arange(startind, endind))
+
+                        # calculating the vector of 4^n correlators
+                        for indcorr in range(2 ** self._nq):
+                            zcorr = average_data(counts_subspace,
+                                                 self._zdict_ops[indcorr])
+                            zind = self.F234(self._nq, indcorr, pur)
+
+                            corr_vec[zind] += zcorr
+                            count_vec[zind] += 1
+
+                    # calculating the purity
+                    purity = 0
+                    for idx, _ in enumerate(corr_vec):
+                        purity += (corr_vec[idx]/count_vec[idx]) ** 2
+                    purity = purity / (2 ** self._nq)
+
+                    self.rbfit_pur.raw_data[-1][seedidx].append(purity)
+
+            startind = endind
+
+    def calc_statistics(self):
+        """
+        Extract averages and std dev from the raw data (self._raw_data).
+        Assumes that self._calc_data has been run. Output into internal
+        _ydata variable:
+            ydata is a list of dictionaries (length number of patterns).
+            Dictionary ydata[i]:
+            ydata[i]['mean'] is a numpy_array of length n;
+                        entry j of this array contains the mean probability of
+                        success over seeds, for vector length
+                        self._cliff_lengths[i][j].
+            And ydata[i]['std'] is a numpy_array of length n;
+                        entry j of this array contains the std
+                        of the probability of success over seeds,
+                        for vector length self._cliff_lengths[i][j].
+        """
+        self.rbfit_pur.calc_statistics()
+
+    def fit_data_pattern(self, patt_ind, fit_guess):
+        """
+        Fit the RB results of a particular pattern
+        to an exponential curve.
+        Args:
+            patt_ind: index of the subsystem to fit
+            fit_guess: guess values for the fit
+        Puts the results into a list of fit dictionaries:
+            where each dictionary corresponds to a pattern and has fields:
+            'params' - three parameters of rb_fit_fun. The middle one is the
+                       exponent.
+            'err' - the error limits of the parameters.
+        """
+        self.rbfit_pur.fit_data_pattern(patt_ind, fit_guess)
+
+    def fit_data(self):
+        """
+        Fit the Purity RB results to an exponential curve.
+        Use the data to construct guess values
+        for the fits
+        Puts the results into a list of fit dictionaries:
+            where each dictionary corresponds to a pattern and has fields:
+            'params' - three parameters of rb_fit_fun. The middle one is the
+                       exponent.
+            'err' - the error limits of the parameters.
+            'epc' - Error per Clifford
+            'pepc' - Purity Error per Clifford
+        """
+        self.rbfit_pur.fit_data()
+
+        for patt_ind, (_, _) in enumerate(zip(self._cliff_lengths,
+                                              self._rb_pattern)):
+            # Calculate alpha (=p):
+            # fitting the curve: A*p^(2m)+B
+            # where m is the Clifford length
+            alpha = self.rbfit_pur.fit[patt_ind]['params'][1]
+            alpha_pur = np.sqrt(alpha)
+            self.rbfit_pur.fit[patt_ind]['params'][1] = alpha_pur
+
+            # calculate the error of alpha
+            alpha_err = self.rbfit_pur.fit[patt_ind]['params_err'][1]
+            alpha_pur_err = alpha_err / (2 * np.sqrt(alpha_pur))
+            self.rbfit_pur.fit[patt_ind]['params_err'][1] = \
+                alpha_pur_err
+
+            # calcuate purity error per clifford (pepc)
+            nrb = 2 ** self._nq
+            pepc = (nrb-1)/nrb * (1-alpha_pur)
+            self.rbfit_pur.fit[patt_ind]['pepc'] = \
+                pepc
+
+            pepc_err = (nrb-1)/nrb * alpha_pur_err / alpha_pur
+            self.rbfit_pur.fit[patt_ind]['pepc_err'] = \
+                pepc_err
+
+    def plot_rb_data(self, pattern_index=0, ax=None,
+                     add_label=True, show_plt=True):
+        """
+          Plot purity rb data of a single pattern.
+        """
+        fit_function = self._rb_pur_fit_fun
+
+        if not HAS_MATPLOTLIB:
+            raise ImportError('The function plot_rb_data needs matplotlib. '
+                              'Run "pip install matplotlib" before.')
+
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+
+        xdata = self._cliff_lengths[pattern_index]
+
+        # Plot the result for each sequence
+        for one_seed_data in self.rbfit_pur.raw_data[pattern_index]:
+            ax.plot(xdata, one_seed_data, color='gray', linestyle='none',
+                    marker='x')
+
+        # Plot the mean with error bars
+        ax.errorbar(xdata, self.rbfit_pur.ydata[pattern_index]['mean'],
+                    yerr=self.rbfit_pur.ydata[pattern_index]['std'],
+                    color='r', linestyle='--', linewidth=3)
+
+        # Plot the fit
+        ax.plot(xdata,
+                fit_function(xdata, *self.rbfit_pur.fit[pattern_index][
+                    'params']),
+                color='blue', linestyle='-', linewidth=2)
+        ax.tick_params(labelsize=14)
+
+        ax.set_xlabel('Clifford Length', fontsize=16)
+        ax.set_ylabel('Trace of Rho Square', fontsize=16)
+        ax.grid(True)
+
+        if add_label:
+            bbox_props = dict(boxstyle="round,pad=0.3",
+                              fc="white", ec="black", lw=2)
+
+            ax.text(0.6, 0.9,
+                    "alpha: %.3f(%.1e) PEPC: %.3e(%.1e)" %
+                    (self.rbfit_pur.fit[pattern_index]['params'][1],
+                     self.rbfit_pur.fit[pattern_index]['params_err'][1],
+                     self.rbfit_pur.fit[pattern_index]['pepc'],
+                     self.rbfit_pur.fit[pattern_index]['pepc_err']),
                     ha="center", va="center", size=14,
                     bbox=bbox_props, transform=ax.transAxes)
 

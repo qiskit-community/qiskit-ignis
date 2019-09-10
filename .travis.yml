@@ -1,4 +1,7 @@
-cache: pip
+cache:
+  pip: true
+  directories:
+    - .stestr
 sudo: false
 
 addons:
@@ -17,6 +20,7 @@ install_osx: &stage_osx
     pip: true
     directories:
       - ~/python-interpreters/
+      - .stestr
   before_install:
     # Travis does not provide support for Python 3 under osx - it needs to be
     # installed manually.
@@ -31,6 +35,12 @@ install_osx: &stage_osx
       fi
       virtualenv --python ~/python-interpreters/$PYTHON_VERSION/bin/python venv
       source venv/bin/activate
+    fi
+
+before_script:
+   - |
+    if [ ! "$(ls -A .stestr)" ]; then
+        rm -r .stestr
     fi
 
 stages:
@@ -83,6 +93,14 @@ matrix:
         - MPLBACKEND=ps
         - PYTHON_VERSION=3.7.2
         - TOXENV=py37
+    - if: tag IS present
+      python: "3.6"
+      env:
+        - TWINE_USERNAME=qiskit
+      install: pip install -U twine
+      script:
+        - python3 setup.py sdist bdist_wheel
+        - twine upload dist/qiskit*
 
 language: python
 install: pip install -U tox pip
