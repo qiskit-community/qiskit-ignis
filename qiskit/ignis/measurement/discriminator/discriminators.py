@@ -11,7 +11,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Union, List
 
 import numpy as np
@@ -25,13 +25,13 @@ from qiskit.result import Result
 from qiskit.pulse.schedule import Schedule
 
 
-class BaseDiscriminationFitter:
+class BaseDiscriminationFitter(ABC):
     """
     IQDiscriminatorFitter takes IQ level 1 data produced by calibration
     measurements with a known expected state. It fits a discriminator
     that can be used to produce level 2 data, i.e. counts of quantum states.
     """
-    @abstractmethod
+
     def __init__(self, cal_results: Union[Result, List[Result]],
                  qubit_mask: List[int], expected_states: Union[List[str], str],
                  standardize: bool = False,
@@ -173,7 +173,6 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
     level 1 data.
     """
 
-    @abstractmethod
     def __init__(self, cal_results: Union[Result, List[Result]],
                  qubit_mask: List[int], expected_states: Union[List[str], str],
                  standardize: bool = False,
