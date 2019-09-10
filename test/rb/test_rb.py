@@ -401,191 +401,6 @@ class TestRB(unittest.TestCase):
         # Load simulator
         backend = qiskit.Aer.get_backend('qasm_simulator')
 
-<<<<<<< HEAD
-        # Test up to 4 qubits (only 1-qubit and 2-qubit RB)
-        nq_list = [1, 2, 3, 4]
-
-        for nq in nq_list:
-
-            print("Testing %d qubit RB" % nq)
-
-            for pattern_type in range(3):
-                for multiplier_type in range(2):
-                    # See documentation of choose_pattern for the meaning of
-                    # the different pattern types
-                    # Choose options for standard (simultaneous) RB:
-                    rb_opts = {}
-                    rb_opts['nseeds'] = 3
-                    rb_opts['length_vector'] = [1, 3, 4, 7]
-                    rb_opts['rb_pattern'], is_purity = \
-                        self.choose_pattern(pattern_type, nq)
-                    # if the pattern type is not relevant for nq
-                    if rb_opts['rb_pattern'] is None:
-                        continue
-                    rb_opts_purity = rb_opts.copy()
-                    rb_opts['length_multiplier'] = self.choose_multiplier(
-                        multiplier_type, len(rb_opts['rb_pattern']))
-                    # Choose options for interleaved RB:
-                    rb_opts_interleaved = rb_opts.copy()
-                    rb_opts_interleaved['interleaved_gates'] = \
-                        self.choose_interleaved_gates(rb_opts['rb_pattern'])
-                    print('rb_opts:', rb_opts_interleaved)
-                    # Choose options for Non-Clifford RB:
-                    rb_opts_nonclifford = rb_opts.copy()
-                    rb_opts_nonclifford['group_gates'] = 'Non-Clifford'
-                    print('rb_opts_nonclifford:', rb_opts_nonclifford)
-                    # Choose options for purity rb
-                    # no length_multiplier
-                    rb_opts_purity['length_multiplier'] = 1
-                    rb_opts_purity['is_purity'] = is_purity
-                    if multiplier_type > 0:
-                        is_purity = False
-                    if is_purity:
-                        print('Testing purity RB')
-                    # Adding seed_offset and align_cliffs
-                    rb_opts['seed_offset'] = 10
-                    rb_opts['align_cliffs'] = True
-
-                    # Generate the sequences
-                    try:
-                        # Standard (simultaneous) RB sequences:
-                        rb_circs, _ = rb.randomized_benchmarking_seq(**rb_opts)
-                        # Interleaved RB sequences:
-                        rb_original_circs, _, rb_interleaved_circs = \
-                            rb.randomized_benchmarking_seq(
-                                **rb_opts_interleaved)
-                        # Non-Clifford RB sequences:
-                        rb_nonclifford_circs, _ = \
-                            rb.randomized_benchmarking_seq(
-                                **rb_opts_nonclifford)
-                        # Purity RB sequences:
-                        if is_purity:
-                            rb_purity_circs, _, npurity = \
-                                rb.randomized_benchmarking_seq(
-                                    **rb_opts_purity)
-                            # verify: npurity = 3^n
-                            self.assertEqual(
-                                npurity, 3 ** len(rb_opts['rb_pattern'][0]),
-                                'Error: npurity does not equal to 3^n')
-                    except OSError:
-                        skip_msg = ('Skipping tests for %s qubits because '
-                                    'tables are missing' % str(nq))
-                        print(skip_msg)
-                        continue
-
-                    # Perform an ideal execution on the generated sequences
-                    basis_gates = ['u1', 'u2', 'u3', 'cx']
-                    shots = 100
-                    result = []
-                    result_original = []
-                    result_interleaved = []
-                    result_nonclifford = []
-                    result_purity = [[] for d in range(npurity)]
-                    for seed in range(rb_opts['nseeds']):
-                        result.append(
-                            qiskit.execute(rb_circs[seed], backend=backend,
-                                           basis_gates=basis_gates,
-                                           shots=shots).result())
-                        result_original.append(
-                            qiskit.execute(rb_original_circs[seed],
-                                           backend=backend,
-                                           basis_gates=basis_gates,
-                                           shots=shots).result())
-                        result_interleaved.append(
-                            qiskit.execute(rb_interleaved_circs[seed],
-                                           backend=backend,
-                                           basis_gates=basis_gates,
-                                           shots=shots).result())
-                        result_nonclifford.append(
-                            qiskit.execute(rb_nonclifford_circs[seed],
-                                           backend=backend,
-                                           basis_gates=basis_gates,
-                                           shots=shots).result())
-                        if is_purity:
-                            for d in range(npurity):
-                                result_purity[d].append(qiskit.execute(
-                                    rb_purity_circs[seed][d],
-                                    backend=backend,
-                                    basis_gates=basis_gates,
-                                    shots=shots).result())
-
-                    # Verify the generated sequences
-                    for seed in range(rb_opts['nseeds']):
-                        length_vec = rb_opts['length_vector']
-                        for circ_index, vec_len in enumerate(length_vec):
-                            # Verify circuits names
-                            self.assertEqual(
-                                rb_circs[seed][circ_index].name,
-                                'rb_length_%d_seed_%d' % (
-                                    circ_index, seed +
-                                    rb_opts['seed_offset']),
-                                'Error: incorrect circuit name')
-                            self.assertEqual(
-                                rb_original_circs[seed][circ_index].name,
-                                'rb_length_%d_seed_%d' % (
-                                    circ_index, seed),
-                                'Error: incorrect circuit name')
-                            self.assertEqual(
-                                rb_interleaved_circs[seed][circ_index].name,
-                                'rb_interleaved_length_%d_seed_%d' % (
-                                    circ_index, seed),
-                                'Error: incorrect interleaved circuit name')
-                            if is_purity:
-                                for d in range(npurity):
-                                    name_type, _ = self.update_purity_gates(
-                                        npurity, d, rb_opts_purity
-                                        ['rb_pattern'])
-                                    self.assertEqual(
-                                        rb_purity_circs[seed][d]
-                                        [circ_index].name,
-                                        'rb_purity_%s_length_%d_seed_%d' % (
-                                            name_type, circ_index, seed),
-                                        'Error: incorrect purity circuit name')
-
-                            self.verify_circuit(rb_circs[seed][circ_index],
-                                                nq, rb_opts,
-                                                vec_len, result[seed], shots)
-                            self.verify_circuit(rb_original_circs[seed]
-                                                [circ_index],
-                                                nq, rb_opts,
-                                                vec_len,
-                                                result_original[seed], shots)
-                            self.verify_circuit(rb_interleaved_circs[seed]
-                                                [circ_index],
-                                                nq, rb_opts_interleaved,
-                                                vec_len,
-                                                result_interleaved[seed],
-                                                shots,
-                                                is_interleaved=True)
-                            self.verify_circuit(rb_nonclifford_circs[seed]
-                                                [circ_index],
-                                                nq, rb_opts_nonclifford,
-                                                vec_len,
-                                                result_nonclifford[seed], shots)
-                            if is_purity:
-                                self.verify_circuit(rb_purity_circs[seed][0]
-                                                    [circ_index],
-                                                    nq, rb_opts_purity,
-                                                    vec_len, result_purity
-                                                    [0][seed], shots)
-                                # compare the purity RB circuits
-                                # with the original circuit
-                                for d in range(1, npurity):
-                                    self.compare_purity_circuits(
-                                        rb_purity_circs[seed][0][circ_index],
-                                        rb_purity_circs[seed][d][circ_index],
-                                        nq, d, npurity, rb_opts_purity,
-                                        vec_len)
-                            # compare the interleaved RB circuits with
-                            # the original RB circuits
-                            self.compare_interleaved_circuit(
-                                rb_original_circs[seed][circ_index],
-                                rb_interleaved_circs[seed][circ_index],
-                                nq, rb_opts_interleaved, vec_len)
-
-                    self.assertEqual(circ_index, len(rb_circs),
-                                     "Error: additional circuits exist")
-=======
         # See documentation of choose_pattern for the meaning of
         # the different pattern types
         # Choose options for standard (simultaneous) RB:
@@ -604,6 +419,9 @@ class TestRB(unittest.TestCase):
         rb_opts_interleaved = rb_opts.copy()
         rb_opts_interleaved['interleaved_gates'] = \
             self.choose_interleaved_gates(rb_opts['rb_pattern'])
+        # Choose options for Non-Clifford RB:
+        rb_opts_nonclifford = rb_opts.copy()
+        rb_opts_nonclifford['group_gates'] = 'Non-Clifford'
         # Choose options for purity rb
         # no length_multiplier
         rb_opts_purity['length_multiplier'] = 1
@@ -622,6 +440,10 @@ class TestRB(unittest.TestCase):
             rb_original_circs, _, rb_interleaved_circs = \
                 rb.randomized_benchmarking_seq(
                     **rb_opts_interleaved)
+            # Non-Clifford RB sequences:
+            rb_nonclifford_circs, _ = \
+                rb.randomized_benchmarking_seq(
+                    **rb_opts_nonclifford)
             # Purity RB sequences:
             if is_purity:
                 rb_purity_circs, _, npurity = \
@@ -643,6 +465,7 @@ class TestRB(unittest.TestCase):
         result = []
         result_original = []
         result_interleaved = []
+        result_nonclifford = []
         if is_purity:
             result_purity = [[] for d in range(npurity)]
         for seed in range(rb_opts['nseeds']):
@@ -657,6 +480,11 @@ class TestRB(unittest.TestCase):
                                shots=shots).result())
             result_interleaved.append(
                 qiskit.execute(rb_interleaved_circs[seed],
+                               backend=backend,
+                               basis_gates=basis_gates,
+                               shots=shots).result())
+            result_nonclifford.append(
+                qiskit.execute(rb_nonclifford_circs[seed],
                                backend=backend,
                                basis_gates=basis_gates,
                                shots=shots).result())
@@ -716,6 +544,11 @@ class TestRB(unittest.TestCase):
                                     result_interleaved[seed],
                                     shots,
                                     is_interleaved=True)
+                self.verify_circuit(rb_nonclifford_circs[seed]
+                                    [circ_index],
+                                    nq, rb_opts_nonclifford,
+                                    vec_len,
+                                    result_nonclifford[seed], shots)
                 if is_purity:
                     self.verify_circuit(rb_purity_circs[seed][0]
                                         [circ_index],
@@ -739,7 +572,7 @@ class TestRB(unittest.TestCase):
 
         self.assertEqual(circ_index, len(rb_circs),
                          "Error: additional circuits exist")
->>>>>>> master
+
 
     def test_rb_utils(self):
 
