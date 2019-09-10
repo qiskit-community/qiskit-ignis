@@ -155,6 +155,7 @@ class BaseDiscriminationFitter(ABC):
         TODO we may be able to simplify this if we store the number of shots
         TODO in an object like expect_sates
         """
+        pass
 
     @abstractmethod
     def fit(self):
@@ -167,7 +168,7 @@ class BaseDiscriminationFitter(ABC):
         pass
 
 
-class IQDiscriminationFitter(BaseDiscriminationFitter):
+class IQDiscriminationFitter(BaseDiscriminationFitter, ABC):
     """
     Abstract discriminator that implements the data formatting for IQ
     level 1 data.
