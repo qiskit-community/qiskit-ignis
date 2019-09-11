@@ -208,7 +208,7 @@ class TestRB(unittest.TestCase):
         return gatelist, op_index
 
     def verify_circuit(self, circ, nq, rb_opts, vec_len, result, shots,
-                       is_interleaved=False):
+                       is_interleaved=False, is_nonclifford=False):
         '''
         For a single sequence, verifies that it meets the requirements:
         - Executing it on the ground state ends up in the ground state
@@ -225,6 +225,9 @@ class TestRB(unittest.TestCase):
                        when executing all the sequences on the ground state
         :param shots: the number of shots in the simulator execution
         :param is_interleaved: True if this is an interleaved circuit
+        :param is_nonclifford: True if this is a non-clifford circuit
+                               corresponding to measurement of the
+                               |+...+> state
         '''
 
         if not hasattr(rb_opts['length_multiplier'], "__len__"):
@@ -233,9 +236,12 @@ class TestRB(unittest.TestCase):
                     len(rb_opts['rb_pattern']))]
 
         ops = circ.data
-        op_index = 0
         # for each cycle (the sequence should consist of vec_len cycles)
         for _ in range(vec_len):
+            op_index = 0
+            # for non-clifford rb
+            if (is_nonclifford):
+                op_index += nq
             # for each component of the pattern...
             for pat_index in range(len(rb_opts['rb_pattern'])):
                 # for each element...
@@ -555,12 +561,14 @@ class TestRB(unittest.TestCase):
                                     [circ_index],
                                     nq, rb_opts_nonclifford,
                                     vec_len,
-                                    result_nonclifford_Z[seed], shots)
-                #self.verify_circuit(rb_nonclifford_X_circs[seed]
-                #                    [circ_index],
-                #                    nq, rb_opts_nonclifford,
-                #                    vec_len,
-                #                    result_nonclifford_X[seed], shots)
+                                    result_nonclifford_Z[seed],
+                                    shots)
+                self.verify_circuit(rb_nonclifford_X_circs[seed]
+                                    [circ_index],
+                                    nq, rb_opts_nonclifford,
+                                    vec_len,
+                                    result_nonclifford_X[seed],
+                                    shots, is_nonclifford=True)
                 if is_purity:
                     self.verify_circuit(rb_purity_circs[seed][0]
                                         [circ_index],
