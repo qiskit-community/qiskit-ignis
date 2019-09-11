@@ -39,7 +39,7 @@ class TestDiscriminationFilter(unittest.TestCase):
 
     def test_count(self):
 
-        fitter = LinearIQDiscriminator([], [], [], [], None)
+        fitter = LinearIQDiscriminator([], [], [])
         d_filter = DiscriminationFilter(fitter, 2)
 
         raw_counts = d_filter.count(['01', '00', '01', '00', '00', '10'])

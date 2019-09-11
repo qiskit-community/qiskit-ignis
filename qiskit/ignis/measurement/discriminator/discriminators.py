@@ -33,38 +33,34 @@ class BaseDiscriminationFitter(ABC):
     """
 
     def __init__(self, cal_results: Union[Result, List[Result]],
-                 qubit_mask: List[int], expected_states: Union[List[str], str],
+                 qubit_mask: List[int], expected_states: List[str],
                  standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None):
         """
         Args:
-            cal_results: calibration results, Result or list of Result
-            qubit_mask: determines which qubit's level 1 data to use in the
-                discrimination process.
-            expected_states: a list that should have the same length as
-                cal_results. If cal_results is a Result and not a list then
-                expected_states should be a string or a schedule.
-            discriminant: a discriminant from e.g. scikit learn.
-            schedules: The schedules in cal_results or their names. If None
-            all schedules will be used.
+            cal_results (Union[Result, List[Result]]): calibration results,
+                Result or list of Result used to fit the discriminator.
+            qubit_mask (List[int]): determines which qubit's level 1 data to
+                use in the discrimination process.
+            expected_states (List[str]): a list that should have the same
+                length as schedules. All results in cal_results are used if
+                schedules is None. expected_states must have the corresponding
+                length.
+            standardize (bool): if true the discriminator will standardize the
+                xdata using the internal method _scale_data.
+            schedules (Union[List[str], List[Schedule]]): The schedules or a
+                subset of schedules in cal_results used to train the
+                discriminator. The user may also pass the name of the schedules
+                instead of the schedules. If schedules is None, then all the
+                schedules in cal_results are used.
         """
-        if schedules is None:
-            schedules = [_.header.name for _ in cal_results.results]
 
-        # Sanity checks
-        if isinstance(cal_results, list) and isinstance(expected_states, list):
-            if len(cal_results) != len(expected_states):
-                raise QiskitError('Number of input results and assigned '
-                                  'states must be equal.')
+        # Use all results in cal_results if schedules is None
+        if schedules is None:
+            schedules = self._get_schedules(cal_results)
 
         self._expected_state = {}
-        for idx, schedule in enumerate(schedules):
-            if isinstance(schedule, Schedule):
-                name = schedule.name
-            else:
-                name = schedule
-            expected_state = expected_states[idx]
-            self._expected_state[name] = expected_state
+        self._add_expected_states(expected_states, schedules)
 
         # Used to rescale the xdata qubit by qubit.
         self._description = None
@@ -89,7 +85,7 @@ class BaseDiscriminationFitter(ABC):
         """
         Adds the expected state of schedule to self._ydata.
         Args:
-            schedule: schedule or schedule name.
+            schedule (Union[Schedule, str]): schedule or schedule name.
             Used to get the expected state.
         """
         if isinstance(schedule, Schedule):
@@ -97,20 +93,81 @@ class BaseDiscriminationFitter(ABC):
         else:
             self._ydata.append(self._expected_state[schedule])
 
-    def add_data(self, result, refit=True, expected_state=None):
+    def add_data(self, result: Result, expected_states: List[str],
+                 refit: bool = True,
+                 schedules: Union[List[Schedule], List[str]] = None):
         """
         Args:
-            result: the Result obtained from e.g. backend.run().result()
-            recalc: this parameter is irrelevant and only needed for Liskov
-            principle.
-            refit: refit the discriminator if True.
-            expected_state: the expected state of the discriminator.
+            result (Result): a Result containing new data to be used to
+                train the discriminator.
+            expected_states (List[str]): the expected states of the results in
+                result.
+            refit (bool): refit the discriminator if True.
+            schedules (Union[List[Schedule], List[str]]):
         """
-        pass
+        if schedules is None:
+            schedules = self._get_schedules(result)
+
+        self._backend_result_list.append(result)
+        self._add_expected_states(expected_states, schedules)
+        self._schedules.extend(schedules)
+        self._xdata = self.get_xdata(self._backend_result_list, schedules)
+        self._ydata = self.get_ydata(self._backend_result_list, schedules)
+
+        if refit:
+            self.fit()
+
+    def _add_expected_states(self, expected_states: List[str],
+                             schedules: Union[List[Schedule], List[str]]):
+        """
+        Adds the given expected states to self._expected_states.
+        Args:
+            expected_states (List[str]): list of expected states. Must have the
+                same length as the number of schedules.
+            schedules (Union[List[Schedule], List[str]]): schedules or their
+                names corresponding to the expected states.
+        """
+        if len(expected_states) != len(schedules):
+            raise QiskitError('Number of input schedules and assigned '
+                              'states must be equal.')
+
+        for idx, schedule in enumerate(schedules):
+            if isinstance(schedule, Schedule):
+                name = schedule.name
+            else:
+                name = schedule
+            expected_state = expected_states[idx]
+            self._expected_state[name] = expected_state
+
+    @staticmethod
+    def _get_schedules(results: Union[Result, List[Result]]) -> List[str]:
+        """
+        Extracts the names of all Schedules in a Result or a list of Result.
+        Args:
+            results (Union[Result, List[Result]]): the results for which to
+            extract the names,
+        Returns (List[str]):
+            The name of the schedules in results.
+        """
+        schedules = []
+        if isinstance(results, Result):
+            for res in results.results:
+                schedules.append(res.header.name)
+        else:
+            for result in results:
+                schedules.extend([_.header.name for _ in result.results])
+
+        return schedules
 
     @property
     def expected_states(self):
+        """Returns the expected states used to train the discriminator."""
         return self._expected_state
+
+    @property
+    def schedules(self):
+        """Returns the schedules with which the discriminator was fitted."""
+        return self._schedules
 
     @property
     def fitted(self):
@@ -118,7 +175,18 @@ class BaseDiscriminationFitter(ABC):
         return self._fitted
 
     @abstractmethod
-    def _scale_data(self, xdata: List[List[float]], refit=False):
+    def _scale_data(self, xdata: List[List[float]],
+                    refit: bool = False) -> List[List[float]]:
+        """
+        Scales xdata, for instance, by transforming it to zero mean and unit
+        variance data.
+        Args:
+            xdata (List[List[float]]): data as a list of features. Each
+                feature is itself a list.
+            refit (bool): if true than self._scaler is refit using the given
+                xdata.
+        Returns (List[List[float]]): the scaled xdata as a list of features.
+        """
         pass
 
     @abstractmethod
@@ -128,13 +196,14 @@ class BaseDiscriminationFitter(ABC):
         """
         Retrieves feature data (xdata) for the discriminator.
         Args:
-            results: the get_memory() method is used to retrieve the level 1
-                data. If result is a list of Result then the first Result to
-                return the data of schedule in schedules is used.
-            schedules: Either the names of the schedules or the schedules
-                themselves.
-        Returns:
-            x data as a list of lists.
+            results (Union[Result, List[Result]]): the get_memory() method is
+                used to retrieve the level 1 data. If result is a list of
+                Result then the first Result to return the data of schedule in
+                schedules is used.
+            schedules (Union[List[str], List[Schedule]]): Either the names of
+                the schedules or the schedules themselves.
+        Returns (List[List[float]]): data as a list of features. Each feature
+            is a list.
         """
         pass
 
@@ -143,17 +212,13 @@ class BaseDiscriminationFitter(ABC):
                   schedules: Union[List[str], List[Schedule]] = None) \
             -> List[str]:
         """
-        Return the ydata as a List[str]. The number of shots in each
-        ExperimentResult is taken into account so that the length of ydata,
-        i.e. sum_i(schedule_i shots), matches the length of the xdata.
         Args:
-            results: needed to retrieve the number of shots.
-            schedules: the schedules for which to get the ydata.
-        Returns:
-            the y data as a list
-
-        TODO we may be able to simplify this if we store the number of shots
-        TODO in an object like expect_sates
+            results (Union[Result, List[Result]]): results for which to
+                retrieve the y data (i.e. expected states).
+            schedules (Union[List[str], List[Schedule]]): the schedules for
+                which to get the y data.
+        Returns (List[str]): the y data, i.e. expected states. get_ydata is
+            designed to produce y data with the same length as the x data.
         """
         pass
 
@@ -164,7 +229,13 @@ class BaseDiscriminationFitter(ABC):
 
     @abstractmethod
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
-        """ Applies the discriminator to x_data"""
+        """
+        Applies the discriminator to x_data
+        Args:
+            x_data (List[List[float]]): list of features. Each feature is
+                itself a list.
+        Returns (List[str]): the discriminated x_data as a list of labels.
+        """
         pass
 
 
@@ -175,22 +246,43 @@ class IQDiscriminationFitter(BaseDiscriminationFitter, ABC):
     """
 
     def __init__(self, cal_results: Union[Result, List[Result]],
-                 qubit_mask: List[int], expected_states: Union[List[str], str],
+                 qubit_mask: List[int], expected_states: List[str],
                  standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None):
+        """
+        Args:
+            cal_results (Union[Result, List[Result]]): calibration results,
+                Result or list of Result used to fit the discriminator.
+            qubit_mask (List[int]): determines which qubit's level 1 data to
+                use in the discrimination process.
+            expected_states (List[str]): a list that should have the same
+                length as schedules. All results in cal_results are used if
+                schedules is None. expected_states must have the corresponding
+                length.
+            standardize (bool): if true the discriminator will standardize the
+                xdata using the internal method _scale_data.
+            schedules (Union[List[str], List[Schedule]]): The schedules or a
+                subset of schedules in cal_results used to train the
+                discriminator. The user may also pass the name of the schedules
+                instead of the schedules. If schedules is None, then all the
+                schedules in cal_results are used.
+        """
 
         BaseDiscriminationFitter.__init__(self, cal_results, qubit_mask,
                                           expected_states, standardize,
                                           schedules)
 
-    def _scale_data(self, xdata: List[List[float]], refit=False):
+    def _scale_data(self, xdata: List[List[float]],
+                    refit: bool = False) -> List[List[float]]:
         """
-        Scales the features of xdata to have mean zero and unit variance.
+        Scales IQ x data so that it has zero mean and unit variance. This
+        is done using Sklearn.
         Args:
-            xdata: A list of lists containing the IQ data.
-            refit: if True a new scaler is fitted to the given IQ data.
-        Returns:
-            data scaled to have zero mean and unit variance.
+            xdata (List[List[float]]): data as a list of features. Each
+                feature is itself a list.
+            refit (bool): if true than self._scaler is refit using the given
+                xdata.
+        Returns (List[List[float]]): the scaled x data as a list of features.
         """
         if not self._standardize:
             return xdata
@@ -205,12 +297,16 @@ class IQDiscriminationFitter(BaseDiscriminationFitter, ABC):
                   schedules: Union[List[str], List[Schedule]] = None) \
             -> List[List[float]]:
         """
+        Retrieves feature data (xdata) for the discriminator.
         Args:
-            results: qiskit Result of list thereof.
-            schedules:
-        Returns:
-            xdata, the IQ data formatted in a list of lists. Each sublist
-            corresponds to a shot or the average of shots.
+            results (Union[Result, List[Result]]): the get_memory() method is
+                used to retrieve the level 1 data. If result is a list of
+                Result, then the first Result in the list that returns the data
+                of schedule (through get_memory(schedule)) is used.
+            schedules (Union[List[str], List[Schedule]]): Either the names of
+                the schedules or the schedules themselves.
+        Returns (List[List[float]]): data as a list of features. Each feature
+            is a list.
         """
         xdata = []
         if schedules is None:
@@ -237,17 +333,13 @@ class IQDiscriminationFitter(BaseDiscriminationFitter, ABC):
     def get_ydata(self, results: Union[Result, List[Result]],
                   schedules: Union[List[str], List[Schedule]] = None):
         """
-        Return the ydata as a List[str]. The number of shots in each
-        ExperimentResult is taken into account so that the length of ydata,
-        i.e. sum_i(schedule_i shots), matches the length of the xdata.
         Args:
-            results: needed to retrieve the number of shots.
-            schedules: the schedules for which to get the ydata.
-        Returns:
-            the y data as a list
-
-        TODO we may be able to simplify this if we store the number of shots
-        TODO in an object like expect_sates
+            results (Union[Result, List[Result]]): results for which to
+                retrieve the y data (i.e. expected states).
+            schedules (Union[List[str], List[Schedule]]): the schedules for
+                which to get the y data.
+        Returns (List[str]): the y data, i.e. expected states. get_ydata is
+            designed to produce y data with the same length as the x data.
         """
         ydata = []
 
@@ -255,7 +347,6 @@ class IQDiscriminationFitter(BaseDiscriminationFitter, ABC):
             schedules = self._get_schedules(results)
 
         for schedule in schedules:
-
             if isinstance(schedule, Schedule):
                 shed_name = schedule.name
             else:
@@ -274,24 +365,6 @@ class IQDiscriminationFitter(BaseDiscriminationFitter, ABC):
 
         return ydata
 
-    def _get_schedules(self,
-                       results: Union[Result, List[Result]]) -> List[str]:
-        """
-        Args:
-            results:
-        Returns:
-            The name of the schedules in results.
-        """
-        schedules = []
-        if isinstance(results, Result):
-            for res in results.results:
-                schedules.append(res.header.name)
-        else:
-            for result in results:
-                schedules.extend([_.header.name for _ in result.results])
-
-        return schedules
-
     def format_iq_data(self, iq_data: np.ndarray) -> List[List[float]]:
         """
         Takes IQ data obtained from get_memory(), applies the qubit mask
@@ -300,13 +373,12 @@ class IQDiscriminationFitter(BaseDiscriminationFitter, ABC):
         the list is the Q data.
 
         Args:
-            iq_data: data obtained from get_memory()
-        Returns:
-            A list of shots where each entry is a list of IQ points.
+            iq_data (np.ndarray): data obtained from get_memory().
+        Returns (List[List[float]]): A list of shots where each entry is a list
+            of IQ points.
         """
         xdata = []
         if len(iq_data.shape) == 2:  # meas_return 'single' case
-
             for shot in iq_data[:, self._qubit_mask]:
                 shot_i = list(np.real(shot))
                 shot_q = list(np.imag(shot))
@@ -326,21 +398,28 @@ class IQDiscriminationFitter(BaseDiscriminationFitter, ABC):
 class LinearIQDiscriminator(IQDiscriminationFitter):
 
     def __init__(self, cal_results: Union[Result, List[Result]],
-                 qubit_mask: List[int], expected_states: Union[List[str], str],
+                 qubit_mask: List[int], expected_states: List[str],
+                 standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None,
-                 discriminator_parameters: dict = None,
-                 standardize: bool = False):
+                 discriminator_parameters: dict = None):
         """
         Args:
-            cal_results: calibration results, list of qiskit.Result or
-            qiskit.Result
-            qubits: the qubits for which to discriminate.
-            expected_states: a list that should have the same length as
-                cal_results. If cal_results is a Result and not a list then
-                expected_states should be a string or a float or an int.
-            schedules: The schedules in cal_results or their names. If None
-                all schedules will be used.
-            discriminator_parameters: parameters for the discriminator.
+            cal_results (Union[Result, List[Result]]): calibration results,
+                Result or list of Result used to fit the discriminator.
+            qubit_mask (List[int]): determines which qubit's level 1 data to
+                use in the discrimination process.
+            expected_states (List[str]): a list that should have the same
+                length as schedules. All results in cal_results are used if
+                schedules is None. expected_states must have the corresponding
+                length.
+            standardize (bool): if true the discriminator will standardize the
+                xdata using the internal method _scale_data.
+            schedules (Union[List[str], List[Schedule]]): The schedules or a
+                subset of schedules in cal_results used to train the
+                discriminator. The user may also pass the name of the schedules
+                instead of the schedules. If schedules is None, then all the
+                schedules in cal_results are used.
+            discriminator_parameters (dict): parameters for Sklearn's LDA.
         """
         if not discriminator_parameters:
             discriminator_parameters = {}
@@ -372,29 +451,41 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
         self._fitted = True
 
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
-        """ Applies the discriminator to x_data."""
+        """
+        Applies the discriminator to x_data
+        Args:
+            x_data (List[List[float]]): list of features. Each feature is
+                itself a list.
+        Returns (List[str]): the discriminated x_data as a list of labels.
+        """
         return self._lda.predict(x_data)
 
 
 class QuadraticIQDiscriminator(IQDiscriminationFitter):
 
     def __init__(self, cal_results: Union[Result, List[Result]],
-                 qubit_mask: List[int], expected_states: Union[List[str], str],
+                 qubit_mask: List[int], expected_states: List[str],
+                 standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None,
-                 discriminator_parameters: dict = None,
-                 standardize: bool = False):
+                 discriminator_parameters: dict = None):
         """
         Args:
-            cal_results: calibration results, list of qiskit.Result or
-            qiskit.Result
-            qubit_mask: the qubits for which to discriminate.
-            expected_states: a list that should have the same length as
-                cal_results. If cal_results is a Result and not a list then
-                expected_states should be a string or a float or an int.
-            schedules: The schedules in cal_results or their names. If None
-                all schedules will be used.
-            discriminator_parameters: parameters for the discriminator.
-
+            cal_results (Union[Result, List[Result]]): calibration results,
+                Result or list of Result used to fit the discriminator.
+            qubit_mask (List[int]): determines which qubit's level 1 data to
+                use in the discrimination process.
+            expected_states (List[str]): a list that should have the same
+                length as schedules. All results in cal_results are used if
+                schedules is None. expected_states must have the corresponding
+                length.
+            standardize (bool): if true the discriminator will standardize the
+                xdata using the internal method _scale_data.
+            schedules (Union[List[str], List[Schedule]]): The schedules or a
+                subset of schedules in cal_results used to train the
+                discriminator. The user may also pass the name of the schedules
+                instead of the schedules. If schedules is None, then all the
+                schedules in cal_results are used.
+            discriminator_parameters (dict): parameters for Sklearn's LDA.
         """
         if not discriminator_parameters:
             discriminator_parameters = {}
@@ -422,5 +513,11 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
         self._fitted = True
 
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
-        """ Applies the discriminator to x_data."""
+        """
+        Applies the discriminator to x_data
+        Args:
+            x_data (List[List[float]]): list of features. Each feature is
+                itself a list.
+        Returns (List[str]): the discriminated x_data as a list of labels.
+        """
         return self._qda.predict(x_data)
