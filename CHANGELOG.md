@@ -17,15 +17,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [UNRELEASED]
 
+## [0.2.0](https://github.com/Qiskit/qiskit/compare/0.1.1...0.2.0)- 2019-08-22
+
 ### Added
 
-- Interleaved RB
-- Repetition Code for Verification
+- Logging Module (\#153)
+- Purity RB (\#218)
+- Interleaved RB (\#174)
+- Repetition Code for Verification (\#210)
 
 ### Changed
 
-- Updates for Terra Qubit class
-- Added the ability to add arbitrary seeds to RB (not just in order)
+- Apply measurement mitigation in parallel when applied to multiple results (\#240)
+- Add multiple results to measurement mitigation (\#240)
+- Fixed bug in RB fit error
+- Updates for Terra Qubit class (\#200)
+- Added the ability to add arbitrary seeds to RB (not just in order) (\#208)
 - Fix bug in the characterization fitter when selecting a qubit index to fit
 - Improved guess values for RB fitters and enabled the user to input their own guess values
 

@@ -1,0 +1,4 @@
+file_logging: true		# Enables/disables file logging (true/false)
+log_file: ignis_test_log.log	# Name of the file log
+max_size: 1000000		# Max file size (in bytes). 
+max_rotations: 5		# Max number of file rotations

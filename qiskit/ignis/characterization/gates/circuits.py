@@ -53,6 +53,7 @@ def ampcal_1Q_circuits(max_reps, qubits):
         for qind, qubit in enumerate(qubits):
             circ.u2(0.0, 0.0, qr[qubit])
             for _ in range(circ_length):
+                circ.barrier(qr[qubit])
                 circ.u2(0.0, 0.0, qr[qubit])
 
         for qind, qubit in enumerate(qubits):
@@ -95,10 +96,12 @@ def anglecal_1Q_circuits(max_reps, qubits, angleerr=0.0):
                 if angleerr != 0:
                     circ.u1(-2*angleerr, qr[qubit])
                 for _ in range(2):
+                    circ.barrier(qr[qubit])
                     circ.u2(-np.pi/2, np.pi/2, qr[qubit])  # Xp
                 if angleerr != 0:
                     circ.u1(2*angleerr, qr[qubit])
                 for _ in range(2):
+                    circ.barrier(qr[qubit])
                     circ.u2(0.0, 0.0, qr[qubit])  # Yp
 
             if angleerr != 0:
@@ -150,6 +153,7 @@ def ampcal_cx_circuits(max_reps, qubits, control_qubits):
             circ.x(qr[control_qubits[qind]])
             circ.u2(-np.pi/2, np.pi/2, qr[qubit])  # X90p
             for _ in range(circ_length):
+                circ.barrier([qr[control_qubits[qind]], qr[qubit]])
                 circ.cx(qr[control_qubits[qind]], qr[qubit])
 
         for qind, qubit in enumerate(qubits):
@@ -201,6 +205,7 @@ def anglecal_cx_circuits(max_reps, qubits, control_qubits, angleerr=0.0):
             for _ in range(circ_length):
                 if angleerr != 0:
                     circ.u1(-angleerr, qr[qubit])
+                circ.barrier([qr[control_qubits[qind]], qr[qubit]])
                 circ.cx(qr[control_qubits[qind]], qr[qubit])
                 if angleerr != 0:
                     circ.u1(angleerr, qr[qubit])
