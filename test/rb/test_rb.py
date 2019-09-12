@@ -241,7 +241,7 @@ class TestRB(unittest.TestCase):
             op_index = 0
             # for non-clifford rb
             if (is_nonclifford):
-                op_index += nq
+                op_index += 2*nq
             # for each component of the pattern...
             for pat_index in range(len(rb_opts['rb_pattern'])):
                 # for each element...
@@ -340,6 +340,59 @@ class TestRB(unittest.TestCase):
                                      "Error: The interleaved gates in the \
                                      %d qubit interleaved RB are not the same \
                                      as given in interleaved_gates input" % nq)
+
+    def compare_nonclifford_circuit(self, nonclifford_Z_circ, nonclifford_X_circ,
+                                    nq, rb_opts_nonclifford, vec_len):
+        '''
+        Verifies that non-Clifford RB circuits are the same,
+        except of the first and last H gates.
+        :param nonclifford_Z_circ: original rb circuits
+        (meassure |0...0> state)
+        :param nonclifford_X_circ: rb circuits that
+        measure |+...+> state.
+        :param nq: number of qubits
+        :param rb_opts_nonclifford: the specification that
+        generated the set of sequences which includes circ
+        :param vec_len: the expected length vector of circ
+        (one of rb_opts['length_vector'])
+        '''
+
+        if not hasattr(rb_opts_nonclifford['length_multiplier'], "__len__"):
+            rb_opts_nonclifford['length_multiplier'] = [
+                rb_opts_nonclifford['length_multiplier'] for i in range(
+                    len(rb_opts_nonclifford['rb_pattern']))]
+
+        measure_Z_ops = nonclifford_Z_circ.data
+        measure_X_ops = nonclifford_X_circ.data
+
+        #print(vec_len, rb_opts_nonclifford)
+        #print(measure_Z_ops)
+        #print(measure_X_ops)
+
+        # for each cycle (the sequence should consist of vec_len cycles)
+        for _ in range(vec_len+1):
+            op_Z_index = 0
+            op_X_index = 0
+            # for each component of the pattern...
+            for pat_index in range(len(rb_opts_nonclifford['rb_pattern'])):
+                # for each element...
+                for _ in range(rb_opts_nonclifford['length_multiplier'][pat_index]):
+                    # Measurement of the |0...0> state
+                    measure_Z_gatelist, op_Z_index = \
+                        self.ops_to_gates(measure_Z_ops, op_Z_index)
+                    # Measurement of the |+...+> state
+                    measure_X_gatelist, op_X_index = \
+                        self.ops_to_gates(measure_X_ops, op_X_index)
+                    #print (op_Z_index, op_X_index)
+                    #print (measure_Z_gatelist)
+                    #print (measure_X_gatelist)
+                    #print ("--------------------")
+                    # Gates in the non-Clifford RB sequence
+                    # should be equal (except of H-gates)
+                    #self.assertEqual(measure_Z_gatelist, measure_X_gatelist,
+                    #                 "Error: The non-Clifford gates in the \
+                    #                 %d qubit non-Clifford RB are not the same"
+                    #                 % nq)
 
     def compare_purity_circuits(self, original_circ, purity_circ, nq,
                                 purity_ind, npurity, rb_opts_purity, vec_len):
@@ -599,6 +652,11 @@ class TestRB(unittest.TestCase):
                     rb_original_circs[seed][circ_index],
                     rb_interleaved_circs[seed][circ_index],
                     nq, rb_opts_interleaved, vec_len)
+                # compare the non-Clifford RB circuits
+                self.compare_nonclifford_circuit(
+                    rb_nonclifford_Z_circs[seed][circ_index],
+                    rb_nonclifford_X_circs[seed][circ_index],
+                    nq, rb_opts_nonclifford, vec_len)
 
         self.assertEqual(circ_index, len(rb_circs),
                          "Error: additional circuits exist")

@@ -372,8 +372,10 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                 nonclifford_circ = qiskit.QuantumCircuit(qr, cr)
                 for qind, qb in enumerate(qlist_flat):
                     nonclifford_circ.h(qr[qb])
+                    nonclifford_circ.barrier(qr[qb])
                 nonclifford_circ += circ
                 for qind, qb in enumerate(qlist_flat):
+                    nonclifford_circ.barrier(qr[qb])
                     nonclifford_circ.h(qr[qb])
                     nonclifford_circ.measure(qr[qb], cr[qind])
 
