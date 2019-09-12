@@ -530,6 +530,16 @@ class TestRB(unittest.TestCase):
                     'rb_interleaved_length_%d_seed_%d' % (
                         circ_index, seed),
                     'Error: incorrect interleaved circuit name')
+                self.assertEqual(
+                    rb_nonclifford_Z_circs[seed][circ_index].name,
+                    'rb_nonclifford_Z_length_%d_seed_%d' % (
+                        circ_index, seed),
+                    'Error: incorrect non-Clifford circuit name')
+                self.assertEqual(
+                    rb_nonclifford_X_circs[seed][circ_index].name,
+                    'rb_nonclifford_X_length_%d_seed_%d' % (
+                        circ_index, seed),
+                    'Error: incorrect non-Clifford circuit name')
                 if is_purity:
                     for d in range(npurity):
                         name_type, _ = self.update_purity_gates(

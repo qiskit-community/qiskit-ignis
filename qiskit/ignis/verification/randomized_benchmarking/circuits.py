@@ -385,17 +385,17 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     # add measurement for interleaved rb
                     circ_interleaved.measure(qr[qb], cr[qind])
 
-                if group_gates == 'Non-Clifford':
-                    circ.name = 'rb_nonclifford_length_Z_%d_seed_%d' % \
-                                (length_index, seed + seed_offset)
-                nonclifford_circ.name = \
-                    'rb_nonclifford_X_length_%d_seed_%d' % \
-                    (length_index, seed + seed_offset)
-
                 circ.name = 'rb_length_%d_seed_%d' % (length_index,
                                                       seed + seed_offset)
                 circ_interleaved.name = 'rb_interleaved_length_%d_seed_%d' \
                                         % (length_index, seed + seed_offset)
+
+                if group_gates == 'Non-Clifford':
+                    circ.name = 'rb_nonclifford_Z_length_%d_seed_%d' % \
+                                (length_index, seed + seed_offset)
+                nonclifford_circ.name = \
+                    'rb_nonclifford_X_length_%d_seed_%d' % \
+                    (length_index, seed + seed_offset)
 
                 circuits[seed].append(circ)
                 circuits_interleaved[seed].append(circ_interleaved)
