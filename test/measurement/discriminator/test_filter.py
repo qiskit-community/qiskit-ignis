@@ -19,7 +19,7 @@ import qiskit
 from qiskit import Aer
 from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
 from qiskit.result.models import ExperimentResultData
-from qiskit.ignis.measurement.discriminator.discriminators import \
+from qiskit.ignis.measurement.discriminator.iq_discriminators import \
     LinearIQDiscriminator
 import test.utils as utils
 from qiskit.ignis.mitigation.measurement import circuits
