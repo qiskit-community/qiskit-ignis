@@ -13,6 +13,7 @@
 # that they have been altered from the originals.
 from abc import ABC, abstractmethod
 from typing import Union, List
+from sklearn.preprocessing import StandardScaler
 
 from qiskit.exceptions import QiskitError
 from qiskit.result import Result
@@ -168,7 +169,6 @@ class BaseDiscriminationFitter(ABC):
         """True if the discriminator has been fitted to calibration data."""
         return self._fitted
 
-    @abstractmethod
     def _scale_data(self, xdata: List[List[float]],
                     refit: bool = False) -> List[List[float]]:
         """
@@ -181,7 +181,14 @@ class BaseDiscriminationFitter(ABC):
                 xdata.
         Returns (List[List[float]]): the scaled xdata as a list of features.
         """
-        pass
+        if not self._standardize:
+            return xdata
+
+        if not self._scaler or refit:
+            self._scaler = StandardScaler(with_std=True)
+            self._scaler.fit(xdata)
+
+        return self._scaler.transform(xdata)
 
     @abstractmethod
     def get_xdata(self, results: Union[Result, List[Result]],

@@ -11,13 +11,11 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-from abc import ABC
 from typing import Union, List
 
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.preprocessing import StandardScaler
 
 from qiskit.exceptions import QiskitError
 from qiskit.ignis.measurement.discriminator.discriminators import \
@@ -27,7 +25,7 @@ from qiskit.result import Result
 from qiskit.pulse.schedule import Schedule
 
 
-class IQDiscriminationFitter(BaseDiscriminationFitter, ABC):
+class IQDiscriminationFitter(BaseDiscriminationFitter):
     """
     Abstract discriminator that implements the data formatting for IQ
     level 1 data.
@@ -59,27 +57,6 @@ class IQDiscriminationFitter(BaseDiscriminationFitter, ABC):
         BaseDiscriminationFitter.__init__(self, cal_results, qubit_mask,
                                           expected_states, standardize,
                                           schedules)
-
-    def _scale_data(self, xdata: List[List[float]],
-                    refit: bool = False) -> List[List[float]]:
-        """
-        Scales IQ x data so that it has zero mean and unit variance. This
-        is done using Sklearn.
-        Args:
-            xdata (List[List[float]]): data as a list of features. Each
-                feature is itself a list.
-            refit (bool): if true than self._scaler is refit using the given
-                xdata.
-        Returns (List[List[float]]): the scaled x data as a list of features.
-        """
-        if not self._standardize:
-            return xdata
-
-        if not self._scaler or refit:
-            self._scaler = StandardScaler(with_std=True)
-            self._scaler.fit(xdata)
-
-        return self._scaler.transform(xdata)
 
     def get_xdata(self, results: Union[Result, List[Result]],
                   schedules: Union[List[str], List[Schedule]] = None) \
