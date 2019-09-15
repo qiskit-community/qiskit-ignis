@@ -25,9 +25,10 @@ import qiskit
 
 from .Clifford import Clifford
 from .clifford_utils import CliffordUtils as clutils
-from qiskit.ignis.logging import *
+from ...logging import *
 
 logger = IgnisLogging().get_logger(__name__)
+
 
 def handle_length_multiplier(length_multiplier, len_pattern,
                              is_purity=False):
