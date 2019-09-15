@@ -370,13 +370,14 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                 # measure both the ground state |0...0> (circ)
                 # and the |+...+> state (nonclifford_circ)
                 nonclifford_circ = qiskit.QuantumCircuit(qr, cr)
-                for qind, qb in enumerate(qlist_flat):
+                for _, qb in enumerate(qlist_flat):
                     nonclifford_circ.h(qr[qb])
                     nonclifford_circ.barrier(qr[qb])
                 nonclifford_circ += circ
-                for qind, qb in enumerate(qlist_flat):
+                for _, qb in enumerate(qlist_flat):
                     nonclifford_circ.barrier(qr[qb])
                     nonclifford_circ.h(qr[qb])
+                for qind, qb in enumerate(qlist_flat):
                     nonclifford_circ.measure(qr[qb], cr[qind])
 
                 # add measurement for standard rb

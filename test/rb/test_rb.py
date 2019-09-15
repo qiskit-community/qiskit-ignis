@@ -199,6 +199,9 @@ class TestRB(unittest.TestCase):
         gatelist = []
         while ops[op_index][0].name != stop_gate:
             gate = ops[op_index][0].name
+            params = ops[op_index][0].params
+            if gate == 'u1':
+                gate += ' ' + str(params[0])
             for x in ops[op_index][1]:
                 gate += ' ' + str(x.index)
             gatelist.append(gate)
@@ -357,42 +360,43 @@ class TestRB(unittest.TestCase):
         (one of rb_opts['length_vector'])
         '''
 
+        qlist_flat, _, _ = rb.circuits.check_pattern(
+            rb_opts_nonclifford['rb_pattern'])
+
         if not hasattr(rb_opts_nonclifford['length_multiplier'], "__len__"):
             rb_opts_nonclifford['length_multiplier'] = [
                 rb_opts_nonclifford['length_multiplier'] for i in range(
                     len(rb_opts_nonclifford['rb_pattern']))]
 
-        measure_Z_ops = nonclifford_Z_circ.data
-        measure_X_ops = nonclifford_X_circ.data
-
-        #print(vec_len, rb_opts_nonclifford)
-        #print(measure_Z_ops)
-        #print(measure_X_ops)
+        circ_Z_ops = nonclifford_Z_circ.data
+        circ_X_ops = nonclifford_X_circ.data
 
         # for each cycle (the sequence should consist of vec_len cycles)
-        for _ in range(vec_len+1):
+        for _ in range(vec_len):
             op_Z_index = 0
             op_X_index = 0
-            # for each component of the pattern...
-            for pat_index in range(len(rb_opts_nonclifford['rb_pattern'])):
-                # for each element...
-                for _ in range(rb_opts_nonclifford['length_multiplier'][pat_index]):
-                    # Measurement of the |0...0> state
-                    measure_Z_gatelist, op_Z_index = \
-                        self.ops_to_gates(measure_Z_ops, op_Z_index)
-                    # Measurement of the |+...+> state
-                    measure_X_gatelist, op_X_index = \
-                        self.ops_to_gates(measure_X_ops, op_X_index)
-                    #print (op_Z_index, op_X_index)
-                    #print (measure_Z_gatelist)
-                    #print (measure_X_gatelist)
-                    #print ("--------------------")
-                    # Gates in the non-Clifford RB sequence
-                    # should be equal (except of H-gates)
-                    #self.assertEqual(measure_Z_gatelist, measure_X_gatelist,
-                    #                 "Error: The non-Clifford gates in the \
-                    #                 %d qubit non-Clifford RB are not the same"
-                    #                 % nq)
+            # Measurement of the |0...0> state
+            circ_Z_gatelist, op_Z_index = \
+            self.ops_to_gates(circ_Z_ops, op_Z_index, stop_gate='measure')
+            # Measurement of the |+...+> state
+            circ_X_gatelist, op_X_index = \
+            self.ops_to_gates(circ_X_ops, op_X_index, stop_gate='measure')
+            h_gates = []
+            for _, qb in enumerate(qlist_flat):
+                h_gates.append('h %d'%qb)
+                h_gates.append('barrier %d'%qb)
+            circ_Z_gatelist = h_gates + circ_Z_gatelist
+            h_gates = []
+            for _, qb in enumerate(qlist_flat):
+                h_gates.append('barrier %d'%qb)
+                h_gates.append('h %d'%qb)
+            circ_Z_gatelist = circ_Z_gatelist + h_gates
+            # Gates in the non-Clifford RB sequence
+            # should be equal (up to the H-gates)
+            self.assertEqual(circ_Z_gatelist, circ_X_gatelist,
+                             "Error: The non-Clifford gates in the \
+                             %d qubit non-Clifford RB are not the same"
+                             % nq)
 
     def compare_purity_circuits(self, original_circ, purity_circ, nq,
                                 purity_ind, npurity, rb_opts_purity, vec_len):
