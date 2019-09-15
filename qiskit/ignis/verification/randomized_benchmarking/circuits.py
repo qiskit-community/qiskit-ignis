@@ -25,7 +25,9 @@ import qiskit
 
 from .Clifford import Clifford
 from .clifford_utils import CliffordUtils as clutils
+from qiskit.ignis.logging import *
 
+logger = IgnisLogging().get_logger(__name__)
 
 def handle_length_multiplier(length_multiplier, len_pattern,
                              is_purity=False):
@@ -181,6 +183,12 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         Ggroup = Clifford
     else:
         raise ValueError("Unknown group or set of gates.")
+
+    logger.log_to_file(nseeds=nseeds, length_vector=length_vector,
+                       rb_pattern=rb_pattern,
+                       length_multiplier=length_multiplier,
+                       seed_offset=seed_offset, align_cliffs=align_cliffs,
+                       is_purity=is_purity, group_gates=group_gates)
 
     if rb_pattern is None:
         rb_pattern = [[0]]
