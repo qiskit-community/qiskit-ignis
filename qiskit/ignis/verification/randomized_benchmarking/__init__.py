@@ -24,5 +24,6 @@ from .clifford_utils import CliffordUtils
 from .dihedral import CNOTDihedral
 from .dihedral_utils import DihedralUtils
 from .circuits import randomized_benchmarking_seq
-from .fitters import RBFitter, InterleavedRBFitter, PurityRBFitter
+from .fitters import RBFitter, InterleavedRBFitter, PurityRBFitter, \
+    NonCliffordRBFitter
 from . import rb_utils
