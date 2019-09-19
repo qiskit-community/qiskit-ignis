@@ -30,19 +30,32 @@ from qiskit.ignis.mitigation.measurement import circuits
 
 
 class TestDiscriminationFilter(unittest.TestCase):
+    """
+    Test methods of discrimination filters.
+    """
 
     def setUp(self) -> None:
+        """
+        Initialize private variables.
+        """
         self.shots = 10
         self.qubits = [0, 1]
 
     def test_get_base(self):
-
+        """
+        Test the get_base method to see if it can properly identify the number
+        of basis states per quantum element. E.g. second excited level of
+        transmon.
+        """
         expected_states = {'a': '02', 'b': '01', 'c': '00', 'd': '11'}
         base = DiscriminationFilter.get_base(expected_states)
         self.assertEqual(base, 3)
 
     def test_count(self):
-
+        """
+        Test to see if the filter properly converts the result of
+        discriminator.discriminate to a dictionary of counts.
+        """
         fitter = LinearIQDiscriminator([], [], [])
         d_filter = DiscriminationFilter(fitter, 2)
 
@@ -63,7 +76,6 @@ class TestDiscriminationFilter(unittest.TestCase):
         Set-up a discriminator based on simulated data, train it and then
         discriminate the calibration data.
         """
-
         meas_cal, _ = circuits.tensored_meas_cal([[0], [1]])
 
         backend = Aer.get_backend('qasm_simulator')

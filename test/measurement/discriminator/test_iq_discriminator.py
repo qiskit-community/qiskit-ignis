@@ -30,8 +30,16 @@ from qiskit.result.models import ExperimentResultData
 
 
 class TestLinearIQDiscriminator(unittest.TestCase):
+    """
+    Test methods of the IQ discriminators.
+    """
 
     def setUp(self):
+        """
+        Setup internal variables and a fake simulation. Aer is used to get the
+        structure of the qiskit.Result. The IQ data is generated using gaussian
+        random number generators.
+        """
         self.shots = 52
         self.qubits = [0, 1]
 
@@ -53,6 +61,10 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         self.cal_results.results[1].data = ExperimentResultData(memory=excited)
 
     def test_get_xdata(self):
+        """
+        Tests that the discriminator properly retrieves the x data from the
+        Qiskit result.
+        """
         discriminator = LinearIQDiscriminator(self.cal_results,
                                               self.qubits,
                                               ['00', '11'])
@@ -68,6 +80,10 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         self.assertEqual(len(xdata[0]), 4)
 
     def test_get_ydata(self):
+        """
+        Tests that the discriminator properly retrieves the y data from the
+        Qiskit calibration results.
+        """
         discriminator = LinearIQDiscriminator(self.cal_results,
                                               self.qubits,
                                               ['00', '11'])
@@ -83,6 +99,10 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         self.assertEqual(ydata[0], '00')
 
     def test_discrimination(self):
+        """
+        Test that the discriminator can be trained on the simulated data and
+        that it can properly discriminate between ground and excited sates.
+        """
         i0, q0, i1, q1 = 0., -1., 0., 1.
         discriminator = LinearIQDiscriminator(self.cal_results,
                                               self.qubits,
@@ -95,6 +115,10 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         self.assertEqual(ground_predicted[0], '00')
 
     def filter_and_discriminate(self):
+        """
+        Test the process of discriminating and then applying the discriminator
+        using a filter.
+        """
         i0, q0, i1, q1 = 0., -1., 0., 1.
 
         discriminator = LinearIQDiscriminator(self.cal_results,
