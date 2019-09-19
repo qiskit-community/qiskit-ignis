@@ -12,16 +12,20 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""
+Test discrimination filters.
+"""
+
 import unittest
 from operator import getitem
 
+import test.utils as utils
 import qiskit
 from qiskit import Aer
 from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
 from qiskit.result.models import ExperimentResultData
 from qiskit.ignis.measurement.discriminator.iq_discriminators import \
     LinearIQDiscriminator
-import test.utils as utils
 from qiskit.ignis.mitigation.measurement import circuits
 
 
@@ -60,7 +64,7 @@ class TestDiscriminationFilter(unittest.TestCase):
         discriminate the calibration data.
         """
 
-        meas_cal, state_labels = circuits.tensored_meas_cal([[0], [1]])
+        meas_cal, _ = circuits.tensored_meas_cal([[0], [1]])
 
         backend = Aer.get_backend('qasm_simulator')
         job = qiskit.execute(meas_cal, backend=backend, shots=self.shots,
