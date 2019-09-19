@@ -17,6 +17,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [UNRELEASED]
 
+### Added
+
+- Pulse Discriminator (\#238)
+
 ## [0.2.0](https://github.com/Qiskit/qiskit/compare/0.1.1...0.2.0)- 2019-08-22
 
 ### Added
