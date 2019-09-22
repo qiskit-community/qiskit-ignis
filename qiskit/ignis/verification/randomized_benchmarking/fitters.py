@@ -23,6 +23,9 @@ from qiskit import QiskitError
 from qiskit.quantum_info.analysis.average import average_data
 from ..tomography import marginal_counts
 from ...characterization.fitters import build_counts_dict_from_list
+from ...logging.ignis_logging import *
+
+logger = IgnisLogging().get_logger(__name__)
 
 try:
     from matplotlib import pyplot as plt
@@ -382,6 +385,7 @@ class RBFitter(RBFitterBase):
         self._fit[patt_ind] = {'params': params, 'params_err': params_err,
                                'epc': epc, 'epc_err': epc_err}
 
+
     def fit_data(self):
         """
         Fit the RB results to an exponential curve.
@@ -420,6 +424,10 @@ class RBFitter(RBFitterBase):
                                 fit_guess[1]**self._cliff_lengths[patt_ind][0])
 
             self.fit_data_pattern(patt_ind, tuple(fit_guess))
+
+            logger.log_to_file(rb=self.__class__.__name__,
+                               qubits=self._rb_pattern[patt_ind],
+                               **self.fit[patt_ind])
 
     def plot_rb_data(self, pattern_index=0, ax=None,
                      add_label=True, show_plt=True):
@@ -695,6 +703,19 @@ class InterleavedRBFitter(RBFitterBase):
                                               systematic_err_L,
                                           'systematic_err_R':
                                               systematic_err_R})
+
+
+            logger.log_to_file(rb=self.__class__.__name__,
+                               qubits=self._rb_pattern[patt_ind],
+                               #params=self.fit[patt_ind]['params'],
+                               # params_err=self.fit[patt_ind]['params_err'],
+                               # epc=self.fit[patt_ind]['epc'],
+                               # epc_err=self.fit[patt_ind]['epc_err'],
+                               **self._fit_interleaved[patt_ind]
+                               )
+
+
+
 
     def plot_rb_data(self, pattern_index=0, ax=None,
                      add_label=True, show_plt=True):
@@ -1084,6 +1105,10 @@ class PurityRBFitter(RBFitterBase):
             pepc_err = (nrb-1)/nrb * alpha_pur_err / alpha_pur
             self.rbfit_pur.fit[patt_ind]['pepc_err'] = \
                 pepc_err
+
+            logger.log_to_file(rb=self.__class__.__name__,
+                               qubits=self._rb_pattern[patt_ind],
+                               **self.rbfit_pur.fit[patt_ind])
 
     def plot_rb_data(self, pattern_index=0, ax=None,
                      add_label=True, show_plt=True):
