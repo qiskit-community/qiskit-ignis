@@ -13,6 +13,7 @@
 # that they have been altered from the originals.
 from typing import Union, List
 
+from matplotlib.pyplot import axes, subplots, figure
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
@@ -158,6 +159,151 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
             raise PulseError('Unknown measurement return type.')
 
         return xdata
+
+    def plot(self, axs: Union[np.ndarray, axes] = None,
+             show_boundary: bool = False, show_fitting_data: bool = True,
+             flag_misclassified: bool = False) -> (Union[List[axes], axes],
+                                                   figure):
+        """
+        Creates a plot of the data used to fit the discriminator.
+
+        Args:
+            axs (Union[np.ndarray, axes]): the axis to use for the plot. If it
+                is none, the plot method will create its own axis instance. If
+                the number of axis instances provided is less than the number
+                of qubits then only the data for the first len(axs) qubits will
+                be plotted.
+            show_boundary (bool): plot the decision regions if true. Some
+                discriminators may put additional constraints on whether the
+                decision regions are plotted or not.
+            show_fitting_data (bool): if True the x data and labels used to
+                fit the discriminator are shown in the plot.
+            flag_misclassified (bool): plot the misclassified training data
+                points if true.
+        Returns: (Union[List[axes], axes], figure): the axes object used for
+            the plot as well as the figure handle. The figure handle returned
+            is not None only when the figure handle is created by the
+            discriminator's plot method.
+        """
+        n_qubits = len(self._qubit_mask)
+
+        if axs is None:
+            fig, axs = subplots(n_qubits, 1)
+        else:
+            fig = None
+
+        if not isinstance(axs, np.ndarray):
+            axs = np.asarray(axs)
+
+        axs = axs.flatten()
+
+        if len(axs) < n_qubits:
+            raise QiskitError('Not enough axis instances supplied. '
+                              'Please provide one per qubit discriminated.')
+
+        x_data = np.array(self._xdata)
+        y_data = np.array(self._ydata)
+
+        # If only one qubit is present then draw the discrimination region.
+        if show_boundary and len(self._qubit_mask) != 1:
+            raise QiskitError('Background can only be plotted for individual '
+                              'qubit discriminators. Qubit mask has length '
+                              '%i != 1' % len(self._qubit_mask))
+
+        if show_boundary and len(self._qubit_mask) == 1:
+            try:
+                xx, yy = self._get_iq_grid(x_data)
+                zz = self.discriminate(np.c_[xx.ravel(), yy.ravel()])
+                zz = np.array(zz).astype(float).reshape(xx.shape)
+
+                axs[0].contourf(xx, yy, zz, alpha=.2)
+            except ValueError:
+                raise QiskitError('Cannot convert expected state labels to '
+                                  'float.')
+
+        if show_fitting_data:
+            for idx in range(n_qubits):
+                ax = axs[idx]
+                for _, exp_state in self.expected_states.items():
+                    data = x_data[y_data == exp_state]
+                    ax.scatter(data[:, idx], data[:, n_qubits + idx],
+                               label=exp_state, alpha=0.5)
+
+                    if flag_misclassified:
+                        discriminated = np.array(
+                            self.discriminate(self._xdata))
+
+                        misclassified = x_data[discriminated != y_data]
+                        ax.scatter(misclassified[:, idx],
+                                   misclassified[:, n_qubits + idx],
+                                   color='r', alpha=0.5)
+
+                ax.legend(frameon=True)
+
+        for ax in axs:
+            ax.set_xlabel('I (arb. units)')
+            ax.set_ylabel('Q (arb. units)')
+
+        return axs, fig
+
+    @staticmethod
+    def _get_iq_grid(x_data: np.array) -> (np.meshgrid, np.meshgrid):
+        """
+        Create mesh grids used to plot the decision boundary.
+
+        Args:
+            x_data (np.array): IQ data.
+        Returns:
+            xx (np.meshgrid): xx meshgrid for plotting discriminator boundary
+            yy (np.meshgrid): yy meshgrid for plotting discriminator boundary
+        """
+        max_i = np.max(x_data[:, 0])
+        min_i = np.min(x_data[:, 0])
+        max_q = np.max(x_data[:, 1])
+        min_q = np.min(x_data[:, 1])
+
+        spacing = (max_i - min_i) / 100.0
+        xx, yy = np.meshgrid(
+            np.arange(min_i - 10 * spacing, max_i + 10 * spacing, spacing),
+            np.arange(min_q - 10 * spacing, max_q + 10 * spacing, spacing))
+
+        return xx, yy
+
+    def plot_xdata(self, axs: Union[np.ndarray, axes],
+                   results: Union[Result, List[Result]], color: str = None):
+        """
+        Add the relevant IQ data from the Qiskit Result, or list thereof, to
+        the given axes as a scatter plot.
+
+        Args:
+            axs (Union[np.ndarray, axes]): the axis to use for the plot. If
+                the number of axis instances provided is less than the number
+                of qubits then only the data for the first len(axs) qubits will
+                be plotted.
+            results (Union[Result, List[Result]]): the discriminators
+                get_xdata will be used to retrieve the x data from the Result
+                or list of Results.
+            color (str): color of the IQ points in the scatter plot.
+        """
+        if not isinstance(axs, np.ndarray):
+            axs = np.asarray(axs)
+
+        axs = axs.flatten()
+
+        if color is None:
+            color = 'C2'
+
+        n_qubits = len(self._qubit_mask)
+        if len(axs) < n_qubits:
+            raise QiskitError('Not enough axis instances supplied. '
+                              'Please provide one per qubit discriminated.')
+
+        x_data = self.get_xdata(results)
+        data = np.array(x_data)
+
+        for idx in range(n_qubits):
+            axs[idx].scatter(data[:, idx], data[:, n_qubits + idx], alpha=0.5,
+                             color=color)
 
 
 class LinearIQDiscriminator(IQDiscriminationFitter):
