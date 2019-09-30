@@ -162,7 +162,7 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         fig.show()
 
         # Make sure each qubit has a plot.
-        self.assertEquals(len(ax), len(self.qubits))
+        self.assertEqual(len(ax), len(self.qubits))
 
         # Ensure figure handle is not None since we did not supply axes.
         self.assertIsNotNone(fig)
