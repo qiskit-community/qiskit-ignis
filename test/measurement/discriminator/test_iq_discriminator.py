@@ -148,3 +148,29 @@ class TestLinearIQDiscriminator(unittest.TestCase):
 
         self.assertEqual(discriminator.discriminate([[i0, q0]])[0], '0')
         self.assertEqual(discriminator.discriminate([[i1, q1]])[0], '1')
+
+    def test_plot(self):
+        """
+        Unit test to check that the plotting routine works.
+        """
+        discriminator = LinearIQDiscriminator(self.cal_results,
+                                              self.qubits,
+                                              ['0', '1'])
+
+        ax, fig = discriminator.plot()
+
+        fig.show()
+
+        # Make sure each qubit has a plot.
+        self.assertEquals(len(ax), len(self.qubits))
+
+        # Ensure figure handle is not None since we did not supply axes.
+        self.assertIsNotNone(fig)
+
+        # Check that the first collection has as many data points as there
+        # are shots
+        self.assertEqual(len(ax[0].collections[0].get_offsets()), self.shots)
+
+        # Check that there are two collections in the plot. I.e. one per
+        # expected state.
+        self.assertEqual(len(ax[0].collections), 2)
