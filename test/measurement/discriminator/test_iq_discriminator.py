@@ -151,10 +151,9 @@ class TestLinearIQDiscriminator(unittest.TestCase):
 
     def test_plot(self):
         """
-        Unit test to check that the plotting routine works.
+        Unit test to check the plotting routine.
         """
-        discriminator = LinearIQDiscriminator(self.cal_results,
-                                              self.qubits,
+        discriminator = LinearIQDiscriminator(self.cal_results, self.qubits,
                                               ['0', '1'])
 
         ax, fig = discriminator.plot()
