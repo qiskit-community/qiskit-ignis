@@ -385,7 +385,6 @@ class RBFitter(RBFitterBase):
         self._fit[patt_ind] = {'params': params, 'params_err': params_err,
                                'epc': epc, 'epc_err': epc_err}
 
-
     def fit_data(self):
         """
         Fit the RB results to an exponential curve.
@@ -704,18 +703,9 @@ class InterleavedRBFitter(RBFitterBase):
                                           'systematic_err_R':
                                               systematic_err_R})
 
-
             logger.log_to_file(rb=self.__class__.__name__,
                                qubits=self._rb_pattern[patt_ind],
-                               #params=self.fit[patt_ind]['params'],
-                               # params_err=self.fit[patt_ind]['params_err'],
-                               # epc=self.fit[patt_ind]['epc'],
-                               # epc_err=self.fit[patt_ind]['epc_err'],
-                               **self._fit_interleaved[patt_ind]
-                               )
-
-
-
+                               **self._fit_interleaved[patt_ind])
 
     def plot_rb_data(self, pattern_index=0, ax=None,
                      add_label=True, show_plt=True):

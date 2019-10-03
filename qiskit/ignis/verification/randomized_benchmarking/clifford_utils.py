@@ -389,16 +389,21 @@ class CliffordUtils(BasicUtils):
     # --------------------------------------------------------
     # Main function that generates a random clifford gate
     # --------------------------------------------------------
-    def random_gates(self, num_qubits):
+    def random_gates(self, num_qubits, rand_seed=None):
         """
         Pick a random Clifford gate.
 
         Args:
             num_qubits: dimension of the Clifford.
+            rand_seed: seed for the random number generator
 
         Returns:
             A 1 or 2 qubit Clifford gate.
         """
+        if rand_seed is not None:
+            if not isinstance(rand_seed, int):
+                raise TypeError("Random seed number should be an integer")
+            np.random.seed(rand_seed)
 
         if num_qubits == 1:
             cliff_gatelist = self.clifford1_gates(np.random.randint(0, 24))

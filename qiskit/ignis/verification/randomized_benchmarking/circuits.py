@@ -20,6 +20,8 @@ Generates randomized benchmarking sequences
 """
 
 import copy
+import os
+import sys
 import numpy as np
 import qiskit
 
@@ -132,17 +134,18 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 align_cliffs=False,
                                 interleaved_gates=None,
                                 is_purity=False,
-                                group_gates=None):
+                                group_gates=None,
+                                rand_seed=None):
     """
     Get a generic randomized benchmarking sequence
 
     Args:
         nseeds: number of seeds
         length_vector: 'm' length vector of sequence lengths. Must be in
-        ascending order. RB sequences of increasing length grow on top of the
-        previous sequences.
+            ascending order. RB sequences of increasing length grow on top of
+        the previous sequences.
         rb_pattern: A list of the form [[i,j],[k],...] which will make
-        simultaneous RB sequences where
+            simultaneous RB sequences where
         Qi,Qj are a 2Q RB sequence and Qk is a 1Q sequence, etc.
         E.g. [[0,3],[2],[1]] would create RB sequences that are 2Q for Q0/Q3,
         1Q for Q1+Q2
@@ -151,18 +154,20 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         length_multiplier: if this is an array it scales each rb_sequence by
         the multiplier
         seed_offset: What to start the seeds at (e.g. if we
-        want to add more seeds later)
+            want to add more seeds later)
         align_cliffs: If true adds a barrier across all qubits in rb_pattern
         after each set of elements, not necessarily Cliffords
         (note: aligns after each increment of elements including the
         length multiplier so if the multiplier is [1,3] it will barrier
         after 1 element for the first pattern and 3 for the second).
         interleaved_gates: A list of gates of elements that
-        will be interleaved (for interleaved randomized benchmarking)
+            will be interleaved (for interleaved randomized benchmarking)
         The length of the list would equal the length of the rb_pattern.
         is_purity: True only for purity rb (default is False)
-        group_gates: On which group (or gate set) we perform RB
+            group_gates: On which group (or gate set) we perform RB
         (default is the Clifford group)
+        rand_seed: random number generator seed, to be used when getting random
+            gates
 
     Returns:
         circuits: list of lists of circuits for the rb sequences
@@ -185,11 +190,15 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     else:
         raise ValueError("Unknown group or set of gates.")
 
+    rand_seed = int.from_bytes(os.urandom(4), byteorder=sys.byteorder) \
+        if rand_seed is None else rand_seed
+
     logger.log_to_file(nseeds=nseeds, length_vector=length_vector,
                        rb_pattern=rb_pattern,
                        length_multiplier=length_multiplier,
                        seed_offset=seed_offset, align_cliffs=align_cliffs,
-                       is_purity=is_purity, group_gates=group_gates)
+                       is_purity=is_purity, group_gates=group_gates,
+                       rand_seed=rand_seed)
 
     if rb_pattern is None:
         rb_pattern = [[0]]
@@ -245,7 +254,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                 for _ in range(length_multiplier[rb_pattern_index]):
 
                     new_elmnt_gatelist = Gutils.random_gates(
-                        rb_q_num)
+                        rb_q_num, rand_seed)
                     Elmnts[rb_pattern_index] = Gutils.compose_gates(
                         Elmnts[rb_pattern_index], new_elmnt_gatelist)
                     general_circ += replace_q_indices(
