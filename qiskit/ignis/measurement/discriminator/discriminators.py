@@ -244,8 +244,10 @@ class BaseDiscriminationFitter(ABC):
 
     @abstractmethod
     def plot(self, axs: Union[ndarray, axes] = None,
-             show_boundary: bool = False, show_fitting_data: bool = True,
-             flag_misclassified: bool = False) -> (axes, figure):
+             show_boundary: bool = False,
+             show_fitting_data: bool = True,
+             flag_misclassified: bool = False,
+             qubits_to_plot: list = None) -> (Union[List[axes], axes], figure):
         """
         Creates a plot of the data used to fit the discriminator.
 
@@ -262,6 +264,10 @@ class BaseDiscriminationFitter(ABC):
                 fit the discriminator are shown in the plot.
             flag_misclassified (bool): plot the misclassified training data
                 points if true.
+            qubits_to_plot (list): each qubit in this list will receive its
+                own plot. The qubits in qubits to plot must be in the qubit
+                mask. If qubits_to_plot is None then the qubit mask will be
+                used.
         Returns: (Union[List[axes], axes], figure): the axes object used for
             the plot as well as the figure handle. The figure handle returned
             is not None only when the figure handle is created by the

@@ -161,9 +161,10 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
         return xdata
 
     def plot(self, axs: Union[np.ndarray, axes] = None,
-             show_boundary: bool = False, show_fitting_data: bool = True,
-             flag_misclassified: bool = False) -> (Union[List[axes], axes],
-                                                   figure):
+             show_boundary: bool = False,
+             show_fitting_data: bool = True,
+             flag_misclassified: bool = False,
+             qubits_to_plot: list = None) -> (Union[List[axes], axes], figure):
         """
         Creates a plot of the data used to fit the discriminator.
 
@@ -180,15 +181,25 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 fit the discriminator are shown in the plot.
             flag_misclassified (bool): plot the misclassified training data
                 points if true.
+            qubits_to_plot (list): each qubit in this list will receive its
+                own plot. The qubits in qubits to plot must be in the qubit
+                mask. If qubits_to_plot is None then the qubit mask will be
+                used.
         Returns: (Union[List[axes], axes], figure): the axes object used for
             the plot as well as the figure handle. The figure handle returned
             is not None only when the figure handle is created by the
             discriminator's plot method.
         """
-        n_qubits = len(self._qubit_mask)
+        if qubits_to_plot is None:
+            qubits_to_plot = self._qubit_mask
+        else:
+            for q in qubits_to_plot:
+                if q not in self._qubit_mask:
+                    raise QiskitError('Qubit %i is not in discriminators '
+                                      'qubit mask' % q)
 
         if axs is None:
-            fig, axs = subplots(n_qubits, 1)
+            fig, axs = subplots(len(qubits_to_plot), 1)
         else:
             fig = None
 
@@ -197,12 +208,9 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
 
         axs = axs.flatten()
 
-        if len(axs) < n_qubits:
+        if len(axs) < len(qubits_to_plot):
             raise QiskitError('Not enough axis instances supplied. '
                               'Please provide one per qubit discriminated.')
-
-        x_data = np.array(self._xdata)
-        y_data = np.array(self._ydata)
 
         # If only one qubit is present then draw the discrimination region.
         if show_boundary and len(self._qubit_mask) != 1:
@@ -210,32 +218,49 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                               'qubit discriminators. Qubit mask has length '
                               '%i != 1' % len(self._qubit_mask))
 
+        x_data = np.array(self._xdata)
+        y_data = np.array(self._ydata)
+
         if show_boundary and len(self._qubit_mask) == 1:
             try:
                 xx, yy = self._get_iq_grid(x_data)
                 zz = self.discriminate(np.c_[xx.ravel(), yy.ravel()])
                 zz = np.array(zz).astype(float).reshape(xx.shape)
-
                 axs[0].contourf(xx, yy, zz, alpha=.2)
+
             except ValueError:
                 raise QiskitError('Cannot convert expected state labels to '
                                   'float.')
 
+        n_qubits = len(self._qubit_mask)
         if show_fitting_data:
-            for idx in range(n_qubits):
+            for idx, q in enumerate(qubits_to_plot):
+                q_idx = self._qubit_mask.index(q)
                 ax = axs[idx]
+
+                # Different results may have the same expected state.
+                # First merge all the data with the same expected state.
+                data = {}
                 for _, exp_state in self.expected_states.items():
-                    data = x_data[y_data == exp_state]
-                    ax.scatter(data[:, idx], data[:, n_qubits + idx],
+
+                    if exp_state not in data:
+                        data[exp_state] = {'I': [], 'Q': []}
+
+                    dat = x_data[y_data == exp_state]
+                    data[exp_state]['I'].extend(dat[:, q_idx])
+                    data[exp_state]['Q'].extend(dat[:, n_qubits + q_idx])
+
+                # Plot the data by expected state.
+                for exp_state in data:
+                    ax.scatter(data[exp_state]['I'], data[exp_state]['Q'],
                                label=exp_state, alpha=0.5)
 
                     if flag_misclassified:
-                        discriminated = np.array(
-                            self.discriminate(self._xdata))
+                        y_disc = np.array(self.discriminate(self._xdata))
 
-                        misclassified = x_data[discriminated != y_data]
-                        ax.scatter(misclassified[:, idx],
-                                   misclassified[:, n_qubits + idx],
+                        misclassified = x_data[y_disc != y_data]
+                        ax.scatter(misclassified[:, q_idx],
+                                   misclassified[:, n_qubits + q_idx],
                                    color='r', alpha=0.5)
 
                 ax.legend(frameon=True)
