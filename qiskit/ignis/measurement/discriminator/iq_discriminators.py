@@ -164,7 +164,8 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
              show_boundary: bool = False,
              show_fitting_data: bool = True,
              flag_misclassified: bool = False,
-             qubits_to_plot: list = None) -> (Union[List[axes], axes], figure):
+             qubits_to_plot: list = None,
+             title: bool = True) -> (Union[List[axes], axes], figure):
         """
         Creates a plot of the data used to fit the discriminator.
 
@@ -185,6 +186,8 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 own plot. The qubits in qubits to plot must be in the qubit
                 mask. If qubits_to_plot is None then the qubit mask will be
                 used.
+            title (bool): adds a title to each subplot with the number of
+                the qubit.
         Returns: (Union[List[axes], axes], figure): the axes object used for
             the plot as well as the figure handle. The figure handle returned
             is not None only when the figure handle is created by the
@@ -264,6 +267,10 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                                    color='r', alpha=0.5)
 
                 ax.legend(frameon=True)
+
+        if title:
+            for idx, q in enumerate(qubits_to_plot):
+                axs[idx].set_title('Qubit %i' % q)
 
         for ax in axs:
             ax.set_xlabel('I (arb. units)')
