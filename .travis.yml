@@ -62,14 +62,14 @@ matrix:
       dist: xenial
       python: "3.7"
       env: TOXENV=py37
-      sudo: true
       name: "Python 3.7 Tests"
       stage: all_python
-    - python: "3.5"
+    - python: "3.7"
+      dist: xenial
       env: TOXENV=lint
       name: "Linter Checks"
       stage: lint_and_python
-        # OSX, Python 3.5.6 (via pyenv)
+    # OSX, Python 3.5.6 (via pyenv)
     - stage: all_python
       name: "Python 3.5 Tests on OSX"
       <<: *stage_osx
