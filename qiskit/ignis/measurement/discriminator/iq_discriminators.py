@@ -13,7 +13,7 @@
 # that they have been altered from the originals.
 from typing import Union, List
 
-from matplotlib.pyplot import axes, subplots, figure
+from matplotlib import pyplot as plt
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
@@ -160,12 +160,13 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
 
         return xdata
 
-    def plot(self, axs: Union[np.ndarray, axes] = None,
+    def plot(self, axs: Union[np.ndarray, plt.axes] = None,
              show_boundary: bool = False,
              show_fitting_data: bool = True,
              flag_misclassified: bool = False,
              qubits_to_plot: list = None,
-             title: bool = True) -> (Union[List[axes], axes], figure):
+             title: bool = True) -> (Union[List[plt.axes], plt.axes],
+                                     plt.figure):
         """
         Creates a plot of the data used to fit the discriminator.
 
@@ -202,7 +203,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                                       'qubit mask' % q)
 
         if axs is None:
-            fig, axs = subplots(len(qubits_to_plot), 1)
+            fig, axs = plt.subplots(len(qubits_to_plot), 1)
         else:
             fig = None
 
@@ -301,7 +302,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
 
         return xx, yy
 
-    def plot_xdata(self, axs: Union[np.ndarray, axes],
+    def plot_xdata(self, axs: Union[np.ndarray, plt.axes],
                    results: Union[Result, List[Result]], color: str = None):
         """
         Add the relevant IQ data from the Qiskit Result, or list thereof, to
