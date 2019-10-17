@@ -164,7 +164,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
 
         return xdata
 
-    def plot(self, axs = None,
+    def plot(self, axs=None,
              show_boundary: bool = False,
              show_fitting_data: bool = True,
              flag_misclassified: bool = False,
