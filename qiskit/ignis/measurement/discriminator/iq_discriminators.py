@@ -24,6 +24,10 @@ from qiskit.ignis.measurement.discriminator.discriminators import \
 from qiskit.pulse import PulseError
 from qiskit.result import Result
 from qiskit.pulse.schedule import Schedule
+from qiskit.visualization import HAS_MATPLOTLIB
+
+if HAS_MATPLOTLIB:
+    from matplotlib import pyplot as plt
 
 
 class IQDiscriminationFitter(BaseDiscriminationFitter):
@@ -194,6 +198,9 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
             is not None only when the figure handle is created by the
             discriminator's plot method.
         """
+        if not HAS_MATPLOTLIB:
+            raise QiskitError('please install matplotlib')
+
         if qubits_to_plot is None:
             qubits_to_plot = self._qubit_mask
         else:
