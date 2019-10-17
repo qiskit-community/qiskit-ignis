@@ -242,13 +242,12 @@ class BaseDiscriminationFitter(ABC):
         pass
 
     @abstractmethod
-    def plot(self, axs: Union[ndarray, plt.axes] = None,
+    def plot(self, axs = None,
              show_boundary: bool = False,
              show_fitting_data: bool = True,
              flag_misclassified: bool = False,
              qubits_to_plot: list = None,
-             title: bool = True) -> (Union[List[plt.axes], plt.axes],
-                                     plt.figure):
+             title: bool = True):
         """
         Creates a plot of the data used to fit the discriminator.
 
@@ -279,7 +278,7 @@ class BaseDiscriminationFitter(ABC):
         pass
 
     @abstractmethod
-    def plot_xdata(self, axs: Union[ndarray, plt.axes],
+    def plot_xdata(self, axs,
                    results: Union[Result, List[Result]], color: str = None):
         """
         Add the relevant IQ data from the Qiskit Result, or list thereof, to
