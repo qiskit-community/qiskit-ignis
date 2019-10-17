@@ -12,6 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 from abc import ABC, abstractmethod
+from numpy import ndarray
 from typing import Union, List
 from sklearn.preprocessing import StandardScaler
 
@@ -54,6 +55,7 @@ class BaseDiscriminationFitter(ABC):
         if schedules is None:
             schedules = self._get_schedules(cal_results)
 
+        # Dict of form schedule name: expected state
         self._expected_state = {}
         self._add_expected_states(expected_states, schedules)
 
@@ -236,5 +238,60 @@ class BaseDiscriminationFitter(ABC):
             x_data (List[List[float]]): list of features. Each feature is
                 itself a list.
         Returns (List[str]): the discriminated x_data as a list of labels.
+        """
+        pass
+
+    @abstractmethod
+    def plot(self, axs=None,
+             show_boundary: bool = False,
+             show_fitting_data: bool = True,
+             flag_misclassified: bool = False,
+             qubits_to_plot: list = None,
+             title: bool = True):
+        """
+        Creates a plot of the data used to fit the discriminator.
+
+        Args:
+            axs (Union[ndarray, axes]): the axis to use for the plot. If it
+                is none, the plot method will create its own axis instance. If
+                the number of axis instances provided is less than the number
+                of qubits then only the data for the first len(axs) qubits will
+                be plotted.
+            show_boundary (bool): plot the decision regions if true. Some
+                discriminators may put additional constraints on whether the
+                decision regions are plotted or not.
+            show_fitting_data (bool): if True the x data and labels used to
+                fit the discriminator are shown in the plot.
+            flag_misclassified (bool): plot the misclassified training data
+                points if true.
+            qubits_to_plot (list): each qubit in this list will receive its
+                own plot. The qubits in qubits to plot must be in the qubit
+                mask. If qubits_to_plot is None then the qubit mask will be
+                used.
+            title (bool): adds a title to each subplot with the number of
+                the qubit.
+        Returns: (Union[List[axes], axes], figure): the axes object used for
+            the plot as well as the figure handle. The figure handle returned
+            is not None only when the figure handle is created by the
+            discriminator's plot method.
+        """
+        pass
+
+    @abstractmethod
+    def plot_xdata(self, axs,
+                   results: Union[Result, List[Result]], color: str = None):
+        """
+        Add the relevant IQ data from the Qiskit Result, or list thereof, to
+        the given axes as a scatter plot.
+
+        Args:
+            axs (Union[ndarray, axes]): the axis to use for the plot. If
+                the number of axis instances provided is less than the number
+                of qubits then only the data for the first len(axs) qubits will
+                be plotted.
+            results (Union[Result, List[Result]]): the discriminators
+                get_xdata will be used to retrieve the x data from the Result
+                or list of Results.
+            color (str): color of the IQ points in the scatter plot.
         """
         pass
