@@ -13,7 +13,6 @@
 # that they have been altered from the originals.
 from typing import Union, List
 
-from matplotlib import pyplot as plt
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
@@ -24,10 +23,11 @@ from qiskit.ignis.measurement.discriminator.discriminators import \
 from qiskit.pulse import PulseError
 from qiskit.result import Result
 from qiskit.pulse.schedule import Schedule
-from qiskit.visualization import HAS_MATPLOTLIB
-
-if HAS_MATPLOTLIB:
+try:
     from matplotlib import pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
 
 
 class IQDiscriminationFitter(BaseDiscriminationFitter):
