@@ -103,7 +103,7 @@ matrix:
         - twine upload dist/qiskit*
 
 language: python
-install: pip install -U tox pip
+install: pip install -U tox pip virtualenv
 script:
   - tox
 

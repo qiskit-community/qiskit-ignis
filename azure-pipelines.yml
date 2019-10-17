@@ -32,7 +32,7 @@ steps:
     displayName: Install Anaconda packages
   - script: |
       call activate qiskit-ignis
-      python -m pip install --upgrade pip
+      python -m pip install --upgrade pip virtualenv
       pip install tox
       tox -e%TOXENV%
     displayName: 'Install dependencies and run tests'
