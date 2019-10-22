@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2019, IBM.
+# This code is part of Qiskit.
 #
-# This source code is licensed under the Apache License, Version 2.0 found in
-# the LICENSE.txt file in the root directory of this source tree.
-
+# (C) Copyright IBM 2019.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 # pylint: disable=no-name-in-module
 
 """
@@ -72,7 +78,8 @@ class TestT2Star(unittest.TestCase):
         backend_result = qiskit.execute(
             circs, backend, shots=shots,
             backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model).result()
+            noise_model=noise_model,
+            optimization_level=0).result()
 
         initial_t2 = expected_t2
         initial_a = 0.5
@@ -93,7 +100,8 @@ class TestT2Star(unittest.TestCase):
             circs_osc, backend,
             shots=shots,
             backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model).result()
+            noise_model=noise_model,
+            optimization_level=0).result()
 
         initial_a = 0.5
         initial_c = 0.5
@@ -141,7 +149,8 @@ class TestT1(unittest.TestCase):
             circs, backend,
             shots=shots,
             backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model).result()
+            noise_model=noise_model,
+            optimization_level=0).result()
 
         initial_t1 = expected_t1
         initial_a = 1
@@ -184,7 +193,8 @@ class TestT2(unittest.TestCase):
             circs, backend,
             shots=shots,
             backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model).result()
+            noise_model=noise_model,
+            optimization_level=0).result()
 
         initial_t2 = expected_t2
         initial_a = 1
@@ -230,7 +240,8 @@ class TestZZ(unittest.TestCase):
         # For demonstration purposes split the execution into two jobs
         backend_result = qiskit.execute(circs, backend,
                                         shots=shots,
-                                        noise_model=noise_model).result()
+                                        noise_model=noise_model,
+                                        optimization_level=0).result()
 
         initial_a = 0.5
         initial_c = 0.5
@@ -297,14 +308,14 @@ class TestCals(unittest.TestCase):
         noise_model = NoiseModel()
         noise_model.add_all_qubit_quantum_error(error, 'u2')
 
-        initial_theta = 0.02
+        initial_theta = 0.18
         initial_c = 0.5
 
         fit = AmpCalFitter(self.run_sim(noise_model), xdata, self._qubits,
                            fit_p0=[initial_theta, initial_c],
                            fit_bounds=([-np.pi, -1],
                                        [np.pi, 1]))
-
+        print(fit.angle_err(0))
         self.assertAlmostEqual(fit.angle_err(0), 0.1, 2)
 
     def test_anglecal1Q(self):
@@ -316,7 +327,7 @@ class TestCals(unittest.TestCase):
         self._circs, xdata = anglecal_1Q_circuits(self._maxrep, self._qubits,
                                                   angleerr=0.1)
 
-        initial_theta = 0.02
+        initial_theta = 0.18
         initial_c = 0.5
 
         fit = AngleCalFitter(self.run_sim([]), xdata, self._qubits,
@@ -347,7 +358,7 @@ class TestCals(unittest.TestCase):
         noise_model = NoiseModel()
         noise_model.add_nonlocal_quantum_error(error, 'cx', [1, 0], [0, 1])
 
-        initial_theta = 0.02
+        initial_theta = 0.18
         initial_c = 0.5
 
         fit = AmpCalCXFitter(self.run_sim(noise_model), xdata, self._qubits,
@@ -369,7 +380,7 @@ class TestCals(unittest.TestCase):
                                                   self._controls,
                                                   angleerr=0.1)
 
-        initial_theta = 0.02
+        initial_theta = 0.18
         initial_c = 0.5
 
         fit = AngleCalCXFitter(self.run_sim([]), xdata, self._qubits,
