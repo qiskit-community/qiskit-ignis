@@ -12,10 +12,19 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Exceptions for errors raised by Ignis characterization module."""
 
-"""
-Characterization module
-"""
+from qiskit.exceptions import QiskitError
 
-from .fitters import BaseCoherenceFitter, BaseGateFitter
-from .exceptions import CharacterizationError
+
+class CharacterizationError(QiskitError):
+    """Errors raised by the characterization module."""
+
+    def __init__(self, *message):
+        """Set the error message."""
+        super().__init__(*message)
+        self.message = ' '.join(message)
+
+    def __str__(self):
+        """Return the message."""
+        return repr(self.message)
