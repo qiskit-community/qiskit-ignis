@@ -129,7 +129,9 @@ class CRFitter:
         Phys. Rev. A 93, 060302 (2016).
 
         Args:
-
+            backend_result: experimental result to analyze.
+            t_qubit: index of target qubit.
+            cr_times: list of CR pulse duration in sec for Rabi experiments.
         """
         self.t_qubit = t_qubit
         self.cr_times = cr_times
