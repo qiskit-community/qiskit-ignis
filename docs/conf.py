@@ -114,3 +114,5 @@ html_theme = 'sphinx_rtd_theme'  # use the theme in subdir 'theme'
 
 html_sidebars = {'**': ['globaltoc.html']}
 html_last_updated_fmt = '%Y/%m/%d'
+
+autoclass_content = 'both'
