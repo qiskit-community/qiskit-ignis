@@ -83,14 +83,14 @@ def cr_tomography_schedules(c_qubit: int,
     for rabi_sched in rabi_schedules:
         for basis, meas_sched in meas_basis.items():
             for c_state in (0, 1):
-                sched = pulse.Schedule(name='%d,%s,%d' % (rabi_sched.name, basis, c_state))
+                sched = pulse.Schedule(name='%s,%s,%d' % (rabi_sched.name, basis, c_state))
                 # flip control qubit
                 if c_state:
-                    sched = sched.insert(0, flip_ctrl)
+                    sched = sched.union((0, flip_ctrl))
                 # add cross resonance schedule
-                sched = sched.insert(flip_ctrl.duration + buffer, rabi_sched)
+                sched = sched.union((flip_ctrl.duration + buffer, rabi_sched))
                 # add measurement
-                sched = sched.insert(sched.duration + buffer, meas_sched)
+                sched = sched.union((sched.duration + buffer, meas_sched))
 
                 schedules.append(sched)
 
@@ -145,20 +145,20 @@ def cr1_rabi_schedules(c_qubit: int,
     for index, cr_sample in enumerate(cr_samples):
         sched = pulse.Schedule(name='%d' % index)
 
-        cr_sched = pulse_lib.gaussian_square(duration=cr_sample,
+        cr_pulse = pulse_lib.gaussian_square(duration=cr_sample,
                                              amp=cr_amp,
                                              sigma=sigma,
                                              risefall=risefall)
         if cancellation_amp:
-            can_sched = pulse_lib.gaussian_square(duration=cr_sample,
+            can_pulse = pulse_lib.gaussian_square(duration=cr_sample,
                                                   amp=cancellation_amp,
                                                   sigma=sigma,
                                                   risefall=risefall)
         else:
-            can_sched = pulse.commands.Delay(cr_sample)
+            can_pulse = pulse.commands.Delay(cr_sample)
 
-        sched.insert(0, cr_sched(cr_drive))
-        sched.insert(0, can_sched(t_drive))
+        sched = sched.union((0, cr_pulse(cr_drive)))
+        sched = sched.union((0, can_pulse(t_drive)))
 
         schedules.append(sched)
 
@@ -221,34 +221,35 @@ def cr2_rabi_schedules(c_qubit: int,
         sched = pulse.Schedule(name='%d' % index)
         half_cr_sample = int(0.5 * cr_sample)
 
-        cr_sched_p = pulse_lib.gaussian_square(duration=half_cr_sample,
+        cr_pulse_p = pulse_lib.gaussian_square(duration=half_cr_sample,
                                                amp=cr_amp,
                                                sigma=sigma,
                                                risefall=risefall)
-        cr_sched_m = pulse_lib.gaussian_square(duration=half_cr_sample,
+        cr_pulse_m = pulse_lib.gaussian_square(duration=half_cr_sample,
                                                amp=-cr_amp,
                                                sigma=sigma,
                                                risefall=risefall)
 
         if cancellation_amp:
-            can_sched_p = pulse_lib.gaussian_square(duration=half_cr_sample,
+            can_pulse_p = pulse_lib.gaussian_square(duration=half_cr_sample,
                                                     amp=cancellation_amp,
                                                     sigma=sigma,
                                                     risefall=risefall)
-            can_sched_m = pulse_lib.gaussian_square(duration=half_cr_sample,
+            can_pulse_m = pulse_lib.gaussian_square(duration=half_cr_sample,
                                                     amp=-cancellation_amp,
                                                     sigma=sigma,
                                                     risefall=risefall)
         else:
-            can_sched_p = pulse.commands.Delay(half_cr_sample)
-            can_sched_m = pulse.commands.Delay(half_cr_sample)
+            can_pulse_p = pulse.commands.Delay(half_cr_sample)
+            can_pulse_m = pulse.commands.Delay(half_cr_sample)
 
-        sched.insert(0, cr_sched_p(cr_drive))
-        sched.insert(0, can_sched_p(t_drive))
-        sched.insert(sched.duration + buffer, echo_pi)
-        sched.insert(sched.duration + buffer, cr_sched_m(cr_drive))
-        sched.insert(sched.duration + buffer, can_sched_m(t_drive))
-        sched.insert(sched.duration + buffer, echo_pi)
+        sched = sched.union((0, cr_pulse_p(cr_drive)))
+        sched = sched.union((0, can_pulse_p(t_drive)))
+        sched = sched.union((sched.duration + buffer, echo_pi))
+        t_echo = sched.duration
+        sched = sched.union((t_echo + buffer, cr_pulse_m(cr_drive)))
+        sched = sched.union((t_echo + buffer, can_pulse_m(t_drive)))
+        sched = sched.union((sched.duration + buffer, echo_pi))
 
         schedules.append(sched)
 

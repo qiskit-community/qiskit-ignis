@@ -194,7 +194,7 @@ class CRFitter:
                         args=(res_x0, res_y0, res_z0, self.cr_times),
                         **fitter_kwargs)
         res1 = minimize(fun=fit_func, x0=fit1,
-                        args=(res_x0, res_y0, res_z0, self.cr_times),
+                        args=(res_x1, res_y1, res_z1, self.cr_times),
                         **fitter_kwargs)
 
         self._vec0 = res0.x
@@ -233,7 +233,7 @@ class CRFitter:
         except ImportError:
             raise CharacterizationError('matplotlib is not installed.')
 
-        fig = plt.figure()
+        fig = plt.figure(figsize=(15, 3))
 
         ax_x = fig.add_subplot(131)
         ax_y = fig.add_subplot(132)
@@ -276,12 +276,12 @@ class CRFitter:
 
             ts *= 1e9
 
-            ax_x.plot(ts, xs0, color='b:')
-            ax_y.plot(ts, ys0, color='b:')
-            ax_z.plot(ts, zs0, color='b:')
-            ax_x.plot(ts, xs1, color='r:')
-            ax_y.plot(ts, ys1, color='r:')
-            ax_z.plot(ts, zs1, color='r:')
+            ax_x.plot(ts, xs0, 'b:')
+            ax_y.plot(ts, ys0, 'b:')
+            ax_z.plot(ts, zs0, 'b:')
+            ax_x.plot(ts, xs1, 'r:')
+            ax_y.plot(ts, ys1, 'r:')
+            ax_z.plot(ts, zs1, 'r:')
 
         ax_x.set_xlim(0, max(cr_times))
         ax_y.set_xlim(0, max(cr_times))
@@ -316,7 +316,7 @@ class CRFitter:
 
         from qiskit.visualization.bloch import Bloch
 
-        fig = plt.figure()
+        fig = plt.figure(figsize=(10, 5))
 
         ax_state0 = fig.add_subplot(121, projection='3d')
         ax_state1 = fig.add_subplot(122, projection='3d')
@@ -377,9 +377,9 @@ class CRFitter:
                         expv += val
                 expv /= sum(counts.values())
 
-                if c_state == '0':
+                if c_state == 0:
                     expvs_c0[index] = expv
-                if c_state == '1':
+                if c_state == 1:
                     expvs_c1[index] = expv
 
         return expvs_c0, expvs_c1
