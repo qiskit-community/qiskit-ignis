@@ -16,13 +16,15 @@
 Fitters for hamiltonian parameters
 """
 
+from typing import List, Optional, Tuple, Dict
+
 import numpy as np
+from qiskit.ignis.characterization import CharacterizationError
+from qiskit.result import Result
 from scipy.linalg import expm, norm
 from scipy.optimize import minimize
+
 from .. import BaseCoherenceFitter
-from qiskit.result import Result
-from typing import List, Optional, Tuple, Dict
-from qiskit.ignis.characterization import CharacterizationError
 
 
 class ZZFitter(BaseCoherenceFitter):

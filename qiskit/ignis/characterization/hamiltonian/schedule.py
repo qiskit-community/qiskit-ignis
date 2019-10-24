@@ -16,15 +16,16 @@
 Schedule generation for measuring hamiltonian parametes
 """
 
+from typing import List, Tuple, Optional, Union
+
 import numpy as np
+import qiskit.pulse.pulse_lib as pulse_lib
+from math import pi
 from qiskit import pulse
+from qiskit.ignis.characterization import CharacterizationError
+from qiskit.providers import BaseBackend
 from qiskit.pulse import CmdDef, Schedule, PulseError
 from qiskit.pulse.channels import Channel
-import qiskit.pulse.pulse_lib as pulse_lib
-from qiskit.providers import BaseBackend
-from typing import List, Tuple, Optional, Union
-from math import pi
-from qiskit.ignis.characterization import CharacterizationError
 
 
 def cr_tomography_schedules(c_qubit: int,
