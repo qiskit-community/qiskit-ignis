@@ -19,4 +19,4 @@ Hamiltonian parameters module
 
 # Measurement correction functions
 from .circuits import zz_circuits
-from .fitters import ZZFitter
+from .fitters import ZZFitter, CRFitter
