@@ -27,11 +27,11 @@ from math import pi
 from qiskit.ignis.characterization import CharacterizationError
 
 
-def cr_schedules(c_qubit: int,
-                 t_qubit: int,
-                 backend: BaseBackend,
-                 rabi_schedules: List[Schedule],
-                 cmd_def: Optional[CmdDef] = None) -> List[Schedule]:
+def cr_tomography_schedules(c_qubit: int,
+                            t_qubit: int,
+                            backend: BaseBackend,
+                            rabi_schedules: List[Schedule],
+                            cmd_def: Optional[CmdDef] = None) -> List[Schedule]:
     """
     Generate `Schedule`s for measuring CR Hamiltonian [1].
     Measuring CR Rabi pulse schedule in all Pauli Basis with control qubit states of both 0 and 1.
