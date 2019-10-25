@@ -471,12 +471,10 @@ class BaseGateFitter(BaseFitter):
 
 
 def build_counts_dict_from_list(count_list):
-
     """
     Add dictionary counts together
 
     """
-
     if len(count_list) == 1:
         return count_list[0]
 
