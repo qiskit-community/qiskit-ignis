@@ -418,15 +418,16 @@ class BConfig:
     def get_ghz_simple(self, n, extent='full'):
         '''
         Get simple GHZ circuit with measurement
+
+        Args:
+           n: number of qubits
+           extent ('full', 'one'): Whether to append full measurement, or only on the first qubit
+        Returns:
+           A GHZ Circuit
         '''
 
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
-
-#         cla = ClassicalRegister(n,'c')
-#         meas = QuantumCircuit(q,cla)
-#         meas.barrier()
-#         meas.measure(q,cla)
 
         meas = self.get_ghz_measurement(n, extent)
         meas = qiskit.compiler.transpile(meas,
