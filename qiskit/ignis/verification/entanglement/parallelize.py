@@ -2,15 +2,15 @@
 
 '''
 In this package, there are three modules, linear.py,
-parallellize.py, and analysis.py.It may be more suitable
+parallellize.py, and analysis.py. It may be more suitable
 to put these in Terra rather than Ignis. The most
 important module, parallellize.py provides methods to
 parallellize CNOT gates in the preparation of the GHZ State,
-which results to the GHZ State having a much higher fidelity
+which results in the GHZ State having a much higher fidelity
 then a normal "linear" CNOT gate preparation of the
 GHZ State. Additionally, there are methods within parallelize.py
 that configure different characterization tests for the
-GHZ State, including Multiple Quantum Coherences (MQC),
+GHZ State, including Multiple Quantum Coherence (MQC),
 Parity Oscillations (PO), and Quantum Tomography.
 '''
 
@@ -24,6 +24,7 @@ class BConfig:
     with parallellized CNOT gates to increase fidelity
     '''
 
+#yn: used - reviewed
     def __init__(self, backend, indicator=True):
         self.nodes = {}
         self.backend = backend
@@ -31,6 +32,7 @@ class BConfig:
         self.add_nodes()
         self.indicator = indicator
 
+#yn: used - reviewed
     def add_nodes(self):
         '''
         Adds nodes to the dictionary based on coupling map
@@ -41,6 +43,7 @@ class BConfig:
         for i in range(len(self.cmap_calib())):
             self.nodes[self.cmap_calib()[i][0]].append(self.cmap_calib()[i][1])
 
+#yn: used - reviewed
     def cmap_calib(self):
         '''
         Only intended for public devices (doubling and reversing
@@ -147,6 +150,7 @@ class BConfig:
         newchildrenlist = [a[0][0] for a in ss]
         return newchildrenlist
 
+#yn: used - continue here
     def get_tier_dict(self):
         '''
         Take the nodes of the BConfig to create a Tier Dictionary,
@@ -154,6 +158,10 @@ class BConfig:
         and the values are the connections following pattern of:
         [controlled qubit, NOT qubit]. Thus the
         backend's GHZ state is parallelized.
+
+        Args:
+        Returns:
+           Tier dictionary - [step in process, control-target connection]. Facilitates parallelized GHZ circuits
         '''
 
         tier = {}
@@ -205,16 +213,21 @@ class BConfig:
 
         return tier
 
+#yn: used
     def get_ghz_layout(self, n, transpiled=True, barriered=True):
         '''
         Feeds the Tier Dict of the backend to create a basic
-        qiskit GHZ circuit with no mesaurement;
-        Can also toggle on/off transpilation,
-        which is useful for Tomography. Also,
-        the barriered argument barriers each "step" of CNOT gates
-        '''
+        qiskit GHZ circuit with no measurement;
 
-        tierdict = self.get_tier_dict()
+        Args:
+           n: number of qubits
+           transpiled: toggle on/off transpilation which is useful for tomography
+           barriered: yes/no whether to barrier each step of CNOT gates
+        Returns:
+           A GHZ Circuit
+       '''
+
+        tierdict = self.get_tier_dict() #yn: here
         q = QuantumRegister(n, 'q')
         circ = QuantumCircuit(q)
         circ.h(q[0])
@@ -250,6 +263,7 @@ class BConfig:
 
         return circ, initial_layout
 
+#yn: used
     def get_ghz_measurement(self, n, extent):
         '''
         Creates a measurement circuit that can toggle
@@ -307,11 +321,18 @@ class BConfig:
 
         return new_circ, initial_layout
 
+#yn: used
     def get_ghz_mqc_para(self, n, extent='full'):
         '''
         Get a parametrized MQC circuit.
         Remember that get_counts() method accepts
         an index now, not a circuit
+
+        Args:
+           n: number of qubits
+           extent ('full', 'one'): Whether to append full measurement, or only on the first qubit
+        Returns:
+           A GHZ Circuit
         '''
 
         circ, initial_layout = self.get_ghz_layout(n)
@@ -415,6 +436,7 @@ class BConfig:
 
         return new_circ, [delta, deltaneg], initial_layout
 
+#yn: used
     def get_ghz_simple(self, n, extent='full'):
         '''
         Get simple GHZ circuit with measurement
