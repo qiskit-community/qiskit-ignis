@@ -321,7 +321,7 @@ class BConfig:
 
         return new_circ, initial_layout
 
-#yn: used
+#yn: used 
     def get_ghz_mqc_para(self, n, extent='full'):
         '''
         Get a parametrized MQC circuit.
