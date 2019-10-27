@@ -36,36 +36,43 @@ class RBFitterBase(ABC):
         Abstract base class (ABS) for fitters for randomized benchmarking
     """
 
+    @property
     @abstractmethod
     def raw_data(self):
         """Return raw data."""
         return
 
+    @property
     @abstractmethod
     def cliff_lengths(self):
         """Return clifford lengths."""
         return
 
+    @property
     @abstractmethod
     def ydata(self):
         """Return ydata (means and std devs)."""
         return
 
+    @property
     @abstractmethod
     def fit(self):
         """Return fit."""
         return
 
+    @property
     @abstractmethod
     def rb_fit_fun(self):
         """Return the function rb_fit_fun."""
         return
 
+    @property
     @abstractmethod
     def seeds(self):
         """Return the number of loaded seeds."""
         return
 
+    @property
     @abstractmethod
     def results(self):
         """Return all the results."""
@@ -730,17 +737,15 @@ class InterleavedRBFitter(RBFitterBase):
                     marker='+')
 
         # Plot the fit
-        ax.plot(xdata,
-                self.rbfit_std.rb_fit_fun(xdata,
-                                          *self.fit[0]
-                                          [pattern_index]['params']),
+        std_fit_function = self.rbfit_std.rb_fit_fun
+        int_fit_function = self.rbfit_int.rb_fit_fun
+        ax.plot(xdata, std_fit_function(xdata,
+                                        *self.fit[0][pattern_index]['params']),
                 color='blue', linestyle='-', linewidth=2,
                 label='Standard RB')
         ax.tick_params(labelsize=14)
-        ax.plot(xdata,
-                self.rbfit_int.rb_fit_fun(xdata,
-                                          *self.fit[1]
-                                          [pattern_index]['params']),
+        ax.plot(xdata, int_fit_function(xdata,
+                                        *self.fit[1][pattern_index]['params']),
                 color='red', linestyle='-', linewidth=2,
                 label='Interleaved RB')
         ax.tick_params(labelsize=14)

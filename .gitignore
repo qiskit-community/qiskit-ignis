@@ -24,6 +24,9 @@ qiskit/ignis/examples/.ipynb_checkpoints/
 venv/
 ENV/
 
+#IDE
+.idea
+
 *.pyc
 
 *-checkpoint.ipynb
