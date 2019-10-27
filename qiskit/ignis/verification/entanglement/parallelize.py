@@ -264,7 +264,7 @@ class BConfig:
         return circ, initial_layout
 
 #yn: used
-    def get_ghz_measurement(self, n, extent):
+    def get_measurement_circ(self, n, extent):
         '''
         Creates a measurement circuit that can toggle
         between measuring the control qubit
@@ -312,7 +312,7 @@ class BConfig:
 #         meas.barrier()
 #         meas.measure(q,cla)
 
-        meas = self.get_ghz_measurement(n, extent)
+        meas = self.get_measurement_circ(n, extent)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -356,7 +356,7 @@ class BConfig:
 #         meas.barrier()
 #         meas.measure(q,cla)
 
-        meas = self.get_ghz_measurement(n, extent)
+        meas = self.get_measurement_circ(n, extent)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -372,7 +372,7 @@ class BConfig:
 
         if extent != 'full':
             raise Exception("Only 'full' argument can be accepted",
-                            " for extent in Parity Oscillation circuit")
+                            " for measure in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
         rotate = QuantumCircuit(q)
@@ -389,7 +389,7 @@ class BConfig:
 #         meas.barrier()
 #         meas.measure(q,cla)
 
-        meas = self.get_ghz_measurement(n, extent)
+        meas = self.get_measurement_circ(n, extent)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -407,7 +407,7 @@ class BConfig:
 
         if extent != 'full':
             raise Exception("Only 'full' argument can be accepted",
-                            " for extent in Parity Oscillation circuit")
+                            " for measure in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
         rotate = QuantumCircuit(q)
@@ -428,7 +428,7 @@ class BConfig:
 #         meas.barrier()
 #         meas.measure(q,cla)
 
-        meas = self.get_ghz_measurement(n, extent)
+        meas = self.get_measurement_circ(n, extent)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -451,7 +451,7 @@ class BConfig:
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
 
-        meas = self.get_ghz_measurement(n, extent)
+        meas = self.get_measurement_circ(n, extent)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
