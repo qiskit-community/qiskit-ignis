@@ -31,12 +31,12 @@ class StateTomographyFitter(TomographyFitter):
 
         Args:
             result (Result): a Qiskit Result object obtained from executing
-                            tomography circuits.
+                tomography circuits.
             circuits (list): a list of circuits or circuit names to extract
-                            count information from the result object.
+                count information from the result object.
             meas_basis (TomographyBasis, str): A function to return measurement
-                        operators corresponding to measurement outcomes. See
-                        Additional Information (default: 'Pauli')
+                operators corresponding to measurement outcomes. See
+                Additional Information (default: 'Pauli')
         """
         super().__init__(result, circuits, meas_basis, None)
 
@@ -47,12 +47,11 @@ class StateTomographyFitter(TomographyFitter):
         Args:
             method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
             standard_weights (bool, optional): Apply weights to
-                                            tomography data
-                                            based on count probability
-                                            (default: True)
+                tomography data based on count probability
+                (default: True)
             beta (float): hedging parameter for converting counts
-                        to probabilities
-                        (default: 0.5)
+                to probabilities
+                (default: 0.5)
             **kwargs (optional): kwargs for fitter method.
 
         Returns:

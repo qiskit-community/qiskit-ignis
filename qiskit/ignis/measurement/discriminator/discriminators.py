@@ -81,9 +81,10 @@ class BaseDiscriminationFitter(ABC):
     def _add_ydata(self, schedule: Union[Schedule, str]):
         """
         Adds the expected state of schedule to self._ydata.
+
         Args:
             schedule (Union[Schedule, str]): schedule or schedule name.
-            Used to get the expected state.
+                Used to get the expected state.
         """
         if isinstance(schedule, Schedule):
             self._ydata.append(self._expected_state[schedule.name])
@@ -118,6 +119,7 @@ class BaseDiscriminationFitter(ABC):
                              schedules: Union[List[Schedule], List[str]]):
         """
         Adds the given expected states to self._expected_states.
+
         Args:
             expected_states (List[str]): list of expected states. Must have the
                 same length as the number of schedules.
@@ -140,9 +142,10 @@ class BaseDiscriminationFitter(ABC):
     def _get_schedules(results: Union[Result, List[Result]]) -> List[str]:
         """
         Extracts the names of all Schedules in a Result or a list of Result.
+
         Args:
             results (Union[Result, List[Result]]): the results for which to
-            extract the names,
+                extract the names,
         Returns (List[str]):
             The name of the schedules in results.
         """
@@ -176,12 +179,14 @@ class BaseDiscriminationFitter(ABC):
         """
         Scales xdata, for instance, by transforming it to zero mean and unit
         variance data.
+
         Args:
             xdata (List[List[float]]): data as a list of features. Each
                 feature is itself a list.
             refit (bool): if true than self._scaler is refit using the given
                 xdata.
-        Returns (List[List[float]]): the scaled xdata as a list of features.
+        Returns (List[List[float]]):
+            the scaled xdata as a list of features.
         """
         if not self._standardize:
             return xdata
@@ -198,6 +203,7 @@ class BaseDiscriminationFitter(ABC):
             -> List[List[float]]:
         """
         Retrieves feature data (xdata) for the discriminator.
+
         Args:
             results (Union[Result, List[Result]]): the get_memory() method is
                 used to retrieve the level 1 data. If result is a list of
@@ -205,8 +211,9 @@ class BaseDiscriminationFitter(ABC):
                 schedules is used.
             schedules (Union[List[str], List[Schedule]]): Either the names of
                 the schedules or the schedules themselves.
-        Returns (List[List[float]]): data as a list of features. Each feature
-            is a list.
+
+        Returns (List[List[float]]):
+            data as a list of features. Each feature is a list.
         """
         pass
 
@@ -220,7 +227,9 @@ class BaseDiscriminationFitter(ABC):
                 retrieve the y data (i.e. expected states).
             schedules (Union[List[str], List[Schedule]]): the schedules for
                 which to get the y data.
-        Returns (List[str]): the y data, i.e. expected states. get_ydata is
+
+        Returns (List[str]):
+            the y data, i.e. expected states. get_ydata is
             designed to produce y data with the same length as the x data.
         """
         pass
@@ -234,10 +243,13 @@ class BaseDiscriminationFitter(ABC):
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
         """
         Applies the discriminator to x_data
+
         Args:
             x_data (List[List[float]]): list of features. Each feature is
                 itself a list.
-        Returns (List[str]): the discriminated x_data as a list of labels.
+
+        Returns (List[str]):
+            the discriminated x_data as a list of labels.
         """
         pass
 
@@ -270,10 +282,11 @@ class BaseDiscriminationFitter(ABC):
                 used.
             title (bool): adds a title to each subplot with the number of
                 the qubit.
-        Returns: (Union[List[axes], axes], figure): the axes object used for
-            the plot as well as the figure handle. The figure handle returned
-            is not None only when the figure handle is created by the
-            discriminator's plot method.
+
+        Returns: (Union[List[axes], axes], figure):
+            the axes object used for the plot as well as the figure handle.
+            The figure handle returned is not ``None`` only when the figure
+            handle is created by the discriminator's plot method.
         """
         pass
 

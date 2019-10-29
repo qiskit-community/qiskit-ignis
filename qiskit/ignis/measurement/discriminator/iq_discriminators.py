@@ -75,8 +75,9 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 of schedule (through get_memory(schedule)) is used.
             schedules (Union[List[str], List[Schedule]]): Either the names of
                 the schedules or the schedules themselves.
-        Returns (List[List[float]]): data as a list of features. Each feature
-            is a list.
+
+        Returns (List[List[float]]):
+            data as a list of features. Each feature is a list.
         """
         xdata = []
         if schedules is None:
@@ -108,7 +109,9 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 retrieve the y data (i.e. expected states).
             schedules (Union[List[str], List[Schedule]]): the schedules for
                 which to get the y data.
-        Returns (List[str]): the y data, i.e. expected states. get_ydata is
+
+        Returns (List[str]):
+            the y data, i.e. expected states. get_ydata is
             designed to produce y data with the same length as the x data.
         """
         ydata = []
@@ -144,8 +147,9 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
 
         Args:
             iq_data (np.ndarray): data obtained from get_memory().
-        Returns (List[List[float]]): A list of shots where each entry is a list
-            of IQ points.
+
+        Returns (List[List[float]]):
+            A list of shots where each entry is a list of IQ points.
         """
         xdata = []
         if len(iq_data.shape) == 2:  # meas_return 'single' case
@@ -192,10 +196,11 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 used.
             title (bool): adds a title to each subplot with the number of
                 the qubit.
-        Returns: (Union[List[axes], axes], figure): the axes object used for
-            the plot as well as the figure handle. The figure handle returned
-            is not None only when the figure handle is created by the
-            discriminator's plot method.
+
+        Returns: (Union[List[axes], axes], figure):
+            the axes object used for the plot as well as the figure handle.
+            The figure handle returned is not None only when the figure handle
+            is created by the discriminator's plot method.
         """
         if not HAS_MATPLOTLIB:
             raise QiskitError('please install matplotlib')
@@ -407,7 +412,9 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
         Args:
             x_data (List[List[float]]): list of features. Each feature is
                 itself a list.
-        Returns (List[str]): the discriminated x_data as a list of labels.
+
+        Returns (List[str]):
+            the discriminated x_data as a list of labels.
         """
         return self._lda.predict(x_data)
 
@@ -465,10 +472,13 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
 
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
         """
-        Applies the discriminator to x_data
+        Applies the discriminator to x_data.
+
         Args:
             x_data (List[List[float]]): list of features. Each feature is
                 itself a list.
-        Returns (List[str]): the discriminated x_data as a list of labels.
+
+        Returns (List[str]):
+            the discriminated x_data as a list of labels.
         """
         return self._qda.predict(x_data)

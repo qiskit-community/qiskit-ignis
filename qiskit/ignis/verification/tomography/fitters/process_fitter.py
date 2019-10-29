@@ -35,11 +35,10 @@ class ProcessTomographyFitter(TomographyFitter):
         Args:
             method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
             standard_weights (bool, optional): Apply weights
-                                            to tomography data
-                                            based on count probability
-                                            (default: True)
+                to tomography data based on count probability
+                (default: True)
             beta (float): hedging parameter for converting counts
-                        to probabilities (default: 0.5)
+                to probabilities (default: 0.5)
             **kwargs (optional): kwargs for fitter method.
 
         Returns:

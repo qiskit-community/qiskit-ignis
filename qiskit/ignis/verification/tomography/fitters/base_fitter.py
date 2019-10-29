@@ -45,16 +45,15 @@ class TomographyFitter:
 
         Args:
             result (Result): a Qiskit Result object obtained from executing
-                            tomography circuits.
+                tomography circuits.
             circuits (list): a list of circuits or circuit names to extract
-                            count information from the result object.
+                count information from the result object.
             meas_basis (TomographyBasis, str): A function to return
-                        measurement operators corresponding to measurement
-                        outcomes. See Additional Information
-                        (default: 'Pauli')
+                measurement operators corresponding to measurement
+                outcomes. See Additional Information. (default: 'Pauli')
             prep_basis (TomographyBasis, str): A function to return
-                        preparation operators. See Additional
-                        Information (default: 'Pauli')
+                preparation operators. See Additional
+                Information (default: 'Pauli')
         """
 
         # Set the measure and prep basis
@@ -106,16 +105,14 @@ class TomographyFitter:
         Args:
             method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
             standard_weights (bool, optional): Apply weights to
-                                            tomography data
-                                            based on count probability
-                                            (default: True)
+                tomography data based on count probability
+                (default: True)
             beta (float): hedging parameter for converting counts
-                        to probabilities
-                        (default: 0.5)
+                to probabilities (default: 0.5)
             PSD (bool, optional): Enforced the fitted matrix to be positive
-                                semidefinite (default: True)
+                semidefinite (default: True)
             trace (int, optional): trace constraint for the fitted matrix
-                                (default: None).
+                (default: None).
             trace_preserving (bool, optional): Enforce the fitted matrix to be
                 trace preserving when fitting a Choi-matrix in quantum process
                 tomography. Note this method does not apply for 'lstsq' fitter
@@ -226,9 +223,9 @@ class TomographyFitter:
 
         Args:
             result (Result): a Qiskit Result object obtained from executing
-                            tomography circuits.
+                tomography circuits.
             circuits (list): a list of circuits or circuit names to extract
-                            count information from the result object.
+                count information from the result object.
         """
         if len(circuits[0].cregs) == 1:
             marginalize = False
@@ -256,8 +253,7 @@ class TomographyFitter:
 
         Args:
             standard_weights (bool, optional): Apply weights to basis matrix
-                            and data based on count probability
-                            (default: True)
+                and data based on count probability (default: True)
             beta (float): hedging parameter for 0, 1
             probabilities (default: 0.5)
 
@@ -340,10 +336,9 @@ class TomographyFitter:
 
         Args:
             counts (dict, vector): A set of measurement counts for
-                                all outcomes of a given measurement
-                                configuration.
+                all outcomes of a given measurement configuration.
             beta (float >= 0): A hedging parameter used to bias probabilities
-                            computed from input counts away from 0 or 1.
+                computed from input counts away from 0 or 1.
 
         Returns:
             A numpy array of binomial weights for the input counts and beta
@@ -418,11 +413,11 @@ class TomographyFitter:
 
         Args:
             label (tuple(str)): a preparation configuration label for a
-                                tomography circuit.
+                tomography circuit.
             prep_matrix_fn (function): a function that returns the matrix
-                            corresponding to a single qubit preparation label.
-                            The functions should have signature
-                                prep_matrix_fn(str) -> np.array
+                corresponding to a single qubit preparation label.
+                The functions should have signature:
+                    ``prep_matrix_fn(str) -> np.array``
         Returns:
             A Numpy array for the multi-qubit prepration operator specified
             by label.
@@ -449,11 +444,11 @@ class TomographyFitter:
 
         Args:
             label (tuple(str)): a measurement configuration label for a
-                                tomography circuit.
+                tomography circuit.
             meas_matrix_fn (function): a function that returns the matrix
-                            corresponding to a single qubit measurement label
-                            for a given outcome. The functions should have
-                            signature meas_matrix_fn(str, int) -> np.array
+                corresponding to a single qubit measurement label
+                for a given outcome. The functions should have
+                signature meas_matrix_fn(str, int) -> np.array
 
         Returns:
             A list of Numpy array for the multi-qubit measurement operators

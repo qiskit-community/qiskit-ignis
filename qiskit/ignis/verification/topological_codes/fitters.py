@@ -12,10 +12,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-'''
+"""
 Decoders for quantum error correction codes, with a focus on those that can be
 expressed as solving a graph-theoretic problem.
-'''
+"""
 
 import copy
 import warnings
@@ -25,13 +25,13 @@ from qiskit import QuantumCircuit, Aer, execute
 
 
 class GraphDecoder():
-    '''
-        Class to construct the graph corresponding to the possible syndromes
-        of a quantum error correction code, and then run suitable decoders.
-    '''
+    """
+    Class to construct the graph corresponding to the possible syndromes
+    of a quantum error correction code, and then run suitable decoders.
+    """
 
     def __init__(self, code, S=None):
-        '''
+        """
         Args:
             code: The QEC Code object for which this decoder will be used.
             S: Graph describing connectivity between syndrome elements. Will
@@ -42,7 +42,7 @@ class GraphDecoder():
             time, it is also possible to load in a premade `S`. However,
             if this was created for a differently defined `code`,it won't work
             properly.
-        '''
+        """
 
         self.code = code
 
@@ -59,13 +59,15 @@ class GraphDecoder():
         return separated_string
 
     def _make_syndrome_graph(self):
-        '''
+        """
         This method injects all possible Pauli errors into the circuit for
-        `code`. This is done by examining the qubits used in each gate of the
+        `code`.
+
+        This is done by examining the qubits used in each gate of the
         circuit for a stored logical 0. A graph is then created with a node
         for each non-trivial syndrome element, and an edge between all such
         elements that can be created by the same error.
-        '''
+        """
 
         S = nx.Graph()
 
@@ -130,7 +132,7 @@ class GraphDecoder():
         return S
 
     def make_error_graph(self, string, subgraphs=None):
-        '''
+        """
         Args:
             string: A string describing the output from the code.
             subgraphs: Used when multiple, semi-indepedent graphs need
@@ -139,7 +141,7 @@ class GraphDecoder():
         Returns:
             E: The subgraph(s) of S which corresponds to the non-trivial
             syndrome elements in the given string.
-        '''
+        """
 
         if subgraphs is None:
             subgraphs = []
@@ -177,7 +179,7 @@ class GraphDecoder():
         return E
 
     def matching(self, string):
-        '''
+        """
         Args:
             string: A string describing the output from the code.
 
@@ -188,7 +190,7 @@ class GraphDecoder():
         Additional information:
             This function can be run directly, or used indirectly to
             calculate a logical error probability with `get_logical_prob`
-        '''
+        """
 
         # this matching algorithm is designed for a single graph
         E = self.make_error_graph(string)['0']
@@ -243,7 +245,7 @@ class GraphDecoder():
         return logical_string
 
     def get_logical_prob(self, results, algorithm='matching'):
-        '''
+        """
         Args:
             results: A results dictionary, as produced by the
             `process_results` method of the code.
@@ -253,7 +255,7 @@ class GraphDecoder():
             logical_prob: Dictionary of logical error probabilities for
             each of the encoded logical states whose results were given in
             the input.
-        '''
+        """
 
         logical_prob = {}
         for log in results:
@@ -287,19 +289,20 @@ class GraphDecoder():
 
 
 def postselection_decoding(results):
-    '''
+    """
     Calculates the logical error probability using postselection decoding.
+
     This postselects all results with trivial syndrome.
 
     Args:
         results: A results dictionary, as produced by the
-                `process_results` method of a code.
+            `process_results` method of a code.
 
     Returns:
         logical_prob: Dictionary of logical error probabilities for
         each of the encoded logical states whose results were given in
         the input.
-    '''
+    """
     logical_prob = {}
     postselected_results = {}
     for log in results:
@@ -331,15 +334,15 @@ def postselection_decoding(results):
 
 
 def lookuptable_decoding(training_results, real_results):
-    '''
+    """
     Calculates the logical error probability using postselection decoding.
     This postselects all results with trivial syndrome.
 
     Args:
         training_results: A results dictionary, as produced by the
-                `process_results` method of a code.
+            `process_results` method of a code.
         real_results: A results dictionary, as produced by the
-                `process_results` method of a code.
+            `process_results` method of a code.
 
     Returns:
         logical_prob: Dictionary of logical error probabilities for
@@ -353,7 +356,7 @@ def lookuptable_decoding(training_results, real_results):
         decoding. This is done using `training_results` as a guide to which
         syndrome is most probable for each logical value, and the
         probability is calculated for the results in `real_results`.
-    '''
+    """
 
     logical_prob = {}
     for log in real_results:
