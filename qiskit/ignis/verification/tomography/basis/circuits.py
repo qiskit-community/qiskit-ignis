@@ -31,6 +31,7 @@ from qiskit.circuit.reset import Reset
 
 from .tomographybasis import TomographyBasis
 from .paulibasis import PauliBasis
+from .gatesetbasis import GatesetTomographyBasis
 from .sicbasis import SICBasis
 
 # Create logger
@@ -128,6 +129,17 @@ def process_tomography_circuits(
                                 meas_labels=meas_labels, meas_basis=meas_basis,
                                 prep_labels=prep_labels, prep_basis=prep_basis)
 
+
+
+def gateset_tomography_circuits(circuit, measured_qubits,
+                                prepared_qubits=None,
+                                gateset_basis = 'Standard GST'):
+    if gateset_basis == 'Standard GST':
+        gateset_basis = GatesetTomographyBasis
+
+    return _tomography_circuits(circuit, measured_qubits, prepared_qubits,
+                                meas_labels=gateset_basis.measurement_labels, meas_basis=gateset_basis,
+                                prep_labels=gateset_basis.preparation_labels, prep_basis=gateset_basis)
 
 ###########################################################################
 # General state and process tomography circuit functions
