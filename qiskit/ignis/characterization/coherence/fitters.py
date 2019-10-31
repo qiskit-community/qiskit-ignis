@@ -27,11 +27,15 @@ class T1Fitter(BaseCoherenceFitter):
     def __init__(self, backend_result, xdata,
                  qubits,
                  fit_p0, fit_bounds,
-                 time_unit='micro-seconds'):
+                 time_unit='micro-seconds',
+                 circlabel=''):
+
+        if circlabel != '':
+            circlabel = circlabel + '-'
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
-            circuit_names.append('t1circuit_%d_' % cind)
+            circuit_names.append('%st1circuit_%d_' % (circlabel, cind))
 
         BaseCoherenceFitter.__init__(self, '$T_1$',
                                      backend_result, xdata,
@@ -57,11 +61,15 @@ class T2Fitter(BaseCoherenceFitter):
 
     def __init__(self, backend_result, xdata,
                  qubits, fit_p0, fit_bounds, circbasename='t2',
-                 time_unit='micro-seconds'):
+                 time_unit='micro-seconds',
+                 circlabel=''):
+
+        if circlabel != '':
+            circlabel = circlabel + '-'
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
-            circuit_names.append('%scircuit_%d_' % (circbasename, cind))
+            circuit_names.append('%s%scircuit_%d_' % (circlabel, circbasename, cind))
 
         BaseCoherenceFitter.__init__(self, '$T_2$',
                                      backend_result,
@@ -87,11 +95,15 @@ class T2StarFitter(BaseCoherenceFitter):
 
     def __init__(self, backend_result, xdata,
                  qubits, fit_p0, fit_bounds,
-                 time_unit='micro-seconds'):
+                 time_unit='micro-seconds',
+                 circlabel=''):
+
+        if circlabel != '':
+            circlabel = circlabel + '-'
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
-            circuit_names.append('t2starcircuit_%d_' % cind)
+            circuit_names.append('%st2starcircuit_%d_' % (circlabel, cind))
 
         BaseCoherenceFitter.__init__(self, '$T_2^*$',
                                      backend_result,

@@ -21,7 +21,7 @@ import qiskit
 from ..characterization_utils import pad_id_gates
 
 
-def t1_circuits(num_of_gates, gate_time, qubits):
+def t1_circuits(num_of_gates, gate_time, qubits, circlabel=''):
     """
     Generates circuit for T1 measurement.
     Each circuit consists of an X gate, followed by a sequence of identity
@@ -33,11 +33,16 @@ def t1_circuits(num_of_gates, gate_time, qubits):
         gate_time (float): time of running a single gate.
         qubits (list of integers): indices of the qubits whose T1 are
             to be measured.
+        circlabel: A string to add to the front of circuit names for
+            unique identification.
 
     Returns:
        A list of QuantumCircuit
        xdata: a list of delay times
     """
+
+    if circlabel != '':
+        circlabel = circlabel + '-'
 
     xdata = gate_time * num_of_gates
 
@@ -48,7 +53,7 @@ def t1_circuits(num_of_gates, gate_time, qubits):
 
     for circ_index, circ_length in enumerate(num_of_gates):
         circ = qiskit.QuantumCircuit(qr, cr)
-        circ.name = 't1circuit_' + str(circ_index) + '_0'
+        circ.name = circlabel + 't1circuit_' + str(circ_index) + '_0'
         for _, qubit in enumerate(qubits):
             circ.x(qr[qubit])
             circ = pad_id_gates(circ, qr, qubit, circ_length)
@@ -60,7 +65,7 @@ def t1_circuits(num_of_gates, gate_time, qubits):
     return circuits, xdata
 
 
-def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
+def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0, circlabel=''):
     """
     Generates circuit for T2* measurement.
     Each circuit consists of a Hadamard gate, followed by a sequence of
@@ -74,11 +79,17 @@ def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
         qubits (list of integers): indices of the qubits
             whose T2* are to be measured.
         nosc: number of oscillations to induce using the phase gate
+        circlabel: A string to add to the front of circuit names for
+            unique identification.
+
     Returns:
         A list of QuantumCircuit
         xdata: a list of delay times
         osc_freq: the induced oscillation frequency
     """
+
+    if circlabel != '':
+        circlabel = circlabel + '-'
 
     xdata = gate_time * num_of_gates
 
@@ -91,7 +102,7 @@ def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
 
     for circ_index, circ_length in enumerate(num_of_gates):
         circ = qiskit.QuantumCircuit(qr, cr)
-        circ.name = 't2starcircuit_' + str(circ_index) + '_0'
+        circ.name = circlabel + 't2starcircuit_' + str(circ_index) + '_0'
         for qind, qubit in enumerate(qubits):
             circ.h(qr[qubit])
             circ = pad_id_gates(circ, qr, qubit, circ_length)
@@ -106,7 +117,7 @@ def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
 
 
 def t2_circuits(num_of_gates, gate_time, qubits, n_echos=1,
-                phase_alt_echo=False):
+                phase_alt_echo=False, circlabel=''):
     """
     Generates circuit for T2 (echo) measurement, by a CPMG sequence.
     Each circuit consists of:
@@ -129,10 +140,16 @@ def t2_circuits(num_of_gates, gate_time, qubits, n_echos=1,
         n_echos (integer): number of echo gates (X or Y).
         phase_alt_echo (bool): if True then alternate the echo between
             X and Y.
+        circlabel: A string to add to the front of circuit names for
+            unique identification.
+
     Returns:
         A list of QuantumCircuit
         xdata: the delay times
     """
+
+    if circlabel != '':
+        circlabel = circlabel + '-'
 
     if n_echos < 1:
         raise ValueError('Must be at least one echo')
@@ -146,7 +163,7 @@ def t2_circuits(num_of_gates, gate_time, qubits, n_echos=1,
 
     for circ_index, circ_length in enumerate(num_of_gates):
         circ = qiskit.QuantumCircuit(qr, cr)
-        circ.name = 't2circuit_' + str(circ_index) + '_0'
+        circ.name = circlabel + 't2circuit_' + str(circ_index) + '_0'
         for qind, qubit in enumerate(qubits):
 
             # First Y90 and Y echo
