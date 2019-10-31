@@ -20,6 +20,7 @@ Quantum tomography circuit generation.
 import logging
 from typing import List, Union, Tuple, Optional
 import itertools as it
+import re
 
 from qiskit import QuantumRegister
 from qiskit.circuit import Qubit
@@ -31,7 +32,7 @@ from qiskit.circuit.reset import Reset
 
 from .tomographybasis import TomographyBasis
 from .paulibasis import PauliBasis
-from .gatesetbasis import GatesetTomographyBasis
+from .gatesetbasis import StandardGatesetBasis
 from .sicbasis import SICBasis
 
 # Create logger
@@ -40,7 +41,6 @@ logger = logging.getLogger(__name__)
 ###########################################################################
 # State tomography circuits for measurement in Pauli basis
 ###########################################################################
-
 
 def state_tomography_circuits(
         circuit: QuantumCircuit,
@@ -130,16 +130,47 @@ def process_tomography_circuits(
                                 prep_labels=prep_labels, prep_basis=prep_basis)
 
 
-
-def gateset_tomography_circuits(circuit, measured_qubits,
-                                prepared_qubits=None,
-                                gateset_basis = 'Standard GST'):
+def gateset_tomography_circuits(gateset_basis='Standard GST'):
+    all_circuits = []
     if gateset_basis == 'Standard GST':
-        gateset_basis = GatesetTomographyBasis
+        gateset_basis = StandardGatesetBasis
+    gateset_tomography_basis = gateset_basis.get_tomography_basis()
+    qubit = QuantumRegister(1)
+    for gate in gateset_basis.gate_labels:
+        circuit = QuantumCircuit(qubit)
+        gateset_basis.gate_func(circuit, qubit, gate)
+        gate_tomography_circuits = _tomography_circuits(circuit, qubit, qubit,
+                                                       meas_labels=gateset_tomography_basis.measurement_labels,
+                                                       meas_basis=gateset_tomography_basis,
+                                                       prep_labels=gateset_tomography_basis.preparation_labels,
+                                                       prep_basis=gateset_tomography_basis)
+        for tomography_circuit in gate_tomography_circuits:
+            res = re.search("'(.*)'.*'(.*)'", tomography_circuit.name)
+            tomography_circuit.name = (res.group(1), gate, res.group(2))
+        all_circuits = all_circuits + gate_tomography_circuits
 
-    return _tomography_circuits(circuit, measured_qubits, prepared_qubits,
-                                meas_labels=gateset_basis.measurement_labels, meas_basis=gateset_basis,
-                                prep_labels=gateset_basis.preparation_labels, prep_basis=gateset_basis)
+    circuit = QuantumCircuit(qubit)
+    gate_tomography_circuits = _tomography_circuits(circuit, qubit, qubit,
+                                                    meas_labels=gateset_tomography_basis.measurement_labels,
+                                                    meas_basis=gateset_tomography_basis,
+                                                    prep_labels=gateset_tomography_basis.preparation_labels,
+                                                    prep_basis=gateset_tomography_basis)
+    for tomography_circuit in gate_tomography_circuits:
+        res = re.search("'(.*)'.*'(.*)'", tomography_circuit.name)
+        tomography_circuit.name = (res.group(1), res.group(2))
+    all_circuits = all_circuits + gate_tomography_circuits
+
+    gate_tomography_circuits = _tomography_circuits(circuit, qubit, qubit,
+                                                    meas_labels=gateset_tomography_basis.measurement_labels,
+                                                    meas_basis=gateset_tomography_basis,
+                                                    prep_labels=None,
+                                                    prep_basis=None)
+    for tomography_circuit in gate_tomography_circuits:
+        res = re.search("'(.*)'", tomography_circuit.name)
+        tomography_circuit.name = (res.group(1),)
+    all_circuits = all_circuits + gate_tomography_circuits
+
+    return all_circuits
 
 ###########################################################################
 # General state and process tomography circuit functions
@@ -155,7 +186,6 @@ def _tomography_circuits(
         prep_basis: Union[str, TomographyBasis] = 'Pauli'
 ) -> List[QuantumCircuit]:
     """Return a list of quantum tomography circuits.
-
     This is the general circuit preparation function called by
     `state_tomography_circuits` and `process_tomography_circuits` and
     allows partial tomography circuits to be generated, or tomography
