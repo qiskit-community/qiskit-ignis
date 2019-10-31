@@ -21,7 +21,6 @@ class GateSetBasis:
         for gate in op_gates:
             self.gate_func(circ, qubit, gate)
 
-
     def measurement_circuit(self, op, qubit, clbit):
         circ = QuantumCircuit(qubit.register, clbit.register)
         self.add_to_circuit(circ, qubit, op)
@@ -41,12 +40,12 @@ class GateSetBasis:
 
     def get_tomography_basis(self):
         return TomographyBasis(self.name,
-                                 measurement=(self.spam_labels,
-                                              self.measurement_circuit,
-                                              self.measurement_matrix),
-                                 preparation=(self.spam_labels,
-                                              self.preparation_circuit,
-                                              self.preparation_matrix))
+                               measurement=(self.spam_labels,
+                                            self.measurement_circuit,
+                                            self.measurement_matrix),
+                               preparation=(self.spam_labels,
+                                            self.preparation_circuit,
+                                            self.preparation_matrix))
 
 
 def standard_gates_func(circ, qubit, op):
@@ -57,10 +56,14 @@ def standard_gates_func(circ, qubit, op):
     if op == 'Y_Rot_90':
         circ.u3(np.pi / 2, np.pi, np.pi, qubit)
 
-standard_gateset_basis = GateSetBasis('Standard GST',
-                                      (('Id', 'X_Rot_90', 'Y_Rot_90'), standard_gates_func),
+
+StandardGatesetBasis = GateSetBasis('Standard GST',
+                                      (('Id', 'X_Rot_90', 'Y_Rot_90'),
+                                       standard_gates_func),
                                       (('F0', 'F1', 'F2', 'F3'),
-                                       {'F0': ('Id',), 'F1': ('X_Rot_90',), 'F2': ('Y_Rot_90',), 'F3': ('X_Rot_90','X_Rot_90')},
-                                       )
-                        )
-GatesetTomographyBasis = standard_gateset_basis.get_tomography_basis()
+                                       {'F0': ('Id',),
+                                        'F1': ('X_Rot_90',),
+                                        'F2': ('Y_Rot_90',),
+                                        'F3': ('X_Rot_90','X_Rot_90')
+                                        })
+                                      )
