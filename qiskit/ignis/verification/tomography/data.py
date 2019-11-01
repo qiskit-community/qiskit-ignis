@@ -36,8 +36,8 @@ def marginal_counts(counts, meas_qubits=True, pad_zeros=False):
     Args:
         counts (dict): a counts dictionary.
         meas_qubits (True, list(int)): the qubits to NOT be marinalized over
-                                       if this is True meas_qubits will be
-                                       all measured qubits (default: True).
+            if this is True meas_qubits will be all measured qubits
+            (default: True).
         pad_zeros (Bool): Include zero count outcomes in return dict.
 
     Returns:

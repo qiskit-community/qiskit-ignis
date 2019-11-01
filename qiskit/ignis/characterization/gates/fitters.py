@@ -56,7 +56,8 @@ class AmpCalFitter(BaseGateFitter):
         Args:
             qind: qubit index to return (-1 return all)
 
-        return a list of errors
+        Returns:
+            a list of errors
         """
 
         fitparam = self._get_param(0, qind, series='0', err=False)
@@ -104,7 +105,8 @@ class AngleCalFitter(BaseGateFitter):
         Args:
             qind: qubit index to return (-1 return all)
 
-        return a list of errors
+        Returns:
+            a list of errors
         """
 
         fitparam = self._get_param(0, qind, series='0', err=False)
@@ -155,7 +157,8 @@ class AmpCalCXFitter(BaseGateFitter):
         Args:
             qind: qubit index to return (-1 return all)
 
-        return a list of errors
+        Returns:
+            a list of errors
         """
 
         fitparam = self._get_param(0, qind, series='0', err=False)
@@ -204,7 +207,8 @@ class AngleCalCXFitter(BaseGateFitter):
         Args:
             qind: qubit index to return (-1 return all)
 
-        return a list of errors
+        Returns:
+            a list of errors
         """
 
         fitparam = self._get_param(0, qind, series='0', err=False)

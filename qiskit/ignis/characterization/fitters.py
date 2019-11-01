@@ -33,18 +33,18 @@ class BaseFitter:
                  series=None, expected_state='0'):
         """
         Args:
-           description: a string describing the fitter's purpose, e.g. 'T1'
-           backend_result: a qiskit.result or list of results
-           xdata: a list of the independent parameter
-               (which will be fit against).
-           qubits: the qubits for which we measured coherence
-           fit_fun, fit_p0, fit_bounds: equivalent to parameters of
-           scipy.curve_fit.
-           circuit_names: names of the circuits, should be the same length
-           as xdata. Full circuit name will be these plus the
-           series name
-           series: list of circuit name tags
-           expected_state: is the circuit supposed to end up in '0' or '1'?
+            description: a string describing the fitter's purpose, e.g. 'T1'
+            backend_result: a qiskit.result or list of results
+            xdata: a list of the independent parameter
+                (which will be fit against).
+            qubits: the qubits for which we measured coherence
+            fit_fun, fit_p0, fit_bounds: equivalent to parameters of
+                scipy.curve_fit.
+            circuit_names: names of the circuits, should be the same length
+                as xdata. Full circuit name will be these plus the
+                series name
+            series: list of circuit name tags
+            expected_state: is the circuit supposed to end up in '0' or '1'?
         """
 
         if series is None:
@@ -376,7 +376,8 @@ class BaseCoherenceFitter(BaseFitter):
             ax: plot axes
             show_plot: call plt.show()
 
-        return the axes object
+        Returns:
+            The axes object
         """
 
         from matplotlib import pyplot as plt
@@ -438,7 +439,8 @@ class BaseGateFitter(BaseFitter):
             ax: plot axes
             show_plot: call plt.show()
 
-        return the axes object
+        Returns:
+            The axes object
         """
 
         from matplotlib import pyplot as plt

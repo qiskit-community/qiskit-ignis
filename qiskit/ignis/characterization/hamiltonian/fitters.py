@@ -70,7 +70,8 @@ class ZZFitter(BaseCoherenceFitter):
             ax: plot axes
             show_plot: call plt.show()
 
-        return the axes object
+        Returns:
+            the axes object
         """
 
         from matplotlib import pyplot as plt
