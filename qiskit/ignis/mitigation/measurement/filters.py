@@ -73,27 +73,25 @@ class MeasurementFilter():
         self._cal_matrix = new_cal_matrix
 
     def apply(self, raw_data, method='least_squares'):
-        """
-        Apply the calibration matrix to results
+        """Apply the calibration matrix to results.
 
         Args:
-            raw_data: The data to be corrected. Can be in a number of forms.
-                Form1: a counts dictionary from results.get_counts
-                Form2: a list of counts of length==len(state_labels)
-                Form3: a list of counts of length==M*len(state_labels) where M
-                    is an integer (e.g. for use with the tomography data)
-                Form4: a qiskit Result
+            raw_data: The data to be corrected. Can be in a number of forms:
+                 * Form1: a counts dictionary from results.get_counts
+                 * Form2: a list of counts of length==len(state_labels)
+                 * Form3: a list of counts of length==M*len(state_labels) where
+                 M is an integer (e.g. for use with the tomography data)
+                 * Form4: a qiskit Result
 
             method (str): fitting method. If None, then least_squares is used.
-                'pseudo_inverse': direct inversion of the A matrix
-                'least_squares': constrained to have physical probabilities
+                ``pseudo_inverse``: direct inversion of the A matrix
+                ``least_squares``: constrained to have physical probabilities
 
         Returns:
             The corrected data in the same form as raw_data
 
-        Additional Information:
+        .. code-block::
 
-            e.g.
             calcircuits, state_labels = complete_measurement_calibration(
                 qiskit.QuantumRegister(5))
             job = qiskit.execute(calcircuits)
@@ -106,7 +104,6 @@ class MeasurementFilter():
 
             error_mitigated_counts = meas_filter.apply(
                 result2.get_counts('circ1'))
-
         """
 
         # check forms of raw_data

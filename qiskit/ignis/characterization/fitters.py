@@ -124,14 +124,15 @@ class BaseFitter:
 
     @property
     def ydata(self):
-        """
-        Return the data points on the y-axis
-        In the form of a list of dictionaries:
-        - ydata[i]['mean'] is a list, where item
-            no. j is the probability of success
-            of qubit i for a circuit that lasts xdata[j].
-        - ydata[i]['std'] is a list, where ydata['std'][j] is the
-            standard deviation of the success of qubit i.
+        """Return the data points on the y-axis
+
+        The data points are returning in the form of a list of dictionaries:
+
+         * ydata[i]['mean'] is a list, where item
+             no. j is the probability of success
+             of qubit i for a circuit that lasts xdata[j].
+         * ydata[i]['std'] is a list, where ydata['std'][j] is the
+             standard deviation of the success of qubit i.
         """
         return self._ydata
 
