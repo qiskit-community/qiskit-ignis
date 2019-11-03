@@ -84,13 +84,13 @@ def process_tomography_circuits(circuit, measured_qubits,
                                 prepared_qubits=None,
                                 meas_labels='Pauli', meas_basis='Pauli',
                                 prep_labels='Pauli', prep_basis='Pauli'):
-    """
-    Return a list of quantum process tomography circuits.
+    """Return a list of quantum process tomography circuits.
 
     This performs preparation in the minimial Pauli-basis eigenstates
-    Zp, Zm, Xp, Ym (|0>, |1>, |+>, |+i>) on each qubit, and measurement in
-    the Pauli-basis X, Y, Z resulting in (4 ** n) * (3 ** n) circuits for
-    an n-qubit process tomography experiment.
+    :math:`Z_p`, :math: `Z_m`, :math:`X_p`, :math:`Y_m` (:math:`|0>`,
+    :math:`|1>`, :math:`|+>`, :math:`|+i>`) on each qubit, and measurement
+    in the Pauli-basis X, Y, Z resulting in :math:`(4 ** n) * (3 ** n)`
+    circuits for an n-qubit process tomography experiment.
 
     Args:
         circuit (QuantumCircuit): the QuantumCircuit circuit to be
@@ -115,15 +115,14 @@ def process_tomography_circuits(circuit, measured_qubits,
         with state preparation circuits prepended, and measurement circuits
         appended.
 
-    Additional Information:
-        The returned circuits are named by the preparation and measurement
-        basis. These circuit names can be recovered using the
-        `process_tomography_circuit_names` function to retrieve count data
-        from a QISKit Result object at a later time.
+    The returned circuits are named by the preparation and measurement
+    basis. These circuit names can be recovered using the
+    :func:`process_tomography_circuit_names`` function to retrieve count
+    data from a :class:`qiskit.result.Result` object at a later time.
 
-        To perform tomography measurement in a custom basis, or to generate
-        a subset of process tomography circuits for a partial tomography
-        experiment use the general function `tomography_circuits`.
+    To perform tomography measurement in a custom basis, or to generate
+    a subset of process tomography circuits for a partial tomography
+    experiment use the general function `tomography_circuits`.
     """
     return _tomography_circuits(circuit, measured_qubits, prepared_qubits,
                                 meas_labels=meas_labels, meas_basis=meas_basis,

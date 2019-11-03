@@ -89,17 +89,13 @@ class RBFitterBase(ABC):
 
     @abstractmethod
     def calc_data(self):
-        """
-        Retrieve probabilities of success from execution results.
-        """
+        """Retrieve probabilities of success from execution results."""
 
         return
 
     @abstractmethod
     def calc_statistics(self):
-        """
-        Extract averages and std dev from the raw data
-        """
+        """Extract averages and std dev from the raw data."""
 
         return
 
@@ -257,8 +253,7 @@ class RBFitter(RBFitterBase):
         return a * alpha ** x + b
 
     def calc_data(self):
-        """
-        Retrieve probabilities of success from execution results.
+        """Retrieve probabilities of success from execution results.
 
         Outputs results into an internal variable _raw_data which is a
         3-dimensional list, where item (i,j,k) is the probability
@@ -319,21 +314,20 @@ class RBFitter(RBFitterBase):
             startind = endind
 
     def calc_statistics(self):
-        """
-        Extract averages and std dev from the raw data (self._raw_data).
-        Assumes that self._calc_data has been run. Output into internal
-        _ydata variable:
+        """Extract averages and std dev from the raw data (self._raw_data).
 
-            ydata is a list of dictionaries (length number of patterns).
-            Dictionary ydata[i]:
-            ydata[i]['mean'] is a numpy_array of length n;
-                        entry j of this array contains the mean probability of
-                        success over seeds, for vector length
-                        self._cliff_lengths[i][j].
-            And ydata[i]['std'] is a numpy_array of length n;
-                        entry j of this array contains the std
-                        of the probability of success over seeds,
-                        for vector length self._cliff_lengths[i][j].
+        Assumes that self._calc_data has been run. Output into internal
+        _ydata variable. ydata is a list of dictionaries (length number of
+        patterns). Dictionary ydata[i]:
+
+         * ydata[i]['mean'] is a numpy_array of length n;
+           entry j of this array contains the mean probability of
+           success over seeds, for vector length
+           self._cliff_lengths[i][j].
+         * ydata[i]['std'] is a numpy_array of length n;
+           entry j of this array contains the std
+           of the probability of success over seeds,
+           for vector length self._cliff_lengths[i][j].
         """
 
         self._ydata = []
@@ -354,12 +348,13 @@ class RBFitter(RBFitterBase):
             patt_ind: index of the data to fit
             fit_guess: guess values for the fit
 
-        Puts the results into a list of fit dictionaries:
-            where each dictionary corresponds to a pattern and has fields:
-            'params' - three parameters of rb_fit_fun. The middle one is the
-                       exponent.
-            'err' - the error limits of the parameters.
-            'epc' - error per Clifford
+        Puts the results into a list of fit dictionaries where each dictionary
+        corresponds to a pattern and has fields:
+
+         * ``params`` - three parameters of rb_fit_fun. The middle one is the
+           exponent.
+         * ``err`` - the error limits of the parameters.
+         * ``epc`` - error per Clifford
         """
 
         lens = self._cliff_lengths[patt_ind]
@@ -390,18 +385,19 @@ class RBFitter(RBFitterBase):
                                'epc': epc, 'epc_err': epc_err}
 
     def fit_data(self):
-        """
-        Fit the RB results to an exponential curve.
+        """Fit the RB results to an exponential curve.
 
         Fit each of the patterns. Use the data to construct guess values
         for the fits
 
-        Puts the results into a list of fit dictionaries:
-            where each dictionary corresponds to a pattern and has fields:
-            'params' - three parameters of rb_fit_fun. The middle one is the
-                       exponent.
-            'err' - the error limits of the parameters.
-            'epc' - error per Clifford
+        Puts the results into a list of fit dictionaries where each dictionary
+        corresponds to a pattern and has fields:
+
+         * ``params`` - three parameters of rb_fit_fun. The middle one is the
+           exponent.
+         * ``err`` - the error limits of the parameters.
+         * ``epc`` - error per Clifford
+
         """
 
         for patt_ind, _ in enumerate(self._rb_pattern):
@@ -430,8 +426,7 @@ class RBFitter(RBFitterBase):
 
     def plot_rb_data(self, pattern_index=0, ax=None,
                      add_label=True, show_plt=True):
-        """
-        Plot randomized benchmarking data of a single pattern.
+        """Plot randomized benchmarking data of a single pattern.
 
         Args:
             pattern_index: which RB pattern to plot
@@ -1016,20 +1011,23 @@ class PurityRBFitter(RBFitterBase):
             startind = endind
 
     def calc_statistics(self):
-        """
-        Extract averages and std dev from the raw data (self._raw_data).
+        """Extract averages and std dev from the raw data (self._raw_data).
+
         Assumes that self._calc_data has been run. Output into internal
-        _ydata variable:
-            ydata is a list of dictionaries (length number of patterns).
-            Dictionary ydata[i]:
-            ydata[i]['mean'] is a numpy_array of length n;
-                        entry j of this array contains the mean probability of
-                        success over seeds, for vector length
-                        self._cliff_lengths[i][j].
-            And ydata[i]['std'] is a numpy_array of length n;
-                        entry j of this array contains the std
-                        of the probability of success over seeds,
-                        for vector length self._cliff_lengths[i][j].
+        _ydata variable. ydata is a list of dictionaries (length number of
+        patterns):
+
+        Dictionary ydata[i]:
+
+         * ydata[i]['mean'] is a numpy_array of length n;
+           entry j of this array contains the mean probability of
+           success over seeds, for vector length
+           self._cliff_lengths[i][j].
+         * ydata[i]['std'] is a numpy_array of length n;
+           entry j of this array contains the std
+           of the probability of success over seeds,
+           for vector length self._cliff_lengths[i][j].
+
         """
         self.rbfit_pur.calc_statistics()
 
@@ -1041,27 +1039,28 @@ class PurityRBFitter(RBFitterBase):
             patt_ind: index of the subsystem to fit
             fit_guess: guess values for the fit
 
-        Puts the results into a list of fit dictionaries:
-            where each dictionary corresponds to a pattern and has fields:
-            'params' - three parameters of rb_fit_fun. The middle one is the
-                       exponent.
-            'err' - the error limits of the parameters.
+        Puts the results into a list of fit dictionaries where each dictionary
+        corresponds to a pattern and has fields:
+
+         * ``params`` - three parameters of rb_fit_fun. The middle one is the
+           exponent.
+         * ``err`` - the error limits of the parameters.
         """
         self.rbfit_pur.fit_data_pattern(patt_ind, fit_guess)
 
     def fit_data(self):
-        """
-        Fit the Purity RB results to an exponential curve.
+        """Fit the Purity RB results to an exponential curve.
 
         Use the data to construct guess values for the fits.
 
-        Puts the results into a list of fit dictionaries:
-            where each dictionary corresponds to a pattern and has fields:
-            'params' - three parameters of rb_fit_fun. The middle one is the
-                       exponent.
-            'err' - the error limits of the parameters.
-            'epc' - Error per Clifford
-            'pepc' - Purity Error per Clifford
+        Puts the results into a list of fit dictionaries where each dictionary
+        corresponds to a pattern and has fields:
+
+         * ``params`` - three parameters of rb_fit_fun. The middle one is the
+           exponent.
+         * ``err`` - the error limits of the parameters.
+         * ``epc`` - Error per Clifford
+         * ``pepc`` - Purity Error per Clifford
         """
         self.rbfit_pur.fit_data()
 

@@ -128,8 +128,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 interleaved_gates=None,
                                 is_purity=False,
                                 group_gates=None):
-    """
-    Get a generic randomized benchmarking sequence
+    """Get a generic randomized benchmarking sequence
 
     Args:
         nseeds: number of seeds
@@ -160,18 +159,22 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
             (default is the Clifford group)
 
     Returns:
-        circuits: list of lists of circuits for the rb sequences
+        A tuple of different fields depending on inputs. The different fields
+        are:
+
+         * ``circuits``: list of lists of circuits for the rb sequences
             (separate list for each seed)
-        xdata: the sequences lengths (with multiplier if applicable)
-        circuits_interleaved (only if interleaved_gates is not None):
-            list of lists of circuits for the interleaved rb sequences
-            (separate list for each seed)
-        circuits_purity (only if is_purity=True):
-            list of lists of lists of circuits for purity rb
-            (separate list for each seed and each of the 3^n circuits)
-        npurity (only if is_purity=True):
+         * ``xdata``: the sequences lengths (with multiplier if applicable)
+         * ``circuits_interleaved`` `(only if interleaved_gates is not None)`:
+           list of lists of circuits for the interleaved rb sequences
+           (separate list for each seed)
+         * ``circuits_purity`` `(only if is_purity=True)`:
+           list of lists of lists of circuits for purity rb
+           (separate list for each seed and each of the 3^n circuits)
+         * ``npurity`` `(only if is_purity=True)`:
             the number of purity rb circuits (per seed)
             which equals to 3^n, where n is the dimension
+
     """
     # Set modules (default is Clifford)
     if group_gates is None or 'Clifford' or 'clifford':
