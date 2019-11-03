@@ -57,8 +57,8 @@ class IgnisLogger(logging.getLoggerClass()):
         This function logs key:value pairs to a log file.
         Note: Logger name in the log file is fixed (ignis_logging)
 
-        :param kargs: Keyword parameters to be logged (e.g t1=0.02,
-        qubits=[1,2,4])
+        Kwargs:
+            Keyword parameters to be logged (e.g t1=0.02, qubits=[1,2,4])
         """
         if not self._file_logging_enabled:
             if not self._warning_omitted:  # Omitting this warning only once

@@ -36,11 +36,11 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
         data (vector like): vector of expectation values
         basis_matrix (matrix like): matrix of measurement operators
         weights (vector like, optional): vector of weights to apply to the
-                                         objective function (default: None)
+            objective function (default: None)
         PSD (bool, optional): Enforced the fitted matrix to be positive
-                              semidefinite (default: True)
+            semidefinite (default: True)
         trace (int, optional): trace constraint for the fitted matrix
-                               (default: None).
+            (default: None).
         trace_preserving (bool, optional): Enforce the fitted matrix to be
             trace preserving when fitting a Choi-matrix in quantum process
             tomography (default: False).
@@ -237,7 +237,7 @@ def partial_trace_super(d1, d2):
 
     Args:
         d1 (int): the dimension of the system not being traced
-        d2 (int): the diemsnion of the system being traced over
+        d2 (int): the dimension of the system being traced over
 
     Returns:
         A Numpy array of the partial trace superoperator S_TrB.

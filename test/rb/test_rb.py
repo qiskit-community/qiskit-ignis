@@ -32,34 +32,38 @@ import qiskit.ignis.verification.randomized_benchmarking as rb
 
 @ddt
 class TestRB(unittest.TestCase):
-    """ The test class """
+    """The test class."""
 
     @staticmethod
     def choose_pattern(pattern_type, nq):
-        '''
+        """
         Choose a valid field for rb_opts['rb_pattern']
-        :param pattern_type: a number between 0 and 2.
-                             0 - a list of all qubits, for nq=5 it is
-                                 [1, 2, 3, 4, 5]
-                             1 - a list of lists of single qubits, for nq=5
-                                 it is [[1], [2], [3], [4], [5]]
-                             2 - randomly choose a pattern which is a list of
-                                 two lists where the first one has 2 elements,
-                                 for example for nq=5 it can be
-                                 [[4, 1], [2, 5, 3]]
-        :param nq: number of qubits
-        :return: the pattern or None
-                 Returns None if the pattern type is not relevant to the
-                 number of qubits, i.e,, one of two cases:
-                 pattern_type = 1 and nq = 1, which implies [[1]]
-                 pattern_type = 2 and nq <= 2: - for nq=1 this is impossible
-                                               - for nq=2 this implies
-                                                 [[1], [2]], which is already
-                                                 tested when pattern_type = 1
-                 is_purity = True if the pattern fits for purity rb
-                 (namely, all the patterns have the same dimension:
-                 only 1-qubit, only 2-qubits etc.).
-        '''
+
+        Args:
+            pattern_type: a number between 0 and 2.
+                0 - a list of all qubits, for nq=5 it is
+                    [1, 2, 3, 4, 5].
+                1 - a list of lists of single qubits, for nq=5
+                    it is [[1], [2], [3], [4], [5]].
+                2 - randomly choose a pattern which is a list of
+                    two lists where the first one has 2 elements,
+                    for example for nq=5 it can be
+                    [[4, 1], [2, 5, 3]].
+            nq: number of qubits
+
+        Returns:
+            the pattern or ``None``.
+            Returns ``None`` if the pattern type is not relevant to the
+            number of qubits, i.e,, one of two cases:
+            pattern_type = 1 and nq = 1, which implies [[1]]
+            pattern_type = 2 and nq <= 2: - for nq=1 this is impossible
+                                        - for nq=2 this implies
+                                            [[1], [2]], which is already
+                                            tested when pattern_type = 1.
+            is_purity = True if the pattern fits for purity rb
+            (namely, all the patterns have the same dimension:
+            only 1-qubit, only 2-qubits etc.).
+        """
 
         is_purity = True
         if pattern_type == 0:
@@ -88,13 +92,17 @@ class TestRB(unittest.TestCase):
 
     @staticmethod
     def choose_multiplier(mult_opt, len_pattern):
-        '''
-        :param multi_opt:
-            0: fixed length
-            1: vector of lengths
-        :param len_pattern: number of patterns
-        :return: the length multiplier
-        '''
+        """
+
+        Args:
+            multi_opt:
+                0: fixed length
+                1: vector of lengths
+            len_pattern: number of patterns
+
+        Returns:
+            the length multiplier
+        """
         if mult_opt == 0:
             res = 1
         else:
@@ -104,13 +112,16 @@ class TestRB(unittest.TestCase):
 
     @staticmethod
     def choose_interleaved_gates(rb_pattern):
-        '''
-        :param rb_pattern: pattern for randomized benchmarking
-        :return: interleaved_gates:
-        A list of gates of Clifford elements that
-        will be interleaved (for interleaved randomized benchmarking)
-        The length of the list would equal the length of the rb_pattern.
-        '''
+        """
+        Args:
+            rb_pattern: pattern for randomized benchmarking
+
+        Returns:
+            interleaved_gates:
+            A list of gates of Clifford elements that
+            will be interleaved (for interleaved randomized benchmarking)
+            The length of the list would equal the length of the rb_pattern.
+        """
         pattern_sizes = [len(pat) for pat in rb_pattern]
         interleaved_gates = []
         for (_, nq) in enumerate(pattern_sizes):
@@ -127,14 +138,17 @@ class TestRB(unittest.TestCase):
 
     @staticmethod
     def update_interleaved_gates(gatelist, pattern):
-        '''
-        :param gatelist: list of Clifford gates
-        :param pattern: pattern of indexes (from rb_pattern)
-        :return: updated_gatelist: list of Clifford gates
-        after the following updates:
-        - change the indexes from [0,1,...]
-        according to the pattern
-        '''
+        """
+        Args:
+            gatelist: list of Clifford gates
+            pattern: pattern of indexes (from rb_pattern)
+
+        Returns:
+            updated_gatelist: list of Clifford gates
+            after the following updates:
+            - change the indexes from [0,1,...]
+            according to the pattern
+        """
         updated_gatelist = []
         for op in gatelist:
             split = op.split()
@@ -148,15 +162,18 @@ class TestRB(unittest.TestCase):
 
     @staticmethod
     def update_purity_gates(npurity, purity_ind, rb_pattern):
-        '''
-        :param npurity: equals to 3^n
-        :param purity_ind: purity index in [0,3^n-1]
-        :param rb_pattern: rb pattern
-        :return: name_type: type of name for rb_circuit
-        (e.g. XY, ZZ etc.)
-        :return: gate_list: list of purity gates
-        (e.g 'rx 0', 'ry 1' etc.) according to rb_pattern
-        '''
+        """
+        Args:
+            npurity: equals to 3^n
+            purity_ind: purity index in [0,3^n-1]
+            rb_pattern: rb pattern
+
+        Returns:
+            name_type: type of name for rb_circuit
+            (e.g. XY, ZZ etc.).
+            gate_list: list of purity gates
+            (e.g 'rx 0', 'ry 1' etc.) according to rb_pattern
+        """
         name_type = ''
         ind_d = purity_ind
         purity_qubit_num = 0
@@ -188,14 +205,16 @@ class TestRB(unittest.TestCase):
 
     @staticmethod
     def ops_to_gates(ops, op_index, stop_gate='barrier'):
-        '''
-        :param ops: of the form circ.data
-        :param op_index: int, the operation index
-        :param stop_gate: the gate to stop
-        (e.g. barrier or measure)
-        :return: gatelist: a list of gates
-        :return: op_index: int, updated index
-        '''
+        """
+        Args:
+            ops: of the form circ.data
+            op_index: int, the operation index
+            stop_gate: the gate to stop (e.g. barrier or measure)
+
+        Returns:
+            gatelist: a list of gates
+            op_index: int, updated index
+        """
         gatelist = []
         while ops[op_index][0].name != stop_gate:
             gate = ops[op_index][0].name
@@ -212,26 +231,25 @@ class TestRB(unittest.TestCase):
 
     def verify_circuit(self, circ, nq, rb_opts, vec_len, result, shots,
                        is_interleaved=False, is_nonclifford=False):
-        '''
+        """
         For a single sequence, verifies that it meets the requirements:
         - Executing it on the ground state ends up in the ground state
         - It has the correct number of elements
         - It fulfills the pattern, as specified by rb_patterns and
           length_multiplier
-        :param circ: the sequence to check
-        :param nq: number of qubits
-        :param rb_opts: the specification that generated the set of sequences
-                        which includes circ
-        :param vec_len: the expected length vector of circ (one of
-                        rb_opts['length_vector'])
-        :param result: the output of the simulator
-                       when executing all the sequences on the ground state
-        :param shots: the number of shots in the simulator execution
-        :param is_interleaved: True if this is an interleaved circuit
-        :param is_nonclifford: True if this is a non-clifford circuit
-                               corresponding to measurement of the
-                               |+...+> state
-        '''
+
+        Args:
+            circ: the sequence to check
+            nq: number of qubits
+            rb_opts: the specification that generated the set of sequences
+                which includes circ
+            vec_len: the expected length vector of circ (one of
+                rb_opts['length_vector'])
+            result: the output of the simulator
+                when executing all the sequences on the ground state
+            shots: the number of shots in the simulator execution
+            is_interleaved: True if this is an interleaved circuit
+        """
 
         if not hasattr(rb_opts['length_multiplier'], "__len__"):
             rb_opts['length_multiplier'] = [
@@ -279,20 +297,22 @@ class TestRB(unittest.TestCase):
 
     def compare_interleaved_circuit(self, original_circ, interleaved_circ,
                                     nq, rb_opts_interleaved, vec_len):
-        '''
+        """
         Verifies that interleaved RB circuits meet the requirements:
         - The non-interleaved gates are the same as the
         original gates.
         - The interleaved gates are the same as the ones
         given in: rb_opts_interleaved['interleaved_gates'].
-        :param original_circ: original rb circuits
-        :param interleaved_circ: interleaved rb circuits
-        :param nq: number of qubits
-        :param rb_opts_interleaved: the specification that
-        generated the set of sequences which includes circ
-        :param vec_len: the expected length vector of circ
-        (one of rb_opts['length_vector'])
-        '''
+
+        Args:
+            original_circ: original rb circuits
+            interleaved_circ: interleaved rb circuits
+            nq: number of qubits
+            rb_opts_interleaved: the specification that
+                generated the set of sequences which includes circ
+            vec_len: the expected length vector of circ
+                (one of rb_opts['length_vector'])
+        """
 
         if not hasattr(rb_opts_interleaved['length_multiplier'], "__len__"):
             rb_opts_interleaved['length_multiplier'] = [
@@ -346,19 +366,21 @@ class TestRB(unittest.TestCase):
 
     def compare_nonclifford_circuit(self, nonclifford_Z_circ, nonclifford_X_circ,
                                     nq, rb_opts_nonclifford, vec_len):
-        '''
+        """
         Verifies that non-Clifford RB circuits are the same,
         except of the first and last H gates.
-        :param nonclifford_Z_circ: original rb circuits
-        (meassure |0...0> state)
-        :param nonclifford_X_circ: rb circuits that
-        measure |+...+> state.
-        :param nq: number of qubits
-        :param rb_opts_nonclifford: the specification that
-        generated the set of sequences which includes circ
-        :param vec_len: the expected length vector of circ
-        (one of rb_opts['length_vector'])
-        '''
+
+        Args:
+            nonclifford_Z_circ: original rb circuits
+            (meassure |0...0> state)
+            nonclifford_X_circ: rb circuits that
+            measure |+...+> state.
+            nq: number of qubits
+            rb_opts_nonclifford: the specification that
+            generated the set of sequences which includes circ
+            vec_len: the expected length vector of circ
+            (one of rb_opts['length_vector'])
+        """
 
         qlist_flat, _, _ = rb.circuits.check_pattern(
             rb_opts_nonclifford['rb_pattern'])
@@ -400,21 +422,23 @@ class TestRB(unittest.TestCase):
 
     def compare_purity_circuits(self, original_circ, purity_circ, nq,
                                 purity_ind, npurity, rb_opts_purity, vec_len):
-        '''
+        """
         Verifies that purity RB circuits meet the requirements:
         - The gates are the same as the original gates.
         - The last gates are either Rx or Ry or nothing
         (depend on d)
-        :param original_circ: original rb circuits
-        :param purity_circ: purity rb circuits
-        :param nq: number of qubits
-        :param purity_ind: purity index in [0,3^n-1]
-        :param npurity: equal to 3^n
-        :param rb_opts_purity: the specification that
-        generated the set of sequences which includes circ
-        :param vec_len: the expected length vector of circ
-        (one of rb_opts['length_vector'])
-        '''
+
+        Args:
+            original_circ: original rb circuits
+            purity_circ: purity rb circuits
+            nq: number of qubits
+            purity_ind: purity index in [0,3^n-1]
+            npurity: equal to 3^n
+            rb_opts_purity: the specification that
+                generated the set of sequences which includes circ
+            vec_len: the expected length vector of circ
+                (one of rb_opts['length_vector'])
+        """
 
         original_ops = original_circ.data
         purity_ops = purity_circ.data
@@ -459,7 +483,7 @@ class TestRB(unittest.TestCase):
     @data(*itertools.product([1, 2, 3, 4], range(3), range(2)))
     @unpack
     def test_rb(self, nq, pattern_type, multiplier_type):
-        """ Main function of the test """
+        """Main function of the test."""
 
         # Load simulator
         backend = qiskit.Aer.get_backend('qasm_simulator')
@@ -667,9 +691,7 @@ class TestRB(unittest.TestCase):
 
 
     def test_rb_utils(self):
-
-        """ Test some of the utility calculations, e.g.
-        coherence limit"""
+        """Test some of the utility calculations, e.g. coherence limit."""
 
         t1 = 100.
         t2 = 100.

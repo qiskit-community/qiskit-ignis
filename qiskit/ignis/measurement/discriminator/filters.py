@@ -67,6 +67,7 @@ class DiscriminationFilter:
 
         Args:
             raw_data: list of qiskit.Result or qiskit.Result.
+
         Returns:
             A list of qiskit.Result or qiskit.Result.
         """
@@ -111,8 +112,12 @@ class DiscriminationFilter:
         22 the basis will be 3.
 
         With this implementation the basis can be at most 10.
-        :param expected_states:
-        :return: the base inferred from the expected states
+
+        Args:
+            expected_states:
+
+        Returns:
+            the base inferred from the expected states
         """
         base = 0
         for key in expected_states:
@@ -130,8 +135,10 @@ class DiscriminationFilter:
     def count(self, y_data: List[str]) -> dict:
         """
         Converts discriminated results into raw counts.
+
         Args:
             y_data: result of a discrimination.
+
         Returns:
             A dict of raw counts.
         """

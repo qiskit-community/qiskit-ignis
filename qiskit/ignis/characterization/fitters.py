@@ -33,18 +33,18 @@ class BaseFitter:
                  series=None, expected_state='0'):
         """
         Args:
-           description: a string describing the fitter's purpose, e.g. 'T1'
-           backend_result: a qiskit.result or list of results
-           xdata: a list of the independent parameter
-               (which will be fit against).
-           qubits: the qubits for which we measured coherence
-           fit_fun, fit_p0, fit_bounds: equivalent to parameters of
-           scipy.curve_fit.
-           circuit_names: names of the circuits, should be the same length
-           as xdata. Full circuit name will be these plus the
-           series name
-           series: list of circuit name tags
-           expected_state: is the circuit supposed to end up in '0' or '1'?
+            description: a string describing the fitter's purpose, e.g. 'T1'
+            backend_result: a qiskit.result or list of results
+            xdata: a list of the independent parameter
+                (which will be fit against).
+            qubits: the qubits for which we measured coherence
+            fit_fun, fit_p0, fit_bounds: equivalent to parameters of
+                scipy.curve_fit.
+            circuit_names: names of the circuits, should be the same length
+                as xdata. Full circuit name will be these plus the
+                series name
+            series: list of circuit name tags
+            expected_state: is the circuit supposed to end up in '0' or '1'?
         """
 
         if series is None:
@@ -124,14 +124,15 @@ class BaseFitter:
 
     @property
     def ydata(self):
-        """
-        Return the data points on the y-axis
-        In the form of a list of dictionaries:
-        - ydata[i]['mean'] is a list, where item
-            no. j is the probability of success
-            of qubit i for a circuit that lasts xdata[j].
-        - ydata[i]['std'] is a list, where ydata['std'][j] is the
-            standard deviation of the success of qubit i.
+        """Return the data points on the y-axis
+
+        The data points are returning in the form of a list of dictionaries:
+
+         * ydata[i]['mean'] is a list, where item
+             no. j is the probability of success
+             of qubit i for a circuit that lasts xdata[j].
+         * ydata[i]['std'] is a list, where ydata['std'][j] is the
+             standard deviation of the success of qubit i.
         """
         return self._ydata
 
@@ -376,7 +377,8 @@ class BaseCoherenceFitter(BaseFitter):
             ax: plot axes
             show_plot: call plt.show()
 
-        return the axes object
+        Returns:
+            The axes object
         """
 
         from matplotlib import pyplot as plt
@@ -438,7 +440,8 @@ class BaseGateFitter(BaseFitter):
             ax: plot axes
             show_plot: call plt.show()
 
-        return the axes object
+        Returns:
+            The axes object
         """
 
         from matplotlib import pyplot as plt

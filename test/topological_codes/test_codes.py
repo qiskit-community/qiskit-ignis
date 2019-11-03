@@ -12,9 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-'''
-Run codes and decoders
-'''
+"""Run codes and decoders."""
 
 import unittest
 
@@ -29,9 +27,7 @@ from qiskit.providers.aer.noise.errors import pauli_error, depolarizing_error
 
 
 def get_syndrome(code, noise_model, shots=1014):
-    '''
-    Runs a code to get required results.
-    '''
+    """Runs a code to get required results."""
     circuits = [code.circuit[log] for log in ['0', '1']]
 
     job = execute(
@@ -47,9 +43,7 @@ def get_syndrome(code, noise_model, shots=1014):
 
 
 def get_noise(p_meas, p_gate):
-    '''
-    Define a noise model.
-    '''
+    """Define a noise model."""
     error_meas = pauli_error([('X', p_meas), ('I', 1 - p_meas)])
     error_gate1 = depolarizing_error(p_gate, 1)
     error_gate2 = error_gate1.tensor(error_gate1)
@@ -66,12 +60,10 @@ def get_noise(p_meas, p_gate):
 
 
 class TestCodes(unittest.TestCase):
-    """ The test class """
+    """The test class. """
 
     def test_rep(self):
-        """
-        Repetition code test.
-        """
+        """Repetition code test."""
         matching_probs = {}
         lookup_probs = {}
         post_probs = {}

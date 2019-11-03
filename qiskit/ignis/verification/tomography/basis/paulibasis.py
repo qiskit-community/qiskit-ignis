@@ -92,7 +92,7 @@ def pauli_preparation_circuit(op, qubit):
 
 def pauli_preparation_matrix(label):
     """
-    Return the matrix corresonding to a Pauli eigenstate preparation.
+    Return the matrix corresponding to a Pauli eigenstate preparation.
 
     Args:
         label (str): single-qubit Pauli eigenstate operator label.

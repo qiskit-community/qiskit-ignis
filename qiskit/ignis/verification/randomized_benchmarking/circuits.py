@@ -66,10 +66,8 @@ def check_pattern(pattern, is_purity=False):
     Verifies that the input pattern is valid
     i.e., that each qubit appears at most once
 
-    In case of purity rb, checkes that all
-    simultaneous sequences have the same dimension
-    (e.g. only 1-qubit squences, or only 2-qubits
-    sequences etc.)
+    In case of purity rb, checks that all simultaneous sequences have the same
+    dimension (e.g. only 1-qubit sequences, or only 2-qubit sequences etc.)
 
     Args:
         pattern: RB pattern
@@ -83,7 +81,7 @@ def check_pattern(pattern, is_purity=False):
         qlist: flat list of all the qubits in the pattern
         maxqubit: the maximum qubit number
         maxdim: the maximal dimension (maximal number of qubits
-        in all sequences)
+            in all sequences)
     """
 
     pattern_flat = []
@@ -132,50 +130,53 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 interleaved_gates=None,
                                 is_purity=False,
                                 group_gates=None):
-    """
-    Get a generic randomized benchmarking sequence
+    """Get a generic randomized benchmarking sequence
 
     Args:
         nseeds: number of seeds
         length_vector: 'm' length vector of sequence lengths. Must be in
-        ascending order. RB sequences of increasing length grow on top of the
-        previous sequences.
+            ascending order. RB sequences of increasing length grow on top of
+            the previous sequences.
         rb_pattern: A list of the form [[i,j],[k],...] which will make
-        simultaneous RB sequences where
-        Qi,Qj are a 2Q RB sequence and Qk is a 1Q sequence, etc.
-        E.g. [[0,3],[2],[1]] would create RB sequences that are 2Q for Q0/Q3,
-        1Q for Q1+Q2
-        The number of qubits is the sum of the entries.
-        For 'regular' RB the qubit_pattern is just [[0]],[[0,1]].
+            simultaneous RB sequences where
+            Qi,Qj are a 2Q RB sequence and Qk is a 1Q sequence, etc.
+            E.g. [[0,3],[2],[1]] would create RB sequences that are
+            2Q for Q0/Q3, 1Q for Q1+Q2
+            The number of qubits is the sum of the entries.
+            For 'regular' RB the qubit_pattern is just [[0]],[[0,1]].
         length_multiplier: if this is an array it scales each rb_sequence by
-        the multiplier
+            the multiplier
         seed_offset: What to start the seeds at (e.g. if we
-        want to add more seeds later)
+            want to add more seeds later)
         align_cliffs: If true adds a barrier across all qubits in rb_pattern
-        after each set of elements, not necessarily Cliffords
-        (note: aligns after each increment of elements including the
-        length multiplier so if the multiplier is [1,3] it will barrier
-        after 1 element for the first pattern and 3 for the second).
+            after each set of elements, not necessarily Cliffords
+            (note: aligns after each increment of elements including the
+            length multiplier so if the multiplier is [1,3] it will barrier
+            after 1 element for the first pattern and 3 for the second).
         interleaved_gates: A list of gates of elements that
-        will be interleaved (for interleaved randomized benchmarking)
-        The length of the list would equal the length of the rb_pattern.
+            will be interleaved (for interleaved randomized benchmarking)
+            The length of the list would equal the length of the rb_pattern.
         is_purity: True only for purity rb (default is False)
         group_gates: On which group (or gate set) we perform RB
-        (default is the Clifford group)
+            (default is the Clifford group)
 
     Returns:
-        circuits: list of lists of circuits for the rb sequences
-        (separate list for each seed)
-        xdata: the sequences lengths (with multiplier if applicable)
-        circuits_interleaved (only if interleaved_gates is not None):
-        list of lists of circuits for the interleaved rb sequences
-        (separate list for each seed)
-        circuits_purity (only if is_purity=True):
-        list of lists of lists of circuits for purity rb
-        (separate list for each seed and each of the 3^n circuits)
-        npurity (only if is_purity=True):
-        the number of purity rb circuits (per seed)
-        which equals to 3^n, where n is the dimension
+        A tuple of different fields depending on inputs. The different fields
+        are:
+
+         * ``circuits``: list of lists of circuits for the rb sequences
+            (separate list for each seed)
+         * ``xdata``: the sequences lengths (with multiplier if applicable)
+         * ``circuits_interleaved`` `(only if interleaved_gates is not None)`:
+           list of lists of circuits for the interleaved rb sequences
+           (separate list for each seed)
+         * ``circuits_purity`` `(only if is_purity=True)`:
+           list of lists of lists of circuits for purity rb
+           (separate list for each seed and each of the 3^n circuits)
+         * ``npurity`` `(only if is_purity=True)`:
+            the number of purity rb circuits (per seed)
+            which equals to 3^n, where n is the dimension
+
     """
     # Set modules (default is Clifford)
     if group_gates is None or group_gates == 'Clifford' or group_gates == 'clifford':
