@@ -261,7 +261,7 @@ class TestRB(unittest.TestCase):
         for _ in range(vec_len):
             op_index = 0
             # for non-clifford rb
-            if (is_nonclifford):
+            if is_nonclifford:
                 op_index += 2*nq
             # for each component of the pattern...
             for pat_index in range(len(rb_opts['rb_pattern'])):

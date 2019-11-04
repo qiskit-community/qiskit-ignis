@@ -104,6 +104,7 @@ class CliffordUtils(BasicUtils):
             else:
                 raise ValueError("Unknown gate type: ", op)
 
+        self._gatelist = gatelist
         self._elmnt = cliff
         return cliff
 

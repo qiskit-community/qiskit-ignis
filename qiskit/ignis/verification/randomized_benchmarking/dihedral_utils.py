@@ -250,11 +250,12 @@ class DihedralUtils(BasicUtils):
             0, len(G_table)), G_table, G_keys)
         self._elmnt = elem
         self._gatelist = self.elem_to_gates(G_table[elem])
+        self._num_qubits = num_qubits
 
         return elem
 
     # -----------------------------------------------
-    # Compose a new gayelist with an existing element
+    # Compose a new gatelist with an existing element
     # -----------------------------------------------
     def compose_gates(self, elem, next_elem):
         """
@@ -267,6 +268,8 @@ class DihedralUtils(BasicUtils):
         Returns:
             A CNOTDihedral object.
         """
+        G_table = self.load_tables(self._num_qubits)
+        self._gatelist = self.elem_to_gates(G_table[next_elem])
 
         elem = next_elem * elem
         self._elmnt = elem

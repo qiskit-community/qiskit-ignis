@@ -182,11 +182,13 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     if group_gates is None or group_gates == 'Clifford' or group_gates == 'clifford':
         Gutils = clutils()
         Ggroup = Clifford
+        rb_circ_type = 'rb'
     elif group_gates == 'Non-Clifford' or group_gates == 'CNOTDihedral' \
             or group_gates == 'CNOT-Dihedral':
         group_gates = 'Non-Clifford'
         Gutils = dutils()
         Ggroup = CNOTDihedral
+        rb_circ_type = 'rb_nonclifford'
     else:
         raise ValueError("Unknown group or set of gates.")
 
@@ -218,6 +220,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     circuits_interleaved = [[] for e in range(nseeds)]
     # initialization: non-clifford rb sequences
     circuits_nonclifford = [[] for e in range(nseeds)]
+    # initialization: non-clifford interleaved rb sequences
+    circuits_nonclifford_interleaved = [[] for e in range(nseeds)]
     # initialization: purity rb sequences
     circuits_purity = [[[] for d in range(npurity)]
                        for e in range(nseeds)]
@@ -264,20 +268,19 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                             Gutils.compose_gates(
                                 Elmnts_interleaved[rb_pattern_index],
                                 new_elmnt_gatelist)
-                        Elmnts_interleaved[rb_pattern_index] = \
-                            Gutils.compose_gates(
-                                Elmnts_interleaved[rb_pattern_index],
-                                interleaved_gates[rb_pattern_index])
                         interleaved_circ += replace_q_indices(
                             get_quantum_circuit(Gutils.gatelist(),
                                                 rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
+                        Elmnts_interleaved[rb_pattern_index] = \
+                            Gutils.compose_gates(
+                                Elmnts_interleaved[rb_pattern_index],
+                                interleaved_gates[rb_pattern_index])
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
                             *[qr[x] for x in rb_pattern[rb_pattern_index]])
                         interleaved_circ += replace_q_indices(
-                            get_quantum_circuit(interleaved_gates
-                                                [rb_pattern_index],
+                            get_quantum_circuit(Gutils.gatelist(),
                                                 rb_q_num),
                             rb_pattern[rb_pattern_index], qr)
                         # add a barrier - interleaved rb
@@ -331,7 +334,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     for d in range(npurity):
                         circ_purity[d] = qiskit.QuantumCircuit(qr, cr)
                         circ_purity[d] += circ
-                        circ_purity[d].name = 'rb_purity_'
+                        circ_purity[d].name = rb_circ_type + '_purity_'
                         ind_d = d
                         purity_qubit_num = 0
                         while True:
@@ -371,15 +374,22 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                 # measure both the ground state |0...0> (circ)
                 # and the |+...+> state (nonclifford_circ)
                 nonclifford_circ = qiskit.QuantumCircuit(qr, cr)
+                nonclifford_interleaved_circ = qiskit.QuantumCircuit(qr, cr)
                 for _, qb in enumerate(qlist_flat):
                     nonclifford_circ.h(qr[qb])
                     nonclifford_circ.barrier(qr[qb])
+                    nonclifford_interleaved_circ.h(qr[qb])
+                    nonclifford_interleaved_circ.barrier(qr[qb])
                 nonclifford_circ += circ
+                nonclifford_interleaved_circ += circ_interleaved
                 for _, qb in enumerate(qlist_flat):
                     nonclifford_circ.barrier(qr[qb])
                     nonclifford_circ.h(qr[qb])
+                    nonclifford_interleaved_circ.barrier(qr[qb])
+                    nonclifford_interleaved_circ.h(qr[qb])
                 for qind, qb in enumerate(qlist_flat):
                     nonclifford_circ.measure(qr[qb], cr[qind])
+                    nonclifford_interleaved_circ.measure(qr[qb], cr[qind])
 
                 # add measurement for standard rb
                 # qubits measure to the c registers as
@@ -389,35 +399,47 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     # add measurement for interleaved rb
                     circ_interleaved.measure(qr[qb], cr[qind])
 
-                circ.name = 'rb_length_%d_seed_%d' % (length_index,
-                                                      seed + seed_offset)
-                circ_interleaved.name = 'rb_interleaved_length_%d_seed_%d' \
+                circ.name = rb_circ_type + '_length_%d_seed_%d' % (length_index,
+                                                                   seed + seed_offset)
+                circ_interleaved.name = rb_circ_type + \
+                                        '_interleaved_length_%d_seed_%d' \
                                         % (length_index, seed + seed_offset)
 
                 if group_gates == 'Non-Clifford':
-                    circ.name = 'rb_nonclifford_Z_length_%d_seed_%d' % \
+                    circ.name = rb_circ_type + '_Z_length_%d_seed_%d' % \
                                 (length_index, seed + seed_offset)
-                nonclifford_circ.name = \
-                    'rb_nonclifford_X_length_%d_seed_%d' % \
+                    circ_interleaved.name = rb_circ_type + \
+                                            '_interleaved_Z_length_%d_seed_%d' \
+                                            % (length_index, seed + seed_offset)
+                nonclifford_circ.name = rb_circ_type + '_X_length_%d_seed_%d' % \
                     (length_index, seed + seed_offset)
+                nonclifford_interleaved_circ.name = rb_circ_type + \
+                                                    'interleaved_X_length_%d_seed_%d' % \
+                                                    (length_index, seed + seed_offset)
 
                 circuits[seed].append(circ)
                 circuits_interleaved[seed].append(circ_interleaved)
                 circuits_nonclifford[seed].append(nonclifford_circ)
+                circuits_nonclifford_interleaved[seed].append(nonclifford_interleaved_circ)
+
                 if is_purity:
                     for d in range(npurity):
                         circuits_purity[seed][d].append(circ_purity[d])
                 length_index += 1
 
+    # output of purity rb
+    if is_purity:
+        return circuits_purity, xdata, npurity
+    # output of non-clifford interleaved rb
+    if interleaved_gates is not None and group_gates == 'Non-Clifford':
+        return circuits, xdata, circuits_nonclifford, circuits_interleaved, \
+               circuits_nonclifford_interleaved
     # output of interleaved rb
     if interleaved_gates is not None:
         return circuits, xdata, circuits_interleaved
     # output of Non-Clifford rb
     if group_gates == 'Non-Clifford':
         return circuits, xdata, circuits_nonclifford
-    # output of purity rb
-    if is_purity:
-        return circuits_purity, xdata, npurity
     # output of standard (simultaneous) rb
     return circuits, xdata
 
