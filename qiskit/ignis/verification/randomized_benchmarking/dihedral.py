@@ -532,7 +532,7 @@ def make_dict_next(n_qubits, dicts_prior):
     This returns the dictionary of CNOT-dihedral elements on
     n_qubits using m+1 CNOT gates given the list of dictionaries
     of circuits using 0, 1, ..., m CNOT gates.
-    There are no more than 16*(n^2 - n)*|G(m)| elements.
+    There are no more than 4*(n^2 - n)*|G(m)| elements.
     The key is the CNOTDihedral object and the value is
     the list of gates as a string.
     """
@@ -542,20 +542,16 @@ def make_dict_next(n_qubits, dicts_prior):
         for i in range(n_qubits):
             for j in range(n_qubits):
                 if i != j:
-                    for tpower in range(8):
-                        for xpower in range(2):
-                            new_elem = copy.deepcopy(elem)
-                            new_circ = copy.deepcopy(circ)
-                            new_elem.cnot(i, j)
-                            new_circ.append(("cx", i, j))
-                            if xpower == 1:
-                                new_elem.flip(i)
-                                new_circ.append(("x", i))
-                            if tpower > 0:
-                                new_elem.phase(tpower, j)
-                                new_circ.append(("u1", tpower, j))
-                            if True not in [(new_elem in d)
-                                            for d in dicts_prior] \
-                                    and new_elem not in obj:
-                                obj[new_elem] = new_circ
+                    for tpower in range(4):
+                        new_elem = copy.deepcopy(elem)
+                        new_circ = copy.deepcopy(circ)
+                        new_elem.cnot(i, j)
+                        new_circ.append(("cx", i, j))
+                        if tpower > 0:
+                            new_elem.phase(tpower, j)
+                            new_circ.append(("u1", tpower, j))
+                        if True not in [(new_elem in d)
+                                        for d in dicts_prior] \
+                                and new_elem not in obj:
+                            obj[new_elem] = new_circ
     return obj

@@ -53,6 +53,7 @@ class TestCNOTDihedral(unittest.TestCase):
             print('test: generating the cnot-dihedral group table - %d qubit'
                   % nq)
             test_dihedral_tables = self.dutils.cnot_dihedral_tables(nq)
+            print ("length:", len(test_dihedral_tables))
 
             picklefile = 'expect_cnot_dihedral_%d.pickle' % nq
             fo = open(picklefile, 'rb')
