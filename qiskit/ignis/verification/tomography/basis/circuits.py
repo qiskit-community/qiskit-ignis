@@ -138,6 +138,7 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
         gateset_basis = StandardGatesetBasis
     gateset_tomography_basis = gateset_basis.get_tomography_basis()
     qubit = QuantumRegister(1)
+    # Experiments of the form <E|F_i G_k F_j|rho>
     for gate in gateset_basis.gate_labels:
         circuit = QuantumCircuit(qubit)
         gateset_basis.gate_func(circuit, qubit, gate)
@@ -148,9 +149,11 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
                                                        prep_basis=gateset_tomography_basis)
         for tomography_circuit in gate_tomography_circuits:
             res = re.search("'(.*)'.*'(.*)'", tomography_circuit.name)
-            tomography_circuit.name = (res.group(1), gate, res.group(2))
+            tomography_circuit.name = str((res.group(1), gate, res.group(2)))
         all_circuits = all_circuits + gate_tomography_circuits
 
+    # Experiments of the form <E|F_i F_j|rho>
+    # Can be skipped if one of the gates is ideal identity
     circuit = QuantumCircuit(qubit)
     gate_tomography_circuits = _tomography_circuits(circuit, qubit, qubit,
                                                     meas_labels=gateset_tomography_basis.measurement_labels,
@@ -159,9 +162,10 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
                                                     prep_basis=gateset_tomography_basis)
     for tomography_circuit in gate_tomography_circuits:
         res = re.search("'(.*)'.*'(.*)'", tomography_circuit.name)
-        tomography_circuit.name = (res.group(1), res.group(2))
+        tomography_circuit.name = str((res.group(1), res.group(2)))
     all_circuits = all_circuits + gate_tomography_circuits
 
+    # Experiments of the form <E|F_j|rho>
     gate_tomography_circuits = _tomography_circuits(circuit, qubit, qubit,
                                                     meas_labels=gateset_tomography_basis.measurement_labels,
                                                     meas_basis=gateset_tomography_basis,
@@ -169,7 +173,7 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
                                                     prep_basis=None)
     for tomography_circuit in gate_tomography_circuits:
         res = re.search("'(.*)'", tomography_circuit.name)
-        tomography_circuit.name = (res.group(1),)
+        tomography_circuit.name = str((res.group(1),))
     all_circuits = all_circuits + gate_tomography_circuits
 
     return all_circuits
