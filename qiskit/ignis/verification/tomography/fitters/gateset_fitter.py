@@ -22,7 +22,6 @@ def compute_probs(data):
     for key in data.keys():
         vals = data[key]
         probs[key] = vals.get('0', 0) / sum(vals.values())
-    print(probs)
     return probs
 
 def gateset_linear_inversion(data, gateset_basis='Standard GST'):
