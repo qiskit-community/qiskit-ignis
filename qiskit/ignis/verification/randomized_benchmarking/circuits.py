@@ -375,21 +375,22 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                 # and the |+...+> state (nonclifford_circ)
                 nonclifford_circ = qiskit.QuantumCircuit(qr, cr)
                 nonclifford_interleaved_circ = qiskit.QuantumCircuit(qr, cr)
-                for _, qb in enumerate(qlist_flat):
-                    nonclifford_circ.h(qr[qb])
-                    nonclifford_circ.barrier(qr[qb])
-                    nonclifford_interleaved_circ.h(qr[qb])
-                    nonclifford_interleaved_circ.barrier(qr[qb])
-                nonclifford_circ += circ
-                nonclifford_interleaved_circ += circ_interleaved
-                for _, qb in enumerate(qlist_flat):
-                    nonclifford_circ.barrier(qr[qb])
-                    nonclifford_circ.h(qr[qb])
-                    nonclifford_interleaved_circ.barrier(qr[qb])
-                    nonclifford_interleaved_circ.h(qr[qb])
-                for qind, qb in enumerate(qlist_flat):
-                    nonclifford_circ.measure(qr[qb], cr[qind])
-                    nonclifford_interleaved_circ.measure(qr[qb], cr[qind])
+                if group_gates == 'Non-Clifford':
+                    for _, qb in enumerate(qlist_flat):
+                        nonclifford_circ.h(qr[qb])
+                        nonclifford_circ.barrier(qr[qb])
+                        nonclifford_interleaved_circ.h(qr[qb])
+                        nonclifford_interleaved_circ.barrier(qr[qb])
+                    nonclifford_circ += circ
+                    nonclifford_interleaved_circ += circ_interleaved
+                    for _, qb in enumerate(qlist_flat):
+                        nonclifford_circ.barrier(qr[qb])
+                        nonclifford_circ.h(qr[qb])
+                        nonclifford_interleaved_circ.barrier(qr[qb])
+                        nonclifford_interleaved_circ.h(qr[qb])
+                    for qind, qb in enumerate(qlist_flat):
+                        nonclifford_circ.measure(qr[qb], cr[qind])
+                        nonclifford_interleaved_circ.measure(qr[qb], cr[qind])
 
                 # add measurement for standard rb
                 # qubits measure to the c registers as
@@ -411,11 +412,11 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     circ_interleaved.name = rb_circ_type + \
                                             '_interleaved_Z_length_%d_seed_%d' \
                                             % (length_index, seed + seed_offset)
-                nonclifford_circ.name = rb_circ_type + '_X_length_%d_seed_%d' % \
-                    (length_index, seed + seed_offset)
-                nonclifford_interleaved_circ.name = rb_circ_type + \
-                                                    'interleaved_X_length_%d_seed_%d' % \
-                                                    (length_index, seed + seed_offset)
+                    nonclifford_circ.name = rb_circ_type + '_X_length_%d_seed_%d' % \
+                                            (length_index, seed + seed_offset)
+                    nonclifford_interleaved_circ.name = rb_circ_type + \
+                                                        'interleaved_X_length_%d_seed_%d' % \
+                                                        (length_index, seed + seed_offset)
 
                 circuits[seed].append(circ)
                 circuits_interleaved[seed].append(circ_interleaved)
