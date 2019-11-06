@@ -19,4 +19,4 @@ Calibration module
 
 from .schedules import rabi_schedules, drag_schedules
 from .fitters import RabiFitter, DragFitter
-from .ibmq_utils import get_single_q_pulse, update_u_gates, update_cx_gates
+from .ibmq_utils import get_single_q_pulse, update_u_gates

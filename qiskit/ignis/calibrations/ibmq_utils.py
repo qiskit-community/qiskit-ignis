@@ -16,8 +16,6 @@
 Utility functions for calibrating IBMQ Devices
 """
 
-# pylint: disable=cell-var-from-loop
-
 import numpy as np
 from scipy.optimize import least_squares
 from qiskit.pulse import SamplePulse, pulse_lib, Schedule, FrameChange
@@ -117,10 +115,10 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
 
         drive_ch = system.qubits[qind].drive
 
-        def param_u2_fc1(**kwargs):
+        def param_u2_fc1(drive_ch=drive_ch, **kwargs):
             return FrameChange(phase=-kwargs['P1']+np.pi/2)(drive_ch)
 
-        def param_u3_fc1(**kwargs):
+        def param_u3_fc1(drive_ch=drive_ch, **kwargs):
             return FrameChange(phase=-kwargs['P2'])(drive_ch)
 
         if pi2_pulse_schedules is None:
@@ -133,18 +131,19 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
 
             x90_pulse = pi2_pulse_schedules[qind]
 
-        def param_u2_fc2(**kwargs):
+        pulse_dur = x90_pulse.duration
+
+        def param_u2_fc2(drive_ch=drive_ch, pulse_dur=pulse_dur, **kwargs):
             return FrameChange(phase=-kwargs['P0']-np.pi/2)(drive_ch) << \
-                                                    x90_pulse.duration
+                                                    pulse_dur
 
-        def param_u3_fc2(**kwargs):
+        def param_u3_fc2(drive_ch=drive_ch, pulse_dur=pulse_dur, **kwargs):
             return FrameChange(phase=-kwargs['P0']+np.pi)(drive_ch) << \
-                                                    x90_pulse.duration
+                                                    pulse_dur
 
-        def param_u3_fc3(**kwargs):
+        def param_u3_fc3(drive_ch=drive_ch, pulse_dur=pulse_dur, **kwargs):
             return FrameChange(phase=-kwargs['P1']-np.pi)(drive_ch) << \
-                                                    x90_pulse.duration << \
-                                                    x90_pulse.duration
+                                                    2*pulse_dur
 
         # add commands to schedule
         # u2
@@ -155,7 +154,8 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
 
         # u3
         schedule2 = ParameterizedSchedule(*[param_u3_fc1, x90_pulse,
-                                            param_u3_fc2, x90_pulse,
+                                            param_u3_fc2,
+                                            x90_pulse << pulse_dur,
                                             param_u3_fc3],
                                           parameters=['P0', 'P1', 'P2'],
                                           name='u3_%d' % qind)
