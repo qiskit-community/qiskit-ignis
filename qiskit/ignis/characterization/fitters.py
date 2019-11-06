@@ -47,6 +47,10 @@ class BaseFitter:
             expected_state: is the circuit supposed to end up in '0' or '1'?
         """
 
+        if fit_bounds is None:
+            fit_bounds = ([-np.inf for e in range(len(fit_p0))],
+                          [np.inf for e in range(len(fit_p0))])
+
         if series is None:
             self._series = ['0']
         else:
@@ -323,6 +327,14 @@ class BaseFitter:
         """
 
         return a*np.cos((theta0+thetaerr) * x + phi0 + phierr) + c
+
+    @staticmethod
+    def _quadratic(x, a, x0, c):
+        """
+        Function used to fit drag
+        """
+
+        return a * (x-x0)**2 + c
 
 
 class BaseCoherenceFitter(BaseFitter):
