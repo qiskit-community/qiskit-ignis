@@ -36,6 +36,7 @@ def _fit_drag_func(duration, amp, sigma, beta, exp_samples):
 
     Returns:
         difference between the drag and experimental samples
+
     """
 
     fit_pulse = pulse_lib.drag(duration=duration, amp=amp, sigma=sigma,
@@ -54,6 +55,9 @@ def get_single_q_pulse(cmd_def, qubits):
 
     Returns:
         List of dictionaries with the parameters for the DRAG
+
+    TODO:
+        Deprecated once parameterized pulses are supported
     """
 
     fit_params = []
@@ -106,6 +110,7 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
 
     Returns:
         updated cmd_def
+
     """
 
     # U2 is -P1.Y90p.-P0

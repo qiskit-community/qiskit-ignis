@@ -26,7 +26,7 @@ from qiskit.scheduler import schedule_circuit, ScheduleConfig
 
 
 def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
-                   width_sigma_ratio=4, system=None, cmd_def=None,
+                   width_sigma_ratio=4, drives=None, cmd_def=None,
                    meas_map=None):
     """
     Generates schedules for a rabi experiment using a Gaussian pulse
@@ -39,7 +39,7 @@ def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
         pulse_sigma: sigma of gaussian
         width_sigma_ratio: set sigma to a certain ratio of the width (use if
         pulse_sigma is None)
-        system: PulseChannelSpec object
+        drives: list of DriveChannel objects
         cmd_def: CmdDef object to use
         meas_map: meas_map to use
 
@@ -80,7 +80,7 @@ def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
             schedule = pulse.Schedule(name='rabi_pulse_%f_%d' % (g_amp,
                                                                  qubit))
 
-            schedule += rabi_pulse(system.qubits[qubit].drive)
+            schedule += rabi_pulse(drives[qubit])
 
             # append this schedule to the cmd_def
             cmd_def.add('rabi_%d' % circ_index, qubits=[qubit],
@@ -104,7 +104,7 @@ def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
 
 def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
                    pulse_sigma=None,
-                   width_sigma_ratio=4, system=None, cmd_def=None,
+                   width_sigma_ratio=4, drives=None, cmd_def=None,
                    meas_map=None):
     """
     Generates schedules for a drag experiment doing a pulse then
@@ -119,7 +119,7 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
         pulse_sigma: sigma of gaussian
         width_sigma_ratio: set sigma to a certain ratio of the width (use if
         pulse_sigma is None)
-        system: PulseChannelSpec object
+        drives: list of DriveChannel objects
         cmd_def: CmdDef object to use
         meas_map: meas_map to use
 
@@ -163,7 +163,7 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
             schedule = pulse.Schedule(name='drag_pulse_%f_%d' % (b_amp,
                                                                  qubit))
 
-            schedule += drag_pulse(system.qubits[qubit].drive)
+            schedule += drag_pulse(drives[qubit])
 
             # append this schedule to the cmd_def
             cmd_def.add('drag_%d_%d' % (circ_index, qubit), qubits=[qubit],
