@@ -16,10 +16,12 @@
 Utility functions for calibrating IBMQ Devices
 """
 
+from collections import defaultdict
 import numpy as np
 from scipy.optimize import least_squares
 from qiskit.pulse import SamplePulse, pulse_lib, Schedule, FrameChange
 from qiskit.pulse.schedule import ParameterizedSchedule
+from qiskit.pulse.commands import FrameChangeInstruction
 
 
 def _fit_drag_func(duration, amp, sigma, beta, exp_samples):
@@ -97,9 +99,7 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
                    qubits=None, cmd_def=None, system=None):
     """
     Update the cmd_def with new single qubit gate values
-
     Will update U2, U3
-
     Args:
         drag_params: list of drag params
         pi2_pulse_schedules: list of new pi/2 gate as a pulse schedule
@@ -107,63 +107,96 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
         qubits: list of qubits to update
         cmd_def: CmdDef object for the device
         system: PulseSpec for drives
-
     Returns:
         updated cmd_def
-
     """
 
     # U2 is -P1.Y90p.-P0
     # U3 is -P2.X90p.-P0.X90m.-P1
 
-    for qind in qubits:
+    def parametrized_fc(kw_name, phi0, chan, t_offset):
+        def _parametrized_fc(**kwargs):
+            return FrameChange(phase=-kwargs[kw_name]+phi0)(chan) << t_offset
+        return _parametrized_fc
 
-        drive_ch = system.qubits[qind].drive
+    for qubit in qubits:
 
-        def param_u2_fc1(drive_ch=drive_ch, **kwargs):
-            return FrameChange(phase=-kwargs['P1']+np.pi/2)(drive_ch)
-
-        def param_u3_fc1(drive_ch=drive_ch, **kwargs):
-            return FrameChange(phase=-kwargs['P2'])(drive_ch)
+        drive_ch = system.qubits[qubit].drive
 
         if pi2_pulse_schedules is None:
-
-            x90_pulse = pulse_lib.drag(**drag_params[qind])
-
+            x90_pulse = pulse_lib.drag(**drag_params[qubit])
             x90_pulse = Schedule(x90_pulse(drive_ch))
-
         else:
-
-            x90_pulse = pi2_pulse_schedules[qind]
+            x90_pulse = pi2_pulse_schedules[qubit]
 
         pulse_dur = x90_pulse.duration
 
-        def param_u2_fc2(drive_ch=drive_ch, pulse_dur=pulse_dur, **kwargs):
-            return FrameChange(phase=-kwargs['P0']-np.pi/2)(drive_ch) << \
-                                                    pulse_dur
+        # find channel dependency for u2
+        for _u2_group in _find_channel_groups('u2', qubits=qubit, cmd_def=cmd_def):
+            if drive_ch in _u2_group:
+                break
+        else:
+            _u2_group = (drive_ch, )
 
-        def param_u3_fc2(drive_ch=drive_ch, pulse_dur=pulse_dur, **kwargs):
-            return FrameChange(phase=-kwargs['P0']+np.pi)(drive_ch) << \
-                                                    pulse_dur
+        u2_fc1s = [parametrized_fc('P1', np.pi/2, ch, 0)
+                   for ch in _u2_group]
+        u2_fc2s = [parametrized_fc('P0', -np.pi/2, ch, pulse_dur)
+                   for ch in _u2_group]
 
-        def param_u3_fc3(drive_ch=drive_ch, pulse_dur=pulse_dur, **kwargs):
-            return FrameChange(phase=-kwargs['P1']-np.pi)(drive_ch) << \
-                                                    2*pulse_dur
+        # find channel dependency for u2
+        for _u3_group in _find_channel_groups('u3', qubits=qubit, cmd_def=cmd_def):
+            if drive_ch in _u3_group:
+                break
+        else:
+            _u3_group = (drive_ch, )
+
+        u3_fc1s = [parametrized_fc('P2', 0, ch, 0) for ch in _u3_group]
+        u3_fc2s = [parametrized_fc('P0', np.pi, ch, pulse_dur) for ch in _u3_group]
+        u3_fc3s = [parametrized_fc('P1', -np.pi, ch, 2*pulse_dur)
+                   for ch in _u3_group]
 
         # add commands to schedule
         # u2
-        schedule1 = ParameterizedSchedule(*[param_u2_fc1, x90_pulse,
-                                            param_u2_fc2],
+        schedule1 = ParameterizedSchedule(*[*u2_fc1s,
+                                            x90_pulse,
+                                            *u2_fc2s],
                                           parameters=['P0', 'P1'],
-                                          name='u2_%d' % qind)
+                                          name='u2_%d' % qubit)
 
         # u3
-        schedule2 = ParameterizedSchedule(*[param_u3_fc1, x90_pulse,
-                                            param_u3_fc2,
+        schedule2 = ParameterizedSchedule(*[*u3_fc1s,
+                                            x90_pulse,
+                                            *u3_fc2s,
                                             x90_pulse << pulse_dur,
-                                            param_u3_fc3],
+                                            *u3_fc3s],
                                           parameters=['P0', 'P1', 'P2'],
-                                          name='u3_%d' % qind)
+                                          name='u3_%d' % qubit)
 
-        cmd_def.add(cmd_name='u2', qubits=[qind], schedule=schedule1)
-        cmd_def.add(cmd_name='u3', qubits=[qind], schedule=schedule2)
+        cmd_def.add(cmd_name='u2', qubits=qubit, schedule=schedule1)
+        cmd_def.add(cmd_name='u3', qubits=qubit, schedule=schedule2)
+
+
+def _find_channel_groups(command, qubits, cmd_def):
+    """
+    Extract frame dependency of control channel on drive channel.
+
+    Args:
+        command: name of command.
+        qubits: target qubit index.
+    Returns:
+        channel_groups: group of channels in the same frame.
+    """
+    params = cmd_def.get_parameters(command, qubits=qubits)
+    temp_sched = cmd_def.get(command, qubits=qubits,
+                             **dict(zip(params, np.zeros(len(params)))))
+
+    synced_fcs = defaultdict(list)
+    for t0, inst in temp_sched.instructions:
+        if isinstance(inst, FrameChangeInstruction):
+            synced_fcs[t0, inst.command.phase].extend(inst.channels)
+
+    channel_groups = set()
+    for synced_fc in synced_fcs.values():
+        channel_groups.add(tuple(synced_fc))
+
+    return list(channel_groups)
