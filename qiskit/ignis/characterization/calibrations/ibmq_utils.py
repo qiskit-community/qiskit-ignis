@@ -132,7 +132,9 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
         pulse_dur = x90_pulse.duration
 
         # find channel dependency for u2
-        for _u2_group in _find_channel_groups('u2', qubits=qubit, cmd_def=cmd_def):
+        for _u2_group in _find_channel_groups('u2',
+                                              qubits=qubit,
+                                              cmd_def=cmd_def):
             if drive_ch in _u2_group:
                 break
         else:
@@ -144,14 +146,17 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
                    for ch in _u2_group]
 
         # find channel dependency for u2
-        for _u3_group in _find_channel_groups('u3', qubits=qubit, cmd_def=cmd_def):
+        for _u3_group in _find_channel_groups('u3',
+                                              qubits=qubit,
+                                              cmd_def=cmd_def):
             if drive_ch in _u3_group:
                 break
         else:
             _u3_group = (drive_ch, )
 
         u3_fc1s = [parametrized_fc('P2', 0, ch, 0) for ch in _u3_group]
-        u3_fc2s = [parametrized_fc('P0', np.pi, ch, pulse_dur) for ch in _u3_group]
+        u3_fc2s = [parametrized_fc('P0', np.pi, ch, pulse_dur)
+                   for ch in _u3_group]
         u3_fc3s = [parametrized_fc('P1', -np.pi, ch, 2*pulse_dur)
                    for ch in _u3_group]
 
