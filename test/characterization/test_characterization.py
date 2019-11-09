@@ -463,7 +463,7 @@ class TestCalibs(unittest.TestCase):
         update_u_gates(single_q_params,
                        qubits=[0],
                        cmd_def=self.cmd_def,
-                       system=self.system)
+                       drives=self.system.drives)
 
 
 if __name__ == '__main__':

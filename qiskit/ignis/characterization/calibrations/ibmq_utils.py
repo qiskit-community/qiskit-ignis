@@ -96,7 +96,7 @@ def get_single_q_pulse(cmd_def, qubits):
 
 
 def update_u_gates(drag_params, pi2_pulse_schedules=None,
-                   qubits=None, cmd_def=None, system=None):
+                   qubits=None, cmd_def=None, drives=None):
     """
     Update the cmd_def with new single qubit gate values
     Will update U2, U3
@@ -106,7 +106,7 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
         will use the drag_params if this is None
         qubits: list of qubits to update
         cmd_def: CmdDef object for the device
-        system: PulseSpec for drives
+        drives: List of drive chs
     Returns:
         updated cmd_def
     """
@@ -121,7 +121,7 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
 
     for qubit in qubits:
 
-        drive_ch = system.qubits[qubit].drive
+        drive_ch = drives[qubit]
 
         if pi2_pulse_schedules is None:
             x90_pulse = pulse_lib.drag(**drag_params[qubit])
