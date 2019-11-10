@@ -43,6 +43,13 @@ from qiskit.ignis.characterization.gates import (AmpCalFitter,
                                                  AngleCalCXFitter,
                                                  anglecal_cx_circuits)
 
+from qiskit.ignis.characterization.calibrations import (rabi_schedules,
+                                                        drag_schedules,
+                                                        update_u_gates)
+
+import qiskit.pulse as pulse
+from qiskit.test.mock import FakeOpenPulse2Q
+
 
 class TestT2Star(unittest.TestCase):
     """
@@ -390,6 +397,73 @@ class TestCals(unittest.TestCase):
 
         self.assertAlmostEqual(fit.angle_err(0), 0.1, 2)
         self.assertAlmostEqual(fit.angle_err(1), 0.1, 2)
+
+
+class TestCalibs(unittest.TestCase):
+    """
+    Test calibration module which creates pulse schedules
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        Init the test cal simulator
+        """
+
+        unittest.TestCase.__init__(self, *args, **kwargs)
+
+        backend_fake = FakeOpenPulse2Q()
+
+        back_defaults = backend_fake.defaults()
+        self.meas_map = backend_fake.configuration().meas_map
+        self.system = pulse.PulseChannelSpec.from_backend(backend_fake)
+        self.cmd_def = pulse.CmdDef.from_defaults(back_defaults.cmd_def,
+                                                  back_defaults.pulse_library)
+
+    def test_rabi(self):
+        """
+        make sure the rabi function will create a schedule
+        """
+
+        rabi, xdata = rabi_schedules(np.linspace(-1, 1, 10),
+                                     [0, 1],
+                                     10,
+                                     2.5,
+                                     drives=self.system.drives,
+                                     cmd_def=self.cmd_def,
+                                     meas_map=self.meas_map)
+
+        self.assertEqual(len(rabi), 10)
+        self.assertEqual(len(xdata), 10)
+
+    def test_drag(self):
+        """
+        Make sure the drag function will create a schedule
+        """
+
+        drag_scheds, xdata = drag_schedules(np.linspace(-3, 3, 11),
+                                            [0, 1],
+                                            [0.5, 0.6],
+                                            10,
+                                            pulse_sigma=2.5,
+                                            drives=self.system.drives,
+                                            cmd_def=self.cmd_def,
+                                            meas_map=self.meas_map)
+
+        self.assertEqual(len(drag_scheds), 11)
+        self.assertEqual(len(xdata), 11)
+
+    def test_ugate_update(self):
+        """
+        Test that a cmd def gets updates
+        """
+
+        single_q_params = [{'amp': 0.1, 'duration': 15,
+                            'beta': 0.1, 'sigma': 3}]
+
+        update_u_gates(single_q_params,
+                       qubits=[0],
+                       cmd_def=self.cmd_def,
+                       drives=self.system.drives)
 
 
 if __name__ == '__main__':
