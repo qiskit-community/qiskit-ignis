@@ -398,14 +398,21 @@ class BConfig:
 
         return new_circ, initial_layout
 
-    def get_ghz_po_para(self, n, extent='full'):
+    #yn: not used
+    def get_ghz_po_para(self, n, measure='full'):
         '''
         Get a parametrized PO circuit. Remember that get_counts()
         method accepts an index now, not a circuit.
         The two phase parameters are a quirk of the Parameter module
+
+         Args:
+           n: number of qubits
+           extent: Must be 'full' - so as to append full measurement.
+        Returns:
+           A parity oscillation circuit, its Delta/minus-delta parameters, and the initial ghz layout
         '''
 
-        if extent != 'full':
+        if measure != 'full':
             raise Exception("Only 'full' argument can be accepted",
                             " for measure in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)
@@ -422,18 +429,11 @@ class BConfig:
                                            backend=self.backend,
                                            initial_layout=initial_layout)
 
-
-#         cla = ClassicalRegister(n,'c')
-#         meas = QuantumCircuit(q,cla)
-#         meas.barrier()
-#         meas.measure(q,cla)
-
         meas = self.get_measurement_circ(n, extent)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
         new_circ = circ + rotate + meas
-
         return new_circ, [delta, deltaneg], initial_layout
 
 #yn: used
