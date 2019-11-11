@@ -56,7 +56,7 @@ jobs:
           displayName: Create Anaconda environment
         - script: |
             call activate qiskit-ignis
-            conda install --yes --quiet --name qiskit-ignis python=%PYTHON_VERSION% mkl
+            conda install --yes --quiet --name qiskit-ignis -c cvxgrp python=%PYTHON_VERSION% cvxpy
           displayName: Install Anaconda packages
         - script: |
             call activate qiskit-ignis
