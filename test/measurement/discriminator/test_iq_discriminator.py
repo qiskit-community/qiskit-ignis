@@ -156,3 +156,16 @@ class TestLinearIQDiscriminator(unittest.TestCase):
 
         self.assertEqual(discriminator.discriminate([[i0, q0]])[0], '0')
         self.assertEqual(discriminator.discriminate([[i1, q1]])[0], '1')
+
+    def test_is_calibration(self):
+        """
+        Test is the discriminator can properly recognize calibration names.
+        """
+        discriminator = LinearIQDiscriminator([], [])
+
+        self.assertTrue(discriminator.is_calibration('cal_01101'))
+        self.assertTrue(discriminator.is_calibration('cal_2121'))
+        self.assertFalse(discriminator.is_calibration('cal_01101b'))
+        self.assertFalse(discriminator.is_calibration('cal01101b'))
+        self.assertFalse(discriminator.is_calibration('test'))
+        self.assertFalse(discriminator.is_calibration('_cal_2121'))
