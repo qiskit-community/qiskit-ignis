@@ -11,6 +11,8 @@ addons:
     packages:
       - gcc-4.8
       - g++-4.8
+      - libblas-dev
+      - liblapack-dev
 
 install_osx: &stage_osx
   os: osx
