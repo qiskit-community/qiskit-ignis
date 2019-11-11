@@ -69,15 +69,19 @@ class TestLinearIQDiscriminator(unittest.TestCase):
                                               self.qubits,
                                               ['00', '11'])
 
-        xdata = discriminator.get_xdata(self.cal_results)
+        xdata = discriminator.get_xdata(self.cal_results, 0)
 
         self.assertEqual(len(xdata), self.shots*2)
         self.assertEqual(len(xdata[0]), len(self.qubits) * 2)
 
-        xdata = discriminator.get_xdata(self.cal_results, ['cal_00'])
+        xdata = discriminator.get_xdata(self.cal_results, 0, ['cal_00'])
 
         self.assertEqual(len(xdata), self.shots)
         self.assertEqual(len(xdata[0]), 4)
+
+        xdata = discriminator.get_xdata(self.cal_results, 1)
+
+        self.assertEqual(len(xdata), 0)
 
     def test_get_ydata(self):
         """
@@ -88,15 +92,19 @@ class TestLinearIQDiscriminator(unittest.TestCase):
                                               self.qubits,
                                               ['00', '11'])
 
-        xdata = discriminator.get_xdata(self.cal_results)
-        ydata = discriminator.get_ydata(self.cal_results)
+        xdata = discriminator.get_xdata(self.cal_results, 0)
+        ydata = discriminator.get_ydata(self.cal_results, 0)
 
         self.assertEqual(len(xdata), len(ydata))
 
-        ydata = discriminator.get_ydata(self.cal_results, ['cal_00'])
+        ydata = discriminator.get_ydata(self.cal_results, 0, ['cal_00'])
 
         self.assertEqual(len(ydata), self.shots)
         self.assertEqual(ydata[0], '00')
+
+        ydata = discriminator.get_ydata(self.cal_results, 1)
+
+        self.assertEqual(len(ydata), 0)
 
     def test_discrimination(self):
         """

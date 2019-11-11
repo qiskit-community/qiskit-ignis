@@ -84,7 +84,7 @@ class DiscriminationFilter:
 
         new_results.results = to_be_discriminated
 
-        x_data = self.discriminator.get_xdata(new_results)
+        x_data = self.discriminator.get_xdata(new_results, 1)
         y_data = self.discriminator.discriminate(x_data)
 
         start = 0
