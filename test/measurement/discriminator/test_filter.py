@@ -18,6 +18,7 @@ Test discrimination filters.
 
 import unittest
 from operator import getitem
+import os
 import pickle
 
 from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
@@ -73,7 +74,8 @@ class TestDiscriminationFilter(unittest.TestCase):
         Set-up a discriminator based on simulated data, train it and then
         discriminate the calibration data.
         """
-        with open('test_result.pkl', 'rb') as handle:
+        result_pkl = os.path.join(os.path.dirname(__file__), 'test_result.pkl')
+        with open(result_pkl, 'rb') as handle:
             result = Result.from_dict(pickle.load(handle))
 
         discriminator = LinearIQDiscriminator(result, [0, 1])
