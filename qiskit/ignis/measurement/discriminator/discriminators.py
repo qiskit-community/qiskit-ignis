@@ -188,13 +188,19 @@ class BaseDiscriminationFitter(ABC):
 
         return schedules
 
-    def _append_to_schedules(self, name, schedule_type, schedules):
+    def _append_to_schedules(self, name: str, schedule_type: int,
+                             schedules: list):
         """
+        Helper function to append schedule names.
 
-        :param name:
-        :param schedule_type:
-        :param schedules:
-        :return:
+        Args:
+            name (str): name of the schedule that may be appended to schedules.
+            schedule_type (int): defines which schedule type to include
+                in the returned schedules.
+                type == 0: only calibration schedules.
+                type == 1: only non-calibration schedules.
+                type == 2: all schedules in the results.
+            schedules (list): a list of schedule names.
         """
         if schedule_type == 0:
             if self.is_calibration(name):

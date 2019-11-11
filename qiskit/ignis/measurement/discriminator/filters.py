@@ -84,14 +84,15 @@ class DiscriminationFilter:
 
         new_results.results = to_be_discriminated
 
-        x_data = self.discriminator.get_xdata(new_results, 1)
+        x_data = self.discriminator.get_xdata(new_results, 2)
         y_data = self.discriminator.discriminate(x_data)
 
         start = 0
         for idx, n_shots in enumerate(shots_per_experiment_result):
-            counts = Obj.from_dict(self.count(y_data[start:(start+n_shots)]))
+            memory = y_data[start:(start+n_shots)]
+            counts = Obj.from_dict(self.count(memory))
             new_results.results[idx].data = ExperimentResultData(counts=counts,
-                                                                 memory=y_data)
+                                                                 memory=memory)
             start += n_shots
 
         for result in new_results.results:
