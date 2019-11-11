@@ -45,7 +45,7 @@ def gateset_linear_inversion(data, gateset_basis='Standard GST'):
             for k in range(m): #gate
                 G_k = gateset_basis.gate_labels[k]
                 gate_matrices[k][i][j] = probs[(F_i, G_k, F_j)]
-
     id_inverse = np.linalg.inv(id_matrix)
+
     gates = [id_inverse @ gate_matrix for gate_matrix in gate_matrices]
     return list(zip(gates,gateset_basis.gate_labels))
