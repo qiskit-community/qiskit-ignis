@@ -630,7 +630,8 @@ class TestFitters(unittest.TestCase):
                                         tst['expected']
                                         ['nonclifford_Z_ydata']
                                         [i]['mean'])),
-                                'Incorrect mean in non-Clifford Z data test no. '
+                                'Incorrect mean in non-Clifford Z data \
+                                test no. '
                                 + str(tst_index))
                 if tst['expected']['nonclifford_Z_ydata'][i]['std'] is None:
                     self.assertIsNone(
@@ -651,7 +652,8 @@ class TestFitters(unittest.TestCase):
                                         tst['expected']
                                         ['nonclifford_X_ydata']
                                         [i]['mean'])),
-                                'Incorrect mean in non-Clifford X data test no. '
+                                'Incorrect mean in non-Clifford X data \
+                                test no. '
                                 + str(tst_index))
                 if tst['expected']['nonclifford_X_ydata'][i]['std'] is None:
                     self.assertIsNone(

@@ -364,8 +364,9 @@ class TestRB(unittest.TestCase):
                                      %d qubit interleaved RB are not the same \
                                      as given in interleaved_gates input" % nq)
 
-    def compare_nonclifford_circuit(self, nonclifford_Z_circ, nonclifford_X_circ,
-                                    nq, rb_opts_nonclifford, vec_len):
+    def compare_nonclifford_circuit(self, nonclifford_Z_circ,
+                                    nonclifford_X_circ,nq, rb_opts_nonclifford,
+                                    vec_len):
         """
         Verifies that non-Clifford RB circuits are the same,
         except of the first and last H gates.
@@ -399,19 +400,19 @@ class TestRB(unittest.TestCase):
             op_X_index = 0
             # Measurement of the |0...0> state
             circ_Z_gatelist, op_Z_index = \
-            self.ops_to_gates(circ_Z_ops, op_Z_index, stop_gate='measure')
+                self.ops_to_gates(circ_Z_ops, op_Z_index, stop_gate='measure')
             # Measurement of the |+...+> state
             circ_X_gatelist, op_X_index = \
-            self.ops_to_gates(circ_X_ops, op_X_index, stop_gate='measure')
+                self.ops_to_gates(circ_X_ops, op_X_index, stop_gate='measure')
             h_gates = []
             for _, qb in enumerate(qlist_flat):
-                h_gates.append('h %d'%qb)
-                h_gates.append('barrier %d'%qb)
+                h_gates.append('h %d' % qb)
+                h_gates.append('barrier %d' % qb)
             circ_Z_gatelist = h_gates + circ_Z_gatelist
             h_gates = []
             for _, qb in enumerate(qlist_flat):
-                h_gates.append('barrier %d'%qb)
-                h_gates.append('h %d'%qb)
+                h_gates.append('barrier %d' % qb)
+                h_gates.append('h %d' % qb)
             circ_Z_gatelist = circ_Z_gatelist + h_gates
             # Gates in the non-Clifford RB sequence
             # should be equal (up to the H-gates)
@@ -528,8 +529,7 @@ class TestRB(unittest.TestCase):
                 rb.randomized_benchmarking_seq(
                     **rb_opts_interleaved)
             # Non-Clifford RB sequences:
-            rb_nonclifford_Z_circs, _, \
-            rb_nonclifford_X_circs = \
+            rb_nonclifford_Z_circs, _, rb_nonclifford_X_circs = \
                 rb.randomized_benchmarking_seq(
                     **rb_opts_nonclifford)
             # Purity RB sequences:
@@ -692,7 +692,6 @@ class TestRB(unittest.TestCase):
 
     def test_rb_utils(self):
         """Test some of the utility calculations, e.g. coherence limit."""
-
         t1 = 100.
         t2 = 100.
         gate2Q = 0.5

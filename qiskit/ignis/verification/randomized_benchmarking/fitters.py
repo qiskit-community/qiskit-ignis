@@ -1141,6 +1141,7 @@ class PurityRBFitter(RBFitterBase):
         if show_plt:
             plt.show()
 
+
 class NonCliffordRBFitter(RBFitterBase):
     """
         Class for fitters for non-Clifford RB

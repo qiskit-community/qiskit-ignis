@@ -179,7 +179,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
 
     """
     # Set modules (default is Clifford)
-    if group_gates is None or group_gates == 'Clifford' or group_gates == 'clifford':
+    if group_gates is None or group_gates == 'Clifford' or \
+            group_gates == 'clifford':
         Gutils = clutils()
         Ggroup = Clifford
         rb_circ_type = 'rb'
@@ -400,28 +401,30 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     # add measurement for interleaved rb
                     circ_interleaved.measure(qr[qb], cr[qind])
 
-                circ.name = rb_circ_type + '_length_%d_seed_%d' % (length_index,
-                                                                   seed + seed_offset)
-                circ_interleaved.name = rb_circ_type + \
-                                        '_interleaved_length_%d_seed_%d' \
-                                        % (length_index, seed + seed_offset)
+                circ.name = rb_circ_type + '_length_%d_seed_%d' % \
+                            (length_index, seed + seed_offset)
+                circ_interleaved.name = \
+                    rb_circ_type + '_interleaved_length_%d_seed_%d' % \
+                    (length_index, seed + seed_offset)
 
                 if group_gates == 'Non-Clifford':
                     circ.name = rb_circ_type + '_Z_length_%d_seed_%d' % \
                                 (length_index, seed + seed_offset)
-                    circ_interleaved.name = rb_circ_type + \
-                                            '_interleaved_Z_length_%d_seed_%d' \
-                                            % (length_index, seed + seed_offset)
-                    nonclifford_circ.name = rb_circ_type + '_X_length_%d_seed_%d' % \
-                                            (length_index, seed + seed_offset)
-                    nonclifford_interleaved_circ.name = rb_circ_type + \
-                                                        'interleaved_X_length_%d_seed_%d' % \
-                                                        (length_index, seed + seed_offset)
+                    circ_interleaved.name = \
+                        rb_circ_type + '_interleaved_Z_length_%d_seed_%d' % \
+                        (length_index, seed + seed_offset)
+                    nonclifford_circ.name = \
+                        rb_circ_type + '_X_length_%d_seed_%d' % \
+                        (length_index, seed + seed_offset)
+                    nonclifford_interleaved_circ.name = \
+                        rb_circ_type + 'interleaved_X_length_%d_seed_%d' % \
+                        (length_index, seed + seed_offset)
 
                 circuits[seed].append(circ)
                 circuits_interleaved[seed].append(circ_interleaved)
                 circuits_nonclifford[seed].append(nonclifford_circ)
-                circuits_nonclifford_interleaved[seed].append(nonclifford_interleaved_circ)
+                circuits_nonclifford_interleaved[seed].append(
+                    nonclifford_interleaved_circ)
 
                 if is_purity:
                     for d in range(npurity):
