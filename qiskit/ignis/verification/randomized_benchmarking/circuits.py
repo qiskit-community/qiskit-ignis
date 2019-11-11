@@ -401,8 +401,9 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     # add measurement for interleaved rb
                     circ_interleaved.measure(qr[qb], cr[qind])
 
-                circ.name = rb_circ_type + '_length_%d_seed_%d' % \
-                            (length_index, seed + seed_offset)
+                circ.name = \
+                    rb_circ_type + '_length_%d_seed_%d' % \
+                    (length_index, seed + seed_offset)
                 circ_interleaved.name = \
                     rb_circ_type + '_interleaved_length_%d_seed_%d' % \
                     (length_index, seed + seed_offset)
