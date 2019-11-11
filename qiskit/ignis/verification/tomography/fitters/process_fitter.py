@@ -29,7 +29,7 @@ class ProcessTomographyFitter(TomographyFitter):
     """Maximum-Likelihood estimation process tomography fitter."""
 
     def fit(self, method='auto', standard_weights=True, beta=0.5, **kwargs):
-        """Reconstruct a quantum channel using CVXPY convex optimization.
+        r"""Reconstruct a quantum channel using CVXPY convex optimization.
 
         **Choi matrix**
 
@@ -54,14 +54,15 @@ class ProcessTomographyFitter(TomographyFitter):
         subject to:
 
          * :math:`x >> 0` (PSD)
-         * :math:`trace(x) = dim` (trace)
-         * :math:`partial_trace(x) = identity` (trace_preserving)
+         * :math:`\text{trace}(x) = dim` (trace)
+         * :math:`\text{partial_trace}(x) = \text{identity}` (trace_preserving)
 
         where:
 
-         * a is the matrix of measurement operators :math:`a[i] = vec(M_i).H`
+         * a is the matrix of measurement operators
+           :math:`a[i] = \text{vec}(M_i).H`
          * b is the vector of expectation value data for each projector
-           :math:`b[i] ~ Tr[M_i.H * x] = (a * x)[i]`
+           :math:`b[i] ~ \text{Tr}[M_i.H * x] = (a * x)[i]`
          * x is the vectorized Choi-matrix to be fitted
 
         **PSD constraint**
@@ -93,13 +94,9 @@ class ProcessTomographyFitter(TomographyFitter):
         **CVXPY Solvers:**
 
         Various solvers can be called in CVXPY using the `solver` keyword
-        argument. Solvers included in CVXPY are:
-
-         * ``CVXOPT``: SDP and SOCP (default solver)
-         * ``SCS``: SDP and SOCP
-         * ``ECOS``: SOCP only
-
-        See the documentation on CVXPY for more information on solvers.
+        argument. See the `CVXPY documentation
+        <https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options>`_
+        for more information on solvers.
 
         References:
 

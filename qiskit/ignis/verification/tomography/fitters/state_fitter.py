@@ -41,7 +41,7 @@ class StateTomographyFitter(TomographyFitter):
         super().__init__(result, circuits, meas_basis, None)
 
     def fit(self, method='auto', standard_weights=True, beta=0.5, **kwargs):
-        """Reconstruct a quantum state using CVXPY convex optimization.
+        r"""Reconstruct a quantum state using CVXPY convex optimization.
 
         **Fitter method**
 
@@ -58,13 +58,14 @@ class StateTomographyFitter(TomographyFitter):
         subject to:
 
          * :math:`x >> 0`
-         * :math:`trace(x) = 1`
+         * :math:`\text{trace}(x) = 1`
 
         where:
 
-         * a is the matrix of measurement operators :math:`a[i] = vec(M_i).H`
+         * a is the matrix of measurement operators
+           :math:`a[i] = \text{vec}(M_i).H`
          * b is the vector of expectation value data for each projector
-           :math:`b[i] ~ Tr[M_i.H * x] = (a * x)[i]`
+           :math:`b[i] ~ \text{Tr}[M_i.H * x] = (a * x)[i]`
          * x is the vectorized density matrix to be fitted
 
         **PSD constraint**
@@ -87,13 +88,9 @@ class StateTomographyFitter(TomographyFitter):
         **CVXPY Solvers:**
 
         Various solvers can be called in CVXPY using the `solver` keyword
-        argument. Solvers included in CVXPY are:
-
-         * ``CVXOPT``: SDP and SOCP (default solver)
-         * ``SCS``: SDP and SOCP
-         * ``ECOS``: SOCP only
-
-        See the documentation on CVXPY for more information on solvers.
+        argument. See the `CVXPY documentation
+        <https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options>`_
+        for more information on solvers.
 
         References:
 
