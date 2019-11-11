@@ -365,8 +365,8 @@ class TestRB(unittest.TestCase):
                                      as given in interleaved_gates input" % nq)
 
     def compare_nonclifford_circuit(self, nonclifford_Z_circ,
-                                    nonclifford_X_circ, nq, rb_opts_nonclifford,
-                                    vec_len):
+                                    nonclifford_X_circ, nq,
+                                    rb_opts_nonclifford, vec_len):
         """
         Verifies that non-Clifford RB circuits are the same,
         except of the first and last H gates.
