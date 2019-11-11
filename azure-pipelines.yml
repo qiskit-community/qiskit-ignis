@@ -63,7 +63,7 @@ jobs:
           displayName: Install Anaconda packages
         - script: |
             call activate qiskit-ignis
-            python -m pip install --upgrade pip virtualenv
-            pip install tox
+            python -m pip install -c constraints.txt --upgrade pip virtualenv
+            pip install -c constraints.txt tox
             tox -e%TOXENV%
           displayName: 'Install dependencies and run tests'
