@@ -95,7 +95,8 @@ class TestCNOTDihedral(unittest.TestCase):
                     nq, dihedral_tables[nq - 1][inv_key])
                 test_random_dihedral.append(inv_elem_nq)
 
-        picklefile = 'expect_cnot_dihedral_random.pickle'
+        picklefile = os.path.join(os.path.dirname(__file__),
+                                  'expect_cnot_dihedral_random.pickle')
         fo = open(picklefile, 'rb')
         expected_random_dihedral = pickle.load(fo)
         fo.close()
