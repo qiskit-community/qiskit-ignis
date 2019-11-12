@@ -53,7 +53,7 @@ jobs:
       steps:
         - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
           displayName: Add conda to PATH
-        - script: conda create --yes --quiet --name qiskit-ignis
+        - script: conda create --yes --quiet --name qiskit-ignis python=%PYTHON_VERSION%
           displayName: Create Anaconda environment
         - script: |
             call activate qiskit-ignis
@@ -62,8 +62,10 @@ jobs:
           condition: ne(variables['python.version'], '3.5')
         - powershell: (new-object System.Net.WebClient).DownloadFile($env:OPENBLAS, 'c:\openblas.zip')
           condition: eq(variables['python.version'], '3.5')
+          displayName: 'Download openblas'
         - powershell: Expand-Archive c:\openblas.zip c:\openblas
           condition: eq(variables['python.version'], '3.5')
+          displayName: 'Unzip openblas'
         - script: |
             call activate qiskit-ignis
             set PATH=%PATH%;%BINPATH%;C:\openblas\%64%\bin;
@@ -77,6 +79,10 @@ jobs:
             cd ..
           condition: eq(variables['python.version'], '3.5')
           displayName: 'Install scs from source for python 3.5'
+        - script: |
+            call activate qiskit-ignis
+            conda install --yes --quiet --name qiskit-ignis python=%PYTHON_VERSION% mkl
+          displayName: 'Install MKL'
         - script: |
             call activate qiskit-ignis
             python -m pip install -c constraints.txt --upgrade pip virtualenv
