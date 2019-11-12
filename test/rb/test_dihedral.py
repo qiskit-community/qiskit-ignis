@@ -20,6 +20,7 @@ Test CNOT-dihedral functions:
 - Inverting an element: dihedral_utils.find_inverse_gates
 """
 
+import os
 import unittest
 import numpy as np
 
@@ -55,7 +56,8 @@ class TestCNOTDihedral(unittest.TestCase):
             test_dihedral_tables = self.dutils.cnot_dihedral_tables(nq)
             print("length:", len(test_dihedral_tables))
 
-            picklefile = 'expect_cnot_dihedral_%d.pickle' % nq
+            picklefile = os.path.join(os.path.dirname(__file__),
+                                      'expect_cnot_dihedral_%d.pickle' % nq)
             fo = open(picklefile, 'rb')
             expected_dihedral_tables = pickle.load(fo)
             fo.close()
@@ -70,10 +72,14 @@ class TestCNOTDihedral(unittest.TestCase):
             using tables and computing its inverse
         """
         dihedral_tables = [[]]*self.max_nq
+        picklefile = os.path.join(os.path.dirname(__file__),
+                                  'expect_cnot_dihedral_1.pickle')
         dihedral_tables[0] = self.dutils.load_dihedral_table(
-            'expect_cnot_dihedral_1.pickle')
+            picklefile)
+        picklefile = os.path.join(os.path.dirname(__file__),
+                                  'expect_cnot_dihedral_2.pickle')
         dihedral_tables[1] = self.dutils.load_dihedral_table(
-            'expect_cnot_dihedral_2.pickle')
+            picklefile)
 
         test_random_dihedral = []
         # test: generating a pseudo-random cnot-dihedral element
