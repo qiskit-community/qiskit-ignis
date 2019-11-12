@@ -72,14 +72,12 @@ class TestCNOTDihedral(unittest.TestCase):
             using tables and computing its inverse
         """
         dihedral_tables = [[]]*self.max_nq
-        picklefile = os.path.join(os.path.dirname(__file__),
-                                  'expect_cnot_dihedral_1.pickle')
-        dihedral_tables[0] = self.dutils.load_dihedral_table(
-            picklefile)
-        picklefile = os.path.join(os.path.dirname(__file__),
-                                  'expect_cnot_dihedral_2.pickle')
-        dihedral_tables[1] = self.dutils.load_dihedral_table(
-            picklefile)
+        for nq in range(self.max_nq):
+            picklefile = os.path.join(os.path.dirname(__file__),
+                                      'expect_cnot_dihedral_%d.pickle'
+                                      % (nq + 1))
+            dihedral_tables[nq] = self.dutils.load_dihedral_table(
+                picklefile)
 
         test_random_dihedral = []
         # test: generating a pseudo-random cnot-dihedral element
