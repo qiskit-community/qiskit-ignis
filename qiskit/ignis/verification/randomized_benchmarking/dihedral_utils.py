@@ -118,6 +118,7 @@ class DihedralUtils(BasicUtils):
 
         with open(picklefile, "wb") as pf:
             pickle.dump(table, pf)
+        pf.close()
 
     def load_dihedral_table(self, picklefile='cnot_dihedral_2.pickle'):
         """

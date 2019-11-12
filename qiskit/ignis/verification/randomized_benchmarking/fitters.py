@@ -1161,8 +1161,8 @@ class NonCliffordRBFitter(RBFitterBase):
             RB sequence that measures the |+...+> state
             (qiskit.Result).
             elmnts_lengths: the group elements lengths,
-                2D list i x j where i is the number of patterns,
-                j is the number of elements lengths
+            2D list i x j where i is the number of patterns,
+            j is the number of elements lengths
             rb_pattern: the pattern for the rb sequences.
         """
 
