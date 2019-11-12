@@ -330,6 +330,7 @@ class CliffordUtils(BasicUtils):
 
         with open(picklefile, "wb") as pf:
             pickle.dump(cliffords, pf)
+        pf.close()
 
     def load_clifford_table(self, picklefile='cliffords2.pickle'):
         """
@@ -343,6 +344,7 @@ class CliffordUtils(BasicUtils):
         """
         with open(picklefile, "rb") as pf:
             return pickle.load(pf)
+        pf.close()
 
     def load_tables(self, num_qubits):
         """
