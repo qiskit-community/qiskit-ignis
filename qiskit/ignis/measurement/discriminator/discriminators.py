@@ -50,6 +50,7 @@ class BaseDiscriminationFitter(ABC):
                 instead of the schedules. If schedules is None, then all the
                 schedules in cal_results are used.
         """
+        
         # Regex pattern used to identify calibration schedules
         self._cal_pattern = r'cal_\d+$'
 
