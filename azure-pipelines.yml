@@ -62,6 +62,9 @@ jobs:
         - script: |
             call activate qiskit-ignis
             conda install --yes --quiet --name qiskit-ignis --channel conda-forge python=%PYTHON_VERSION% openblas
+          condition: eq(variables['python.version'], '3.5')
+        - script: |
+            call activate qiskit-ignis
             git clone https://github.com/cvxgrp/scs.git
             cd scs
             git checkout 2.1.1
