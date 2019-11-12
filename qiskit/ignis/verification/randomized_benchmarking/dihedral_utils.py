@@ -132,6 +132,7 @@ class DihedralUtils(BasicUtils):
           """
         with open(picklefile, "rb") as pf:
             return pickle.load(pf)
+        pf.close()
 
     def load_tables(self, num_qubits):
         """
