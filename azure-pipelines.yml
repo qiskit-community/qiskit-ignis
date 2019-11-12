@@ -68,14 +68,19 @@ jobs:
           displayName: 'Unzip openblas'
         - script: |
             call activate qiskit-ignis
+            conda install --yes --quiet --update-all --name qiskit-ignis python=%PYTHON_VERSION% numpy scipy
+          displayName: Install Anaconda packages
+          condition: eq(variables['python.version'], '3.5')
+        - script: |
+            call activate qiskit-ignis
             set PATH=%PATH%;%BINPATH%;C:\openblas\%64%\bin;
             echo %PATH%
             dir C:\openblas\%ARCH%\bin
-            git clone https://github.com/cvxgrp/scs.git
-            cd scs
-            git checkout 2.1.1
             make.exe CC="gcc.exe -m64" USE_LAPACK=1 BLASLDFLAGS="-LC:\openblas\64\bin -lopenblas_5f998ef_gcc7_1_0"
             make.exe install
+            git clone --recursive https://github.com/bodono/scs-python.git
+            cd scs-python
+            python setup.py install --scs 'CC="gcc.exe -m64" USE_LAPACK=1 BLASLDFLAGS="-LC:\openblas\64\bin -lopenblas_5f998ef_gcc7_1_0"'
             cd ..
           condition: eq(variables['python.version'], '3.5')
           displayName: 'Install scs from source for python 3.5'
