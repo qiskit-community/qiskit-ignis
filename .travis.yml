@@ -44,7 +44,7 @@ before_script:
     if [ ! "$(ls -A .stestr)" ]; then
         rm -r .stestr
     fi
-   - pip install --no-cache-dir ---ignore-installed scs
+   - pip install --no-cache-dir --ignore-installed scs
 
 stages:
  - lint_and_python
