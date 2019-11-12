@@ -58,6 +58,18 @@ jobs:
             call activate qiskit-ignis
             conda install --yes --quiet --name qiskit-ignis --channel conda-forge python=%PYTHON_VERSION% scs
           displayName: Install Anaconda packages
+          condition: ne(variables['python.version'], '3.5')
+        - script: |
+            call activate qiskit-ignis
+            conda install --yes --quiet --name qiskit-ignis --channel conda-forge python=%PYTHON_VERSION% openblas
+            git clone https://github.com/cvxgrp/scs.git
+            cd scs
+            git checkout 2.1.1
+            make.exe CC="gcc.exe" USE_LAPACK=1
+            make.exe install
+            cd ..
+          condition: eq(variables['python.version'], '3.5')
+          displayName: 'Install scs from source for python 3.5'
         - script: |
             call activate qiskit-ignis
             python -m pip install -c constraints.txt --upgrade pip virtualenv
