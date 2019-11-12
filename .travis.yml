@@ -44,7 +44,6 @@ before_script:
     if [ ! "$(ls -A .stestr)" ]; then
         rm -r .stestr
     fi
-   - pip install --no-cache-dir --ignore-installed scs
 
 stages:
  - lint_and_python
@@ -108,7 +107,9 @@ matrix:
 language: python
 install: pip install -U tox pip virtualenv setuptools
 script:
-  - tox --sitepackages
+  - tox --notest
+  - tox/$TOXENV/bin/pip install --no-cache-dir --ignore-installed scs
+  - tox
 
 notifications:
   email: false
