@@ -39,7 +39,7 @@ from functools import reduce
 from operator import mul
 
 
-class SpecialPolynomial(object):
+class SpecialPolynomial():
     """Multivariate polynomial with special form.
 
     Maximum degree 3, n Z_2 variables, coefficients in Z_8.
@@ -226,9 +226,9 @@ class SpecialPolynomial(object):
             "indices non-increasing!"
         if length == 0:
             return self.weight_0
-        elif length == 1:
+        if length == 1:
             return self.weight_1[indices[0]]
-        elif length == 2:
+        if length == 2:
             # sum(self.n_vars-j, {j, 1, indices[0]})
             offset_1 = int(indices[0] * self.n_vars -
                            ((indices[0] + 1) * indices[0])/2)
@@ -333,7 +333,7 @@ class SpecialPolynomial(object):
         return out
 
 
-class CNOTDihedral(object):
+class CNOTDihedral():
     """Element of a CNOT-dihedral group <CNOT,T,X> on n qubits."""
 
     def __init__(self, n_qubits):

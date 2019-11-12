@@ -184,8 +184,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         Gutils = clutils()
         Ggroup = Clifford
         rb_circ_type = 'rb'
-    elif group_gates == 'Non-Clifford' or group_gates == 'CNOTDihedral' \
-            or group_gates == 'CNOT-Dihedral':
+    elif group_gates in ('Non-Clifford', 'CNOTDihedral',
+                         'CNOT-Dihedral'):
         group_gates = 'Non-Clifford'
         Gutils = dutils()
         Ggroup = CNOTDihedral

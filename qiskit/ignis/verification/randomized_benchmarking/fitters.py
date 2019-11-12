@@ -1376,15 +1376,15 @@ class NonCliffordRBFitter(RBFitterBase):
                     marker='+')
 
         # Plot the fit
-        ax.plot(xdata,
-                self.rbfit_Z.rb_fit_fun(xdata,
+        rbfit_Z_function = self.rbfit_Z.rb_fit_fun
+        rbfit_X_function = self.rbfit_X.rb_fit_fun
+        ax.plot(xdata, rbfit_Z_function(xdata,
                                         *self.fit[0]
                                         [pattern_index]['params']),
                 color='blue', linestyle='-', linewidth=2,
                 label='Measure state |0...0>')
         ax.tick_params(labelsize=14)
-        ax.plot(xdata,
-                self.rbfit_X.rb_fit_fun(xdata,
+        ax.plot(xdata, rbfit_X_function(xdata,
                                         *self.fit[1]
                                         [pattern_index]['params']),
                 color='red', linestyle='-', linewidth=2,
