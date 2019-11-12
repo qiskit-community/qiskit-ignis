@@ -42,6 +42,7 @@ jobs:
           Python35:
             python.version: '3.5'
             TOXENV: py35
+            OPENBLAS: https://3f23b170c54c2533c070-1c8a9b3114517dc5fe17b7c3f8c63a43.ssl.cf2.rackcdn.com/openblas-5f998ef_gcc7_1_0_win64.zip
           Python36:
             python.version: '3.6'
             TOXENV: py36
@@ -59,16 +60,19 @@ jobs:
             conda install --yes --quiet --name qiskit-ignis --channel conda-forge python=%PYTHON_VERSION% scs
           displayName: Install Anaconda packages
           condition: ne(variables['python.version'], '3.5')
-        - script: |
-            call activate qiskit-ignis
-            conda install --yes --quiet --name qiskit-ignis --channel conda-forge python=%PYTHON_VERSION% openblas
+        - ps: (new-object System.Net.WebClient).DownloadFile($env:OPENBLAS, 'c:\openblas.zip')
+          condition: eq(variables['python.version'], '3.5')
+        - ps: Expand-Archive c:\openblas.zip c:\openblas
           condition: eq(variables['python.version'], '3.5')
         - script: |
             call activate qiskit-ignis
+            set PATH=%PATH%;%BINPATH%;C:\projects\openblas\%64%\bin;
+            echo %PATH%
+            dir C:\openblas\%ARCH%\bin
             git clone https://github.com/cvxgrp/scs.git
             cd scs
             git checkout 2.1.1
-            make.exe CC="gcc.exe" USE_LAPACK=1
+            make.exe CC="gcc.exe -m64" USE_LAPACK=1 BLASLDFLAGS="-LC:\openblas\64\bin -lopenblas_5f998ef_gcc7_1_0"
             make.exe install
             cd ..
           condition: eq(variables['python.version'], '3.5')
