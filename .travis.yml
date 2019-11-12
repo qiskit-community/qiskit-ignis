@@ -108,7 +108,7 @@ matrix:
 language: python
 install: pip install -U tox pip virtualenv
 script:
-  - tox
+  - tox --sitepackages
 
 notifications:
   email: false
