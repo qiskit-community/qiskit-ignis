@@ -13,6 +13,11 @@ test/python/*.pdf
 test/python/*.prof
 .stestr/
 
+# Built documentation
+docs/_build/
+docs/stubs/
+docs/api/
+
 # dotenv
 .env
 
