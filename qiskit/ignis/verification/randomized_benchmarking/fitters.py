@@ -1143,24 +1143,24 @@ class PurityRBFitter(RBFitterBase):
 
 
 class NonCliffordRBFitter(RBFitterBase):
-    """
-        Class for fitters for non-Clifford RB
-        Derived from RBFitterBase class
+    """Class for fitters for non-Clifford RB.
 
-        Contains two RBFitter objects
+    Derived from RBFitterBase class. Contains two RBFitter objects
     """
 
     def __init__(self, nonclifford_Z_result, nonclifford_X_result,
                  elmnts_lengths, rb_pattern=None):
-        """
+        """Initialize a new NonCliffordRBFitter.
+
         Args:
-            nonclifford_Z_result: list of results of the
-                RB sequence that measures the ground state (qiskit.Result).
-            nonclifford_X_result: list of results of the
-                RB sequence that measures the |+...+> state (qiskit.Result).
-            elmnts_lengths: the group elements lengths, 2D list i x j where i
-                is the number of patterns, j is the number of elements lengths
-            rb_pattern: the pattern for the rb sequences.
+            nonclifford_Z_result (qiskit.Result): list of results of the
+                RB sequence that measures the ground state.
+            nonclifford_X_result (qiskit.Result): list of results of the
+                RB sequence that measures the :math:`|+...+>` state.
+            elmnts_lengths (list): the group elements lengths,
+                2D list i x j where i is the number of patterns,
+                j is the number of elements lengths
+            rb_pattern (list): the pattern for the rb sequences.
         """
 
         self._cliff_lengths = elmnts_lengths
@@ -1279,7 +1279,6 @@ class NonCliffordRBFitter(RBFitterBase):
             fit_guess: guess values for the fit
             fit_index: 0 fit the standard data, 1 fit the
             interleaved data
-
         """
 
         if fit_index == 0:
@@ -1288,21 +1287,26 @@ class NonCliffordRBFitter(RBFitterBase):
             self.rbfit_X.fit_data_pattern(patt_ind, fit_guess)
 
     def fit_data(self):
-        """
-        Fit the non-Clifford RB results
-        Fit each of the patterns
+        """Fit the non-Clifford RB results/
 
-        According to the paper: "Scalable randomized benchmarking
-        of non-Clifford gates"
-        (https://www.nature.com/articles/npjqi201612)
+        Fit each of the patterns.
+        According to the paper:
 
-        Puts the results into a list of fit dictionaries:
-            where each dictionary corresponds to a pattern and has fields:
-            'alpha' - alpha parameter of the non-Clifford RB
-            'alpha_err' - the error of the alpha parameter of
-                          the non-Clifford RB
-            'epg_est' - the estimated error per a CNOT-dihedral element
-            'epg_est_error' - the estimated error derived from the params_err
+        `Scalable randomized benchmarking of non-Clifford gates
+        <https://www.nature.com/articles/npjqi201612>`_
+
+
+        Returns:
+            list: A list of dictionaries where each dictionary corresponds to
+                a pattern and has fields:
+
+                 * ``alpha`` - alpha parameter of the non-Clifford RB
+                 * ``'alpha_err`` - the error of the alpha parameter of
+                   the non-Clifford RB
+                 * ``epg_est`` - the estimated error per a CNOT-dihedral
+                   element
+                 * ``epg_est_error`` - the estimated error derived from the
+                   params_err
         """
         self.rbfit_Z.fit_data()
         self.rbfit_X.fit_data()
