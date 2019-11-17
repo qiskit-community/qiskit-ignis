@@ -17,7 +17,6 @@ Pulse Schedule Generation for calibration experiments
 """
 
 import copy
-import numpy as np
 import qiskit
 import qiskit.pulse as pulse
 import qiskit.pulse.pulse_lib as pulse_lib
@@ -149,6 +148,7 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
 
         for qind, qubit in enumerate(qubits):
 
+            # positive drag pulse
             drag_pulse = pulse_lib.drag(duration=pulse_width,
                                         amp=pulse_amp[qind],
                                         beta=b_amp,
@@ -169,9 +169,30 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
             cmd_def.add('drag_%d_%d' % (circ_index, qubit), qubits=[qubit],
                         schedule=schedule)
 
+            # negative pulse
+            drag_pulse2 = pulse_lib.drag(duration=pulse_width,
+                                         amp=-1*pulse_amp[qind],
+                                         beta=b_amp,
+                                         sigma=pulse_sigma,
+                                         name='drag_pulse_%d_%d' % (circ_index,
+                                                                    qubit))
+
+            drag_gate2 = Gate(name='drag2_%d_%d' % (circ_index, qubit),
+                              num_qubits=1, params=[])
+
+            # add commands to schedule
+            schedule2 = pulse.Schedule(name='drag_pulse2_%f_%d' % (b_amp,
+                                                                   qubit))
+
+            schedule2 += drag_pulse2(drives[qubit])
+
+            # append this schedule to the cmd_def
+            cmd_def.add('drag2_%d_%d' % (circ_index, qubit), qubits=[qubit],
+                        schedule=schedule2)
+
             circ.append(drag_gate, [qr[qubit]])
-            circ.u1(np.pi, [qr[qubit]])
-            circ.append(drag_gate, [qr[qubit]])
+            # circ.u1(np.pi, [qr[qubit]])
+            circ.append(drag_gate2, [qr[qubit]])
 
         for qind, qubit in enumerate(qubits):
             circ.measure(qr[qubit], cr[qind])
