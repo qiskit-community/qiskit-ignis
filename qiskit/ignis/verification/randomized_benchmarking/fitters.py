@@ -1238,9 +1238,9 @@ class NonCliffordRBFitter(RBFitterBase):
 
         Args:
             new_nonclifford_Z_result: list of rb results
-            of the non-Clifford Z circuits
+                of the non-Clifford Z circuits
             new_nonclifford_X_result: list of rb results
-            of the non-Clifford X circuits
+                of the non-Clifford X circuits
             rerun_fit: re-caculate the means and fit the result
 
         Additional information:
@@ -1278,7 +1278,7 @@ class NonCliffordRBFitter(RBFitterBase):
             patt_ind: index of the data to fit
             fit_guess: guess values for the fit
             fit_index: 0 fit the standard data, 1 fit the
-            interleaved data
+                interleaved data
         """
 
         if fit_index == 0:
