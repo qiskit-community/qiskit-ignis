@@ -164,6 +164,11 @@ class DihedralUtils(BasicUtils):
                 self.pickle_dihedral_table(num_qubits=num_qubits)
                 dihedral_tables = self.load_dihedral_table(
                     picklefile='cnot_dihedral_%d.pickle' % num_qubits)
+            except Exception:
+                print('Making the n=%d CNOT-dihedral Table' % num_qubits)
+                self.pickle_dihedral_table(num_qubits=num_qubits)
+                dihedral_tables = self.load_dihedral_table(
+                    picklefile='cnot_dihedral_%d.pickle' % num_qubits)
         else:
             raise ValueError("The number of qubits should be only 1 or 2")
 
