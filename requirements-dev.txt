@@ -8,3 +8,4 @@ sphinx-automodapi
 stestr>=2.5.0
 ddt>=1.2.0
 jupyter
+dill
