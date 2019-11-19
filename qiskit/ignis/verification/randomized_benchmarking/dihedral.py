@@ -292,8 +292,9 @@ class SpecialPolynomial():
 
     def key(self):
         """Return a hashable representation."""
-        return (self.weight_0, tuple(self.weight_1),
-                tuple(self.weight_2), tuple(self.weight_3))
+        tup = (self.weight_0, tuple(self.weight_1),
+               tuple(self.weight_2), tuple(self.weight_3))
+        return str(tup)
 
     def __eq__(self, x):
         """Test equality."""
@@ -301,7 +302,7 @@ class SpecialPolynomial():
 
     def __hash__(self):
         """Return hash of self."""
-        strkey = str(self.key())
+        strkey = self.key()
         m = hashlib.md5(strkey.encode('utf-8')).hexdigest()
         return int(m, 16)
 
@@ -417,8 +418,9 @@ class CNOTDihedral():
 
     def key(self):
         """Return a hashable representation."""
-        tup = (self.poly.key(), tuple(map(tuple, self.linear)), tuple(self.shift))
-        return(str(tup))
+        tup = (self.poly.key(), tuple(map(tuple, self.linear)),
+               tuple(self.shift))
+        return str(tup)
 
     def __eq__(self, x):
         """Test equality."""
@@ -426,7 +428,7 @@ class CNOTDihedral():
 
     def __hash__(self):
         """Return hash of self."""
-        strkey = str(self.key())
+        strkey = self.key()
         m = hashlib.md5(strkey.encode('utf-8')).hexdigest()
         return int(m, 16)
 
@@ -526,7 +528,6 @@ def make_dict_0(n_qubits):
                 elem.flip(j)
                 circ.append(("x", j))
             num = int((num - num % 16) / 16)
-
         obj[elem] = circ
     return obj
 
