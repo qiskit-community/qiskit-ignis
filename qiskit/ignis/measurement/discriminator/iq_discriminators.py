@@ -474,6 +474,8 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
         self._description = 'Quadratic IQ discriminator for measurement ' \
                             'level 1.'
 
+        self.fit()
+
     def fit(self):
         """ Fits the discriminator using self._xdata and self._ydata. """
         if len(self._xdata) == 0:
