@@ -417,9 +417,8 @@ class CNOTDihedral():
 
     def key(self):
         """Return a hashable representation."""
-        return (self.poly.key(),
-                tuple(map(tuple, self.linear)),
-                tuple(self.shift))
+        tup = (self.poly.key(), tuple(map(tuple, self.linear)), tuple(self.shift))
+        return(str(tup))
 
     def __eq__(self, x):
         """Test equality."""
@@ -527,6 +526,7 @@ def make_dict_0(n_qubits):
                 elem.flip(j)
                 circ.append(("x", j))
             num = int((num - num % 16) / 16)
+
         obj[elem] = circ
     return obj
 
