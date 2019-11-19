@@ -300,7 +300,7 @@ class SpecialPolynomial():
 
     def __hash__(self):
         """Return hash of self."""
-        return hash(self.key())
+        return hash(str(self.key()))
 
     def __str__(self):
         """Return formatted string representation."""
@@ -424,7 +424,7 @@ class CNOTDihedral():
 
     def __hash__(self):
         """Return hash of self."""
-        return hash(self.key())
+        return hash(str(self.key()))
 
     def cnot(self, i, j):
         """Apply a CNOT gate to this element.

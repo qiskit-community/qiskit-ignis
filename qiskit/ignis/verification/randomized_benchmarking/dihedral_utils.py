@@ -19,7 +19,6 @@ Advanced CNOT-dihedral operations needed for randomized benchmarking.
 import numpy as np
 from .dihedral import make_dict_0, make_dict_next
 from .basic_utils import BasicUtils
-import dill
 
 try:
     import cPickle as pickle
@@ -114,14 +113,14 @@ class DihedralUtils(BasicUtils):
             raise ValueError(
                 "number of qubits bigger than is not supported for pickle")
 
-        picklefile = 'cnot_dihedral_' + str(num_qubits) + '.dill'
+        picklefile = 'cnot_dihedral_' + str(num_qubits) + '.pickle'
         table = self.cnot_dihedral_tables(num_qubits)
 
         with open(picklefile, "wb") as pf:
-            dill.dump(table, pf)
+            pickle.dump(table, pf)
         pf.close()
 
-    def load_dihedral_table(self, picklefile='cnot_dihedral_2.dill'):
+    def load_dihedral_table(self, picklefile='cnot_dihedral_2.pickle'):
         """
           Load pickled files of the tables of CNOT-dihedral group tables.
 
@@ -132,7 +131,7 @@ class DihedralUtils(BasicUtils):
               A table of all CNOT-dihedral group elements.
           """
         with open(picklefile, "rb") as pf:
-            return dill.load(pf)
+            return pickle.load(pf)
         pf.close()
 
     def load_tables(self, num_qubits):
@@ -157,14 +156,14 @@ class DihedralUtils(BasicUtils):
             # the file
             try:
                 dihedral_tables = self.load_dihedral_table(
-                    picklefile='cnot_dihedral_%d.dill' % num_qubits)
+                    picklefile='cnot_dihedral_%d.pickle' % num_qubits)
             except (OSError, EOFError):
                 # table doesn't exist, so save it
                 # this will save time next run
                 print('Making the n=%d CNOT-dihedral Table' % num_qubits)
                 self.pickle_dihedral_table(num_qubits=num_qubits)
                 dihedral_tables = self.load_dihedral_table(
-                    picklefile='cnot_dihedral_%d.dill' % num_qubits)
+                    picklefile='cnot_dihedral_%d.pickle' % num_qubits)
         else:
             raise ValueError("The number of qubits should be only 1 or 2")
 
