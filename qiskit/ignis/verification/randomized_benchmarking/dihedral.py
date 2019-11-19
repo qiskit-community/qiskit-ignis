@@ -35,6 +35,7 @@ Example:
 """
 import itertools
 import copy
+import hashlib
 from functools import reduce
 from operator import mul
 
@@ -300,7 +301,9 @@ class SpecialPolynomial():
 
     def __hash__(self):
         """Return hash of self."""
-        return hash(str(self.key()))
+        strkey = str(self.key())
+        m = hashlib.md5(strkey.encode('utf-8')).hexdigest()
+        return int(m, 16)
 
     def __str__(self):
         """Return formatted string representation."""
@@ -424,7 +427,9 @@ class CNOTDihedral():
 
     def __hash__(self):
         """Return hash of self."""
-        return hash(str(self.key()))
+        strkey = str(self.key())
+        m = hashlib.md5(strkey.encode('utf-8')).hexdigest()
+        return int(m, 16)
 
     def cnot(self, i, j):
         """Apply a CNOT gate to this element.
