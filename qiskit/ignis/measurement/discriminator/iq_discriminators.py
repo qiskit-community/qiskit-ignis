@@ -37,7 +37,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
     """
 
     def __init__(self, cal_results: Union[Result, List[Result]],
-                 qubit_mask: List[int], expected_states: List[str],
+                 qubit_mask: List[int], expected_states: List[str] = None,
                  standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None):
         """
@@ -64,6 +64,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                                           schedules)
 
     def get_xdata(self, results: Union[Result, List[Result]],
+                  schedule_type_to_get: int,
                   schedules: Union[List[str], List[Schedule]] = None) \
             -> List[List[float]]:
         """
@@ -73,6 +74,11 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 used to retrieve the level 1 data. If result is a list of
                 Result, then the first Result in the list that returns the data
                 of schedule (through get_memory(schedule)) is used.
+            schedule_type_to_get (int): use to specify if we should return data
+                corresponding to:
+                0: calibration data only
+                1: non-calibration data
+                2: both calibration and non-calibration data
             schedules (Union[List[str], List[Schedule]]): Either the names of
                 the schedules or the schedules themselves.
 
@@ -81,7 +87,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
         """
         xdata = []
         if schedules is None:
-            schedules = self._get_schedules(results)
+            schedules = self._get_schedules(results, schedule_type_to_get)
 
         for schedule in schedules:
             iq_data = None
@@ -102,11 +108,17 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
         return self._scale_data(xdata)
 
     def get_ydata(self, results: Union[Result, List[Result]],
+                  schedule_type_to_get: int,
                   schedules: Union[List[str], List[Schedule]] = None):
         """
         Args:
             results (Union[Result, List[Result]]): results for which to
                 retrieve the y data (i.e. expected states).
+            schedule_type_to_get (int): use to specify if we should return data
+                corresponding to:
+                0: calibration data only
+                1: non-calibration data
+                2: both calibration and non-calibration data
             schedules (Union[List[str], List[Schedule]]): the schedules for
                 which to get the y data.
 
@@ -117,7 +129,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
         ydata = []
 
         if schedules is None:
-            schedules = self._get_schedules(results)
+            schedules = self._get_schedules(results, schedule_type_to_get)
 
         for schedule in schedules:
             if isinstance(schedule, Schedule):
@@ -342,7 +354,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
             raise QiskitError('Not enough axis instances supplied. '
                               'Please provide one per qubit discriminated.')
 
-        x_data = self.get_xdata(results)
+        x_data = self.get_xdata(results, 1)
         data = np.array(x_data)
 
         for idx in range(n_qubits):
@@ -354,7 +366,7 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
     """Linear discriminant analysis discriminator for IQ data."""
 
     def __init__(self, cal_results: Union[Result, List[Result]],
-                 qubit_mask: List[int], expected_states: List[str],
+                 qubit_mask: List[int], expected_states: List[str] = None,
                  standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None,
                  discriminator_parameters: dict = None):
@@ -422,7 +434,7 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
 class QuadraticIQDiscriminator(IQDiscriminationFitter):
 
     def __init__(self, cal_results: Union[Result, List[Result]],
-                 qubit_mask: List[int], expected_states: List[str],
+                 qubit_mask: List[int], expected_states: List[str] = None,
                  standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None,
                  discriminator_parameters: dict = None):
@@ -461,6 +473,8 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
 
         self._description = 'Quadratic IQ discriminator for measurement ' \
                             'level 1.'
+
+        self.fit()
 
     def fit(self):
         """ Fits the discriminator using self._xdata and self._ydata. """
