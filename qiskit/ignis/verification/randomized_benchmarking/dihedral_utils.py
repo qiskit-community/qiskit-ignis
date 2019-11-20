@@ -117,7 +117,7 @@ class DihedralUtils(BasicUtils):
         table = self.cnot_dihedral_tables(num_qubits)
 
         with open(picklefile, "wb") as pf:
-            pickle.dump(table, pf)
+            pickle.dump(table, pf, protocol=0)
         pf.close()
 
     def load_dihedral_table(self, picklefile='cnot_dihedral_2.pickle'):
