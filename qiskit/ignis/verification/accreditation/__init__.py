@@ -15,5 +15,5 @@
 ACCREDITING OUTPUTS OF NISQ COMPUTING DEVICES (arXiv.1811.09709)
 """
 
-from circuits import accreditation_circuits
-from fitters import accreditationFitter
+from .circuits import accreditation_circuits
+from .fitters import accreditationFitter

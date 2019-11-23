@@ -398,11 +398,11 @@ def accreditation_parser(target_circuit):
             # Adds single gates' gate object to the array corresponding to
             # their qubit in single_qubit_gates
             if len(gate_qubits) == 1:
-                single_qubit_gates[gate[1][0][1]].append(gate)
+                single_qubit_gates[gate_qubits[0].index].append(gate)
             # Records the location of 2 qubit gates
             else:
-                cz_gate.append([current_band_no, gate_qubits[0][1],
-                                gate_qubits[1][1]])
+                cz_gate.append([current_band_no, gate_qubits[0].index,
+                                gate_qubits[1].index])
                 unavailiable_qubits += gate_qubits
 
     # Adds a band of identity gates if circuit ends with cz gates
