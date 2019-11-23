@@ -15,14 +15,15 @@
 Generates accreditation circuits
 """
 
-import sys
 import numpy as np
 from numpy import random
 
-from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+from qiskit import (QuantumCircuit, QuantumRegister, ClassicalRegister,
+                    QiskitError)
 from qiskit.quantum_info.synthesis import euler_angles_1q
 
 
+# pylint: disable=no-member
 def routine_one(gate, cz_gate, type_circ):
     """
     Routine 1.
@@ -223,8 +224,7 @@ def accreditation_circuits(target_circuit, num_trap):
 
     # Check if cz_gate is valid
     if cz_gate[len(cz_gate)-1][0] >= m_bands-1:
-        print('ERROR: The last band must contain no cZ gates.')
-        sys.exit(0)
+        QiskitError('ERROR: The last band must contain no cZ gates.')
 
     # Position of the target
     v_zero = random.randint(0, num_trap)

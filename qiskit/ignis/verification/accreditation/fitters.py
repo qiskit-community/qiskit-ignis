@@ -17,7 +17,9 @@
     quantum devices, arXiv:1811.09709
 """
 
+import sys
 import numpy as np
+from qiskit import QiskitError
 
 
 class accreditationFitter:
@@ -53,13 +55,11 @@ class accreditationFitter:
             self.num_traps = len(outputs_list)-1
         else:
             if len(outputs_list)-1 != self.num_traps:
-                print("ERROR: Run protocol with the same number of traps")
-                import sys
-                sys.exit(0)
+                QiskitError("ERROR: Run protocol with the " +
+                            "same number of traps")
+
         if self.num_traps < 3:
-            print("ERROR: run the protocol with at least 3 traps")
-            import sys
-            sys.exit(0)
+            QiskitError("ERROR: run the protocol with at least 3 traps")
 
         for k in range(len(outputs_list)):
 
@@ -93,7 +93,6 @@ class accreditationFitter:
                 theta (float): number between 0 and 1
         """
         if self.N_acc == 0:
-            import sys
             sys.exit()
         if self.N_acc/self.num_runs > theta:
             self.bound = self.g_num*1.7/(self.num_traps+1)
