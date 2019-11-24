@@ -55,12 +55,16 @@ class TestCNOTDihedral(unittest.TestCase):
             print('test: generating the cnot-dihedral group table - %d qubit'
                   % nq)
             test_dihedral_tables = self.dutils.cnot_dihedral_tables(nq)
+            test_dihedral_tables = dict(sorted(test_dihedral_tables.
+                                               items()))
             print("length:", len(test_dihedral_tables))
 
             picklefile = os.path.join(os.path.dirname(__file__),
                                       'expect_cnot_dihedral_%d.pickle' % nq)
             fo = open(picklefile, 'rb')
             expected_dihedral_tables = pickle.load(fo)
+            expected_dihedral_tables = dict(sorted(expected_dihedral_tables.
+                                                   items()))
             fo.close()
 
             self.assertDictEqual(expected_dihedral_tables,
@@ -80,6 +84,8 @@ class TestCNOTDihedral(unittest.TestCase):
                                       % (nq + 1))
             dihedral_tables[nq] = self.dutils.load_dihedral_table(
                 picklefile)
+            dihedral_tables[nq] = dict(sorted(dihedral_tables[nq].
+                                              items()))
 
         test_random_dihedral = []
         # test: generating a pseudo-random cnot-dihedral element
