@@ -370,7 +370,7 @@ class CliffordUtils(BasicUtils):
             try:
                 clifford_tables = self.load_clifford_table(
                     picklefile='cliffords%d.pickle' % num_qubits)
-            except OSError:
+            except (OSError, EOFError):
                 # table doesn't exist, so save it
                 # this will save time next run
                 print('Making the n=%d Clifford Table' % num_qubits)
