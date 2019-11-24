@@ -35,7 +35,6 @@ Example:
 """
 import itertools
 import copy
-import hashlib
 from functools import reduce
 from operator import mul
 
@@ -290,21 +289,16 @@ class SpecialPolynomial():
             offset_3 = int(indices[2] - indices[1] - 1)
             self.weight_3[offset_1 + offset_2 + offset_3] = value
 
+    @property
     def key(self):
-        """Return a hashable representation."""
+        """Return a string representation."""
         tup = (self.weight_0, tuple(self.weight_1),
                tuple(self.weight_2), tuple(self.weight_3))
         return str(tup)
 
     def __eq__(self, x):
         """Test equality."""
-        return isinstance(x, SpecialPolynomial) and self.key() == x.key()
-
-    def __hash__(self):
-        """Return hash of self."""
-        strkey = self.key()
-        m = hashlib.md5(strkey.encode('utf-8')).hexdigest()
-        return int(m, 16)
+        return isinstance(x, SpecialPolynomial) and self.key == x.key
 
     def __str__(self):
         """Return formatted string representation."""
@@ -416,21 +410,16 @@ class CNOTDihedral():
         result.poly = self.poly + other.poly.evaluate(new_vars)
         return result
 
+    @property
     def key(self):
-        """Return a hashable representation."""
-        tup = (self.poly.key(), tuple(map(tuple, self.linear)),
+        """Return a string representation."""
+        tup = (self.poly.key, tuple(map(tuple, self.linear)),
                tuple(self.shift))
         return str(tup)
 
     def __eq__(self, x):
         """Test equality."""
-        return isinstance(x, CNOTDihedral) and self.key() == x.key()
-
-    def __hash__(self):
-        """Return hash of self."""
-        strkey = self.key()
-        m = hashlib.md5(strkey.encode('utf-8')).hexdigest()
-        return int(m, 16)
+        return isinstance(x, CNOTDihedral) and self.key == x.key
 
     def cnot(self, i, j):
         """Apply a CNOT gate to this element.
@@ -509,8 +498,8 @@ def make_dict_0(n_qubits):
 
     This returns the dictionary of CNOT-dihedral elements on
     n_qubits using no CNOT gates. There are 16^n elements.
-    The key is the CNOTDihedral object and the value is
-    the list of gates as a string.
+    The key is a unique string and the value is a pair:
+    a CNOTDihedral object and a list of gates as a string.
     """
     assert n_qubits >= 1, "n_qubits too small!"
     obj = {}
@@ -528,7 +517,7 @@ def make_dict_0(n_qubits):
                 elem.flip(j)
                 circ.append(("x", j))
             num = int((num - num % 16) / 16)
-        obj[elem] = circ
+        obj[elem.key] = (elem, circ)
     return obj
 
 
@@ -539,12 +528,12 @@ def make_dict_next(n_qubits, dicts_prior):
     n_qubits using m+1 CNOT gates given the list of dictionaries
     of circuits using 0, 1, ..., m CNOT gates.
     There are no more than 4*(n^2 - n)*|G(m)| elements.
-    The key is the CNOTDihedral object and the value is
-    the list of gates as a string.
+    The key is a unique string and the value is a pair:
+    a CNOTDihedral object and a list of gates as a string.
     """
     assert n_qubits >= 1, "n_qubits too small!"
     obj = {}
-    for elem, circ in dicts_prior[-1].items():
+    for elem, circ in dicts_prior[-1].values():
         for i in range(n_qubits):
             for j in range(n_qubits):
                 if i != j:
@@ -556,8 +545,8 @@ def make_dict_next(n_qubits, dicts_prior):
                         if tpower > 0:
                             new_elem.phase(tpower, j)
                             new_circ.append(("u1", tpower, j))
-                        if True not in [(new_elem in d)
+                        if True not in [(new_elem.key in d)
                                         for d in dicts_prior] \
-                                and new_elem not in obj:
-                            obj[new_elem] = new_circ
+                                and new_elem.key not in obj:
+                            obj[new_elem.key] = (new_elem, new_circ)
     return obj

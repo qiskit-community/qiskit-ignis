@@ -14,7 +14,8 @@
 
 """
 Test CNOT-dihedral functions:
-- Generating CNOT-dihedral group tables on 1 and 2 qubits: ???
+- Generating CNOT-dihedral group tables on 1 and 2 qubits:
+  dihedral_utils.cnot_dihedral_tables
 - Generating a pseudo-random group element (using the tables):
   dihedral_utils.random_gates
 - Inverting an element: dihedral_utils.find_inverse_gates
@@ -62,9 +63,10 @@ class TestCNOTDihedral(unittest.TestCase):
             expected_dihedral_tables = pickle.load(fo)
             fo.close()
 
-            self.assertEqual(expected_dihedral_tables, test_dihedral_tables,
-                             'Error: tables on %d qubit are not the same'
-                             % nq)
+            self.assertDictEqual(expected_dihedral_tables,
+                                 test_dihedral_tables,
+                                 'Error: tables on %d qubit are not the same'
+                                 % nq)
 
     def test_random_and_inverse_dihedral(self):
         """
@@ -81,7 +83,7 @@ class TestCNOTDihedral(unittest.TestCase):
 
         test_random_dihedral = []
         # test: generating a pseudo-random cnot-dihedral element
-        # using tables - 1&2 qubits and computing its inverse
+        # using tables (1&2 qubits) and computing its inverse
         for nq in range(1, 1+self.max_nq):
             print("test: generating pseudo-random cnot-dihedral "
                   "elements and inverse using the tables - %d qubit" % nq)
@@ -89,8 +91,8 @@ class TestCNOTDihedral(unittest.TestCase):
                 my_seed = i
                 np.random.seed(my_seed)
                 elem_nq = self.dutils.random_gates(nq)
-                test_random_dihedral.append(elem_nq)
-                inv_key = self.dutils.find_key(elem_nq, nq)
+                test_random_dihedral.append(elem_nq[1])
+                inv_key = self.dutils.find_key(elem_nq[0], nq)
                 inv_elem_nq = self.dutils.find_inverse_gates(
                     nq, dihedral_tables[nq - 1][inv_key])
                 test_random_dihedral.append(inv_elem_nq)
@@ -101,7 +103,7 @@ class TestCNOTDihedral(unittest.TestCase):
         expected_random_dihedral = pickle.load(fo)
         fo.close()
 
-        self.assertEqual(expected_random_dihedral, expected_random_dihedral,
+        self.assertEqual(test_random_dihedral, expected_random_dihedral,
                          "Error: random and/or inverse cliffords are not "
                          "the same")
 

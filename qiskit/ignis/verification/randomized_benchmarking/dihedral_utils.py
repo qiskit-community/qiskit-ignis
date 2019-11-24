@@ -117,7 +117,7 @@ class DihedralUtils(BasicUtils):
         table = self.cnot_dihedral_tables(num_qubits)
 
         with open(picklefile, "wb") as pf:
-            pickle.dump(table, pf, protocol=4)
+            pickle.dump(table, pf)
         pf.close()
 
     def load_dihedral_table(self, picklefile='cnot_dihedral_2.pickle'):
@@ -181,7 +181,6 @@ class DihedralUtils(BasicUtils):
         Returns:
             List of gates for the QuantumCircuit.
         """
-
         gatelist = []
         for gate in circ:
             if gate[0] == 'u1':
@@ -220,12 +219,13 @@ class DihedralUtils(BasicUtils):
             A single CNOT-dihedral element on num_qubits.
         """
 
-        elem = G_keys[idx]
-        circ = (G_table[elem])
+        elem_key = G_keys[idx]
+        elem = G_table[elem_key]
+        circ = (G_table[elem_key][1])
         gatelist = self.elem_to_gates(circ)
 
         self._gatelist = gatelist
-        self._elmnt = elem
+        self._elmnt = elem[0]
         return elem
 
     # ---------------------------------------------------------
@@ -251,7 +251,7 @@ class DihedralUtils(BasicUtils):
         elem = self.cnot_dihedral_gates(np.random.randint(
             0, len(G_table)), G_table, G_keys)
         self._elmnt = elem
-        self._gatelist = self.elem_to_gates(G_table[elem])
+        self._gatelist = elem[1]
         self._num_qubits = num_qubits
 
         return elem
@@ -270,28 +270,26 @@ class DihedralUtils(BasicUtils):
         Returns:
             A CNOTDihedral object.
         """
-        G_table = self.load_tables(self._num_qubits)
-        self._gatelist = self.elem_to_gates(G_table[next_elem])
-
-        elem = next_elem * elem
+        self._gatelist = self.elem_to_gates(next_elem[1])
+        elem = next_elem[0] * elem
         self._elmnt = elem
         return elem
 
     # -------------------------------------------------------------------
     # Main function that calculates an inverse of a CNOT dihedral element
     # -------------------------------------------------------------------
-    def find_inverse_gates(self, num_qubits, gatelist):
+    def find_inverse_gates(self, num_qubits, elem):
         """
         Find the inverse of a CNOT-dihedral gate.
 
         Args:
             num_qubits: the dimension of the element.
-            gatelist: a Clifford gate.
+            elem: an element in the CNOTDihedral table.
 
         Returns:
-            An inverse Clifford gate.
+            An inverse list of gates.
         """
-
+        gatelist = elem[1]
         if num_qubits in (1, 2):
             inverse = []
             for gate in reversed(gatelist):
@@ -315,7 +313,6 @@ class DihedralUtils(BasicUtils):
         """
         G_table = self.load_tables(num_qubits)
         elem.poly.weight_0 = 0  # set global phase
-        assert elem in G_table, \
+        assert elem.key in G_table, \
             "inverse not found in lookup table!\n%s" % elem
-
-        return elem
+        return elem.key
