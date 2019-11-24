@@ -17,10 +17,10 @@ Parity Oscillations (PO), and Quantum Tomography.
 from qiskit import *
 from qiskit.circuit import Parameter
 
-
+#yn: used
 class BConfig:
     '''
-    This class creates an object that creates a GHZ circuit
+    This class is used to create a GHZ circuit
     with parallellized CNOT gates to increase fidelity
     '''
 
@@ -398,7 +398,6 @@ class BConfig:
 
         return new_circ, initial_layout
 
-    #yn: not used
     def get_ghz_po_para(self, n, measure='full'):
         '''
         Get a parametrized PO circuit. Remember that get_counts()
@@ -407,7 +406,7 @@ class BConfig:
 
          Args:
            n: number of qubits
-           extent: Must be 'full' - so as to append full measurement.
+           measure: Must be 'full' - so as to append full measurement.
         Returns:
            A parity oscillation circuit, its Delta/minus-delta parameters, and the initial ghz layout
         '''
@@ -428,8 +427,7 @@ class BConfig:
         rotate = qiskit.compiler.transpile(rotate,
                                            backend=self.backend,
                                            initial_layout=initial_layout)
-
-        meas = self.get_measurement_circ(n, extent)
+        meas = self.get_measurement_circ(n, measure)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
