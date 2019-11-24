@@ -63,9 +63,9 @@ class TestCNOTDihedral(unittest.TestCase):
                                       'expect_cnot_dihedral_%d.pickle' % nq)
             fo = open(picklefile, 'rb')
             expected_dihedral_tables = pickle.load(fo)
+            fo.close()
             expected_dihedral_tables = dict(sorted(expected_dihedral_tables.
                                                    items()))
-            fo.close()
 
             self.assertDictEqual(expected_dihedral_tables,
                                  test_dihedral_tables,
@@ -110,8 +110,8 @@ class TestCNOTDihedral(unittest.TestCase):
         fo.close()
 
         self.assertEqual(test_random_dihedral, expected_random_dihedral,
-                         "Error: random and/or inverse cliffords are not "
-                         "the same")
+                         "Error: random and/or inverse cnot-dihedral "
+                         "elements are not the same")
 
 
 if __name__ == '__main__':
