@@ -17,6 +17,7 @@ Parity Oscillations (PO), and Quantum Tomography.
 from qiskit import *
 from qiskit.circuit import Parameter
 
+
 class BConfig:
     '''
     This class is used to create a GHZ circuit
@@ -156,7 +157,8 @@ class BConfig:
 
         Args:
         Returns:
-           Tier dictionary - [step in process, control-target connection]. Facilitates parallelized GHZ circuits
+           Tier dictionary - [step in process, control-target connection].
+            Facilitates parallelized GHZ circuits
         '''
 
         tier = {}
@@ -215,7 +217,7 @@ class BConfig:
 
         Args:
            n: number of qubits
-           transpiled: toggle on/off transpilation which is useful for tomography
+           transpiled: toggle on/off transpilation - useful for tomography
            barriered: yes/no whether to barrier each step of CNOT gates
         Returns:
            A GHZ Circuit
@@ -322,7 +324,8 @@ class BConfig:
 
         Args:
            n: number of qubits
-           extent ('full', 'one'): Whether to append full measurement, or only on the first qubit
+           extent ('full', 'one'):
+            Whether to append full measurement, or only on the first qubit
         Returns:
            A GHZ Circuit
         '''
@@ -400,7 +403,8 @@ class BConfig:
            n: number of qubits
            measure: Must be 'full' - so as to append full measurement.
         Returns:
-           A parity oscillation circuit, its Delta/minus-delta parameters, and the initial ghz layout
+           A parity oscillation circuit, its Delta/minus-delta parameters,
+            and the initial ghz layout
         '''
 
         if measure != 'full':
@@ -432,7 +436,8 @@ class BConfig:
 
         Args:
            n: number of qubits
-           extent ('full', 'one'): Whether to append full measurement, or only on the first qubit
+           extent ('full', 'one'):
+            Whether to append full measurement, or only on the first qubit
         Returns:
            A GHZ Circuit
         '''

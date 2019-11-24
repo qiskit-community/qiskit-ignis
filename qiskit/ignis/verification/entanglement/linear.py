@@ -8,6 +8,7 @@ preparation analogous of parallelize.py.
 from qiskit import *
 from qiskit.circuit import Parameter
 
+
 def get_measurement_circ(n, extent='full'):
     '''
     Creates a measurement circuit that can toggle between
@@ -16,7 +17,8 @@ def get_measurement_circ(n, extent='full'):
 
     Args:
        n: number of qubits
-       extent ('full', 'one'): Whether to append full measurement, or only on the first qubit.
+       extent ('full', 'one'):
+        Whether to append full measurement, or only on the first qubit.
     Returns:
        The measurement suffix for a circuit
     '''
@@ -37,6 +39,7 @@ def get_measurement_circ(n, extent='full'):
         raise Exception("Extent arguments must be 'full' or 'one'")
     return None
 
+
 def get_ghz_simple(n, measure=True, extent='full'):
     '''
     Creates a linear GHZ state
@@ -54,7 +57,7 @@ def get_ghz_simple(n, measure=True, extent='full'):
     circ = QuantumCircuit(q)
     circ.h(q[0])
     for i in range(1, n):
-        circ.cx(q[ i -1], q[i])
+        circ.cx(q[i - 1], q[i])
     if measure:
         meas = get_measurement_circ(n, extent)
         circ = circ + meas
@@ -81,6 +84,7 @@ def get_ghz_mqc(n, delta, measure='full'):
     circ.draw()
     return circ
 
+
 def get_ghz_mqc_para(n, measure='full'):
     '''
     This function creates an MQC circuit with n qubits,
@@ -88,7 +92,8 @@ def get_ghz_mqc_para(n, measure='full'):
 
     Args:
        n: number of qubits
-       measure ('full', 'one'): Whether to append full measurement, or only on the first qubit.
+       measure ('full', 'one'):
+        Whether to append full measurement, or only on the first qubit.
     Returns:
        An mqc circuit and its Delta parameter
     '''
@@ -126,6 +131,7 @@ def get_ghz_po(n, delta, measure='full'):
     circ = circ + meas
     circ.draw()
     return circ
+
 
 def get_ghz_po_para(n, measure='full'):
     '''
