@@ -48,8 +48,9 @@ def get_ghz_simple(n, measure=True, extent='full'):
     Args:
        n: number of qubits
        measure (Boolean): Whether to add measurement gates
-       extent ('full', 'one'): Whether to append full measurement, or only on the first qubit. Relevant only
-        for measure=True
+       extent ('full', 'one'):
+        Whether to append full measurement, or only on the first qubit.
+        Relevant only for measure=True
     Returns:
        A linear GHZ Circuit
     '''
