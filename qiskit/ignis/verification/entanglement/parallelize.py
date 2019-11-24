@@ -46,7 +46,7 @@ class BConfig:
         Only intended for public devices (doubling and reversing
         each item in coupling map), but useful to run anyway
         '''
-        cmap_new = [i for i in self.cmap]
+        cmap_new = list(self.cmap)
         for a in self.cmap:
             if [a[1], a[0]] not in self.cmap:
                 cmap_new.append([a[1], a[0]])
