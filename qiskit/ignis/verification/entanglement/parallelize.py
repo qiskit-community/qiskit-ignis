@@ -17,14 +17,12 @@ Parity Oscillations (PO), and Quantum Tomography.
 from qiskit import *
 from qiskit.circuit import Parameter
 
-#yn: used
 class BConfig:
     '''
     This class is used to create a GHZ circuit
     with parallellized CNOT gates to increase fidelity
     '''
 
-#yn: used - reviewed
     def __init__(self, backend, indicator=True):
         self.nodes = {}
         self.backend = backend
@@ -32,7 +30,6 @@ class BConfig:
         self.add_nodes()
         self.indicator = indicator
 
-#yn: used - reviewed
     def add_nodes(self):
         '''
         Adds nodes to the dictionary based on coupling map
@@ -43,7 +40,6 @@ class BConfig:
         for i in range(len(self.cmap_calib())):
             self.nodes[self.cmap_calib()[i][0]].append(self.cmap_calib()[i][1])
 
-#yn: used - reviewed
     def cmap_calib(self):
         '''
         Only intended for public devices (doubling and reversing
@@ -150,7 +146,6 @@ class BConfig:
         newchildrenlist = [a[0][0] for a in ss]
         return newchildrenlist
 
-#yn: used - continue here
     def get_tier_dict(self):
         '''
         Take the nodes of the BConfig to create a Tier Dictionary,
@@ -213,7 +208,6 @@ class BConfig:
 
         return tier
 
-#yn: used
     def get_ghz_layout(self, n, transpiled=True, barriered=True):
         '''
         Feeds the Tier Dict of the backend to create a basic
@@ -227,7 +221,7 @@ class BConfig:
            A GHZ Circuit
        '''
 
-        tierdict = self.get_tier_dict() #yn: here
+        tierdict = self.get_tier_dict()
         q = QuantumRegister(n, 'q')
         circ = QuantumCircuit(q)
         circ.h(q[0])
@@ -263,7 +257,6 @@ class BConfig:
 
         return circ, initial_layout
 
-#yn: used
     def get_measurement_circ(self, n, extent):
         '''
         Creates a measurement circuit that can toggle
@@ -321,7 +314,6 @@ class BConfig:
 
         return new_circ, initial_layout
 
-#yn: used
     def get_ghz_mqc_para(self, n, extent='full'):
         '''
         Get a parametrized MQC circuit.
@@ -434,7 +426,6 @@ class BConfig:
         new_circ = circ + rotate + meas
         return new_circ, [delta, deltaneg], initial_layout
 
-#yn: used
     def get_ghz_simple(self, n, extent='full'):
         '''
         Get simple GHZ circuit with measurement

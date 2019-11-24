@@ -8,8 +8,6 @@ preparation analogous of parallelize.py.
 from qiskit import *
 from qiskit.circuit import Parameter
 
-
-# yn: used - reviewed
 def get_measurement_circ(n, extent='full'):
     '''
     Creates a measurement circuit that can toggle between
@@ -39,8 +37,6 @@ def get_measurement_circ(n, extent='full'):
         raise Exception("Extent arguments must be 'full' or 'one'")
     return None
 
-
-# yn: used - reviewed
 def get_ghz_simple(n, measure=True, extent='full'):
     '''
     Creates a linear GHZ state
@@ -85,7 +81,6 @@ def get_ghz_mqc(n, delta, measure='full'):
     circ.draw()
     return circ
 
-#yn: used - reviewed
 def get_ghz_mqc_para(n, measure='full'):
     '''
     This function creates an MQC circuit with n qubits,
@@ -132,7 +127,6 @@ def get_ghz_po(n, delta, measure='full'):
     circ.draw()
     return circ
 
-#yn: used and reviewed
 def get_ghz_po_para(n, measure='full'):
     '''
     This function creates a Parity Oscillation circuit with n qubits,
