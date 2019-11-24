@@ -132,7 +132,7 @@ class TestT1(unittest.TestCase):
 
     def test_t1(self):
         """
-        Run the simulator with thermal relaxatoin noise.
+        Run the simulator with thermal relaxation noise.
         Then verify that the calculated T1 matches the t1
         parameter.
         """
@@ -142,7 +142,7 @@ class TestT1(unittest.TestCase):
         gate_time = 0.11
         qubits = [0]
 
-        circs, xdata = t1_circuits(num_of_gates, gate_time, qubits)
+        circs, xdata = t1_circuits(num_of_gates, gate_time, len(qubits))
 
         expected_t1 = 10
         error = thermal_relaxation_error(expected_t1, 2*expected_t1, gate_time)

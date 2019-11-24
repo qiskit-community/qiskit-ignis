@@ -21,7 +21,7 @@ import qiskit
 from ..characterization_utils import pad_id_gates
 
 
-def t1_circuits(num_of_gates, gate_time, qubits):
+def t1_circuits(num_of_gates, gate_time, nqubits):
     """
     Generates circuit for T1 measurement.
     Each circuit consists of an X gate, followed by a sequence of identity
@@ -31,30 +31,33 @@ def t1_circuits(num_of_gates, gate_time, qubits):
         num_of_gates (list of integers): the number of identity gates in each
             circuit. Must be in an increasing order.
         gate_time (float): time of running a single gate.
-        qubits (list of integers): indices of the qubits whose T1 are
-            to be measured.
+                           Assuming that it is the same for all the qubits
+                           whose T1s are to be measured.
+        nqubits (integer): number of qubits whose T1s are to be measured.
+                           Specify which qubits in the `initial_layout`
+                           parameter when calling `execute`.
 
     Returns:
        A list of QuantumCircuit
-       xdata: a list of delay times
+       A list of delay times
     """
 
     xdata = gate_time * num_of_gates
 
-    qr = qiskit.QuantumRegister(max(qubits)+1)
-    cr = qiskit.ClassicalRegister(len(qubits))
+    qr = qiskit.QuantumRegister(nqubits)
+    cr = qiskit.ClassicalRegister(nqubits)
 
     circuits = []
 
     for circ_index, circ_length in enumerate(num_of_gates):
         circ = qiskit.QuantumCircuit(qr, cr)
         circ.name = 't1circuit_' + str(circ_index) + '_0'
-        for _, qubit in enumerate(qubits):
+        for qubit in range(nqubits):
             circ.x(qr[qubit])
             circ = pad_id_gates(circ, qr, qubit, circ_length)
         circ.barrier(qr)
-        for qind, qubit in enumerate(qubits):
-            circ.measure(qr[qubit], cr[qind])
+        for qubit in range(nqubits):
+            circ.measure(qr[qubit], cr[qubit])
         circuits.append(circ)
 
     return circuits, xdata
