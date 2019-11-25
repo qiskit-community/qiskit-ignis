@@ -533,7 +533,8 @@ def make_dict_next(n_qubits, dicts_prior):
     """
     assert n_qubits >= 1, "n_qubits too small!"
     obj = {}
-    for elem, circ in dicts_prior[-1].values():
+    sorted_dict = dict(sorted(dicts_prior[-1].items()))
+    for elem, circ in sorted_dict.values():
         for i in range(n_qubits):
             for j in range(n_qubits):
                 if i != j:
