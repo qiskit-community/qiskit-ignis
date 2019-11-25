@@ -41,7 +41,7 @@ class TestCNOTDihedral(unittest.TestCase):
         self.number_of_tests = 20  # number of pseudo-random seeds
         self.max_nq = 2  # maximal number of qubits to check
         self.dutils = dutils()
-        self.table_size = [0,16,6144]
+        self.table_size = [0, 16, 6144]
 
     def test_dihedral_tables(self):
         """
