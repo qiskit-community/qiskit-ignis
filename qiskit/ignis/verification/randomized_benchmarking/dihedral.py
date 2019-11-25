@@ -518,6 +518,7 @@ def make_dict_0(n_qubits):
                 circ.append(("x", j))
             num = int((num - num % 16) / 16)
         obj[elem.key] = (elem, circ)
+    obj = dict(sorted(obj.items()))
     return obj
 
 
@@ -550,4 +551,5 @@ def make_dict_next(n_qubits, dicts_prior):
                                         for d in dicts_prior] \
                                 and new_elem.key not in obj:
                             obj[new_elem.key] = (new_elem, new_circ)
+    obj = dict(sorted(obj.items()))
     return obj
