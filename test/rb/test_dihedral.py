@@ -24,11 +24,6 @@ import unittest
 from qiskit.ignis.verification.randomized_benchmarking \
     import DihedralUtils as dutils
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
 
 class TestCNOTDihedral(unittest.TestCase):
     """
