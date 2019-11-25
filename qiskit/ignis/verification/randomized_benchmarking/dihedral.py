@@ -518,7 +518,6 @@ def make_dict_0(n_qubits):
                 circ.append(("x", j))
             num = int((num - num % 16) / 16)
         obj[elem.key] = (elem, circ)
-    obj = dict(sorted(obj.items()))
     return obj
 
 
@@ -534,8 +533,7 @@ def make_dict_next(n_qubits, dicts_prior):
     """
     assert n_qubits >= 1, "n_qubits too small!"
     obj = {}
-    sorted_dict = dict(sorted(dicts_prior[-1].items()))
-    for elem, circ in sorted_dict.values():
+    for elem, circ in dicts_prior[-1].values():
         for i in range(n_qubits):
             for j in range(n_qubits):
                 if i != j:
@@ -551,5 +549,4 @@ def make_dict_next(n_qubits, dicts_prior):
                                         for d in dicts_prior] \
                                 and new_elem.key not in obj:
                             obj[new_elem.key] = (new_elem, new_circ)
-    obj = dict(sorted(obj.items()))
     return obj

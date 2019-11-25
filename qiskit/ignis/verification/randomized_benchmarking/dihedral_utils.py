@@ -115,7 +115,6 @@ class DihedralUtils(BasicUtils):
 
         picklefile = 'cnot_dihedral_' + str(num_qubits) + '.pickle'
         table = self.cnot_dihedral_tables(num_qubits)
-        table = dict(sorted(table.items()))
 
         with open(picklefile, "wb") as pf:
             pickle.dump(table, pf)

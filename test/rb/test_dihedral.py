@@ -16,14 +16,9 @@
 Test CNOT-dihedral functions:
 - Generating CNOT-dihedral group tables on 1 and 2 qubits:
   dihedral_utils.cnot_dihedral_tables
-- Generating a pseudo-random group element (using the tables):
-  dihedral_utils.random_gates
-- Inverting an element: dihedral_utils.find_inverse_gates
 """
 
-import os
 import unittest
-import numpy as np
 
 # Import the dihedral_utils functions
 from qiskit.ignis.verification.randomized_benchmarking \
@@ -46,6 +41,7 @@ class TestCNOTDihedral(unittest.TestCase):
         self.number_of_tests = 20  # number of pseudo-random seeds
         self.max_nq = 2  # maximal number of qubits to check
         self.dutils = dutils()
+        self.table_size = [0,16,6144]
 
     def test_dihedral_tables(self):
         """
@@ -57,61 +53,12 @@ class TestCNOTDihedral(unittest.TestCase):
             test_dihedral_tables = self.dutils.cnot_dihedral_tables(nq)
             test_dihedral_tables = dict(sorted(test_dihedral_tables.
                                                items()))
+            len_table = len(test_dihedral_tables)
             print("length:", len(test_dihedral_tables))
 
-            picklefile = os.path.join(os.path.dirname(__file__),
-                                      'expect_cnot_dihedral_%d.pickle' % nq)
-            fo = open(picklefile, 'rb')
-            expected_dihedral_tables = pickle.load(fo)
-            fo.close()
-            expected_dihedral_tables = dict(sorted(expected_dihedral_tables.
-                                                   items()))
-
-            self.assertDictEqual(expected_dihedral_tables,
-                                 test_dihedral_tables,
-                                 'Error: tables on %d qubit are not the same'
-                                 % nq)
-
-    def test_random_and_inverse_dihedral(self):
-        """
-            test: generating a pseudo-random cnot-dihedral element
-            using tables and computing its inverse
-        """
-        dihedral_tables = [[]]*self.max_nq
-        for nq in range(self.max_nq):
-            picklefile = os.path.join(os.path.dirname(__file__),
-                                      'expect_cnot_dihedral_%d.pickle'
-                                      % (nq + 1))
-            dihedral_tables[nq] = self.dutils.load_dihedral_table(
-                picklefile)
-            dihedral_tables[nq] = dict(sorted(dihedral_tables[nq].
-                                              items()))
-
-        test_random_dihedral = []
-        # test: generating a pseudo-random cnot-dihedral element
-        # using tables (1&2 qubits) and computing its inverse
-        for nq in range(1, 1+self.max_nq):
-            print("test: generating pseudo-random cnot-dihedral "
-                  "elements and inverse using the tables - %d qubit" % nq)
-            for i in range(0, self.number_of_tests):
-                my_seed = i
-                np.random.seed(my_seed)
-                elem_nq = self.dutils.random_gates(nq)
-                test_random_dihedral.append(elem_nq[1])
-                inv_key = self.dutils.find_key(elem_nq[0], nq)
-                inv_elem_nq = self.dutils.find_inverse_gates(
-                    nq, dihedral_tables[nq - 1][inv_key])
-                test_random_dihedral.append(inv_elem_nq)
-
-        picklefile = os.path.join(os.path.dirname(__file__),
-                                  'expect_cnot_dihedral_random.pickle')
-        fo = open(picklefile, 'rb')
-        expected_random_dihedral = pickle.load(fo)
-        fo.close()
-
-        self.assertEqual(test_random_dihedral, expected_random_dihedral,
-                         "Error: random and/or inverse cnot-dihedral "
-                         "elements are not the same")
+            self.assertEqual(len_table, self.table_size[nq],
+                             'Error: table on %d qubit does not contain '
+                             'the expected number of elements' % nq)
 
 
 if __name__ == '__main__':
