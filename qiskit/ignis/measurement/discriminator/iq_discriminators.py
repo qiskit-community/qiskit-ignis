@@ -288,7 +288,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                         misclassified = x_data[y_disc != y_data]
                         ax.scatter(misclassified[:, q_idx],
                                    misclassified[:, n_qubits + q_idx],
-                                   color='r', alpha=0.5)
+                                   color='r', alpha=0.5, marker='x')
 
                 ax.legend(frameon=True)
 
