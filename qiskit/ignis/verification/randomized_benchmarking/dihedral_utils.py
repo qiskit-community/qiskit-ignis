@@ -158,7 +158,7 @@ class DihedralUtils(BasicUtils):
             try:
                 dihedral_tables = self.load_dihedral_table(
                     picklefile='cnot_dihedral_%d.pickle' % num_qubits)
-            except (OSError, EOFError):
+            except (OSError, EOFError, pickle.UnpicklingError):
                 # table doesn't exist, so save it
                 # this will save time next run
                 print('Making the n=%d CNOT-dihedral Table' % num_qubits)
