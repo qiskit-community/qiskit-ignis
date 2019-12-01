@@ -135,7 +135,6 @@ class DihedralUtils(BasicUtils):
         pf.close()
         return pickletable
 
-
     def load_tables(self, num_qubits):
         """
         Returns the needed CNOT dihedral tables for RB

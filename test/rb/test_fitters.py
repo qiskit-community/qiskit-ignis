@@ -643,7 +643,8 @@ class TestFitters(unittest.TestCase):
                     self.assertTrue(
                         all(np.isclose(a, b) for a, b in zip(
                             ydata_Z[i]['std'],
-                            tst['expected']['cnotdihedral_Z_ydata'][i]['std'])),
+                            tst['expected']['cnotdihedral_Z_ydata']
+                            [i]['std'])),
                         'Incorrect std in cnot-dihedral Z data test no. ' +
                         str(tst_index))
 
