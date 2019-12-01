@@ -343,8 +343,9 @@ class CliffordUtils(BasicUtils):
             A table of 1 and 2 qubit Clifford gates.
         """
         with open(picklefile, "rb") as pf:
-            return pickle.load(pf)
+            pickletable = pickle.load(pf)
         pf.close()
+        return pickletable
 
     def load_tables(self, num_qubits):
         """

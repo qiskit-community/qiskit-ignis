@@ -23,7 +23,7 @@ import unittest
 import numpy as np
 
 from qiskit.ignis.verification.randomized_benchmarking import \
-    RBFitter, InterleavedRBFitter, PurityRBFitter, NonCliffordRBFitter
+    RBFitter, InterleavedRBFitter, PurityRBFitter, CNOTDihedralRBFitter
 
 
 class TestFitters(unittest.TestCase):
@@ -534,12 +534,13 @@ class TestFitters(unittest.TestCase):
                     'Incorrect PEPC error in purity data test no. '
                     + str(tst_index))
 
-    def test_nonclifford_fitters(self):
-        """ Test the non-clifford fitters """
+    def test_cnotdihedral_fitters(self):
+        """ Test the non-clifford cnot-dihedral CNOT-Dihedral
+        fitters """
 
         # Use pickled results files
 
-        tests_nonclifford = \
+        tests_cnotdihedral = \
             [{
                 'rb_opts': {
                     'xdata': np.array([[1, 21, 41, 61,
@@ -550,16 +551,16 @@ class TestFitters(unittest.TestCase):
                                         483, 543]]),
                     'rb_pattern': [[0, 2], [1]],
                     'shots': 200},
-                'nonclifford_X_results_file':
+                'cnotdihedral_X_results_file':
                     os.path.join(
                         os.path.dirname(__file__),
-                        'test_fitter_nonclifford_X_results.pkl'),
-                'noncliffrod_Z_results_file':
+                        'test_fitter_cnotdihedral_X_results.pkl'),
+                'cnotdihedral_Z_results_file':
                     os.path.join(
                         os.path.dirname(__file__),
-                        'test_fitter_nonclifford_Z_results.pkl'),
+                        'test_fitter_cnotdihedral_Z_results.pkl'),
                 'expected': {
-                    'nonclifford_X_ydata':
+                    'cnotdihedral_X_ydata':
                         [{'mean': np.array([0.961, 0.72, 0.565,
                                             0.462, 0.353, 0.34,
                                             0.303, 0.301, 0.28,
@@ -578,7 +579,7 @@ class TestFitters(unittest.TestCase):
                                            0.03937004, 0.03114482,
                                            0.026, 0.01529706,
                                            0.02387467, 0.02302173])}],
-                    'nonclifford_Z_ydata':
+                    'cnotdihedral_Z_ydata':
                         [{'mean': np.array([0.97, 0.725, 0.578,
                                             0.462, 0.373, 0.348,
                                             0.32, 0.311, 0.263, 0.268]),
@@ -606,21 +607,21 @@ class TestFitters(unittest.TestCase):
                          'epg_est_err': 9.315951142941721e-05}]
                 }}]
 
-        for tst_index, tst in enumerate(tests_nonclifford):
-            fo = open(tst['nonclifford_X_results_file'], 'rb')
-            nonclifford_X_result_list = pickle.load(fo)
+        for tst_index, tst in enumerate(tests_cnotdihedral):
+            fo = open(tst['cnotdihedral_X_results_file'], 'rb')
+            cnotdihedral_X_result_list = pickle.load(fo)
             fo.close()
 
-            fo = open(tst['noncliffrod_Z_results_file'], 'rb')
-            nonclifford_Z_result_list = pickle.load(fo)
+            fo = open(tst['cnotdihedral_Z_results_file'], 'rb')
+            cnotdihedral_Z_result_list = pickle.load(fo)
             fo.close()
 
-            # NonCliffordRBFitter class
-            joint_rb_fit = NonCliffordRBFitter(
-                nonclifford_Z_result_list, nonclifford_X_result_list,
+            # CNOTDihedralRBFitter class
+            joint_rb_fit = CNOTDihedralRBFitter(
+                cnotdihedral_Z_result_list, cnotdihedral_X_result_list,
                 tst['rb_opts']['xdata'], tst['rb_opts']['rb_pattern'])
 
-            joint_fit = joint_rb_fit.fit_nonclifford
+            joint_fit = joint_rb_fit.fit_cnotdihedral
             ydata_Z = joint_rb_fit.ydata[0]
             ydata_X = joint_rb_fit.ydata[1]
 
@@ -628,45 +629,45 @@ class TestFitters(unittest.TestCase):
                 self.assertTrue(all(np.isclose(a, b) for a, b in
                                     zip(ydata_Z[i]['mean'],
                                         tst['expected']
-                                        ['nonclifford_Z_ydata']
+                                        ['cnotdihedral_Z_ydata']
                                         [i]['mean'])),
-                                'Incorrect mean in non-Clifford Z data \
+                                'Incorrect mean in cnot-dihedral Z data \
                                 test no. '
                                 + str(tst_index))
-                if tst['expected']['nonclifford_Z_ydata'][i]['std'] is None:
+                if tst['expected']['cnotdihedral_Z_ydata'][i]['std'] is None:
                     self.assertIsNone(
                         ydata_Z[i]['std'],
-                        'Incorrect std in non-Clifford Z data test no. ' +
+                        'Incorrect std in cnot-dihedral Z data test no. ' +
                         str(tst_index))
                 else:
                     self.assertTrue(
                         all(np.isclose(a, b) for a, b in zip(
                             ydata_Z[i]['std'],
-                            tst['expected']['nonclifford_Z_ydata'][i]['std'])),
-                        'Incorrect std in non-Clifford Z data test no. ' +
+                            tst['expected']['cnotdihedral_Z_ydata'][i]['std'])),
+                        'Incorrect std in cnot-dihedral Z data test no. ' +
                         str(tst_index))
 
             for i, _ in enumerate(ydata_X):
                 self.assertTrue(all(np.isclose(a, b) for a, b in
                                     zip(ydata_X[i]['mean'],
                                         tst['expected']
-                                        ['nonclifford_X_ydata']
+                                        ['cnotdihedral_X_ydata']
                                         [i]['mean'])),
-                                'Incorrect mean in non-Clifford X data \
+                                'Incorrect mean in cnot-dihedral X data \
                                 test no. '
                                 + str(tst_index))
-                if tst['expected']['nonclifford_X_ydata'][i]['std'] is None:
+                if tst['expected']['cnotdihedral_X_ydata'][i]['std'] is None:
                     self.assertIsNone(
                         ydata_X[i]['std'],
-                        'Incorrect std in non-Clifford X data test no. '
+                        'Incorrect std in cnot-dihedral X data test no. '
                         + str(tst_index))
                 else:
                     self.assertTrue(
                         all(np.isclose(a, b) for a, b in zip(
                             ydata_X[i]['std'],
-                            tst['expected']['nonclifford_X_ydata']
+                            tst['expected']['cnotdihedral_X_ydata']
                             [i]['std'])),
-                        'Incorrect std in non-Clifford X test no. '
+                        'Incorrect std in cnotdihedral X test no. '
                         + str(tst_index))
 
             for i, _ in enumerate(joint_fit):

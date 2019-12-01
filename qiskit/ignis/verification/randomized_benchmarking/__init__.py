@@ -25,5 +25,5 @@ from .dihedral import CNOTDihedral
 from .dihedral_utils import DihedralUtils
 from .circuits import randomized_benchmarking_seq
 from .fitters import RBFitter, InterleavedRBFitter, PurityRBFitter, \
-    NonCliffordRBFitter
+    CNOTDihedralRBFitter
 from . import rb_utils

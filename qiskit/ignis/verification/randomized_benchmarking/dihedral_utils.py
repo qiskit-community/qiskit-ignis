@@ -131,8 +131,10 @@ class DihedralUtils(BasicUtils):
               A table of all CNOT-dihedral group elements.
           """
         with open(picklefile, "rb") as pf:
-            return pickle.load(pf)
+            pickletable = pickle.load(pf)
         pf.close()
+        return pickletable
+
 
     def load_tables(self, num_qubits):
         """
@@ -145,8 +147,8 @@ class DihedralUtils(BasicUtils):
             A table of CNOTDihedral objects
         """
 
-        # load the clifford tables, but only if we're using that particular
-        # num_qubits
+        # load the cnot-dihedral tables, but only if we're using
+        # that particular num_qubits
         if num_qubits == 1:
             # 1Q - load table programmatically
             dihedral_tables = self.cnot_dihedral_tables(1)
