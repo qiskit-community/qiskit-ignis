@@ -109,7 +109,7 @@ install: pip install -U tox pip virtualenv setuptools
 script:
   - tox --notest
   - .tox/$TOXENV/bin/pip install --no-cache-dir --ignore-installed scs
-  - travis_wait tox
+  - tox
 
 notifications:
   email: false
