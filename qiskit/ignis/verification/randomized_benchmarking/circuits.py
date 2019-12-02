@@ -188,14 +188,15 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
         Gutils = clutils()
         Ggroup = Clifford
         rb_circ_type = 'rb'
+        group_gates_type = 0
     elif group_gates in ('1', 'Non-Clifford',
                          'NonClifford'
                          'CNOTDihedral',
                          'CNOT-Dihedral'):
-        group_gates = 'CNOT-Dihedral'
         Gutils = dutils()
         Ggroup = CNOTDihedral
         rb_circ_type = 'rb_cnotdihedral'
+        group_gates_type = 1
     else:
         raise ValueError("Unknown group or set of gates.")
 
@@ -384,7 +385,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                 # and the |+...+> state (cnot-dihedral_circ)
                 cnotdihedral_circ = qiskit.QuantumCircuit(qr, cr)
                 cnotdihedral_interleaved_circ = qiskit.QuantumCircuit(qr, cr)
-                if group_gates == 'CNOT-Dihedral':
+                if group_gates_type == 1:
                     for _, qb in enumerate(qlist_flat):
                         cnotdihedral_circ.h(qr[qb])
                         cnotdihedral_circ.barrier(qr[qb])
@@ -416,7 +417,7 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                     rb_circ_type + '_interleaved_length_%d_seed_%d' % \
                     (length_index, seed + seed_offset)
 
-                if group_gates == 'CNOT-Dihedral':
+                if group_gates_type == 1:
                     circ.name = rb_circ_type + '_Z_length_%d_seed_%d' % \
                                 (length_index, seed + seed_offset)
                     circ_interleaved.name = \
@@ -444,14 +445,14 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
     if is_purity:
         return circuits_purity, xdata, npurity
     # output of non-clifford cnot-dihedral interleaved rb
-    if interleaved_gates is not None and group_gates == 'CNOT-Dihedral':
+    if interleaved_gates is not None and group_gates_type == 1:
         return circuits, xdata, circuits_cnotdihedral, circuits_interleaved, \
                circuits_cnotdihedral_interleaved
     # output of interleaved rb
     if interleaved_gates is not None:
         return circuits, xdata, circuits_interleaved
     # output of Non-Clifford cnot-dihedral rb
-    if group_gates == 'CNOT-Dihedral':
+    if group_gates_type == 1:
         return circuits, xdata, circuits_cnotdihedral
     # output of standard (simultaneous) rb
     return circuits, xdata
