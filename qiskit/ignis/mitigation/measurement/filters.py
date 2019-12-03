@@ -73,27 +73,25 @@ class MeasurementFilter():
         self._cal_matrix = new_cal_matrix
 
     def apply(self, raw_data, method='least_squares'):
-        """
-        Apply the calibration matrix to results
+        """Apply the calibration matrix to results.
 
         Args:
-            raw_data: The data to be corrected. Can be in a number of forms.
-                Form1: a counts dictionary from results.get_counts
-                Form2: a list of counts of length==len(state_labels)
-                Form3: a list of counts of length==M*len(state_labels) where M
-                    is an integer (e.g. for use with the tomography data)
-                Form4: a qiskit Result
+            raw_data: The data to be corrected. Can be in a number of forms:
+                 * Form1: a counts dictionary from results.get_counts
+                 * Form2: a list of counts of length==len(state_labels)
+                 * Form3: a list of counts of length==M*len(state_labels) where
+                 M is an integer (e.g. for use with the tomography data)
+                 * Form4: a qiskit Result
 
             method (str): fitting method. If None, then least_squares is used.
-                'pseudo_inverse': direct inversion of the A matrix
-                'least_squares': constrained to have physical probabilities
+                ``pseudo_inverse``: direct inversion of the A matrix
+                ``least_squares``: constrained to have physical probabilities
 
         Returns:
             The corrected data in the same form as raw_data
 
-        Additional Information:
+        .. code-block::
 
-            e.g.
             calcircuits, state_labels = complete_measurement_calibration(
                 qiskit.QuantumRegister(5))
             job = qiskit.execute(calcircuits)
@@ -106,7 +104,6 @@ class MeasurementFilter():
 
             error_mitigated_counts = meas_filter.apply(
                 result2.get_counts('circ1'))
-
         """
 
         # check forms of raw_data
@@ -203,10 +200,7 @@ class MeasurementFilter():
         return raw_data2
 
     def _apply_correction(self, resultidx, raw_data, method):
-        """
-        Wrapper to call apply with a counts dictionary
-
-        """
+        """Wrapper to call apply with a counts dictionary."""
         new_counts = self.apply(
             raw_data.get_counts(resultidx), method=method)
         return resultidx, new_counts
@@ -217,21 +211,20 @@ class TensoredFilter():
     Tensored measurement error mitigation filter
 
     Produced from a tensored measurement calibration fitter and can be applied
-    to data
-
+    to data.
     """
 
     def __init__(self, cal_matrices, substate_labels_list):
         """
         Initialize a tensored measurement error mitigation filter using
-        the cal_matrices from a tensored measurement calibration fitter
+        the cal_matrices from a tensored measurement calibration fitter.
 
         Args:
             cal_matrices: the calibration matrices for applying the correction
             qubit_list_sizes: the lengths of the lists in mit_pattern
-            (see tensored_meas_cal in circuits.py for mit_pattern)
+                (see tensored_meas_cal in circuits.py for mit_pattern)
             substate_labels_list (list of lists): for each calibration matrix
-            a list of the states (as strings, states in the subspace)
+                a list of the states (as strings, states in the subspace)
         """
 
         self._cal_matrices = cal_matrices
@@ -275,17 +268,17 @@ class TensoredFilter():
 
     @property
     def qubit_list_sizes(self):
-        """Return _qubit_list_sizes"""
+        """Return _qubit_list_sizes."""
         return self._qubit_list_sizes
 
     @property
     def nqubits(self):
-        """Return the number of qubits"""
+        """Return the number of qubits."""
         return sum(self._qubit_list_sizes)
 
     def apply(self, raw_data, method='least_squares'):
         """
-        Apply the calibration matrices to results
+        Apply the calibration matrices to results.
 
         Args:
             raw_data: The data to be corrected. Can be in a number of forms.
@@ -293,8 +286,8 @@ class TensoredFilter():
                 or a qiskit Result
 
             method (str): fitting method. If None, then least_squares is used.
-                'pseudo_inverse': direct inversion of the cal matrices
-                'least_squares': constrained to have physical probabilities
+                'pseudo_inverse': direct inversion of the cal matrices.
+                'least_squares': constrained to have physical probabilities.
 
         Returns:
             The corrected data in the same form as raw_data
@@ -426,10 +419,7 @@ class TensoredFilter():
         return new_count_dict
 
     def _apply_correction(self, resultidx, raw_data, method):
-        """
-        Wrapper to call apply with a counts dictionary
-
-        """
+        """Wrapper to call apply with a counts dictionary."""
         new_counts = self.apply(
             raw_data.get_counts(resultidx), method=method)
         return resultidx, new_counts

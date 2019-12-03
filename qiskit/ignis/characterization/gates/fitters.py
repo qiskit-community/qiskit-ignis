@@ -48,6 +48,25 @@ class AmpCalFitter(BaseGateFitter):
                                          thetaerr, thetaerr,
                                          np.pi/2, np.pi/2, c)
 
+    def guess_params(self, qind=0):
+        """
+        Guess fit parameters for the amp cal
+
+        Args:
+            qind: qubit index to guess fit parameters for
+
+        Returns:
+            List of fit guess parameters
+            [thetaerr, offset]
+        """
+
+        c = self.ydata['0'][qind]['mean'][0]
+
+        theta_err = (self.ydata['0'][qind]['mean'][0] -
+                     self.ydata['0'][qind]['mean'][1])/2
+
+        return [theta_err, c]
+
     def angle_err(self, qind=-1):
 
         """
@@ -56,7 +75,8 @@ class AmpCalFitter(BaseGateFitter):
         Args:
             qind: qubit index to return (-1 return all)
 
-        return a list of errors
+        Returns:
+            a list of errors
         """
 
         fitparam = self._get_param(0, qind, series='0', err=False)
@@ -104,7 +124,8 @@ class AngleCalFitter(BaseGateFitter):
         Args:
             qind: qubit index to return (-1 return all)
 
-        return a list of errors
+        Returns:
+            a list of errors
         """
 
         fitparam = self._get_param(0, qind, series='0', err=False)
@@ -155,7 +176,8 @@ class AmpCalCXFitter(BaseGateFitter):
         Args:
             qind: qubit index to return (-1 return all)
 
-        return a list of errors
+        Returns:
+            a list of errors
         """
 
         fitparam = self._get_param(0, qind, series='0', err=False)
@@ -204,7 +226,8 @@ class AngleCalCXFitter(BaseGateFitter):
         Args:
             qind: qubit index to return (-1 return all)
 
-        return a list of errors
+        Returns:
+            a list of errors
         """
 
         fitparam = self._get_param(0, qind, series='0', err=False)

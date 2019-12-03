@@ -33,19 +33,23 @@ class BaseFitter:
                  series=None, expected_state='0'):
         """
         Args:
-           description: a string describing the fitter's purpose, e.g. 'T1'
-           backend_result: a qiskit.result or list of results
-           xdata: a list of the independent parameter
-               (which will be fit against).
-           qubits: the qubits for which we measured coherence
-           fit_fun, fit_p0, fit_bounds: equivalent to parameters of
-           scipy.curve_fit.
-           circuit_names: names of the circuits, should be the same length
-           as xdata. Full circuit name will be these plus the
-           series name
-           series: list of circuit name tags
-           expected_state: is the circuit supposed to end up in '0' or '1'?
+            description: a string describing the fitter's purpose, e.g. 'T1'
+            backend_result: a qiskit.result or list of results
+            xdata: a list of the independent parameter
+                (which will be fit against).
+            qubits: the qubits for which we measured coherence
+            fit_fun, fit_p0, fit_bounds: equivalent to parameters of
+                scipy.curve_fit.
+            circuit_names: names of the circuits, should be the same length
+                as xdata. Full circuit name will be these plus the
+                series name
+            series: list of circuit name tags
+            expected_state: is the circuit supposed to end up in '0' or '1'?
         """
+
+        if fit_bounds is None:
+            fit_bounds = ([-np.inf for e in range(len(fit_p0))],
+                          [np.inf for e in range(len(fit_p0))])
 
         if series is None:
             self._series = ['0']
@@ -124,14 +128,15 @@ class BaseFitter:
 
     @property
     def ydata(self):
-        """
-        Return the data points on the y-axis
-        In the form of a list of dictionaries:
-        - ydata[i]['mean'] is a list, where item
-            no. j is the probability of success
-            of qubit i for a circuit that lasts xdata[j].
-        - ydata[i]['std'] is a list, where ydata['std'][j] is the
-            standard deviation of the success of qubit i.
+        """Return the data points on the y-axis
+
+        The data points are returning in the form of a list of dictionaries:
+
+         * ydata[i]['mean'] is a list, where item
+             no. j is the probability of success
+             of qubit i for a circuit that lasts xdata[j].
+         * ydata[i]['std'] is a list, where ydata['std'][j] is the
+             standard deviation of the success of qubit i.
         """
         return self._ydata
 
@@ -323,6 +328,184 @@ class BaseFitter:
 
         return a*np.cos((theta0+thetaerr) * x + phi0 + phierr) + c
 
+    @staticmethod
+    def _quadratic(x, a, x0, c):
+        """
+        Function used to fit drag
+        """
+
+        return a * (x-x0)**2 + c
+
+
+class IQFitter(BaseFitter):
+    """
+    Base Fitter Class for experiments with Level 1 results
+    """
+
+    def __init__(self, description, backend_result, xdata,
+                 qubits, fit_fun, fit_p0,
+                 fit_bounds, circuit_names,
+                 series=None):
+
+        """
+        See BaseFitter __init__
+        """
+
+        BaseFitter.__init__(self, description,
+                            backend_result, xdata,
+                            qubits, fit_fun,
+                            fit_p0, fit_bounds, circuit_names,
+                            series)
+
+    def _build_iq_list(self):
+        """
+        From a list of results, calculate the mean for each
+        experiment and circuit/program
+
+        Returns:
+            mean of the iq data, variance of the iq data (if
+            single shot IQ)
+        """
+
+        iq_list = {}
+        iq_list_mean = {}
+        iq_list_var = {}
+        shots_list = {}
+        meas_ret = ''
+
+        for single_result in self._backend_result_list:
+            # go through each of the schedules in this run
+            for result in single_result.results:
+                sname = result.header.name
+                mem_slots = result.header.memory_slots
+
+                if meas_ret == '':
+                    # update
+                    if result.meas_return == 'avg':
+                        meas_ret = 'avg'
+                    else:
+                        meas_ret = 'single'
+
+                if result.meas_level != 1:
+                    raise QiskitError('This fitter works with IQ data')
+
+                if meas_ret != result.meas_return:
+                    raise QiskitError('All data must be single shot or '
+                                      'averaged')
+
+                shots_list[sname] = (result.shots +
+                                     shots_list.get(sname, 0))
+
+                if meas_ret == 'avg':
+
+                    # data is averaged already, but if we need to
+                    # further average over different runs
+                    # we need to take into account the full number of shots
+
+                    iq_list[sname] = (result.shots *
+                                      single_result.get_memory(sname) +
+                                      iq_list.get(sname, np.zeros(mem_slots)))
+
+                else:
+
+                    # data is in single shot IQ mode
+                    iq_list[sname] = (result.shots *
+                                      single_result.get_memory(sname) +
+                                      iq_list.get(sname,
+                                                  np.zeros([result.shots,
+                                                            mem_slots])))
+
+        for sname in iq_list:
+
+            if meas_ret == 'avg':
+                iq_list_mean[sname] = iq_list[sname]/shots_list[sname]
+                iq_list_var[sname] = np.ones(len(iq_list_mean[sname]))*1e-4
+            else:
+                iq_list_mean[sname] = np.sum(iq_list[sname])/shots_list[sname]
+                iq_list_var[sname] = np.std(iq_list[sname])
+
+        return iq_list_mean, iq_list_var
+
+    def _calc_data(self):
+        """
+        Take the IQ values from the list of results, get the mean
+        values and then project onto a line in IQ space to give
+        the maximum signal. Load into the _ydata which is the mean
+        and variance as a single float.
+
+        Overloaded from BaseFitter._calc_data which assumed shots
+        """
+
+        iq_list_mean, iq_list_var = self._build_iq_list()
+
+        self._ydata = {}
+        for _, serieslbl in enumerate(self._series):
+            self._ydata[serieslbl] = []
+            for qind, _ in enumerate(self._qubits):
+                self._ydata[serieslbl].append({'mean': [], 'std': []})
+                mean_list = self._ydata[serieslbl][-1]['mean']
+                var_list = self._ydata[serieslbl][-1]['std']
+                for circ, _ in enumerate(self._xdata):
+                    circname = self._circuit_names[circ] + serieslbl
+                    mean_list.append(iq_list_mean[circname][qind])
+                    var_list.append(iq_list_var[circname][qind])
+                    # problem for the fitter if one of the std points is
+                    # exactly zero
+                    if var_list[-1] == 0:
+                        var_list[-1] = 1e-4
+
+                # project the data onto a line
+                # mean over all the experiment
+                q_exp_mean = np.mean(mean_list)
+                mean_list -= q_exp_mean
+                real_ext = np.mean(np.abs(np.real(mean_list)))
+                imag_ext = np.mean(np.abs(np.imag(mean_list)))
+                crot = real_ext/(real_ext**2+imag_ext**2)**0.5
+                srot = imag_ext/(real_ext**2+imag_ext**2)**0.5
+                mean_list = crot*np.real(mean_list)+srot*np.imag(mean_list)
+                self._ydata[serieslbl][-1]['mean'] = mean_list
+
+    def plot(self, qind, series='0', ax=None, show_plot=True):
+        """
+        Plot calibration data.
+
+        Args:
+            qind: qubit index to plot
+            ax: plot axes
+            show_plot: call plt.show()
+
+        Returns:
+            The axes object
+        """
+
+        from matplotlib import pyplot as plt
+
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+
+        ax.errorbar(self._xdata, self._ydata[series][qind]['mean'],
+                    self._ydata[series][qind]['std'],
+                    marker='.', markersize=9,
+                    c='b', linestyle='')
+        ax.plot(self._xdata, self._fit_fun(self._xdata,
+                                           *self._params[series][qind]),
+                c='r', linestyle='--',
+                label='Q%d' % (self._qubits[qind]))
+
+        ax.tick_params(axis='x', labelsize=14, labelrotation=70)
+        ax.tick_params(axis='y', labelsize=14)
+        ax.set_xlabel('X', fontsize=16)
+        ax.set_ylabel('IQ Signal', fontsize=16)
+        ax.set_title(self._description + ' for qubit ' +
+                     str(self._qubits[qind]), fontsize=18)
+        ax.legend(fontsize=12)
+        ax.grid(True)
+        if show_plot:
+            plt.show()
+
+        return ax
+
 
 class BaseCoherenceFitter(BaseFitter):
     """
@@ -376,7 +559,8 @@ class BaseCoherenceFitter(BaseFitter):
             ax: plot axes
             show_plot: call plt.show()
 
-        return the axes object
+        Returns:
+            The axes object
         """
 
         from matplotlib import pyplot as plt
@@ -438,7 +622,8 @@ class BaseGateFitter(BaseFitter):
             ax: plot axes
             show_plot: call plt.show()
 
-        return the axes object
+        Returns:
+            The axes object
         """
 
         from matplotlib import pyplot as plt
