@@ -243,13 +243,16 @@ def cr2_rabi_schedules(c_qubit: int,
             can_pulse_p = pulse.commands.Delay(half_cr_sample)
             can_pulse_m = pulse.commands.Delay(half_cr_sample)
 
-        sched = sched.union((0, cr_pulse_p(cr_drive)))
-        sched = sched.union((0, can_pulse_p(t_drive)))
+        # +ZX45 drive
+        sched = sched.union((0, echo_pi))
+        t_echo1 = sched.duration
+        sched = sched.union((t_echo1 + buffer, cr_pulse_p(cr_drive)))
+        sched = sched.union((t_echo1 + buffer, can_pulse_p(t_drive)))
+        # -ZX45 drive
         sched = sched.union((sched.duration + buffer, echo_pi))
-        t_echo = sched.duration
-        sched = sched.union((t_echo + buffer, cr_pulse_m(cr_drive)))
-        sched = sched.union((t_echo + buffer, can_pulse_m(t_drive)))
-        sched = sched.union((sched.duration + buffer, echo_pi))
+        t_echo2 = sched.duration
+        sched = sched.union((t_echo2 + buffer, cr_pulse_m(cr_drive)))
+        sched = sched.union((t_echo2 + buffer, can_pulse_m(t_drive)))
 
         schedules.append(sched)
 
@@ -276,9 +279,10 @@ def _get_channels(c_qubit: int,
         t_drive: `DriveChannel` instance that drives target qubit.
         cr_drive: `ControlChannel` instance that drives cross resonance.
     """
-    defaults = backend.defaults()
+    back_default = backend.defaults()
+    back_config = backend.configuration()
     if not cmd_def:
-        cmd_def = pulse.CmdDef.from_defaults(defaults.cmd_def, defaults.pulse_library)
+        cmd_def = pulse.CmdDef.from_defaults(back_default.cmd_def, back_default.pulse_library)
 
     try:
         cx_ref = cmd_def.get('cx', qubits=(c_qubit, t_qubit))
@@ -292,7 +296,7 @@ def _get_channels(c_qubit: int,
             break
     else:
         raise CharacterizationError('No valid control channel to drive cross resonance.')
-    c_drive = pulse.PulseChannelSpec.from_backend(backend).qubits[c_qubit].drive
-    t_drive = pulse.PulseChannelSpec.from_backend(backend).qubits[t_qubit].drive
+    c_drive = back_config.drive(c_qubit)
+    t_drive = back_config.drive(t_qubit)
 
     return c_drive, t_drive, cr_drive

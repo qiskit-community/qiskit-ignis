@@ -16,15 +16,12 @@
 Fitters for hamiltonian parameters
 """
 
-from typing import List, Optional, Tuple, Dict
-
 import numpy as np
+import scipy.linalg as la
 from qiskit.ignis.characterization import CharacterizationError
-from qiskit.result import Result
-from scipy.linalg import expm, norm
-from scipy.optimize import minimize
+from qiskit import QiskitError
 
-from .. import BaseCoherenceFitter
+from .. import BaseCoherenceFitter, BaseHamiltonianFitter
 
 
 class ZZFitter(BaseCoherenceFitter):
@@ -116,272 +113,222 @@ class ZZFitter(BaseCoherenceFitter):
         return ax
 
 
-class CRFitter:
+class CrossResonanceHamiltonianFitter(BaseHamiltonianFitter):
     """
     CR Fitter.
+
+    You can refer to the article below for the details.
+    Sheldon, S., Magesan, E., Chow, J. M. & Gambetta, J. M.
+    Procedure for systematically tuning up cross-talk in the cross-resonance gate.
+    Phys. Rev. A 93, 060302 (2016).
     """
-    def __init__(self,
-                 backend_result: Result,
-                 t_qubit: int,
-                 cr_times: List[float]):
-        """
-        Create new CR Fitter.
+    def __init__(self, backend_result, xdata,
+                 qubits, fit_p0, fit_bounds, circuit_names):
 
-        [1] Sheldon, S., Magesan, E., Chow, J. M. & Gambetta, J. M.
-        Procedure for systematically tuning up cross-talk in the cross-resonance gate.
-        Phys. Rev. A 93, 060302 (2016).
+        BaseHamiltonianFitter.__init__(self, 'CR', backend_result,
+                                       xdata, qubits,
+                                       self._bloch_equation_fit_fun, fit_p0,
+                                       fit_bounds, circuit_names,
+                                       series=['0', '1'], dim=2)
+
+    def _calc_data(self):
+        """
+        Take count dictionary from the results, retrieve eigenvalues of
+        each measurement basis and create a bloch vector for each CR duration.
+        Load into the ``ydata`` which gives the partial CR rabi oscillation
+        in Pauli basis. Note that vector is flattened to generate
+        1-d array for fitting of vector function.
+
+        Overloaded from ``BaseFitter._calc_data``.
+        """
+        meas_basis = 'x', 'y', 'z'
+
+        self._ydata = {}
+        for serieslbl in self._series:
+            self._ydata[serieslbl] = []
+
+            for qind in range(len(self.measured_qubits)):
+                self._ydata[serieslbl].append({'mean': None, 'std': None})
+                bloch_vecs = []
+                for circname in self._circuit_names:
+                    temp_bloch_vec = []
+                    for axis in meas_basis:
+                        expname = '%s,%s,%s' % (circname, axis, serieslbl)
+                        counts = {}
+                        for result in self._backend_result_list:
+                            try:
+                                counts = result.get_counts(expname)
+                            except (QiskitError, KeyError):
+                                pass
+                        # convert count into eigenvalue
+                        expv = 0
+                        for bits, count in counts.items():
+                            if bits[::-1][qind] == '1':
+                                expv -= count
+                            else:
+                                expv += count
+                        expv /= sum(counts.values())
+                        temp_bloch_vec.append(expv)
+                    bloch_vecs.append(temp_bloch_vec)
+                bloch_vecs_flatten = np.array(bloch_vecs).T.ravel()
+                self._ydata[serieslbl][qind]['mean'] = bloch_vecs_flatten
+
+    def plot_rabi(self, qind=0, axs=None, show_plot=True):
+        """
+        Plot CR Rabi and fit result.
 
         Args:
-            backend_result: experimental result to analyze.
-            t_qubit: index of target qubit.
-            cr_times: list of CR pulse duration in sec for Rabi experiments.
-        """
-        self.t_qubit = t_qubit
-        self.cr_times = cr_times
+            qind: qubit index to plot
+            axs: tuple of axes to plot CR rabi on x, y, z measurement basis.
+            show_plot: call ``plt.show()``
 
-        # get expectation values in each measurement basis
-        self._expvs_x = self._get_meas_basis(backend_result, 'x')
-        self._expvs_y = self._get_meas_basis(backend_result, 'y')
-        self._expvs_z = self._get_meas_basis(backend_result, 'z')
-
-        # rotation generators
-        self._vec0 = None
-        self._vec1 = None
-
-    def fit(self,
-            fit0: Optional[np.ndarray] = None,
-            fit1: Optional[np.ndarray] = None,
-            **fitter_kwargs) -> None:
-        """
-        Fit Rabi oscillation by Bloch equation to extract CR Hamiltonian.
-
-        Args:
-            fit0: initial fit parameters (Omega_x, Omega_y, Delta) for control qubit = 0.
-            fit1: initial fit parameters (Omega_x, Omega_y, Delta) for control qubit = 1.
-            **fitter_kwargs: see options of `scipy.optimize.minimize`.
-        """
-        res_x0, res_x1 = self._expvs_x
-        res_y0, res_y1 = self._expvs_y
-        res_z0, res_z1 = self._expvs_z
-
-        if fit0 is None:
-            fit0 = np.array([0, 0, 0])
-        if fit1 is None:
-            fit1 = np.array([0, 0, 0])
-
-        def fit_func(params, *args):
-            """ Fitting function for Bloch equation.
-            """
-            omega_x, omega_y, delta = params
-            xs, ys, zs, ts = args
-
-            # initial bloch vector of target qubit |0>
-            vec_r0 = np.matrix([0, 0, 1]).T
-
-            # see ref [1] eq. 5
-            mat_a = np.matrix([[0, delta, omega_y],
-                               [-delta, 0, -omega_x],
-                               [-omega_y, omega_x, 0]])
-
-            # fit equation, see ref [1] eq. 4
-            residuals = np.zeros_like(ts)
-            for ii, (x, y, z, t) in enumerate(zip(xs, ys, zs, ts)):
-                vec_rt = np.matrix([x, y, z]).T
-                residuals[ii] = norm(vec_rt - expm(mat_a * t) * vec_r0)
-
-            return np.sum(residuals)
-
-        res0 = minimize(fun=fit_func, x0=fit0,
-                        args=(res_x0, res_y0, res_z0, self.cr_times),
-                        **fitter_kwargs)
-        res1 = minimize(fun=fit_func, x0=fit1,
-                        args=(res_x1, res_y1, res_z1, self.cr_times),
-                        **fitter_kwargs)
-
-        self._vec0 = res0.x
-        self._vec1 = res1.x
-
-    def hamiltonian(self) -> Dict[str, float]:
-        """
-        Return CR Hamiltonian in dictionary format.
-        """
-        if self._vec0 is None or self._vec1 is None:
-            raise CharacterizationError('No fitting results. Run `.fit()` first.')
-
-        cr_terms = {
-            'IX': (self.vec0[0] + self.vec1[0]) / 2,
-            'IY': (self.vec0[1] + self.vec1[1]) / 2,
-            'IZ': (self.vec0[2] + self.vec1[2]) / 2,
-            'ZX': (self.vec0[0] - self.vec1[0]) / 2,
-            'ZY': (self.vec0[1] - self.vec1[1]) / 2,
-            'ZZ': (self.vec0[2] - self.vec1[2]) / 2
-        }
-
-        return cr_terms
-
-    def plot_rabi_oscillation(self,
-                              resolution: Optional[int] = 1000,
-                              show_plot: Optional[bool] = True):
-        """
-        Visualize Rabi oscillation.
-
-        Args:
-            resolution: number of points for curve fitting.
-            show_plot: call plt.show()
+        Returns:
+            The axes object
         """
         try:
             from matplotlib import pyplot as plt
         except ImportError:
             raise CharacterizationError('matplotlib is not installed.')
 
-        fig = plt.figure(figsize=(15, 3))
+        if axs is None:
+            fig = plt.figure(figsize=(15, 3))
+            ax_1 = fig.add_subplot(131)
+            ax_2 = fig.add_subplot(132)
+            ax_3 = fig.add_subplot(133)
+        else:
+            ax_1, ax_2, ax_3 = axs
 
-        ax_x = fig.add_subplot(131)
-        ax_y = fig.add_subplot(132)
-        ax_z = fig.add_subplot(133)
+        cr_times_ns = self.xdata * 1e9
 
-        cr_times = np.array(self.cr_times) * 1e9
+        # experimental data
+        cr0_x, cr0_y, cr0_z = np.split(self.ydata['0'][qind]['mean'], 3)
+        cr1_x, cr1_y, cr1_z = np.split(self.ydata['1'][qind]['mean'], 3)
 
-        ax_x.scatter(cr_times, self._expvs_x[0], color='b', label='|00>')
-        ax_y.scatter(cr_times, self._expvs_y[0], color='b', label='|00>')
-        ax_z.scatter(cr_times, self._expvs_z[0], color='b', label='|00>')
-        ax_x.scatter(cr_times, self._expvs_x[1], color='r', label='|10>')
-        ax_y.scatter(cr_times, self._expvs_y[1], color='r', label='|10>')
-        ax_z.scatter(cr_times, self._expvs_z[1], color='r', label='|10>')
+        ax_1.scatter(cr_times_ns, cr0_x, color='b', label='|00>')
+        ax_1.scatter(cr_times_ns, cr1_x, color='r', label='|01>')
+        ax_2.scatter(cr_times_ns, cr0_y, color='b', label='|00>')
+        ax_2.scatter(cr_times_ns, cr1_y, color='r', label='|01>')
+        ax_3.scatter(cr_times_ns, cr0_z, color='b', label='|00>')
+        ax_3.scatter(cr_times_ns, cr1_z, color='r', label='|01>')
 
-        # add fitting curve if fit is done
-        if self._vec0 is not None and self._vec1 is not None:
-            ts = np.linspace(0, max(self.cr_times), resolution)
-            vec_r0 = np.matrix([0, 0, 1]).T
+        # overwrite fitting results
+        ts = np.linspace(0, max(self.xdata), 1000)
 
-            xs0, ys0, zs0 = [np.zeros_like(ts, dtype=float) for _ in ('x', 'y', 'z')]
-            xs1, ys1, zs1 = [np.zeros_like(ts, dtype=float) for _ in ('x', 'y', 'z')]
+        fit_params0 = self.params['0'][qind]
+        fit_params1 = self.params['1'][qind]
 
-            omega_x0, omega_y0, delta0 = self._vec0
-            omega_x1, omega_y1, delta1 = self._vec1
+        fit_cr0 = self._bloch_equation_fit_fun(ts, **fit_params0)
+        fit_cr1 = self._bloch_equation_fit_fun(ts, **fit_params1)
 
-            mat_a0 = np.matrix([[0, delta0, omega_y0],
-                                [-delta0, 0, -omega_x0],
-                                [-omega_y0, omega_x0, 0]])
+        fit_cr0_x, fit_cr0_y, fit_cr0_z = np.split(fit_cr0, 3)
+        fit_cr1_x, fit_cr1_y, fit_cr1_z = np.split(fit_cr1, 3)
 
-            mat_a1 = np.matrix([[0, delta1, omega_y1],
-                                [-delta1, 0, -omega_x1],
-                                [-omega_y1, omega_x1, 0]])
+        ts *= 1e9
 
-            for ii, t in enumerate(ts):
-                vec_rt0 = expm(mat_a0 * t) * vec_r0
-                vec_rt1 = expm(mat_a1 * t) * vec_r0
+        ax_1.plot(ts, fit_cr0_x, 'b:')
+        ax_1.plot(ts, fit_cr1_x, 'r:')
+        ax_2.plot(ts, fit_cr0_y, 'b:')
+        ax_2.plot(ts, fit_cr1_y, 'r:')
+        ax_3.plot(ts, fit_cr0_z, 'b:')
+        ax_3.plot(ts, fit_cr1_z, 'r:')
 
-                xs0[ii], ys0[ii], zs0[ii] = np.array(vec_rt0)
-                xs1[ii], ys1[ii], zs1[ii] = np.array(vec_rt1)
+        # format
+        ax_1.set_xlim(0, max(cr_times_ns))
+        ax_2.set_xlim(0, max(cr_times_ns))
+        ax_3.set_xlim(0, max(cr_times_ns))
 
-            ts *= 1e9
+        ax_1.set_ylim(-1, 1)
+        ax_2.set_ylim(-1, 1)
+        ax_3.set_ylim(-1, 1)
 
-            ax_x.plot(ts, xs0, 'b:')
-            ax_y.plot(ts, ys0, 'b:')
-            ax_z.plot(ts, zs0, 'b:')
-            ax_x.plot(ts, xs1, 'r:')
-            ax_y.plot(ts, ys1, 'r:')
-            ax_z.plot(ts, zs1, 'r:')
-
-        ax_x.set_xlim(0, max(cr_times))
-        ax_y.set_xlim(0, max(cr_times))
-        ax_z.set_xlim(0, max(cr_times))
-
-        ax_x.set_ylim(-1, 1)
-        ax_y.set_ylim(-1, 1)
-        ax_z.set_ylim(-1, 1)
-
-        ax_x.legend()
-        ax_y.legend()
-        ax_z.legend()
+        ax_1.legend()
+        ax_2.legend()
+        ax_3.legend()
 
         if show_plot:
             plt.show()
-            return None
 
-        return fig
+        return ax_1, ax_2, ax_3
 
-    def plot_bloch_vec(self,
-                       show_plot: Optional[bool] = True):
+    def plot_bloch(self, qind=0, axs=None, show_plot=True):
         """
-        Visualize Bloch vector trajectory.
+        Plot CR Rabi and fit result.
 
         Args:
-            show_plot: call plt.show()
+            qind: qubit index to plot
+            axs: tuple of axes to plot bloch vector trajectory from |00> and |01>.
+            show_plot: call ``plt.show()``
+
+        Returns:
+            The axes object
         """
         try:
             from matplotlib import pyplot as plt
         except ImportError:
             raise CharacterizationError('matplotlib is not installed.')
+
+        if axs is None:
+            fig = plt.figure(figsize=(10, 5))
+            ax_1 = fig.add_subplot(121, projection='3d')
+            ax_2 = fig.add_subplot(122, projection='3d')
+        else:
+            ax_1, ax_2 = axs
 
         from qiskit.visualization.bloch import Bloch
 
-        fig = plt.figure(figsize=(10, 5))
+        # experimental data
+        cr0_x, cr0_y, cr0_z = np.split(self.ydata['0'][qind]['mean'], 3)
+        cr1_x, cr1_y, cr1_z = np.split(self.ydata['1'][qind]['mean'], 3)
 
-        ax_state0 = fig.add_subplot(121, projection='3d')
-        ax_state1 = fig.add_subplot(122, projection='3d')
-
-        pb0 = Bloch(axes=ax_state0)
-        pb0.add_points((self._expvs_x[0], self._expvs_y[0], self._expvs_z[0]), meth='l')
-        pb0.add_points((self._expvs_x[0], self._expvs_y[0], self._expvs_z[0]), meth='s')
+        pb0 = Bloch(axes=ax_1)
+        pb0.add_points((cr0_x, cr0_y, cr0_z), meth='l')
+        pb0.add_points((cr0_x, cr0_y, cr0_z), meth='s')
         pb0.render(title='Initial state |00>')
 
-        pb1 = Bloch(axes=ax_state1)
-        pb1.add_points((self._expvs_x[1], self._expvs_y[1], self._expvs_z[1]), meth='l')
-        pb1.add_points((self._expvs_x[1], self._expvs_y[1], self._expvs_z[1]), meth='s')
-        pb1.render(title='Initial state |10>')
+        pb0 = Bloch(axes=ax_2)
+        pb0.add_points((cr1_x, cr1_y, cr1_z), meth='l')
+        pb0.add_points((cr1_x, cr1_y, cr1_z), meth='s')
+        pb0.render(title='Initial state |01>')
 
         if show_plot:
             plt.show()
-            return None
 
-        return fig
+        return ax_1, ax_2
+
+    @staticmethod
+    def _bloch_equation_fit_fun(x, omega_x, omega_y, delta):
+        """
+        Function to fit bloch equation.
+
+        See the equations 4 and 5 of reference article.
+        """
+        # initial bloch vector |0>
+        vec_r_t0 = np.matrix([0, 0, 1]).T
+
+        # rotation generator
+        mat_a = np.matrix([[0, delta, omega_y],
+                           [-delta, 0, -omega_x],
+                           [-omega_y, omega_x, 0]])
+
+        # bloch vector at each time
+        vec_ts = list(map(lambda t: la.expm(mat_a * t) * vec_r_t0, x))
+
+        return np.array(vec_ts).T.ravel()
 
     @property
-    def vec0(self):
+    def hamiltonian(self):
         """
-        Return generator when control qubit is |0>.
+        Return CR Hamiltonian.
         """
-        return self._vec0
+        for qid in self.measured_qubits:
+            fit_params0 = self.params['0'][qid]
+            fit_params1 = self.params['1'][qid]
 
-    @property
-    def vec1(self):
-        """
-        Return generator when control qubit is |1>.
-        """
-        return self._vec1
+            self._hamiltonian[qid]['XI']: (fit_params0[0] + fit_params1[0]) / 2
+            self._hamiltonian[qid]['YI']: (fit_params0[1] + fit_params1[1]) / 2
+            self._hamiltonian[qid]['ZI']: (fit_params0[2] + fit_params1[2]) / 2
+            self._hamiltonian[qid]['XZ']: (fit_params0[0] - fit_params1[0]) / 2
+            self._hamiltonian[qid]['YZ']: (fit_params0[1] - fit_params1[1]) / 2
+            self._hamiltonian[qid]['ZZ']: (fit_params0[2] - fit_params1[2]) / 2
 
-    def _get_meas_basis(self,
-                        backend_result: Result,
-                        axis: str) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Extract expected value from experimental result.
-
-        Args:
-            backend_result: experimental results.
-            axis: basis of measurement.
-        """
-        expvs_c0 = np.zeros_like(self.cr_times, dtype=float)
-        expvs_c1 = np.zeros_like(self.cr_times, dtype=float)
-
-        for index in range(len(self.cr_times)):
-            for c_state in (0, 1):
-                experiment_name = '%s,%s,%s' % (index, axis, c_state)
-                counts = backend_result.get_counts(experiment_name)
-                # convert population into eigenvalue
-                expv = 0
-                for key, val in counts.items():
-                    if key[::-1][self.t_qubit] == '1':
-                        expv -= val
-                    else:
-                        expv += val
-                expv /= sum(counts.values())
-
-                if c_state == 0:
-                    expvs_c0[index] = expv
-                if c_state == 1:
-                    expvs_c1[index] = expv
-
-        return expvs_c0, expvs_c1
-
+        return self._hamiltonian

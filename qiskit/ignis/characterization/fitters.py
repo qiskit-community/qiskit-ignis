@@ -18,6 +18,7 @@ Fitters of characteristic times
 
 from scipy.optimize import curve_fit
 import numpy as np
+import itertools
 from qiskit import QiskitError
 from ..verification.tomography import marginal_counts
 
@@ -653,6 +654,45 @@ class BaseGateFitter(BaseFitter):
             plt.show()
 
         return ax
+
+
+class BaseHamiltonianFitter(BaseFitter):
+    """
+    Base class for Hamiltonian fitter.
+    """
+
+    def __init__(self, description, backend_result, xdata,
+                 qubits, fit_fun, fit_p0,
+                 fit_bounds, circuit_names,
+                 series=None, expected_state='0', dim=1):
+
+        """
+        See BaseFitter __init__
+
+        Args:
+            dim (int): Dimension of target Hilbert space.
+        """
+
+        BaseFitter.__init__(self, description,
+                            backend_result, xdata,
+                            qubits, fit_fun,
+                            fit_p0, fit_bounds, circuit_names,
+                            series, expected_state)
+
+        basis = 'I', 'X', 'Y', 'Z'
+        interaction_terms = itertools.product(basis, repeat=dim)
+
+        self._hamiltonian = {}
+
+        for qid in qubits:
+            self._hamiltonian[qid] = {term: 0 for term in interaction_terms}
+
+    @property
+    def hamiltonian(self):
+        """
+        Return estimated system hamiltonian.
+        """
+        return self._hamiltonian
 
 
 def build_counts_dict_from_list(count_list):

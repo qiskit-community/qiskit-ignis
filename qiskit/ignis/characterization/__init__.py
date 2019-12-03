@@ -17,5 +17,5 @@
 Characterization module
 """
 
-from .fitters import BaseCoherenceFitter, BaseGateFitter
+from .fitters import BaseCoherenceFitter, BaseGateFitter, BaseHamiltonianFitter
 from .exceptions import CharacterizationError
