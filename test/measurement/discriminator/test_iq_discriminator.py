@@ -69,15 +69,19 @@ class TestLinearIQDiscriminator(unittest.TestCase):
                                               self.qubits,
                                               ['00', '11'])
 
-        xdata = discriminator.get_xdata(self.cal_results)
+        xdata = discriminator.get_xdata(self.cal_results, 0)
 
         self.assertEqual(len(xdata), self.shots*2)
         self.assertEqual(len(xdata[0]), len(self.qubits) * 2)
 
-        xdata = discriminator.get_xdata(self.cal_results, ['cal_00'])
+        xdata = discriminator.get_xdata(self.cal_results, 0, ['cal_00'])
 
         self.assertEqual(len(xdata), self.shots)
         self.assertEqual(len(xdata[0]), 4)
+
+        xdata = discriminator.get_xdata(self.cal_results, 1)
+
+        self.assertEqual(len(xdata), 0)
 
     def test_get_ydata(self):
         """
@@ -88,15 +92,19 @@ class TestLinearIQDiscriminator(unittest.TestCase):
                                               self.qubits,
                                               ['00', '11'])
 
-        xdata = discriminator.get_xdata(self.cal_results)
-        ydata = discriminator.get_ydata(self.cal_results)
+        xdata = discriminator.get_xdata(self.cal_results, 0)
+        ydata = discriminator.get_ydata(self.cal_results, 0)
 
         self.assertEqual(len(xdata), len(ydata))
 
-        ydata = discriminator.get_ydata(self.cal_results, ['cal_00'])
+        ydata = discriminator.get_ydata(self.cal_results, 0, ['cal_00'])
 
         self.assertEqual(len(ydata), self.shots)
         self.assertEqual(ydata[0], '00')
+
+        ydata = discriminator.get_ydata(self.cal_results, 1)
+
+        self.assertEqual(len(ydata), 0)
 
     def test_discrimination(self):
         """
@@ -148,3 +156,16 @@ class TestLinearIQDiscriminator(unittest.TestCase):
 
         self.assertEqual(discriminator.discriminate([[i0, q0]])[0], '0')
         self.assertEqual(discriminator.discriminate([[i1, q1]])[0], '1')
+
+    def test_is_calibration(self):
+        """
+        Test is the discriminator can properly recognize calibration names.
+        """
+        discriminator = LinearIQDiscriminator([], [])
+
+        self.assertTrue(discriminator.is_calibration('cal_01101'))
+        self.assertTrue(discriminator.is_calibration('cal_2121'))
+        self.assertFalse(discriminator.is_calibration('cal_01101b'))
+        self.assertFalse(discriminator.is_calibration('cal01101b'))
+        self.assertFalse(discriminator.is_calibration('test'))
+        self.assertFalse(discriminator.is_calibration('_cal_2121'))
