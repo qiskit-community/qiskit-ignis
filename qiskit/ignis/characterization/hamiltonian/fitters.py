@@ -212,44 +212,40 @@ class CrossResonanceHamiltonianFitter(BaseHamiltonianFitter):
         else:
             ax_1, ax_2, ax_3 = axs
 
-        cr_times_ns = self.xdata * 1e9
-
         # experimental data
         cr0_x, cr0_y, cr0_z = np.split(self.ydata['0'][qind]['mean'], 3)
         cr1_x, cr1_y, cr1_z = np.split(self.ydata['1'][qind]['mean'], 3)
 
-        ax_1.scatter(cr_times_ns, cr0_x, color='b', label='|00>')
-        ax_1.scatter(cr_times_ns, cr1_x, color='r', label='|01>')
-        ax_2.scatter(cr_times_ns, cr0_y, color='b', label='|00>')
-        ax_2.scatter(cr_times_ns, cr1_y, color='r', label='|01>')
-        ax_3.scatter(cr_times_ns, cr0_z, color='b', label='|00>')
-        ax_3.scatter(cr_times_ns, cr1_z, color='r', label='|01>')
+        ax_1.scatter(self.xdata, cr0_x, color='b', label='|00>')
+        ax_1.scatter(self.xdata, cr1_x, color='r', label='|01>')
+        ax_2.scatter(self.xdata, cr0_y, color='b', label='|00>')
+        ax_2.scatter(self.xdata, cr1_y, color='r', label='|01>')
+        ax_3.scatter(self.xdata, cr0_z, color='b', label='|00>')
+        ax_3.scatter(self.xdata, cr1_z, color='r', label='|01>')
 
         # overwrite fitting results
-        ts = np.linspace(0, max(self.xdata), 1000)
+        xdata_interp = np.linspace(0, max(self.xdata), 1000)
 
         fit_params0 = self.params['0'][qind]
         fit_params1 = self.params['1'][qind]
 
-        fit_cr0 = self._bloch_equation_fit_fun(ts, **fit_params0)
-        fit_cr1 = self._bloch_equation_fit_fun(ts, **fit_params1)
+        fit_cr0 = self._bloch_equation_fit_fun(xdata_interp, **fit_params0)
+        fit_cr1 = self._bloch_equation_fit_fun(xdata_interp, **fit_params1)
 
         fit_cr0_x, fit_cr0_y, fit_cr0_z = np.split(fit_cr0, 3)
         fit_cr1_x, fit_cr1_y, fit_cr1_z = np.split(fit_cr1, 3)
 
-        ts *= 1e9
-
-        ax_1.plot(ts, fit_cr0_x, 'b:')
-        ax_1.plot(ts, fit_cr1_x, 'r:')
-        ax_2.plot(ts, fit_cr0_y, 'b:')
-        ax_2.plot(ts, fit_cr1_y, 'r:')
-        ax_3.plot(ts, fit_cr0_z, 'b:')
-        ax_3.plot(ts, fit_cr1_z, 'r:')
+        ax_1.plot(xdata_interp, fit_cr0_x, 'b:')
+        ax_1.plot(xdata_interp, fit_cr1_x, 'r:')
+        ax_2.plot(xdata_interp, fit_cr0_y, 'b:')
+        ax_2.plot(xdata_interp, fit_cr1_y, 'r:')
+        ax_3.plot(xdata_interp, fit_cr0_z, 'b:')
+        ax_3.plot(xdata_interp, fit_cr1_z, 'r:')
 
         # format
-        ax_1.set_xlim(0, max(cr_times_ns))
-        ax_2.set_xlim(0, max(cr_times_ns))
-        ax_3.set_xlim(0, max(cr_times_ns))
+        ax_1.set_xlim(0, max(self.xdata))
+        ax_2.set_xlim(0, max(self.xdata))
+        ax_3.set_xlim(0, max(self.xdata))
 
         ax_1.set_ylim(-1, 1)
         ax_2.set_ylim(-1, 1)
