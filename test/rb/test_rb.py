@@ -68,7 +68,7 @@ class TestRB(unittest.TestCase):
         is_purity = True
         if pattern_type == 0:
             res = [list(range(nq))]
-            if nq > 2:  # since we only have 1-qubit and 2-qubit Cliffords
+            if nq > 2:  # since we only have 1-qubit and 2-qubit RB
                 return None, None
         elif pattern_type == 1:
             if nq == 1:
@@ -82,7 +82,7 @@ class TestRB(unittest.TestCase):
             # split_loc = random.randint(1, nq-1)
             split_loc = 2  # deterministic test
             res = [shuffled_bits[:split_loc], shuffled_bits[split_loc:]]
-            # since we only have 1-qubit and 2-qubit Cliffords
+            # since we only have 1-qubit and 2-qubit RB
             if (split_loc > 2) | (nq-split_loc > 2):
                 return None, None
             if 2*split_loc != nq:
@@ -118,7 +118,7 @@ class TestRB(unittest.TestCase):
 
         Returns:
             interleaved_gates:
-            A list of gates of Clifford elements that
+            A list of gates of group elements that
             will be interleaved (for interleaved randomized benchmarking)
             The length of the list would equal the length of the rb_pattern.
         """
@@ -218,6 +218,9 @@ class TestRB(unittest.TestCase):
         gatelist = []
         while ops[op_index][0].name != stop_gate:
             gate = ops[op_index][0].name
+            params = ops[op_index][0].params
+            if gate == 'u1':
+                gate += ' ' + str(params[0])
             for x in ops[op_index][1]:
                 gate += ' ' + str(x.index)
             gatelist.append(gate)
@@ -227,11 +230,11 @@ class TestRB(unittest.TestCase):
         return gatelist, op_index
 
     def verify_circuit(self, circ, nq, rb_opts, vec_len, result, shots,
-                       is_interleaved=False):
+                       is_interleaved=False, is_cnotdihedral=False):
         """
         For a single sequence, verifies that it meets the requirements:
         - Executing it on the ground state ends up in the ground state
-        - It has the correct number of Cliffords
+        - It has the correct number of elements
         - It fulfills the pattern, as specified by rb_patterns and
           length_multiplier
 
@@ -246,6 +249,8 @@ class TestRB(unittest.TestCase):
                 when executing all the sequences on the ground state
             shots: the number of shots in the simulator execution
             is_interleaved: True if this is an interleaved circuit
+            is_cnotdihedral: True if this is a non-clifford cnot-dihedral
+                circuit
         """
 
         if not hasattr(rb_opts['length_multiplier'], "__len__"):
@@ -254,15 +259,18 @@ class TestRB(unittest.TestCase):
                     len(rb_opts['rb_pattern']))]
 
         ops = circ.data
-        op_index = 0
         # for each cycle (the sequence should consist of vec_len cycles)
         for _ in range(vec_len):
+            op_index = 0
+            # for non-clifford cnot-dihedral rb
+            if is_cnotdihedral:
+                op_index += 2*nq
             # for each component of the pattern...
             for pat_index in range(len(rb_opts['rb_pattern'])):
-                # for each Clifford...
+                # for each element...
                 for _ in range(rb_opts['length_multiplier'][pat_index]):
                     # if it is an interleaved RB circuit,
-                    # then it has twice as many Cliffords
+                    # then it has twice as many elements
                     for _ in range(is_interleaved+1):
                         # for each basis gate...
                         # in case of align_cliffs we may have extra barriers
@@ -293,9 +301,9 @@ class TestRB(unittest.TestCase):
                                     nq, rb_opts_interleaved, vec_len):
         """
         Verifies that interleaved RB circuits meet the requirements:
-        - The non-interleaved Clifford gates are the same as the
-        original Clifford gates.
-        - The interleaved Clifford gates are the same as the ones
+        - The non-interleaved gates are the same as the
+        original gates.
+        - The interleaved gates are the same as the ones
         given in: rb_opts_interleaved['interleaved_gates'].
 
         Args:
@@ -327,7 +335,7 @@ class TestRB(unittest.TestCase):
                 updated_gatelist = self.update_interleaved_gates(
                     rb_opts_interleaved['interleaved_gates']
                     [pat_index], rb_opts_interleaved['rb_pattern'][pat_index])
-                # for each Clifford...
+                # for each element...
                 for _ in range(rb_opts_interleaved['length_multiplier']
                                [pat_index]):
                     # original RB sequence
@@ -339,13 +347,13 @@ class TestRB(unittest.TestCase):
                         self.ops_to_gates(interleaved_ops,
                                           interleaved_op_index)
 
-                    # Clifford gates in the interleaved RB sequence
+                    # Gates in the interleaved RB sequence
                     # should be equal to original gates
                     self.assertEqual(original_gatelist, compared_gatelist,
                                      "Error: The gates in the %d qubit  \
                                      interleaved RB are not the same as \
                                      in the original RB circuits" % nq)
-                    # Clifford gates in the interleaved RB sequence
+                    # Gates in the interleaved RB sequence
                     # should be equal to the given gates in
                     # rb_opts_interleaved['interleaved_gates']
                     # (after updating them)
@@ -358,11 +366,68 @@ class TestRB(unittest.TestCase):
                                      %d qubit interleaved RB are not the same \
                                      as given in interleaved_gates input" % nq)
 
+    def compare_cnotdihedral_circuit(self, cnotdihedral_Z_circ,
+                                     cnotdihedral_X_circ, nq,
+                                     rb_opts_cnotdihedral, vec_len):
+        """
+        Verifies that cnotdihedral RB circuits are the same,
+        except of the first and last H gates.
+
+        Args:
+            cnotdihedral_Z_circ: original rb circuits
+            (meassure |0...0> state)
+            cnotdihedral_X_circ: rb circuits that
+            measure |+...+> state.
+            nq: number of qubits
+            rb_opts_cnotdihedral: the specification that
+            generated the set of sequences which includes circ
+            vec_len: the expected length vector of circ
+            (one of rb_opts['length_vector'])
+        """
+
+        qlist_flat, _, _ = rb.circuits.check_pattern(
+            rb_opts_cnotdihedral['rb_pattern'])
+
+        if not hasattr(rb_opts_cnotdihedral['length_multiplier'], "__len__"):
+            rb_opts_cnotdihedral['length_multiplier'] = [
+                rb_opts_cnotdihedral['length_multiplier'] for i in range(
+                    len(rb_opts_cnotdihedral['rb_pattern']))]
+
+        circ_Z_ops = cnotdihedral_Z_circ.data
+        circ_X_ops = cnotdihedral_X_circ.data
+
+        # for each cycle (the sequence should consist of vec_len cycles)
+        for _ in range(vec_len):
+            op_Z_index = 0
+            op_X_index = 0
+            # Measurement of the |0...0> state
+            circ_Z_gatelist, op_Z_index = \
+                self.ops_to_gates(circ_Z_ops, op_Z_index, stop_gate='measure')
+            # Measurement of the |+...+> state
+            circ_X_gatelist, op_X_index = \
+                self.ops_to_gates(circ_X_ops, op_X_index, stop_gate='measure')
+            h_gates = []
+            for _, qb in enumerate(qlist_flat):
+                h_gates.append('h %d' % qb)
+                h_gates.append('barrier %d' % qb)
+            circ_Z_gatelist = h_gates + circ_Z_gatelist
+            h_gates = []
+            for _, qb in enumerate(qlist_flat):
+                h_gates.append('barrier %d' % qb)
+                h_gates.append('h %d' % qb)
+            circ_Z_gatelist = circ_Z_gatelist + h_gates
+            # Gates in the non-Clifford cnot-dihedralRB sequence
+            # should be equal (up to the H-gates)
+            self.assertEqual(circ_Z_gatelist, circ_X_gatelist,
+                             "Error: The non-Clifford gates in the \
+                             %d qubit non-Clifford CNOT-Dihedral RB \
+                             are not the same" % nq)
+
     def compare_purity_circuits(self, original_circ, purity_circ, nq,
                                 purity_ind, npurity, rb_opts_purity, vec_len):
         """
         Verifies that purity RB circuits meet the requirements:
-        - The Clifford gates are the same as the original Clifford gates.
+        - The gates are the same as the original gates.
         - The last gates are either Rx or Ry or nothing
         (depend on d)
 
@@ -387,7 +452,7 @@ class TestRB(unittest.TestCase):
         for _ in range(vec_len):
             # for each component of the pattern...
             for pat_index in range(len(rb_opts_purity['rb_pattern'])):
-                # for each Clifford...
+                # for each element...
                 for _ in range(rb_opts_purity['length_multiplier'][pat_index]):
                     # original RB sequence
                     original_gatelist, op_index = \
@@ -395,7 +460,7 @@ class TestRB(unittest.TestCase):
                     # purity RB sequence
                     purity_gatelist, pur_index = \
                         self.ops_to_gates(purity_ops, pur_index)
-                    # Clifford gates in the purity RB sequence
+                    # Gates in the purity RB sequence
                     # should be equal to original gates
                     self.assertEqual(original_gatelist, purity_gatelist,
                                      "Error: The purity gates in the \
@@ -403,7 +468,7 @@ class TestRB(unittest.TestCase):
                                      as in the original RB circuits" % nq)
 
         # The last gate in the purity RB sequence
-        # should be equal to the inverse clifford
+        # should be equal to the inverse element
         # with either Rx or Ry or nothing (depend on d)
         # original last gate
         original_gatelist, op_index = \
@@ -444,6 +509,9 @@ class TestRB(unittest.TestCase):
         rb_opts_interleaved = rb_opts.copy()
         rb_opts_interleaved['interleaved_gates'] = \
             self.choose_interleaved_gates(rb_opts['rb_pattern'])
+        # Choose options for Non-Clifford cnot-dihedral RB:
+        rb_opts_cnotdihedral = rb_opts.copy()
+        rb_opts_cnotdihedral['group_gates'] = 'CNOT-Dihedral'
         # Choose options for purity rb
         # no length_multiplier
         rb_opts_purity['length_multiplier'] = 1
@@ -462,6 +530,10 @@ class TestRB(unittest.TestCase):
             rb_original_circs, _, rb_interleaved_circs = \
                 rb.randomized_benchmarking_seq(
                     **rb_opts_interleaved)
+            # Non-Clifford cnot-dihedral RB sequences:
+            rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs = \
+                rb.randomized_benchmarking_seq(
+                    **rb_opts_cnotdihedral)
             # Purity RB sequences:
             if is_purity:
                 rb_purity_circs, _, npurity = \
@@ -483,6 +555,8 @@ class TestRB(unittest.TestCase):
         result = []
         result_original = []
         result_interleaved = []
+        result_cnotdihedral_Z = []
+        result_cnotdihedral_X = []
         if is_purity:
             result_purity = [[] for d in range(npurity)]
         for seed in range(rb_opts['nseeds']):
@@ -497,6 +571,16 @@ class TestRB(unittest.TestCase):
                                shots=shots).result())
             result_interleaved.append(
                 qiskit.execute(rb_interleaved_circs[seed],
+                               backend=backend,
+                               basis_gates=basis_gates,
+                               shots=shots).result())
+            result_cnotdihedral_Z.append(
+                qiskit.execute(rb_cnotdihedral_Z_circs[seed],
+                               backend=backend,
+                               basis_gates=basis_gates,
+                               shots=shots).result())
+            result_cnotdihedral_X.append(
+                qiskit.execute(rb_cnotdihedral_X_circs[seed],
                                backend=backend,
                                basis_gates=basis_gates,
                                shots=shots).result())
@@ -529,6 +613,17 @@ class TestRB(unittest.TestCase):
                     'rb_interleaved_length_%d_seed_%d' % (
                         circ_index, seed),
                     'Error: incorrect interleaved circuit name')
+                self.assertEqual(
+                    rb_cnotdihedral_Z_circs[seed][circ_index].name,
+                    'rb_cnotdihedral_Z_length_%d_seed_%d' % (
+                        circ_index, seed),
+                    'Error: incorrect cnotdihedral circuit name')
+                self.assertEqual(
+                    rb_cnotdihedral_X_circs[seed][circ_index].name,
+                    'rb_cnotdihedral_X_length_%d_seed_%d' % (
+                        circ_index, seed),
+                    'Error: incorrect non-Clifford CNOT-Dihedral \
+                    circuit name')
                 if is_purity:
                     for d in range(npurity):
                         name_type, _ = self.update_purity_gates(
@@ -556,6 +651,18 @@ class TestRB(unittest.TestCase):
                                     result_interleaved[seed],
                                     shots,
                                     is_interleaved=True)
+                self.verify_circuit(rb_cnotdihedral_Z_circs[seed]
+                                    [circ_index],
+                                    nq, rb_opts_cnotdihedral,
+                                    vec_len,
+                                    result_cnotdihedral_Z[seed],
+                                    shots)
+                self.verify_circuit(rb_cnotdihedral_X_circs[seed]
+                                    [circ_index],
+                                    nq, rb_opts_cnotdihedral,
+                                    vec_len,
+                                    result_cnotdihedral_X[seed],
+                                    shots, is_cnotdihedral=True)
                 if is_purity:
                     self.verify_circuit(rb_purity_circs[seed][0]
                                         [circ_index],
@@ -576,13 +683,17 @@ class TestRB(unittest.TestCase):
                     rb_original_circs[seed][circ_index],
                     rb_interleaved_circs[seed][circ_index],
                     nq, rb_opts_interleaved, vec_len)
+                # compare the non-Clifford cnot-dihedral RB circuits
+                self.compare_cnotdihedral_circuit(
+                    rb_cnotdihedral_Z_circs[seed][circ_index],
+                    rb_cnotdihedral_X_circs[seed][circ_index],
+                    nq, rb_opts_cnotdihedral, vec_len)
 
         self.assertEqual(circ_index, len(rb_circs),
                          "Error: additional circuits exist")
 
     def test_rb_utils(self):
         """Test some of the utility calculations, e.g. coherence limit."""
-
         t1 = 100.
         t2 = 100.
         gate2Q = 0.5

@@ -36,7 +36,7 @@ class CliffordUtils(BasicUtils):
             elmnt: a group element.
             elmnt_key: a unique index of a Clifford object.
             gatelist: a list of gates corresponding to a
-                Clifford object
+                Clifford object.
         """
 
         self._num_qubits = num_qubits
@@ -104,6 +104,7 @@ class CliffordUtils(BasicUtils):
             else:
                 raise ValueError("Unknown gate type: ", op)
 
+        self._gatelist = gatelist
         self._elmnt = cliff
         return cliff
 
@@ -329,6 +330,7 @@ class CliffordUtils(BasicUtils):
 
         with open(picklefile, "wb") as pf:
             pickle.dump(cliffords, pf)
+        pf.close()
 
     def load_clifford_table(self, picklefile='cliffords2.pickle'):
         """
@@ -341,7 +343,9 @@ class CliffordUtils(BasicUtils):
             A table of 1 and 2 qubit Clifford gates.
         """
         with open(picklefile, "rb") as pf:
-            return pickle.load(pf)
+            pickletable = pickle.load(pf)
+        pf.close()
+        return pickletable
 
     def load_tables(self, num_qubits):
         """
@@ -367,7 +371,7 @@ class CliffordUtils(BasicUtils):
             try:
                 clifford_tables = self.load_clifford_table(
                     picklefile='cliffords%d.pickle' % num_qubits)
-            except OSError:
+            except (OSError, EOFError):
                 # table doesn't exist, so save it
                 # this will save time next run
                 print('Making the n=%d Clifford Table' % num_qubits)
@@ -376,9 +380,14 @@ class CliffordUtils(BasicUtils):
                     num_qubits=num_qubits)
                 clifford_tables = self.load_clifford_table(
                     picklefile='cliffords%d.pickle' % num_qubits)
+            except pickle.UnpicklingError:
+                # handle error
+                clifford_tables = self.self.clifford2_gates_table()
+
         else:
             raise ValueError("The number of qubits should be only 1 or 2")
 
+        self._group_tables = clifford_tables
         return clifford_tables
 
     # --------------------------------------------------------
@@ -433,14 +442,18 @@ class CliffordUtils(BasicUtils):
             return inv_gatelist
         raise ValueError("The number of qubits should be only 1 or 2")
 
-    def find_key(self, cliff):
+    def find_key(self, cliff, num_qubits):
         """
         Find the Clifford index.
 
         Args:
             cliff: a Clifford object.
+            num_qubits: the dimension of the Clifford.
 
         Returns:
             Clifford index (an integer).
         """
+        G_table = self.load_tables(num_qubits)
+        assert cliff.index() in G_table, \
+            "inverse not found in lookup table!\n%s" % cliff
         return cliff.index()
