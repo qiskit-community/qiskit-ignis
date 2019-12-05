@@ -65,15 +65,19 @@ def cr_hamiltonian_tomography_schedules(c_qubit: int,
     Example:
         .. jupyter-execute::
 
-           from qiskit import QuantumCircuit
-           from qiskit import quantum_info as qi
-           from qiskit.visualization import plot_process_city
-           %matplotlib inline
+           import qiskit
+           from qiskit.ignis.characterization.hamiltonian import *
 
-           qc = QuantumCircuit(2)
-           qc.cx(0, 1)
+           provider = qiskit.IBMQ.get_provider()
+           backend = provider.get_backend('my_ibmq_backend')
 
-           plot_quantum_channel_hinton(qc, title="New Hinton Plot")
+           params = {'cr_amp': 0.1, 'sigma': 5, 'risefall': 20}
+           cr_durations = [100, 200, 300]
+
+           qc, cmds, gates = create_cr_circuit(0, 1, backend, params)
+           scheds = cr_hamiltonian_tomography_schedules(0, 1, qc,
+                                                        cr_durations, backend,
+                                                        cmds, gates)
     """
     circ_names = ['cr_ham_tomo_sched_%d' % ii for ii in range(len(cr_durations))]
 
