@@ -137,7 +137,7 @@ class CrossResonanceHamiltonianFitter(BaseHamiltonianFitter):
 
         circuit_names = []
         for cind in range(len(xdata)):
-            circuit_names.append('cr_tomo_sched_%d_' % cind)
+            circuit_names.append('cr_ham_tomo_sched_%d' % cind)
 
         BaseHamiltonianFitter.__init__(self, 'CR', backend_result,
                                        xdata, qubits,

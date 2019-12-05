@@ -19,5 +19,5 @@ Hamiltonian parameters module
 
 # Measurement correction functions
 from .circuits import zz_circuits
-from .schedule import cr_tomography_schedules, cr1_rabi_schedules, cr2_rabi_schedules
-from .fitters import ZZFitter, CRFitter
+from .schedule import cr_hamiltonian_tomography_schedules, create_cr_circuit
+from .fitters import ZZFitter, CrossResonanceHamiltonianFitter
