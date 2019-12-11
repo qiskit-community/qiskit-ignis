@@ -103,7 +103,7 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
 
     # Check if CVXPY package is installed
     if cvxpy is None:
-        raise Exception('CVXPY is not installed. Use `mle_fit` instead.')
+        raise Exception('CVXPY is not installed. Use `lstsq` instead.')
     # Check CVXPY version
     version = cvxpy.__version__
     if not (version[0] == '1' or version[:3] == '0.4'):
