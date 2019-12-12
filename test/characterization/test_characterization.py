@@ -506,10 +506,10 @@ class TestHamiltonian(unittest.TestCase):
         # check if circuit is parametrized
         self.assertEqual(len(circ.parameters), 1)
 
-        cr_rabi, xdata = cr_hamiltonian_tomography_circuits((0, 1), circ, self.durations, 0.1)
+        cr_rabi, xdata = cr_hamiltonian_tomography_circuits((0, 1), circ, self.durations, 2)
 
         # check if cr times are correct
-        self.assertListEqual(list(xdata), [0.6, 0.8, 1.0])
+        self.assertListEqual(list(xdata), [12.0, 16.0, 20.0])
 
         # check if circuit format is correct
         self.assertEqual(len(cr_rabi), 18)
