@@ -38,11 +38,12 @@ def get_control_channels(c_qubit: int,
     try:
         cx_ref = circ_inst_map.get('cx', qubits=(c_qubit, t_qubit))
     except pulse.PulseError:
-        raise CharacterizationError('Cross resonance is not defined for qubits %d-%d.' % (c_qubit, t_qubit))
+        raise CharacterizationError('Cross resonance is not defined'
+                                    'for qubits %d-%d.' % (c_qubit, t_qubit))
 
     cx_ref = cx_ref.filter(instruction_types=[pulse.commands.PulseInstruction])
     for channel in cx_ref.channels:
         if isinstance(channel, pulse.ControlChannel):
             return channel.index
 
-    raise CharacterizationError('No valid control channel to drive cross resonance.')
+    raise CharacterizationError('No valid control channel for CR drive.')

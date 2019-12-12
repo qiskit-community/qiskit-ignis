@@ -19,7 +19,7 @@ from copy import deepcopy
 from typing import Callable, Dict
 
 import qiskit
-import qiskit.pulse.pulse_lib as pulse_lib
+import qiskit.pulse.pulse_lib as plib
 
 var_duration = qiskit.circuit.Parameter('duration')
 
@@ -41,7 +41,8 @@ def cr_designer_variable_duration(sched_params: Dict[str, float],
     """
     # get valid cross resonance pulse parameters
     valid_pnames = 'cr_amp', 'ca_amp', 'sigma', 'risefall'
-    valid_params = {pname: sched_params.get(pname, 0) for pname in valid_pnames}
+    valid_params = {pname: sched_params.get(pname, 0)
+                    for pname in valid_pnames}
     if negative:
         cr_amp = -valid_params.pop('cr_amp')
         ca_amp = -valid_params.pop('ca_amp')
@@ -71,20 +72,25 @@ def cr_designer_variable_duration(sched_params: Dict[str, float],
         ca_params['name'] = 'CR90%s_d_var' % ('m' if negative else 'p')
 
         # create channels
-        c_drive = qiskit.pulse.DriveChannel(c_qubit)
-        t_drive = qiskit.pulse.DriveChannel(t_qubit)
-        cr_drive = qiskit.pulse.ControlChannel(u_index)
+        c_drv = qiskit.pulse.DriveChannel(c_qubit)
+        t_drv = qiskit.pulse.DriveChannel(t_qubit)
+        u_drv = qiskit.pulse.ControlChannel(u_index)
 
         # create CR schedule
         sched = qiskit.pulse.Schedule()
-        sched = sched.union((0, pulse_lib.gaussian_square(**cr_params)(cr_drive)))
-        sched = sched.union((0, qiskit.pulse.Delay(duration)(c_drive)))
+        sched = sched.union((0,
+                             plib.gaussian_square(**cr_params)(u_drv)))
+        sched = sched.union((0,
+                             qiskit.pulse.Delay(duration)(c_drv)))
         if ca_amp != 0:
-            sched = sched.union((0, pulse_lib.gaussian_square(**ca_params)(t_drive)))
+            sched = sched.union((0,
+                                 plib.gaussian_square(**ca_params)(t_drv)))
         else:
-            sched = sched.union((0, qiskit.pulse.Delay(duration)(t_drive)))
+            sched = sched.union((0,
+                                 qiskit.pulse.Delay(duration)(t_drv)))
         return sched
 
     params = [var_duration.name]
 
-    return qiskit.pulse.schedule.ParameterizedSchedule(cr_var_sched, parameters=params)
+    return qiskit.pulse.schedule.ParameterizedSchedule(cr_var_sched,
+                                                       parameters=params)

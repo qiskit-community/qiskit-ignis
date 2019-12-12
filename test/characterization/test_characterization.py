@@ -46,10 +46,10 @@ from qiskit.ignis.characterization.gates import (AmpCalFitter,
 from qiskit.ignis.characterization.calibrations import (rabi_schedules,
                                                         drag_schedules,
                                                         update_u_gates)
-from qiskit.ignis.characterization.hamiltonian import (create_cr_circuit,
-                                                       cr_hamiltonian_tomography_circuits)
-from qiskit.ignis.characterization.pulse_library import (cr_designer_variable_duration,
-                                                         get_control_channels)
+from qiskit.ignis.characterization.hamiltonian import \
+    create_cr_circuit, cr_hamiltonian_tomography_circuits
+from qiskit.ignis.characterization.pulse_library import \
+    cr_designer_variable_duration, get_control_channels
 
 import qiskit.pulse as pulse
 from qiskit.test.mock import FakeOpenPulse2Q
@@ -493,7 +493,8 @@ class TestHamiltonian(unittest.TestCase):
         """
         Test CR Rabi experiments
         """
-        circ, maps, gates = create_cr_circuit((0, 1), self.backend, self.params)
+        circ, maps, gates = create_cr_circuit((0, 1), self.backend,
+                                              self.params)
 
         # check if mapper has custom pulse sequence
         self.assertTrue(maps.has('zx_p', (0, 1)))
@@ -506,7 +507,8 @@ class TestHamiltonian(unittest.TestCase):
         # check if circuit is parametrized
         self.assertEqual(len(circ.parameters), 1)
 
-        cr_rabi, xdata = cr_hamiltonian_tomography_circuits((0, 1), circ, self.durations, 2)
+        cr_rabi, xdata = cr_hamiltonian_tomography_circuits((0, 1), circ,
+                                                            self.durations, 2)
 
         # check if cr times are correct
         self.assertListEqual(list(xdata), [12.0, 16.0, 20.0])
@@ -528,7 +530,8 @@ class TestHamiltonian(unittest.TestCase):
         """
         Test cr schedule designer
         """
-        sched = cr_designer_variable_duration(self.params, 0, 1, 0, negative=True)
+        sched = cr_designer_variable_duration(self.params, 0, 1, 0,
+                                              negative=True)
 
         self.assertIsInstance(sched, pulse.schedule.ParameterizedSchedule)
         self.assertEqual(sched.parameters[0], 'duration')

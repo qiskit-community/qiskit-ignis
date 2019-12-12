@@ -18,5 +18,6 @@ Hamiltonian parameters module
 """
 
 # Measurement correction functions
-from .circuits import zz_circuits, create_cr_circuit, cr_hamiltonian_tomography_circuits
+from .circuits import zz_circuits, create_cr_circuit, \
+    cr_hamiltonian_tomography_circuits
 from .fitters import ZZFitter, CrossResonanceHamiltonianFitter

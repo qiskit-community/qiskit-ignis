@@ -16,10 +16,14 @@
 Fitters of characteristic times
 """
 
-from scipy.optimize import curve_fit
-import numpy as np
 import itertools
+
+import numpy as np
+
+from scipy.optimize import curve_fit
+
 from qiskit import QiskitError
+
 from ..verification.tomography import marginal_counts
 
 
@@ -685,7 +689,8 @@ class BaseHamiltonianFitter(BaseFitter):
         self._hamiltonian = {}
 
         for qid in qubits:
-            self._hamiltonian[qid] = {''.join(term): 'n/a' for term in interaction_terms}
+            self._hamiltonian[qid] = {''.join(term): 'n/a'
+                                      for term in interaction_terms}
 
     @property
     def hamiltonian(self):
