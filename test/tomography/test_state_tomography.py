@@ -97,6 +97,7 @@ class TestStateTomography(unittest.TestCase):
 
     def test_complex_3_qubit_circuit(self):
         def rand_angles():
+            # pylint: disable=E1101
             return tuple(2 * numpy.pi * numpy.random.random(3) - numpy.pi)
 
         q = QuantumRegister(3)

@@ -7,32 +7,90 @@ trigger:
 - master
 - stable
 
-pool:
-  vmImage: 'vs2017-win2016'
-strategy:
-  matrix:
-    Python35:
-      python.version: '3.5'
-      TOXENV: py35
-    Python36:
-      python.version: '3.6'
-      TOXENV: py36
-    Python37:
-      python.version: '3.7'
-      TOXENV: py37
+jobs:
+    - job: 'Docs'
+      pool: {vmImage: 'ubuntu-16.04'}
+      strategy:
+        matrix:
+          Python37:
+            python.version: '3.7'
+      steps:
+       - checkout: self
+       - task: UsePythonVersion@0
+         inputs:
+           versionSpec: '$(python.version)'
+         displayName: 'Use Python $(python.version)'
+       - bash: |
+           set -e
+           python -m pip install --upgrade pip virtualenv
+           pip install -U tox
+           python setup.py build_ext --inplace
+         displayName: 'Install dependencies'
+       - bash: |
+           tox -edocs -- -j auto
+         displayName: 'Run Docs build'
+       - task: PublishBuildArtifacts@1
+         displayName: 'Publish docs'
+         inputs:
+           pathtoPublish: 'docs/_build/html'
+           artifactName: 'html_docs'
+    - job: 'windows'
+      pool:
+        vmImage: 'vs2017-win2016'
+      strategy:
+        matrix:
+          Python35:
+            python.version: '3.5'
+            TOXENV: py35
+            OPENBLAS: https://3f23b170c54c2533c070-1c8a9b3114517dc5fe17b7c3f8c63a43.ssl.cf2.rackcdn.com/openblas-5f998ef_gcc7_1_0_win64.zip
+          Python36:
+            python.version: '3.6'
+            TOXENV: py36
+          Python37:
+            python.version: '3.7'
+            TOXENV: py37
 
-steps:
-  - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
-    displayName: Add conda to PATH
-  - script: conda create --yes --quiet --name qiskit-ignis
-    displayName: Create Anaconda environment
-  - script: |
-      call activate qiskit-ignis
-      conda install --yes --quiet --name qiskit-ignis python=%PYTHON_VERSION% mkl
-    displayName: Install Anaconda packages
-  - script: |
-      call activate qiskit-ignis
-      python -m pip install --upgrade pip
-      pip install tox
-      tox -e%TOXENV%
-    displayName: 'Install dependencies and run tests'
+      steps:
+        - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+          displayName: Add conda to PATH
+        - script: conda create --yes --quiet --name qiskit-ignis python=%PYTHON_VERSION%
+          displayName: Create Anaconda environment
+        - script: |
+            call activate qiskit-ignis
+            conda install --yes --quiet --name qiskit-ignis --channel conda-forge python=%PYTHON_VERSION% scs
+          displayName: Install Anaconda packages
+          condition: ne(variables['python.version'], '3.5')
+        - powershell: (new-object System.Net.WebClient).DownloadFile($env:OPENBLAS, 'c:\openblas.zip')
+          condition: eq(variables['python.version'], '3.5')
+          displayName: 'Download openblas'
+        - powershell: Expand-Archive c:\openblas.zip c:\openblas
+          condition: eq(variables['python.version'], '3.5')
+          displayName: 'Unzip openblas'
+        - script: |
+            call activate qiskit-ignis
+            conda install --yes --quiet --update-all --name qiskit-ignis python=%PYTHON_VERSION% numpy scipy
+          displayName: Install Anaconda packages
+          condition: eq(variables['python.version'], '3.5')
+        - script: |
+            call activate qiskit-ignis
+            set PATH=%PATH%;%BINPATH%;C:\openblas\%64%\bin;
+            echo %PATH%
+            dir C:\openblas\%ARCH%\bin
+            make.exe CC="gcc.exe -m64" USE_LAPACK=1 BLASLDFLAGS="-LC:\openblas\64\bin -lopenblas_5f998ef_gcc7_1_0"
+            make.exe install
+            git clone --recursive https://github.com/bodono/scs-python.git
+            cd scs-python
+            python setup.py install --scs 'CC="gcc.exe -m64" USE_LAPACK=1 BLASLDFLAGS="-LC:\openblas\64\bin -lopenblas_5f998ef_gcc7_1_0"'
+            cd ..
+          condition: eq(variables['python.version'], '3.5')
+          displayName: 'Install scs from source for python 3.5'
+        - script: |
+            call activate qiskit-ignis
+            conda install --yes --quiet --name qiskit-ignis python=%PYTHON_VERSION% mkl
+          displayName: 'Install MKL'
+        - script: |
+            call activate qiskit-ignis
+            python -m pip install -c constraints.txt --upgrade pip virtualenv setuptools
+            pip install -c constraints.txt -U tox
+            tox --sitepackages -e%TOXENV%
+          displayName: 'Install dependencies and run tests'

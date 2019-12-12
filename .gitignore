@@ -13,13 +13,24 @@ test/python/*.pdf
 test/python/*.prof
 .stestr/
 
+# Built documentation
+docs/_build/
+docs/stubs/
+docs/api/
+
 # dotenv
 .env
+
+# Jupyter notebooks checkpoints
+qiskit/ignis/examples/.ipynb_checkpoints/
 
 # virtualenv
 .venv
 venv/
 ENV/
+
+#IDE
+.idea
 
 *.pyc
 
@@ -42,5 +53,4 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
 *.DS_Store

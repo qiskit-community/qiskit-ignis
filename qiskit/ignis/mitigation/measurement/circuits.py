@@ -134,7 +134,7 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
 
     qubits_list_sizes = [len(qubit_list) for qubit_list in mit_pattern]
     nqubits = sum(qubits_list_sizes)
-    size_of_largest_group = max([list_size for list_size in qubits_list_sizes])
+    size_of_largest_group = max(qubits_list_sizes)
     largest_labels = count_keys(size_of_largest_group)
 
     state_labels = []

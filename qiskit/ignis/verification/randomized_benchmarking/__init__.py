@@ -14,12 +14,16 @@
 
 
 """
-Measurement correction module
+Randomized Benchmarking module
 """
 
-# Measurement correction functions
+# Randomized Benchmarking functions
 from .Clifford import Clifford
-from . import clifford_utils
+from .basic_utils import BasicUtils
+from .clifford_utils import CliffordUtils
+from .dihedral import CNOTDihedral
+from .dihedral_utils import DihedralUtils
 from .circuits import randomized_benchmarking_seq
-from .fitters import RBFitter, InterleavedRBFitter, PurityRBFitter
+from .fitters import RBFitter, InterleavedRBFitter, PurityRBFitter, \
+    CNOTDihedralRBFitter
 from . import rb_utils
