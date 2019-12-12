@@ -685,7 +685,7 @@ class BaseHamiltonianFitter(BaseFitter):
         self._hamiltonian = {}
 
         for qid in qubits:
-            self._hamiltonian[qid] = {term: 0 for term in interaction_terms}
+            self._hamiltonian[qid] = {''.join(term): 'n/a' for term in interaction_terms}
 
     @property
     def hamiltonian(self):

@@ -14,9 +14,7 @@
 
 
 """
-Hamiltonian parameters module
+Parametrized pulse definitions
 """
-
-# Measurement correction functions
-from .circuits import zz_circuits, create_cr_circuit, cr_hamiltonian_tomography_circuits
-from .fitters import ZZFitter, CrossResonanceHamiltonianFitter
+from .cr_pulses import cr_designer_variable_duration, var_duration
+from .ibmq_utils import get_control_channels
