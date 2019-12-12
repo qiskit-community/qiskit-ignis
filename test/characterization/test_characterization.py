@@ -46,6 +46,10 @@ from qiskit.ignis.characterization.gates import (AmpCalFitter,
 from qiskit.ignis.characterization.calibrations import (rabi_schedules,
                                                         drag_schedules,
                                                         update_u_gates)
+from qiskit.ignis.characterization.hamiltonian import (create_cr_circuit,
+                                                       cr_hamiltonian_tomography_circuits)
+from qiskit.ignis.characterization.pulse_library import (cr_designer_variable_duration,
+                                                         get_control_channels)
 
 import qiskit.pulse as pulse
 from qiskit.test.mock import FakeOpenPulse2Q
@@ -464,6 +468,73 @@ class TestCalibs(unittest.TestCase):
                        qubits=[0],
                        cmd_def=self.cmd_def,
                        drives=self.system.drives)
+
+
+class TestHamiltonian(unittest.TestCase):
+    """
+    Test Hamiltonian module which creates pulse schedules
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        Init the test experiments.
+        """
+
+        unittest.TestCase.__init__(self, *args, **kwargs)
+
+        backend = FakeOpenPulse2Q()
+
+        self.backend = backend
+        self.circ_inst_map = backend.defaults().circuit_instruction_map
+        self.params = {'cr_amp': 0.3, 'sigma': 2, 'risefall': 4}
+        self.durations = np.array([6, 8, 10])
+
+    def test_cr_rabi(self):
+        """
+        Test CR Rabi experiments
+        """
+        circ, maps, gates = create_cr_circuit((0, 1), self.backend, self.params)
+
+        # check if mapper has custom pulse sequence
+        self.assertTrue(maps.has('zx_p', (0, 1)))
+        self.assertTrue(maps.has('zx_m', (0, 1)))
+
+        # check if gates has pulse gate
+        self.assertIn('zx_p', gates)
+        self.assertIn('zx_m', gates)
+
+        # check if circuit is parametrized
+        self.assertEqual(len(circ.parameters), 1)
+
+        cr_rabi, xdata = cr_hamiltonian_tomography_circuits((0, 1), circ, self.durations, 0.1)
+
+        # check if cr times are correct
+        self.assertListEqual(list(xdata), [0.6, 0.8, 1.0])
+
+        # check if circuit format is correct
+        self.assertEqual(len(cr_rabi), 18)
+        self.assertEqual(cr_rabi[0].name, 'cr_ham_tomo_sched_0_x_0')
+
+    def test_get_u_channel(self):
+        """
+        Test uchannel index finder
+        """
+        uind = get_control_channels(0, 1, self.circ_inst_map)
+        uind_ref = 0
+
+        self.assertEqual(uind, uind_ref)
+
+    def test_cr_designer(self):
+        """
+        Test cr schedule designer
+        """
+        sched = cr_designer_variable_duration(self.params, 0, 1, 0, negative=True)
+
+        self.assertIsInstance(sched, pulse.schedule.ParameterizedSchedule)
+        self.assertEqual(sched.parameters[0], 'duration')
+
+        sched_bind = sched.bind_parameters(duration=6)
+        self.assertEqual(sched_bind.duration, 6)
 
 
 if __name__ == '__main__':
