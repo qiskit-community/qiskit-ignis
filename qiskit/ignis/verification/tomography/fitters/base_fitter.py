@@ -45,16 +45,15 @@ class TomographyFitter:
 
         Args:
             result (Result): a Qiskit Result object obtained from executing
-                            tomography circuits.
+                tomography circuits.
             circuits (list): a list of circuits or circuit names to extract
-                            count information from the result object.
+                count information from the result object.
             meas_basis (TomographyBasis, str): A function to return
-                        measurement operators corresponding to measurement
-                        outcomes. See Additional Information
-                        (default: 'Pauli')
+                measurement operators corresponding to measurement
+                outcomes. See Additional Information. (default: 'Pauli')
             prep_basis (TomographyBasis, str): A function to return
-                        preparation operators. See Additional
-                        Information (default: 'Pauli')
+                preparation operators. See Additional
+                Information (default: 'Pauli')
         """
 
         # Set the measure and prep basis
@@ -100,22 +99,73 @@ class TomographyFitter:
         return self._prep_basis
 
     def fit(self, method='auto', standard_weights=True, beta=0.5, **kwargs):
-        """
-        Reconstruct a quantum state using CVXPY convex optimization.
+        r"""Reconstruct a quantum state using CVXPY convex optimization.
+
+                **Fitter method**
+
+        The ``cvx`` fitter method used CVXPY convex optimization package.
+        The ``lstsq`` method uses least-squares fitting (linear inversion).
+        The ``auto`` method will use 'cvx' if the CVXPY package is found on
+        the system, otherwise it will default to 'lstsq'.
+
+        **Objective function**
+
+        This fitter solves the constrained least-squares minimization:
+        :math:`minimize: ||a * x - b ||_2`
+
+        subject to:
+
+         * :math:`x >> 0`
+         * :math:`\text{trace}(x) = 1`
+
+        where:
+
+         * a is the matrix of measurement operators
+           :math:`a[i] = \text{vec}(M_i).H`
+         * b is the vector of expectation value data for each projector
+           :math:`b[i] ~ \text{Tr}[M_i.H * x] = (a * x)[i]`
+         * x is the vectorized density matrix to be fitted
+
+        **PSD constraint**
+
+        The PSD keyword constrains the fitted matrix to be
+        postive-semidefinite. For the ``lstsq`` fitter method the fitted matrix
+        is rescaled using the method proposed in Reference [1]. For the ``cvx``
+        fitter method the convex constraint makes the optimization problem a
+        SDP. If PSD=False the fitted matrix will still be constrained to be
+        Hermitian, but not PSD. In this case the optimization problem becomes
+        a SOCP.
+
+        **Trace constraint**
+
+        The trace keyword constrains the trace of the fitted matrix. If
+        trace=None there will be no trace constraint on the fitted matrix.
+        This constraint should not be used for process tomography and the
+        trace preserving constraint should be used instead.
+
+        **CVXPY Solvers:**
+
+        Various solvers can be called in CVXPY using the `solver` keyword
+        argument. See the `CVXPY documentation
+        <https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options>`_
+        for more information on solvers.
+
+        References:
+
+        [1] J Smolin, JM Gambetta, G Smith, Phys. Rev. Lett. 108, 070502
+            (2012). Open access: arXiv:1106.5458 [quant-ph].
 
         Args:
             method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
             standard_weights (bool, optional): Apply weights to
-                                            tomography data
-                                            based on count probability
-                                            (default: True)
+                tomography data based on count probability
+                (default: True)
             beta (float): hedging parameter for converting counts
-                        to probabilities
-                        (default: 0.5)
+                to probabilities (default: 0.5)
             PSD (bool, optional): Enforced the fitted matrix to be positive
-                                semidefinite (default: True)
+                semidefinite (default: True)
             trace (int, optional): trace constraint for the fitted matrix
-                                (default: None).
+                (default: None).
             trace_preserving (bool, optional): Enforce the fitted matrix to be
                 trace preserving when fitting a Choi-matrix in quantum process
                 tomography. Note this method does not apply for 'lstsq' fitter
@@ -124,78 +174,7 @@ class TomographyFitter:
 
         Returns:
             The fitted matrix rho that minimizes
-            ||basis_matrix * vec(rho) - data||_2.
-
-        Additional Information:
-
-            Fitter method
-            -------------
-            The 'cvx' fitter method used CVXPY convex optimization package.
-            The 'lstsq' method uses least-squares fitting (linear inversion).
-            The 'auto' method will use 'cvx' if the CVXPY package is found on
-            the system, otherwise it will default to 'lstsq'.
-
-            Objective function
-            ------------------
-            This fitter solves the constrained least-squares minimization:
-
-                minimize: ||a * x - b ||_2
-                subject to: x >> 0 (PSD, optional)
-                            trace(x) = t (trace, optional)
-                            partial_trace(x) = identity (trace_preserving,
-                                                        optional)
-
-            where:
-                a is the matrix of measurement operators a[i] = vec(M_i).H
-                b is the vector of expectation value data for each projector
-                b[i] ~ Tr[M_i.H * x] = (a * x)[i]
-                x is the vectorized density matrix (or Choi-matrix)
-                to be fitted
-
-            PSD constraint
-            --------------
-            The PSD keyword constrains the fitted matrix to be
-            postive-semidefinite.
-            For the 'lstsq' fitter method the fitted matrix is rescaled
-            using the method proposed in Reference [1].
-            For the 'cvx' fitter method the convex constraint makes the
-            optimization problem a SDP. If PSD=False the fitted matrix
-            will still
-            be constrained to be Hermitian, but not PSD. In this case the
-            optimization problem becomes a SOCP.
-
-            Trace constraint
-            ----------------
-            The trace keyword constrains the trace of the fitted matrix. If
-            trace=None there will be no trace constraint on the fitted matrix.
-            This constraint should not be used for process tomography and the
-            trace preserving constraint should be used instead.
-
-            Trace preserving (TP) constraint
-            --------------------------------
-            The trace_preserving keyword constrains the fitted matrix
-            to be TP. This should only be used for process tomography,
-            not state tomography.
-            Note that the TP constraint implicitly enforces
-            the trace of the fitted
-            matrix to be equal to the square-root of the matrix dimension.
-            If a trace constraint is also specified that
-            differs from this value the fit
-            will likely fail. Note that this can only be used
-            for the CVX method.
-
-            CVXPY Solvers:
-            -------
-            Various solvers can be called in CVXPY using the `solver` keyword
-            argument. Solvers included in CVXPY are:
-                'CVXOPT': SDP and SOCP (default solver)
-                'SCS'   : SDP and SOCP
-                'ECOS'  : SOCP only
-            See the documentation on CVXPY for more information on solvers.
-
-            References:
-            [1] J Smolin, JM Gambetta, G Smith, Phys. Rev. Lett. 108, 070502
-                (2012). Open access: arXiv:1106.5458 [quant-ph].
+            :math:`||basis_matrix * vec(rho) - data||_2`.
         """
         # Get fitter data
         data, basis_matrix, weights = self._fitter_data(standard_weights,
@@ -226,9 +205,9 @@ class TomographyFitter:
 
         Args:
             result (Result): a Qiskit Result object obtained from executing
-                            tomography circuits.
+                tomography circuits.
             circuits (list): a list of circuits or circuit names to extract
-                            count information from the result object.
+                count information from the result object.
         """
         if len(circuits[0].cregs) == 1:
             marginalize = False
@@ -256,8 +235,7 @@ class TomographyFitter:
 
         Args:
             standard_weights (bool, optional): Apply weights to basis matrix
-                            and data based on count probability
-                            (default: True)
+                and data based on count probability (default: True)
             beta (float): hedging parameter for 0, 1
             probabilities (default: 0.5)
 
@@ -340,10 +318,9 @@ class TomographyFitter:
 
         Args:
             counts (dict, vector): A set of measurement counts for
-                                all outcomes of a given measurement
-                                configuration.
+                all outcomes of a given measurement configuration.
             beta (float >= 0): A hedging parameter used to bias probabilities
-                            computed from input counts away from 0 or 1.
+                computed from input counts away from 0 or 1.
 
         Returns:
             A numpy array of binomial weights for the input counts and beta
@@ -418,11 +395,11 @@ class TomographyFitter:
 
         Args:
             label (tuple(str)): a preparation configuration label for a
-                                tomography circuit.
+                tomography circuit.
             prep_matrix_fn (function): a function that returns the matrix
-                            corresponding to a single qubit preparation label.
-                            The functions should have signature
-                                prep_matrix_fn(str) -> np.array
+                corresponding to a single qubit preparation label.
+                The functions should have signature:
+                    ``prep_matrix_fn(str) -> np.array``
         Returns:
             A Numpy array for the multi-qubit prepration operator specified
             by label.
@@ -449,11 +426,11 @@ class TomographyFitter:
 
         Args:
             label (tuple(str)): a measurement configuration label for a
-                                tomography circuit.
+                tomography circuit.
             meas_matrix_fn (function): a function that returns the matrix
-                            corresponding to a single qubit measurement label
-                            for a given outcome. The functions should have
-                            signature meas_matrix_fn(str, int) -> np.array
+                corresponding to a single qubit measurement label
+                for a given outcome. The functions should have
+                signature meas_matrix_fn(str, int) -> np.array
 
         Returns:
             A list of Numpy array for the multi-qubit measurement operators

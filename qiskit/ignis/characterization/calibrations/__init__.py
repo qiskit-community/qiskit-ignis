@@ -14,16 +14,9 @@
 
 
 """
-Randomized Benchmarking module
+Calibration module
 """
 
-# Randomized Benchmarking functions
-from .Clifford import Clifford
-from .basic_utils import BasicUtils
-from .clifford_utils import CliffordUtils
-from .dihedral import CNOTDihedral
-from .dihedral_utils import DihedralUtils
-from .circuits import randomized_benchmarking_seq
-from .fitters import RBFitter, InterleavedRBFitter, PurityRBFitter, \
-    CNOTDihedralRBFitter
-from . import rb_utils
+from .pulse_schedules import rabi_schedules, drag_schedules
+from .fitters import RabiFitter, DragFitter
+from .ibmq_utils import get_single_q_pulse, update_u_gates

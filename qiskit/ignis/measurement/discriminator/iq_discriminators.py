@@ -37,7 +37,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
     """
 
     def __init__(self, cal_results: Union[Result, List[Result]],
-                 qubit_mask: List[int], expected_states: List[str],
+                 qubit_mask: List[int], expected_states: List[str] = None,
                  standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None):
         """
@@ -64,6 +64,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                                           schedules)
 
     def get_xdata(self, results: Union[Result, List[Result]],
+                  schedule_type_to_get: int,
                   schedules: Union[List[str], List[Schedule]] = None) \
             -> List[List[float]]:
         """
@@ -73,14 +74,20 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 used to retrieve the level 1 data. If result is a list of
                 Result, then the first Result in the list that returns the data
                 of schedule (through get_memory(schedule)) is used.
+            schedule_type_to_get (int): use to specify if we should return data
+                corresponding to:
+                0: calibration data only
+                1: non-calibration data
+                2: both calibration and non-calibration data
             schedules (Union[List[str], List[Schedule]]): Either the names of
                 the schedules or the schedules themselves.
-        Returns (List[List[float]]): data as a list of features. Each feature
-            is a list.
+
+        Returns (List[List[float]]):
+            data as a list of features. Each feature is a list.
         """
         xdata = []
         if schedules is None:
-            schedules = self._get_schedules(results)
+            schedules = self._get_schedules(results, schedule_type_to_get)
 
         for schedule in schedules:
             iq_data = None
@@ -101,20 +108,28 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
         return self._scale_data(xdata)
 
     def get_ydata(self, results: Union[Result, List[Result]],
+                  schedule_type_to_get: int,
                   schedules: Union[List[str], List[Schedule]] = None):
         """
         Args:
             results (Union[Result, List[Result]]): results for which to
                 retrieve the y data (i.e. expected states).
+            schedule_type_to_get (int): use to specify if we should return data
+                corresponding to:
+                0: calibration data only
+                1: non-calibration data
+                2: both calibration and non-calibration data
             schedules (Union[List[str], List[Schedule]]): the schedules for
                 which to get the y data.
-        Returns (List[str]): the y data, i.e. expected states. get_ydata is
+
+        Returns (List[str]):
+            the y data, i.e. expected states. get_ydata is
             designed to produce y data with the same length as the x data.
         """
         ydata = []
 
         if schedules is None:
-            schedules = self._get_schedules(results)
+            schedules = self._get_schedules(results, schedule_type_to_get)
 
         for schedule in schedules:
             if isinstance(schedule, Schedule):
@@ -144,8 +159,9 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
 
         Args:
             iq_data (np.ndarray): data obtained from get_memory().
-        Returns (List[List[float]]): A list of shots where each entry is a list
-            of IQ points.
+
+        Returns (List[List[float]]):
+            A list of shots where each entry is a list of IQ points.
         """
         xdata = []
         if len(iq_data.shape) == 2:  # meas_return 'single' case
@@ -192,10 +208,11 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 used.
             title (bool): adds a title to each subplot with the number of
                 the qubit.
-        Returns: (Union[List[axes], axes], figure): the axes object used for
-            the plot as well as the figure handle. The figure handle returned
-            is not None only when the figure handle is created by the
-            discriminator's plot method.
+
+        Returns: (Union[List[axes], axes], figure):
+            the axes object used for the plot as well as the figure handle.
+            The figure handle returned is not None only when the figure handle
+            is created by the discriminator's plot method.
         """
         if not HAS_MATPLOTLIB:
             raise QiskitError('please install matplotlib')
@@ -271,7 +288,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                         misclassified = x_data[y_disc != y_data]
                         ax.scatter(misclassified[:, q_idx],
                                    misclassified[:, n_qubits + q_idx],
-                                   color='r', alpha=0.5)
+                                   color='r', alpha=0.5, marker='x')
 
                 ax.legend(frameon=True)
 
@@ -337,7 +354,7 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
             raise QiskitError('Not enough axis instances supplied. '
                               'Please provide one per qubit discriminated.')
 
-        x_data = self.get_xdata(results)
+        x_data = self.get_xdata(results, 1)
         data = np.array(x_data)
 
         for idx in range(n_qubits):
@@ -349,7 +366,7 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
     """Linear discriminant analysis discriminator for IQ data."""
 
     def __init__(self, cal_results: Union[Result, List[Result]],
-                 qubit_mask: List[int], expected_states: List[str],
+                 qubit_mask: List[int], expected_states: List[str] = None,
                  standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None,
                  discriminator_parameters: dict = None):
@@ -407,7 +424,9 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
         Args:
             x_data (List[List[float]]): list of features. Each feature is
                 itself a list.
-        Returns (List[str]): the discriminated x_data as a list of labels.
+
+        Returns (List[str]):
+            the discriminated x_data as a list of labels.
         """
         return self._lda.predict(x_data)
 
@@ -415,7 +434,7 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
 class QuadraticIQDiscriminator(IQDiscriminationFitter):
 
     def __init__(self, cal_results: Union[Result, List[Result]],
-                 qubit_mask: List[int], expected_states: List[str],
+                 qubit_mask: List[int], expected_states: List[str] = None,
                  standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None,
                  discriminator_parameters: dict = None):
@@ -455,6 +474,8 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
         self._description = 'Quadratic IQ discriminator for measurement ' \
                             'level 1.'
 
+        self.fit()
+
     def fit(self):
         """ Fits the discriminator using self._xdata and self._ydata. """
         if len(self._xdata) == 0:
@@ -465,10 +486,13 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
 
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
         """
-        Applies the discriminator to x_data
+        Applies the discriminator to x_data.
+
         Args:
             x_data (List[List[float]]): list of features. Each feature is
                 itself a list.
-        Returns (List[str]): the discriminated x_data as a list of labels.
+
+        Returns (List[str]):
+            the discriminated x_data as a list of labels.
         """
         return self._qda.predict(x_data)

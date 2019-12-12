@@ -29,18 +29,65 @@ except ImportError:
 
 def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
             trace_preserving=False, **kwargs):
-    """
+    r"""
     Reconstruct a quantum state using CVXPY convex optimization.
+
+    **Objective function**
+
+    This fitter solves the constrained least-squares minimization:
+    :math:`minimize: ||a * x - b ||_2`
+
+    subject to:
+
+    * :math:`x >> 0` (PSD, optional)
+    * :math:`\text{trace}(x) = t` (trace, optional)
+    * :math:`\text{partial_trace}(x)` = identity (trace_preserving, optional)
+
+    where:
+    * a is the matrix of measurement operators :math:`a[i] = vec(M_i).H`
+    * b is the vector of expectation value data for each projector
+      :math:`b[i] ~ \text{Tr}[M_i.H * x] = (a * x)[i]`
+    * x is the vectorized density matrix (or Choi-matrix) to be fitted
+
+    **PSD constraint**
+
+    The PSD keyword constrains the fitted matrix to be
+    postive-semidefinite, which makes the optimization problem a SDP. If
+    PSD=False the fitted matrix will still be constrained to be Hermitian,
+    but not PSD. In this case the optimization problem becomes a SOCP.
+
+    **Trace constraint**
+
+    The trace keyword constrains the trace of the fitted matrix. If
+    trace=None there will be no trace constraint on the fitted matrix.
+    This constraint should not be used for process tomography and the
+    trace preserving constraint should be used instead.
+
+    **Trace preserving (TP) constraint**
+
+    The trace_preserving keyword constrains the fitted matrix to be TP.
+    This should only be used for process tomography, not state tomography.
+    Note that the TP constraint implicitly enforces the trace of the fitted
+    matrix to be equal to the square-root of the matrix dimension. If a
+    trace constraint is also specified that differs from this value the fit
+    will likely fail.
+
+    **CVXPY Solvers**
+
+    Various solvers can be called in CVXPY using the `solver` keyword
+    argument. See the `CVXPY documentation
+    <https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options>`_
+    for more information on solvers.
 
     Args:
         data (vector like): vector of expectation values
         basis_matrix (matrix like): matrix of measurement operators
         weights (vector like, optional): vector of weights to apply to the
-                                         objective function (default: None)
+            objective function (default: None)
         PSD (bool, optional): Enforced the fitted matrix to be positive
-                              semidefinite (default: True)
+            semidefinite (default: True)
         trace (int, optional): trace constraint for the fitted matrix
-                               (default: None).
+            (default: None).
         trace_preserving (bool, optional): Enforce the fitted matrix to be
             trace preserving when fitting a Choi-matrix in quantum process
             tomography (default: False).
@@ -48,57 +95,7 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
 
     Returns:
         The fitted matrix rho that minimizes
-        ||basis_matrix * vec(rho) - data||_2.
-
-    Additional Information:
-
-        Objective function
-        ------------------
-        This fitter solves the constrained least-squares minimization:
-
-            minimize: ||a * x - b ||_2
-            subject to: x >> 0 (PSD, optional)
-                        trace(x) = t (trace, optional)
-                        partial_trace(x) = identity (trace_preserving,
-                                                     optional)
-
-        where:
-            a is the matrix of measurement operators a[i] = vec(M_i).H
-            b is the vector of expectation value data for each projector
-              b[i] ~ Tr[M_i.H * x] = (a * x)[i]
-            x is the vectorized density matrix (or Choi-matrix) to be fitted
-
-        PSD constraint
-        --------------
-        The PSD keyword constrains the fitted matrix to be
-        postive-semidefinite, which makes the optimization problem a SDP. If
-        PSD=False the fitted matrix will still be constrained to be Hermitian,
-        but not PSD. In this case the optimization problem becomes a SOCP.
-
-        Trace constraint
-        ----------------
-        The trace keyword constrains the trace of the fitted matrix. If
-        trace=None there will be no trace constraint on the fitted matrix.
-        This constraint should not be used for process tomography and the
-        trace preserving constraint should be used instead.
-
-        Trace preserving (TP) constraint
-        --------------------------------
-        The trace_preserving keyword constrains the fitted matrix to be TP.
-        This should only be used for process tomography, not state tomography.
-        Note that the TP constraint implicitly enforces the trace of the fitted
-        matrix to be equal to the square-root of the matrix dimension. If a
-        trace constraint is also specified that differs from this value the fit
-        will likely fail.
-
-        CVXPY Solvers:
-        -------
-        Various solvers can be called in CVXPY using the `solver` keyword
-        argument. Solvers included in CVXPY are:
-            'CVXOPT': SDP and SOCP (default solver)
-            'SCS'   : SDP and SOCP
-            'ECOS'  : SOCP only
-        See the documentation on CVXPY for more information on solvers.
+            :math:`||basis_matrix * vec(rho) - data||_2`.
     """
 
     # Check if CVXPY package is installed
@@ -195,10 +192,6 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
     iters = 5000
     max_iters = kwargs.get('max_iters', 20000)
 
-    # Set the default solver to 'CVXOPT'
-    if 'solver' not in kwargs:
-        kwargs['solver'] = 'CVXOPT'
-
     problem_solved = False
     while not problem_solved:
         kwargs['max_iters'] = iters
@@ -237,7 +230,7 @@ def partial_trace_super(d1, d2):
 
     Args:
         d1 (int): the dimension of the system not being traced
-        d2 (int): the diemsnion of the system being traced over
+        d2 (int): the dimension of the system being traced over
 
     Returns:
         A Numpy array of the partial trace superoperator S_TrB.

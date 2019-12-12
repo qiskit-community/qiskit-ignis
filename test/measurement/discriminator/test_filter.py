@@ -18,15 +18,13 @@ Test discrimination filters.
 
 import unittest
 from operator import getitem
+import os
+import pickle
 
-import test.utils as utils
-import qiskit
-from qiskit import Aer
 from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
-from qiskit.result.models import ExperimentResultData
+from qiskit.result import Result
 from qiskit.ignis.measurement.discriminator.iq_discriminators import \
     LinearIQDiscriminator
-from qiskit.ignis.mitigation.measurement import circuits
 
 
 class TestDiscriminationFilter(unittest.TestCase):
@@ -76,36 +74,21 @@ class TestDiscriminationFilter(unittest.TestCase):
         Set-up a discriminator based on simulated data, train it and then
         discriminate the calibration data.
         """
-        meas_cal, _ = circuits.tensored_meas_cal([[0], [1]])
+        result_pkl = os.path.join(os.path.dirname(__file__), 'test_result.pkl')
+        with open(result_pkl, 'rb') as handle:
+            result = Result.from_dict(pickle.load(handle))
 
-        backend = Aer.get_backend('qasm_simulator')
-        job = qiskit.execute(meas_cal, backend=backend, shots=self.shots,
-                             meas_level=1)
-
-        cal_results = job.result()
-
-        i0, q0, i1, q1 = 0., -1., 0., 1.
-        ground = utils.create_shots(i0, q0, 0.1, 0.1, self.shots, self.qubits)
-        excited = utils.create_shots(i1, q1, 0.1, 0.1, self.shots, self.qubits)
-
-        cal_results.results[0].meas_level = 1
-        cal_results.results[1].meas_level = 1
-        cal_results.results[0].data = ExperimentResultData(memory=ground)
-        cal_results.results[1].data = ExperimentResultData(memory=excited)
-
-        discriminator = LinearIQDiscriminator(cal_results,
-                                              self.qubits,
-                                              ['00', '11'])
+        discriminator = LinearIQDiscriminator(result, [0, 1])
 
         d_filter = DiscriminationFilter(discriminator)
 
-        self.assertEqual(cal_results.results[0].meas_level, 1)
-        new_results = d_filter.apply(cal_results)
+        self.assertEqual(result.results[0].meas_level, 1)
+        new_results = d_filter.apply(result)
 
         self.assertEqual(new_results.results[0].meas_level, 2)
 
-        counts_00 = new_results.results[0].data.counts.to_dict()['0x0']
-        counts_11 = new_results.results[1].data.counts.to_dict()['0x3']
+        for idx in range(3):
+            counts_00 = new_results.results[idx].data.counts.to_dict()['0x0']
+            counts_11 = new_results.results[idx].data.counts.to_dict()['0x3']
 
-        self.assertEqual(counts_00, self.shots)
-        self.assertEqual(counts_11, self.shots)
+            self.assertEqual(counts_00 + counts_11, 512)

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # This code is part of Qiskit.
 #
 # (C) Copyright IBM 2019.
@@ -14,16 +12,8 @@
 
 
 """
-Randomized Benchmarking module
+ACCREDITING OUTPUTS OF NISQ COMPUTING DEVICES (arXiv.1811.09709)
 """
 
-# Randomized Benchmarking functions
-from .Clifford import Clifford
-from .basic_utils import BasicUtils
-from .clifford_utils import CliffordUtils
-from .dihedral import CNOTDihedral
-from .dihedral_utils import DihedralUtils
-from .circuits import randomized_benchmarking_seq
-from .fitters import RBFitter, InterleavedRBFitter, PurityRBFitter, \
-    CNOTDihedralRBFitter
-from . import rb_utils
+from .circuits import accreditation_circuits
+from .fitters import accreditationFitter
