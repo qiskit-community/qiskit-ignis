@@ -115,17 +115,19 @@ class ZZFitter(BaseCoherenceFitter):
 
 class CrossResonanceHamiltonianFitter(BaseHamiltonianFitter):
     """
-    CR Fitter. The fitter estimates CR Hamiltonian composed of XI, YI, ZI, ZX, ZY and ZZ
-    interaction terms. Qubit ordering is defined as little endian |target,control>.
-
-    You can refer to the article below for the details.
-
-    Sheldon, S., Magesan, E., Chow, J. M. & Gambetta, J. M.
-    Procedure for systematically tuning up cross-talk in the cross-resonance gate.
-    Phys. Rev. A 93, 060302 (2016).
+    Cross resonance Hamiltonian fitter.
     """
+
     def __init__(self, backend_result, xdata, qubits, fit_p0, fit_bounds):
         """ Create new fitter.
+
+        The fitter estimates CR Hamiltonian composed of XI, YI, ZI, ZX, ZY and ZZ
+        interaction terms. Qubits are ordered in little endian convention: |target, control>.
+        You can refer to the article below for the details.
+
+        Sheldon, S., Magesan, E., Chow, J. M. & Gambetta, J. M.
+        Procedure for systematically tuning up cross-talk in the cross-resonance gate.
+        Phys. Rev. A 93, 060302 (2016).
 
         Args:
             backend_result: a qiskit.result or list of results
