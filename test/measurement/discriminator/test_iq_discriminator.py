@@ -210,7 +210,7 @@ class TestSklearnIQDiscriminator(unittest.TestCase):
         """
         i0, q0, i1, q1 = 0., -1., 0., 1.
 
-        svc = SVC(C=10., kernel="rbg", gamma="scale")
+        svc = SVC(C=10., kernel="rbf", gamma="scale")
         discriminator = SklearnIQDiscriminator(
             svc, self.cal_results, self.qubits, ['00', '11'])
 
@@ -227,7 +227,7 @@ class TestSklearnIQDiscriminator(unittest.TestCase):
         """
         i0, q0, i1, q1 = 0., -1., 0., 1.
 
-        svc = SVC(C=10., kernel="rbg", gamma="scale")
+        svc = SVC(C=10., kernel="rbf", gamma="scale")
         discriminator = SklearnIQDiscriminator(
             svc, self.cal_results, self.qubits, ['00', '11'])
 
@@ -248,7 +248,7 @@ class TestSklearnIQDiscriminator(unittest.TestCase):
 
         self.qubits = [0]
 
-        svc = SVC(C=10., kernel="rbg", gamma="scale")
+        svc = SVC(C=10., kernel="rbf", gamma="scale")
         discriminator = SklearnIQDiscriminator(
             svc, self.cal_results, self.qubits, ['0', '1'])
 
