@@ -62,6 +62,16 @@ class BasicUtils(ABC):
         return
 
     @abstractmethod
+    def random_gates(self):
+        """Pick a random group element"""
+        return
+
+    @abstractmethod
     def find_inverse_gates(self):
         """Compute the inverse group element."""
+        return
+
+    @abstractmethod
+    def find_key(self):
+        """Returns a key to the group element."""
         return
