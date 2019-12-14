@@ -30,9 +30,9 @@ from qiskit.result.models import ExperimentResultData
 from sklearn.svm import SVC
 
 
-class TestLinearIQDiscriminator(unittest.TestCase):
+class BaseTestIQDiscriminator(unittest.TestCase):
     """
-    Test methods of the IQ discriminators.
+    Base class for IQ discriminator test cases.
     """
 
     def setUp(self):
@@ -60,6 +60,12 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         self.cal_results.results[1].meas_level = 1
         self.cal_results.results[0].data = ExperimentResultData(memory=ground)
         self.cal_results.results[1].data = ExperimentResultData(memory=excited)
+
+
+class TestLinearIQDiscriminator(BaseTestIQDiscriminator):
+    """
+    Test methods of the IQ discriminators.
+    """
 
     def test_get_xdata(self):
         """
@@ -172,36 +178,10 @@ class TestLinearIQDiscriminator(unittest.TestCase):
         self.assertFalse(discriminator.is_calibration('_cal_2121'))
 
 
-class TestSklearnIQDiscriminator(unittest.TestCase):
+class TestSklearnIQDiscriminator(BaseTestIQDiscriminator):
     """
     Test methods of the sklearn IQ discriminators.
     """
-
-    def setUp(self):
-        """
-        Setup internal variables and a fake simulation. Aer is used to get the
-        structure of the qiskit.Result. The IQ data is generated using gaussian
-        random number generators.
-        """
-        self.shots = 52
-        self.qubits = [0, 1]
-
-        meas_cal, _ = circuits.tensored_meas_cal([[0], [1]])
-
-        backend = Aer.get_backend('qasm_simulator')
-        job = qiskit.execute(meas_cal, backend=backend, shots=self.shots,
-                             meas_level=1)
-
-        self.cal_results = job.result()
-
-        i0, q0, i1, q1 = 0., -1., 0., 1.
-        ground = utils.create_shots(i0, q0, 0.1, 0.1, self.shots, self.qubits)
-        excited = utils.create_shots(i1, q1, 0.1, 0.1, self.shots, self.qubits)
-
-        self.cal_results.results[0].meas_level = 1
-        self.cal_results.results[1].meas_level = 1
-        self.cal_results.results[0].data = ExperimentResultData(memory=ground)
-        self.cal_results.results[1].data = ExperimentResultData(memory=excited)
 
     def test_discrimination(self):
         """
