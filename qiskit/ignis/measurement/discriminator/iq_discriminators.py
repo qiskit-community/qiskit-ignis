@@ -511,7 +511,7 @@ class SklearnIQDiscriminator(IQDiscriminationFitter):
         """
         Args:
             classifier:
-                An sklearn classifier to train.
+                An sklearn classifier to train and do the discrimination.
             cal_results (Union[Result, List[Result]]): calibration results,
                 Result or list of Result used to fit the discriminator.
             qubit_mask (List[int]): determines which qubit's level 1 data to
