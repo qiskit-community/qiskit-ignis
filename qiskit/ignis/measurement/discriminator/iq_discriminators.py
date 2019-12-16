@@ -511,7 +511,8 @@ class SklearnIQDiscriminator(IQDiscriminationFitter):
         """
         Args:
             classifier:
-                An sklearn classifier to train and do the discrimination.
+                An sklearn classifier to train and do the discrimination. The
+                classifier must have a fit method and a predict method
             cal_results (Union[Result, List[Result]]): calibration results,
                 Result or list of Result used to fit the discriminator.
             qubit_mask (List[int]): determines which qubit's level 1 data to
@@ -528,6 +529,7 @@ class SklearnIQDiscriminator(IQDiscriminationFitter):
                 instead of the schedules. If schedules is None, then all the
                 schedules in cal_results are used.
         """
+        self._type_check_classifier(classifier)
         self._classifier = classifier
 
         # Also sets the x and y data.
@@ -540,6 +542,15 @@ class SklearnIQDiscriminator(IQDiscriminationFitter):
                 classifier.__class__.__name__))
 
         self.fit()
+
+    @staticmethod
+    def _type_check_classifier(classifier):
+        for name in ['fit', 'predict']:
+            if not callable(getattr(classifier, name, None)):
+                raise QiskitError(
+                    'Classifier of type "{}" does not have a callable "{}"'
+                    ' method.'.format(type(classifier).__name__, name)
+                )
 
     def fit(self):
         """ Fits the discriminator using self._xdata and self._ydata. """

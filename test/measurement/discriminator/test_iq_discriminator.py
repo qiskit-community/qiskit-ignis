@@ -22,6 +22,7 @@ import unittest
 import test.utils as utils
 import qiskit
 from qiskit import Aer
+from qiskit.exceptions import QiskitError
 from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
 from qiskit.ignis.measurement.discriminator.iq_discriminators import \
     LinearIQDiscriminator, SklearnIQDiscriminator
@@ -182,6 +183,42 @@ class TestSklearnIQDiscriminator(BaseTestIQDiscriminator):
     """
     Test methods of the sklearn IQ discriminators.
     """
+
+    def test_classifier_type_check(self):
+        """
+        Test that the discriminator correctly checks that its classifier
+        has fit and predict methods.
+        """
+        class ClassifierWithoutFit:
+            def predict(self):
+                pass
+
+        class ClassifierWithoutPredict:
+            def fit(self):
+                pass
+
+        with self.assertRaisesRegex(
+                QiskitError,
+                r'^\'Classifier of type "ClassifierWithoutFit" does not have a'
+                r' callable "fit" method\.\'$'
+                ):
+            SklearnIQDiscriminator(
+                ClassifierWithoutFit(), self.cal_results, self.qubits,
+                ['00', '11'])
+
+        with self.assertRaisesRegex(
+                QiskitError,
+                r'^\'Classifier of type "ClassifierWithoutPredict" does not'
+                r' have a callable "predict" method\.\'$'
+                ):
+            SklearnIQDiscriminator(
+                ClassifierWithoutPredict(), self.cal_results, self.qubits,
+                ['00', '11'])
+
+        # check that a valid classifier does not raise an error
+        svc = SVC(C=10., kernel="rbf", gamma="scale")
+        SklearnIQDiscriminator(
+            svc, self.cal_results, self.qubits, ['00', '11'])
 
     def test_discrimination(self):
         """
