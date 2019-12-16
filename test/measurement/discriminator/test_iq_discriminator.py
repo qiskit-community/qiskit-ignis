@@ -179,6 +179,18 @@ class TestLinearIQDiscriminator(BaseTestIQDiscriminator):
         self.assertFalse(discriminator.is_calibration('_cal_2121'))
 
 
+class ClassifierWithoutFit:
+    """ A dummy classifier without a .fit() method. """
+    def predict(self):
+        """ A dummy predict method. """
+
+
+class ClassifierWithoutPredict:
+    """ A dummy classifier withou a .predict() method. """
+    def fit(self):
+        """ A dummy fit method. """
+
+
 class TestSklearnIQDiscriminator(BaseTestIQDiscriminator):
     """
     Test methods of the sklearn IQ discriminators.
@@ -189,14 +201,6 @@ class TestSklearnIQDiscriminator(BaseTestIQDiscriminator):
         Test that the discriminator correctly checks that its classifier
         has fit and predict methods.
         """
-        class ClassifierWithoutFit:
-            def predict(self):
-                pass
-
-        class ClassifierWithoutPredict:
-            def fit(self):
-                pass
-
         with self.assertRaisesRegex(
                 QiskitError,
                 r'^\'Classifier of type "ClassifierWithoutFit" does not have a'
