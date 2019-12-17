@@ -113,7 +113,6 @@ class RepetitionCode():
             for j in range(self.d - 1):
                 self.circuit[log].measure(
                     self.link_qubit[j], self.link_bits[self.T][j])
-                self.circuit[log].reset(self.link_qubit[j])
 
             self.circuit[log].barrier()
 
@@ -167,11 +166,11 @@ class RepetitionCode():
                 syndrome_changes = ''
                 for t in range(self.T + 1):
                     for j in range(self.d - 1):
-                        if t == 0:
-                            change = (syndrome_list[-1][j] != '0')
+                        if t in [0, 1]:
+                            change = (syndrome_list[-t-1][j] != '0')
                         else:
                             change = (syndrome_list[-t][j]
-                                      != syndrome_list[-t - 1][j])
+                                      != syndrome_list[-t - 2][j])
                         syndrome_changes += '0' * (not change) + '1' * change
                     syndrome_changes += ' '
 
