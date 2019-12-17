@@ -94,7 +94,7 @@ class RepetitionCode():
         """
         self.x(['1'])
 
-    def syndrome_measurement(self,reset=True):
+    def syndrome_measurement(self, reset=True):
         """Application of a syndrome measurement round."""
 
         self.link_bits.append(ClassicalRegister(

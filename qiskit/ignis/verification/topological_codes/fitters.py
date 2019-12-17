@@ -121,10 +121,11 @@ class GraphDecoder():
                                         nodes.append((syn_type,
                                                       syn_round,
                                                       elem_num))
-                        assert len(nodes) in [0, 2] ,"Error of type " + error + \
-                        " on qubit " + str(qubit) + " at depth " + str(j) + \
-                        " creates " + str(len(nodes)) + \
-                        " nodes in syndrome graph, instead of 2."
+                        assert len(nodes) in [0, 2], "Error of type " + \
+                            error + " on qubit " + str(qubit) + \
+                            " at depth " + str(j) + " creates " + \
+                            str(len(nodes)) + \
+                            " nodes in syndrome graph, instead of 2."
 
                         for node in nodes:
                             S.add_node(node)
