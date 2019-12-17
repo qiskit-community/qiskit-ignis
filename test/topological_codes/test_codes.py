@@ -74,7 +74,7 @@ class TestCodes(unittest.TestCase):
 
         for d in range(3, max_dist + 1, 2):
 
-            code = RepetitionCode(d, 2)
+            code = RepetitionCode(d, 3)
 
             results = get_syndrome(code, noise_model=noise_model, shots=8192)
 
