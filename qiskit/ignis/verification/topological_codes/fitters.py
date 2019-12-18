@@ -20,6 +20,7 @@ expressed as solving a graph-theoretic problem.
 import copy
 import warnings
 import networkx as nx
+import numpy as np
 
 from qiskit import QuantumCircuit, Aer, execute
 
@@ -142,6 +143,38 @@ class GraphDecoder():
 
         return S
 
+    def weight_syndrome_graph(self, results):
+        """
+        Args:
+            results: A results dictionary, as produced by the
+            `process_results` method of the code.
+            algorithm: Choice of which decoder to use.
+
+        Additional information:
+            Uses `results` to estimate the probability of the errors that
+            create the pairs of nodes in S. The edge weights are then
+            replaced with the correspoinding -log(p/(1-p).
+        """
+
+        results = results['0']
+
+        both = {edge: 0 for edge in self.S.edges}
+        neither = {edge: 0 for edge in self.S.edges}
+
+        for string in results:
+
+            nodes = self._string2nodes(string)
+
+            for edge in self.S.edges:
+                if edge[0] in nodes and edge[1] in nodes:
+                    both[edge] += results[string]
+                if edge[0] not in nodes and edge[1] not in nodes:
+                    neither[edge] += results[string]
+
+        for edge in self.S.edges:
+            edge_data = self.S.get_edge_data(edge[0], edge[1])
+            edge_data['distance'] = -np.log(both[edge]/neither[edge])
+
     def make_error_graph(self, string, subgraphs=None):
         """
         Args:
@@ -184,7 +217,7 @@ class GraphDecoder():
                 for target in E[subgraph]:
                     if target != (source):
                         distance = int(nx.shortest_path_length(
-                            self.S, source, target))
+                            self.S, source, target, weight='distance'))
                         E[subgraph].add_edge(source, target, weight=-distance)
 
         return E
