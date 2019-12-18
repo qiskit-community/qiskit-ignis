@@ -173,7 +173,7 @@ class GraphDecoder():
 
         for edge in self.S.edges:
             edge_data = self.S.get_edge_data(edge[0], edge[1])
-            edge_data['distance'] = max(0,-np.log(both[edge]/neither[edge]))
+            edge_data['distance'] = max(0, -np.log(both[edge]/neither[edge]))
 
     def make_error_graph(self, string, subgraphs=None):
         """
