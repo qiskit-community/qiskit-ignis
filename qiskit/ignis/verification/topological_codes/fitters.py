@@ -58,6 +58,22 @@ class GraphDecoder():
             separated_string.append(syndrome_type_string.split(' '))
         return separated_string
 
+    def _string2nodes(self, string):
+
+        separated_string = self._separate_string(string)
+        nodes = []
+        for syn_type, _ in enumerate(separated_string):
+            for syn_round in range(
+                    len(separated_string[syn_type])):
+                elements = \
+                    separated_string[syn_type][syn_round]
+                for elem_num, element in enumerate(elements):
+                    if element == '1':
+                        nodes.append((syn_type,
+                                      syn_round,
+                                      elem_num))
+        return nodes
+
     def _make_syndrome_graph(self):
         """
         This method injects all possible Pauli errors into the circuit for
@@ -108,19 +124,9 @@ class GraphDecoder():
                     results = self.code.process_results(raw_results)['0']
 
                     for string in results:
-                        separated_string = self._separate_string(string)
 
-                        nodes = []
-                        for syn_type, _ in enumerate(separated_string):
-                            for syn_round in range(
-                                    len(separated_string[syn_type])):
-                                elements = \
-                                    separated_string[syn_type][syn_round]
-                                for elem_num, element in enumerate(elements):
-                                    if element == '1':
-                                        nodes.append((syn_type,
-                                                      syn_round,
-                                                      elem_num))
+                        nodes = self._string2nodes(string)
+
                         assert len(nodes) in [0, 2], "Error of type " + \
                             error + " on qubit " + str(qubit) + \
                             " at depth " + str(j) + " creates " + \
