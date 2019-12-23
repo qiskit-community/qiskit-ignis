@@ -52,9 +52,9 @@ def standard_gates_func(circ, qubit, op):
     if op == 'Id':
         pass
     if op == 'X_Rot_90':
-        circ.u3(np.pi / 2, -np.pi / 2, np.pi / 2, qubit)
+        circ.u2(-np.pi / 2, np.pi / 2, qubit)
     if op == 'Y_Rot_90':
-        circ.u3(np.pi / 2, np.pi, np.pi, qubit)
+        circ.u2(np.pi, np.pi, qubit)
 
 
 StandardGatesetBasis = GateSetBasis('Standard GST',
