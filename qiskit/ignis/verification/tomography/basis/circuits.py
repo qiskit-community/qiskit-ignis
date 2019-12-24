@@ -132,21 +132,64 @@ def process_tomography_circuits(circuit, measured_qubits,
                                 prep_labels=prep_labels, prep_basis=prep_basis)
 
 
+###########################################################################
+# Gate set tomography circuits for preparation and measurement
+###########################################################################
+
 def gateset_tomography_circuits(gateset_basis='Standard GST'):
+    """
+    Return a list of quantum gate set tomography circuits.
+
+    The circuits are fully constructed from the data given in gateset_basis
+
+    Args:
+        gateset_basis (GateSetBasis): The gateset and SPAM data for the tomography
+
+    Returns:
+        A list of QuantumCircuit objects containing the original circuit
+        with state preparation circuits prepended, and measurement circuits
+        appended.
+    Additional Information:
+        Gate set tomography is performed on a gate set (G0, G1,...,Gm)
+        with the additional information of SPAM circuits (F0,F1,...,Fn)
+        that are constructed from the gates in the gate set.
+
+        In gate set tomography, we assume a single initial state |rho>
+        and a single POVM measurement operator E. The SPAM circuits
+        now provide us with a complete set of initial state F_j|rho>
+        and measurements <E|F_i.
+
+        We perform three types of experiments:
+
+        1) <E|F_i G_k F_j|rho> for 1 <= i,j <= n and 1 <= k <= m:
+            This experiment enables us to obtain data on the gate G_k
+        2) <E|F_i F_j|rho> for 1 <= i,j <= n:
+            This experiment enables us to obtain the Gram matrix required
+            to "invert" the results of experiments of type 1 in order to
+            reconstruct (a matrix similar to) the gate G_k
+        3) <E|F_j|rho> for 1 <= j <= n:
+            This experiment enables us to reconstruct <E| and |rho>
+
+        The result of this method is the set of all the circuits needed for
+        these experiments, suitably labeled with a tuple of the corresponding gate/SPAM labels
+    """
+
     all_circuits = []
     if gateset_basis == 'Standard GST':
         gateset_basis = StandardGatesetBasis
     gateset_tomography_basis = gateset_basis.get_tomography_basis()
     qubit = QuantumRegister(1)
+    meas_labels = gateset_tomography_basis.measurement_labels
+    prep_labels = gateset_tomography_basis.preparation_labels
     # Experiments of the form <E|F_i G_k F_j|rho>
     for gate in gateset_basis.gate_labels:
         circuit = QuantumCircuit(qubit)
         gateset_basis.gate_func(circuit, qubit, gate)
         gate_tomography_circuits = _tomography_circuits(circuit, qubit, qubit,
-                                                       meas_labels=gateset_tomography_basis.measurement_labels,
-                                                       meas_basis=gateset_tomography_basis,
-                                                       prep_labels=gateset_tomography_basis.preparation_labels,
-                                                       prep_basis=gateset_tomography_basis)
+                                                        meas_labels=meas_labels,
+                                                        meas_basis=gateset_tomography_basis,
+                                                        prep_labels=prep_labels,
+                                                        prep_basis=gateset_tomography_basis)
         for tomography_circuit in gate_tomography_circuits:
             res = re.search("'(.*)'.*'(.*)'", tomography_circuit.name)
             tomography_circuit.name = str((res.group(1), gate, res.group(2)))
@@ -156,9 +199,9 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
     # Can be skipped if one of the gates is ideal identity
     circuit = QuantumCircuit(qubit)
     gate_tomography_circuits = _tomography_circuits(circuit, qubit, qubit,
-                                                    meas_labels=gateset_tomography_basis.measurement_labels,
+                                                    meas_labels=meas_labels,
                                                     meas_basis=gateset_tomography_basis,
-                                                    prep_labels=gateset_tomography_basis.preparation_labels,
+                                                    prep_labels=prep_labels,
                                                     prep_basis=gateset_tomography_basis)
     for tomography_circuit in gate_tomography_circuits:
         res = re.search("'(.*)'.*'(.*)'", tomography_circuit.name)
@@ -167,7 +210,7 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
 
     # Experiments of the form <E|F_j|rho>
     gate_tomography_circuits = _tomography_circuits(circuit, qubit, qubit,
-                                                    meas_labels=gateset_tomography_basis.measurement_labels,
+                                                    meas_labels=meas_labels,
                                                     meas_basis=gateset_tomography_basis,
                                                     prep_labels=None,
                                                     prep_basis=None)
