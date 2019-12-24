@@ -19,8 +19,6 @@ Quantum gate set tomography fitter
 """
 
 import numpy as np
-import itertools
-import scipy.optimize as opt
 from qiskit.ignis.verification.tomography.basis.gatesetbasis import StandardGatesetBasis
 
 
@@ -38,7 +36,7 @@ def gateset_linear_inversion(data, gateset_basis='Standard GST'):
     Args:
         data (vector like): vector of expectation values
         gateset_basis (String or GateSetBasis): representation of the gateset data
-        
+
     Returns:
         A list of tuples (G, label) of gate representation and this gate's label
         as given in gateset_basis
@@ -48,31 +46,32 @@ def gateset_linear_inversion(data, gateset_basis='Standard GST'):
         the data should contain the probabilities of the following types:
         p_{ijk} = <E|F_i G_k F_j |rho>
         p_{ij} = <E|F_i F_j |rho>
-        
+
         One constructs the Gram matrix g = (p_ij)_{ij} which can be described as a product g=AB
-        where A = \sum |i><E|F_i| and B=\sum |F_j|rho><j|
+        where A = sum |i><E|F_i| and B=sum |F_j|rho><j|
         For each gate Gk one can also construct the matrix Mk=(pijk)_{ij}
         which can be described as Mk=A*Gk*B
         Inverting g we obtain g^{-1} = B^{-1}A^{-1} and so
         g^{1} * Mk = B^{-1] * Gk * B
-        This gives us a matrix similiar to Gk's representing matrix. However, it will not be the same as Gk.
-        Since the observable results cannot distinguish between (G1,..,Gm) and (B^{-1}*G1*B,..,B^{-1}*Gm*B)
+        This gives us a matrix similiar to Gk's representing matrix.
+        However, it will not be the same as Gk, since the observable results cannot distinguish
+        between (G1,..,Gm) and (B^{-1}*G1*B,..,B^{-1}*Gm*B)
         a further step of *Gauge optimization* is required on the results
         of the linear inversion stage. One can also use the linear inversion results
         as a starting point for a MLE optimization for finding a physical gateset, since
         unless the probabilities are accurate, the resulting gateset needs not be physical.
     """
-    
+
     if gateset_basis == 'Standard GST':
         gateset_basis = StandardGatesetBasis
 
     probs = compute_probs(data)
     n = len(gateset_basis.spam_labels)
     m = len(gateset_basis.gate_labels)
-    gram_matrix = np.zeros((n,n))
+    gram_matrix = np.zeros((n, n))
     gate_matrices = []
     for i in range(m):
-        gate_matrices.append(np.zeros((n,n)))
+        gate_matrices.append(np.zeros((n, n)))
 
     for i in range(n): # row
         for j in range(n): # column
@@ -83,8 +82,8 @@ def gateset_linear_inversion(data, gateset_basis='Standard GST'):
             for k in range(m): #gate
                 G_k = gateset_basis.gate_labels[k]
                 gate_matrices[k][i][j] = probs[(F_i, G_k, F_j)]
-                
+
     gram_inverse = np.linalg.inv(gram_matrix)
 
     gates = [gram_inverse @ gate_matrix for gate_matrix in gate_matrices]
-    return list(zip(gates,gateset_basis.gate_labels))
+    return list(zip(gates, gateset_basis.gate_labels))
