@@ -1,13 +1,7 @@
 .. _qiskit-ignis-characterization-gates:
 
-************************************
-qiskit.ignis.characterization.gates
-************************************
+.. automodule:: qiskit.ignis.characterization.gates
+   :no-members:
+   :no-inherited-members:
+   :no-special-members:
 
-.. currentmodule:: qiskit.ignis.characterization.gates
-
-
-.. automodapi:: qiskit.ignis.characterization.gates
-  :no-heading:
-  :no-inheritance-diagram:
-  :inherited-members:

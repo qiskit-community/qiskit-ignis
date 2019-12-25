@@ -1,16 +1,9 @@
 .. _qiskit-ignis-mitigation:
 
-************************
-qiskit.ignis.mitigation
-************************
-
-.. currentmodule:: qiskit.ignis.mitigation
-
-
-.. automodapi:: qiskit.ignis.mitigation
-  :no-heading:
-  :no-inheritance-diagram:
-  :inherited-members:
+.. automodule:: qiskit.ignis.mitigation
+   :no-members:
+   :no-inherited-members:
+   :no-special-members:
 
 Submodules
 ==========

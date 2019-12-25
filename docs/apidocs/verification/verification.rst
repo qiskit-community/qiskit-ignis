@@ -1,16 +1,9 @@
 .. _qiskit-ignis-verification:
 
-******************************
-qiskit.ignis.verification
-******************************
-
-.. currentmodule:: qiskit.ignis.verification
-
-
-.. automodapi:: qiskit.ignis.verification
-  :no-heading:
-  :no-inheritance-diagram:
-  :inherited-members:
+.. automodule:: qiskit.ignis.verification
+   :no-members:
+   :no-inherited-members:
+   :no-special-members:
 
 Submodules
 ==========

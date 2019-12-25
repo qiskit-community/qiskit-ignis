@@ -1,16 +1,9 @@
 .. _qiskit-ignis:
 
-****************
-qiskit.ignis
-****************
-
-.. currentmodule:: qiskit.ignis
-
-
-.. automodapi:: qiskit.ignis
-  :no-heading:
-  :no-inheritance-diagram:
-  :inherited-members:
+.. automodule:: qiskit.ignis
+   :no-members:
+   :no-inherited-members:
+   :no-special-members:
 
 Submodules
 ==========

@@ -1,16 +1,9 @@
 .. _qiskit-ignis-characterization:
 
-******************************
-qiskit.ignis.characterization
-******************************
-
-.. currentmodule:: qiskit.ignis.characterization
-
-
-.. automodapi:: qiskit.ignis.characterization
-  :no-heading:
-  :no-inheritance-diagram:
-  :inherited-members:
+.. automodule:: qiskit.ignis.characterization
+   :no-members:
+   :no-inherited-members:
+   :no-special-members:
 
 Submodules
 ==========
