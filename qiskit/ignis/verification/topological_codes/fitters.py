@@ -158,22 +158,28 @@ class GraphDecoder():
 
         results = results['0']
 
-        both = {edge: 0 for edge in self.S.edges}
-        neither = {edge: 0 for edge in self.S.edges}
+        prob = { element:{edge: 0 for edge in self.S.edges} for element in ['00','01','10','11'] }
 
         for string in results:
 
             nodes = self._string2nodes(string)
 
             for edge in self.S.edges:
-                if edge[0] in nodes and edge[1] in nodes:
-                    both[edge] += results[string]
-                if edge[0] not in nodes and edge[1] not in nodes:
-                    neither[edge] += results[string]
+                element = ''
+                for j in range(2):
+                    if edge[j] in nodes:
+                        element += '1'
+                    else:
+                        element += '0'
+                prob[element][edge] += results[string]
 
         for edge in self.S.edges:
             edge_data = self.S.get_edge_data(edge[0], edge[1])
-            edge_data['distance'] = max(0, -np.log(both[edge]/neither[edge]))
+            ratios = []
+            for elements in [('00','11'),('11','00'),('01','10'),('10','01')]:  
+                if prob[elements[1]][edge]>0:
+                    ratios.append( prob[elements[0]][edge]/prob[elements[1]][edge] )
+            edge_data['distance'] = -np.log(min(ratios))
 
     def make_error_graph(self, string, subgraphs=None):
         """
