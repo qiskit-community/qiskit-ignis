@@ -100,7 +100,7 @@ class TestCodes(unittest.TestCase):
             for log in ['0', '1']:
                 m_down = matching_probs[(d, log)] \
                     > matching_probs[(d + 2, log)]
-                w_down = matching_probs[(d + 2, log)] \
+                w_down = matching_probs[(d, log)] \
                     > weighted_matching_probs[(d + 2, log)]
                 l_down = lookup_probs[(d, log)] \
                     > lookup_probs[(d + 2, log)]
@@ -114,12 +114,12 @@ class TestCodes(unittest.TestCase):
                     + ".\n"\
                     + "For d="+str(d+2)+": " + str(matching_probs[(d+2, log)])\
                     + "."
-                w_error = "Error: Weighted matching decoder does not"\
-                    + "improve error rate over unweighted for"\
-                    + " distance " + str(d + 2) + ".\n"\
-                    + "For unweighted: " + str(matching_probs[(d+2, log)])\
-                    + ".\n"\
-                    + "For weighted: "\
+                w_error = "Error: Matching decoder does not improve "\
+                    + "logical error rate between repetition codes"\
+                    + " of distance " + str(d) + " and " + str(d + 2) + ".\n"\
+                    + "For d="+str(d)+" (unweighted): "\
+                    + str(matching_probs[(d, log)]) + ".\n"\
+                    + "For d="+str(d+2)+" (weighted): "\
                     + str(weighted_matching_probs[(d+2, log)])\
                     + "."
                 l_error = "Error: Lookup decoder does not improve "\
