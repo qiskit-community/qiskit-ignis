@@ -158,7 +158,8 @@ class GraphDecoder():
 
         results = results['0']
 
-        prob = { element:{edge: 0 for edge in self.S.edges} for element in ['00','01','10','11'] }
+        count = {element: {edge: 0 for edge in self.S.edges}
+                 for element in ['00', '01', '10', '11']}
 
         for string in results:
 
@@ -171,14 +172,16 @@ class GraphDecoder():
                         element += '1'
                     else:
                         element += '0'
-                prob[element][edge] += results[string]
+                count[element][edge] += results[string]
 
         for edge in self.S.edges:
             edge_data = self.S.get_edge_data(edge[0], edge[1])
             ratios = []
-            for elements in [('00','11'),('11','00'),('01','10'),('10','01')]:  
-                if prob[elements[1]][edge]>0:
-                    ratios.append( prob[elements[0]][edge]/prob[elements[1]][edge] )
+            for elements in [('00', '11'), ('11', '00'),
+                             ('01', '10'), ('10', '01')]:
+                if count[elements[1]][edge] > 0:
+                    ratio = count[elements[0]][edge]/count[elements[1]][edge]
+                    ratios.append(ratio)
             edge_data['distance'] = -np.log(min(ratios))
 
     def make_error_graph(self, string, subgraphs=None):
