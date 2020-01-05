@@ -58,20 +58,20 @@ class GatesetTomographyFitter:
             Given a gate set (G1,..,Gm)
             and SPAM circuits (F1,...,Fn) constructed from those gates
             the data should contain the probabilities of the following types:
-            p_{ijk} = <E|F_i G_k F_j |rho>
-            p_{ij} = <E|F_i F_j |rho>
+            p_ijk = <E|F_i G_k F_j |rho>
+            p_ij = <E|F_i F_j |rho>
 
-            One constructs the Gram matrix g = (p_ij)_{ij}
+            One constructs the Gram matrix g = (p_ij)_ij
             which can be described as a product g=AB
             where A = sum |i><E|F_i| and B=sum |F_j|rho><j|
-            For each gate Gk one can also construct the matrix Mk=(pijk)_{ij}
+            For each gate Gk one can also construct the matrix Mk=(pijk)_ij
             which can be described as Mk=A*Gk*B
-            Inverting g we obtain g^{-1} = B^{-1}A^{-1} and so
-            g^{1} * Mk = B^{-1] * Gk * B
+            Inverting g we obtain g^-1 = B^-1A^-1 and so
+            g^1 * Mk = B^-1 * Gk * B
             This gives us a matrix similiar to Gk's representing matrix.
             However, it will not be the same as Gk,
             since the observable results cannot distinguish
-            between (G1,..,Gm) and (B^{-1}*G1*B,..,B^{-1}*Gm*B)
+            between (G1,..,Gm) and (B^-1*G1*B,..,B^-1*Gm*B)
             a further step of *Gauge optimization* is required on the results
             of the linear inversion stage.
             One can also use the linear inversion results as a starting point
