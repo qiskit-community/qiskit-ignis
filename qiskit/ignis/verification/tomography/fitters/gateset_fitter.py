@@ -55,7 +55,7 @@ class GatesetTomographyFitter:
             and this gate's label as given in gateset_basis
 
         Additional Information:
-            Given a gate set (G1,..,Gm)
+            Given a gate set (G1,...,Gm)
             and SPAM circuits (F1,...,Fn) constructed from those gates
             the data should contain the probabilities of the following types:
             p_ijk = <E|F_i G_k F_j |rho>
@@ -71,7 +71,7 @@ class GatesetTomographyFitter:
             This gives us a matrix similiar to Gk's representing matrix.
             However, it will not be the same as Gk,
             since the observable results cannot distinguish
-            between (G1,..,Gm) and (B^-1*G1*B,..,B^-1*Gm*B)
+            between (G1,...,Gm) and (B^-1*G1*B,...,B^-1*Gm*B)
             a further step of *Gauge optimization* is required on the results
             of the linear inversion stage.
             One can also use the linear inversion results as a starting point
