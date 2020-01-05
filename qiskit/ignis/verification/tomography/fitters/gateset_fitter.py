@@ -58,12 +58,12 @@ class GatesetTomographyFitter:
             Given a gate set (G1,...,Gm)
             and SPAM circuits (F1,...,Fn) constructed from those gates
             the data should contain the probabilities of the following types:
-            p_ijk = <E|F_i G_k F_j|rho>
-            p_ij = <E|F_i F_j|rho>
+            p_ijk = E*F_i*G_k*F_j*rho
+            p_ij = E*F_i*F_j*rho
 
             One constructs the Gram matrix g = (p_ij)_ij
             which can be described as a product g=AB
-            where A = sum |i><E|F_i| and B=sum |F_j|rho><j|
+            where A = sum i E F_i and B=sum F_j rho j
             For each gate Gk one can also construct the matrix Mk=(pijk)_ij
             which can be described as Mk=A*Gk*B
             Inverting g we obtain g^-1 = B^-1A^-1 and so
