@@ -143,7 +143,7 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
     The circuits are fully constructed from the data given in gateset_basis
 
     Args:
-        gateset_basis (GateSetBasis): The gateset and SPAM data for the tomography
+        gateset_basis (GateSetBasis): The gateset and SPAM data
 
     Returns:
         A list of QuantumCircuit objects containing the original circuit
@@ -171,53 +171,55 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
             This experiment enables us to reconstruct <E| and |rho>
 
         The result of this method is the set of all the circuits needed for
-        these experiments, suitably labeled with a tuple of the corresponding gate/SPAM labels
+        these experiments, suitably labeled with a tuple of the corresponding
+        gate/SPAM labels
     """
 
     all_circuits = []
     if gateset_basis == 'Standard GST':
         gateset_basis = StandardGatesetBasis
-    gateset_tomography_basis = gateset_basis.get_tomography_basis()
+    meas_basis = gateset_basis.get_tomography_basis()
+    prep_basis = gateset_basis.get_tomography_basis()
+    meas_labels = meas_basis.measurement_labels
+    prep_labels = prep_basis.preparation_labels
     qubit = QuantumRegister(1)
-    meas_labels = gateset_tomography_basis.measurement_labels
-    prep_labels = gateset_tomography_basis.preparation_labels
     # Experiments of the form <E|F_i G_k F_j|rho>
     for gate in gateset_basis.gate_labels:
         circuit = QuantumCircuit(qubit)
         gateset_basis.gate_func(circuit, qubit, gate)
-        gate_tomography_circuits = _tomography_circuits(circuit, qubit, qubit,
-                                                        meas_labels=meas_labels,
-                                                        meas_basis=gateset_tomography_basis,
-                                                        prep_labels=prep_labels,
-                                                        prep_basis=gateset_tomography_basis)
-        for tomography_circuit in gate_tomography_circuits:
+        gst_circuits = _tomography_circuits(circuit, qubit, qubit,
+                                            meas_labels=meas_labels,
+                                            meas_basis=meas_basis,
+                                            prep_labels=prep_labels,
+                                            prep_basis=prep_basis)
+        for tomography_circuit in gst_circuits:
             res = re.search("'(.*)'.*'(.*)'", tomography_circuit.name)
             tomography_circuit.name = str((res.group(1), gate, res.group(2)))
-        all_circuits = all_circuits + gate_tomography_circuits
+        all_circuits = all_circuits + gst_circuits
 
     # Experiments of the form <E|F_i F_j|rho>
     # Can be skipped if one of the gates is ideal identity
     circuit = QuantumCircuit(qubit)
-    gate_tomography_circuits = _tomography_circuits(circuit, qubit, qubit,
-                                                    meas_labels=meas_labels,
-                                                    meas_basis=gateset_tomography_basis,
-                                                    prep_labels=prep_labels,
-                                                    prep_basis=gateset_tomography_basis)
-    for tomography_circuit in gate_tomography_circuits:
+    gst_circuits = _tomography_circuits(circuit, qubit, qubit,
+                                        meas_labels=meas_labels,
+                                        meas_basis=meas_basis,
+                                        prep_labels=prep_labels,
+                                        prep_basis=prep_basis)
+    for tomography_circuit in gst_circuits:
         res = re.search("'(.*)'.*'(.*)'", tomography_circuit.name)
         tomography_circuit.name = str((res.group(1), res.group(2)))
-    all_circuits = all_circuits + gate_tomography_circuits
+    all_circuits = all_circuits + gst_circuits
 
     # Experiments of the form <E|F_j|rho>
-    gate_tomography_circuits = _tomography_circuits(circuit, qubit, qubit,
-                                                    meas_labels=meas_labels,
-                                                    meas_basis=gateset_tomography_basis,
-                                                    prep_labels=None,
-                                                    prep_basis=None)
-    for tomography_circuit in gate_tomography_circuits:
+    gst_circuits = _tomography_circuits(circuit, qubit, qubit,
+                                        meas_labels=meas_labels,
+                                        meas_basis=meas_basis,
+                                        prep_labels=None,
+                                        prep_basis=None)
+    for tomography_circuit in gst_circuits:
         res = re.search("'(.*)'", tomography_circuit.name)
         tomography_circuit.name = str((res.group(1),))
-    all_circuits = all_circuits + gate_tomography_circuits
+    all_circuits = all_circuits + gst_circuits
 
     return all_circuits
 

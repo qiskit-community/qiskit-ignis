@@ -26,12 +26,13 @@ from .tomographybasis import TomographyBasis
 
 class GateSetBasis:
     """
-    This class contains the gate set data needed to perform gate set tomgography.
+    This class contains the gateset data needed to perform gateset tomgography.
     This data is comprised of four elements:
     1) The labels (strings) of the gates
-    2) A function f(circ, qubit, op) which adds to circ at qubit the gate labeled by op
+    2) A function f(circ, qubit, op)
+        which adds to circ at qubit the gate labeled by op
     3) The labels of the SPAM circuits for the gate set tomography
-    4) For SPAM label, a tuple of gate labels for the gates comprising this SPAM circuit
+    4) For SPAM label, tuple of gate labels for the gates in this SPAM circuit
     """
     def __init__(self, name, gates, spam):
         """
@@ -40,7 +41,8 @@ class GateSetBasis:
         Params:
             name (str): Name of the basis.
             gates (tuple, function): the gate labels and gate function
-            spam (tuple, dict): tuple of SPAM circuits names and dict of SPAM definitions
+            spam (tuple, dict): tuple of SPAM circuits names
+            and dict of SPAM definitions
         """
         self.name = name
         self.gate_labels = gates[0]
@@ -82,7 +84,8 @@ class GateSetBasis:
 
     def measurement_matrix(self):
         """
-        A stub function since the measurement matrix is not used yet in gate set tomography
+        A stub function,
+        since the measurement matrix is not used yet in gate set tomography
         """
         return None
 
@@ -103,16 +106,20 @@ class GateSetBasis:
 
     def preparation_matrix(self):
         """
-        A stub function since the preperation matrix is not used yet in gate set tomography
+        A stub function,
+        since the preperation matrix is not used yet in gate set tomography
         """
         return None
 
     def get_tomography_basis(self):
         """
-        Returns a TomographyBasis object corresponding to the gate set tomography data
+        Returns a TomographyBasis object
+        corresponding to the gate set tomography data
 
-        A TomographyBasis object should have for both measurements and preperations
-        the sets of labels (the SPAM labels in our case), circuit creation functions
+        A TomographyBasis object should have
+        for both measurements and preperations
+        the sets of labels (the SPAM labels in our case),
+        circuit creation functions
         and corresponding matrices (here given as stubs)
 
         Returns:

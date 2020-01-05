@@ -18,9 +18,12 @@ Quantum tomography basis
 
 # Tomography Circuit Generation Functions
 from .tomographybasis import TomographyBasis
+from .gatesetbasis import GateSetBasis
+from .gatesetbasis import StandardGatesetBasis
 from .paulibasis import PauliBasis
 from .sicbasis import SICBasis
 from .circuits import state_tomography_circuits
 from .circuits import process_tomography_circuits
+from .circuits import gateset_tomography_circuits
 from .circuits import default_basis
 from .circuits import tomography_circuit_tuples
