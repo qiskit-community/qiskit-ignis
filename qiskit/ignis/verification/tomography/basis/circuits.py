@@ -152,7 +152,7 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
         with the additional information of SPAM circuits (F0,F1,...,Fn)
         that are constructed from the gates in the gate set.
 
-        In gate set tomography, we assume a single initial state |rho>
+        In gate set tomography, we assume a single initial state rho
         and a single POVM measurement operator E. The SPAM circuits
         now provide us with a complete set of initial state F_j|rho>
         and measurements <E|F_i.
@@ -166,7 +166,7 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
             to "invert" the results of experiments of type 1 in order to
             reconstruct (a matrix similar to) the gate G_k
         3) <E|F_j|rho> for 1 <= j <= n:
-            This experiment enables us to reconstruct <E| and |rho>
+            This experiment enables us to reconstruct <E| and rho
 
         The result of this method is the set of all the circuits needed for
         these experiments, suitably labeled with a tuple of the corresponding
