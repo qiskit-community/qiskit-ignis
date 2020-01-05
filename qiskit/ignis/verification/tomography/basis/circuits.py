@@ -90,7 +90,7 @@ def process_tomography_circuits(circuit, measured_qubits,
     Return a list of quantum process tomography circuits.
 
     This performs preparation in the minimial Pauli-basis eigenstates
-    
+    Zp, Zm, Xp, Ym (|0>, |1>, |+>, |+i>) on each qubit, and measurement in
     the Pauli-basis X, Y, Z resulting in (4 ** n) * (3 ** n) circuits for
     an n-qubit process tomography experiment.
 
