@@ -63,7 +63,7 @@ class GatesetTomographyFitter:
 
             One constructs the Gram matrix g = (p_ij)_ij
             which can be described as a product g=AB
-            where A = sum i E F_i and B=sum F_j rho j
+            where A = sum (i> <E F_i) and B=sum (F_j rho><j)
             For each gate Gk one can also construct the matrix Mk=(pijk)_ij
             which can be described as Mk=A*Gk*B
             Inverting g we obtain g^-1 = B^-1A^-1 and so
