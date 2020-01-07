@@ -210,7 +210,7 @@ class SpecialPolynomial():
 
         Example: indices = [] returns the constant
                  indices = [0] returns the coefficient of x_0
-                 indices = [0,3] returns the cofficient of x_0x_3
+                 indices = [0,3] returns the coefficient of x_0x_3
                  indices = [0,1,3] returns the coefficient of x_0x_1x_3
 
         If len(indices) > 3 the method fails.
@@ -251,7 +251,7 @@ class SpecialPolynomial():
 
         Example: indices = [] returns the constant
                  indices = [0] returns the coefficient of x_0
-                 indices = [0,3] returns the cofficient of x_0x_3
+                 indices = [0,3] returns the coefficient of x_0x_3
                  indices = [0,1,3] returns the coefficient of x_0x_1x_3
 
         If len(indices) > 3 the method fails.

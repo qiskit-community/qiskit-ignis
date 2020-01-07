@@ -58,7 +58,7 @@ def sicpovm_preparation_circuit(op, qubit):
 
 def sicpovm_preparation_matrix(label):
     """
-    Return the matrix corresonding to a SIC-POVM preparation.
+    Return the matrix corresponding to a SIC-POVM preparation.
 
     Args:
         label (str): single-qubit SIC-POVM element label.

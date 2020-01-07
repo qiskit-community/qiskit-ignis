@@ -322,7 +322,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
 
     # Note if the input circuit already has classical registers defined
     # the returned circuits add a new classical register for the tomography
-    # measurments which will be inserted as the first classical register in
+    # measurements which will be inserted as the first classical register in
     # the list of returned circuits.
     registers = qubit_registers.copy()
     if measurement is not None:
@@ -373,14 +373,14 @@ def default_basis(basis):
             return SICBasis
     if isinstance(basis, TomographyBasis):
         return basis
-    raise ValueError('Unrecognised basis: {}'.format(basis))
+    raise ValueError('Unrecognized basis: {}'.format(basis))
 
 
 def _default_measurement_labels(basis):
     """Built in measurement basis labels."""
     if default_basis(basis) == PauliBasis:
         return ('X', 'Y', 'Z')
-    raise ValueError('Unrecognised basis string "{}"'.format(basis))
+    raise ValueError('Unrecognized basis string "{}"'.format(basis))
 
 
 def _default_preparation_labels(basis):
@@ -390,7 +390,7 @@ def _default_preparation_labels(basis):
         return ('Zp', 'Zm', 'Xp', 'Yp')
     if tomo_basis == SICBasis:
         return ('S0', 'S1', 'S2', 'S3')
-    raise ValueError('Unrecognised basis string "{}"'.format(basis))
+    raise ValueError('Unrecognized basis string "{}"'.format(basis))
 
 
 ###########################################################################

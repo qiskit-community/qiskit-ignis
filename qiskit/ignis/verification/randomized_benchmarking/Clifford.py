@@ -31,7 +31,7 @@ class Clifford:
     def __init__(self, num_qubits=None, table=None, phases=None):
         """Initialize an n-qubit Clifford table."""
         # Use index for initializing 1 and 2 qubit Cliffords
-        # If index is none initilize to identity.
+        # If index is none initialize to identity.
 
         # It will be easier for internal functions to use a single np array
         # for the Clifford table rather than the Pauli class, and we can
@@ -98,7 +98,7 @@ class Clifford:
 
     @property
     def table(self):
-        """Return the the Clifford table."""
+        """Return the Clifford table."""
         return self._table
 
     @property

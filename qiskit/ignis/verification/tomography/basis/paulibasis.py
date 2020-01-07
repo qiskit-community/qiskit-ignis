@@ -126,7 +126,7 @@ def pauli_preparation_matrix(label):
 
 def pauli_measurement_matrix(label, outcome):
     """
-    Return the matrix corresonding to a Pauli measurement outcome.
+    Return the matrix corresponding to a Pauli measurement outcome.
 
     Args:
         label (str): single-qubit Pauli measurement operator label.
