@@ -58,8 +58,9 @@ class RepetitionCode():
 
         self._preparation()
 
-        for _ in range(T):
+        for _ in range(T-1):
             self.syndrome_measurement()
+        self.syndrome_measurement(reset=False)
 
         if T != 0:
             self.readout()
@@ -93,7 +94,7 @@ class RepetitionCode():
         """
         self.x(['1'])
 
-    def syndrome_measurement(self):
+    def syndrome_measurement(self, reset=True):
         """Application of a syndrome measurement round."""
 
         self.link_bits.append(ClassicalRegister(
@@ -113,7 +114,8 @@ class RepetitionCode():
             for j in range(self.d - 1):
                 self.circuit[log].measure(
                     self.link_qubit[j], self.link_bits[self.T][j])
-                self.circuit[log].reset(self.link_qubit[j])
+                if reset:
+                    self.circuit[log].reset(self.link_qubit[j])
 
             self.circuit[log].barrier()
 
