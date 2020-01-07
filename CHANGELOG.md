@@ -22,7 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - CNOT-Dihedral RB (\#296)
 - Accreditation (\#252)
 - Pulse calibrations for single qubits (\#292, \#302, \#303, \#304)
-- Pulse Discriminator (\#238, \#278, \#297)
+- Pulse Discriminator (\#238, \#278, \#297, \#316)
 
 ## [0.2.0](https://github.com/Qiskit/qiskit/compare/0.1.1...0.2.0)- 2019-08-22
 
