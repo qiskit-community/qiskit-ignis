@@ -144,7 +144,8 @@ class GraphDecoder():
         return S
 
     def weight_syndrome_graph(self, results):
-        """
+        """Generate weighted syndrome graph from result counts.
+
         Args:
             results: A results dictionary, as produced by the
             `process_results` method of the code.
