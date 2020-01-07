@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - CNOT-Dihedral RB (\#296)
-- Accreditation (\#252)
+- Accreditation (\#252, \#325)
 - Pulse calibrations for single qubits (\#292, \#302, \#303, \#304)
 - Pulse Discriminator (\#238, \#278, \#297, \#316)
 
