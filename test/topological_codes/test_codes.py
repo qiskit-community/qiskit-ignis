@@ -62,9 +62,10 @@ def get_noise(p_meas, p_gate):
 class TestCodes(unittest.TestCase):
     """The test class. """
 
-    def test_rep(self):
+    def test_rep(self, weighted=False):
         """Repetition code test."""
         matching_probs = {}
+        weighted_matching_probs = {}
         lookup_probs = {}
         post_probs = {}
 
@@ -79,6 +80,8 @@ class TestCodes(unittest.TestCase):
             results = get_syndrome(code, noise_model=noise_model, shots=8192)
 
             dec = GraphDecoder(code)
+            if weighted:
+                dec.weight_syndrome_graph(results=results[d])
 
             logical_prob_match = dec.get_logical_prob(
                 results)
@@ -89,6 +92,7 @@ class TestCodes(unittest.TestCase):
 
             for log in ['0', '1']:
                 matching_probs[(d, log)] = logical_prob_match[log]
+                weighted_matching_probs[(d, log)] = logical_prob_match[log]
                 lookup_probs[(d, log)] = logical_prob_lookup[log]
                 post_probs[(d, log)] = logical_prob_post[log]
 
@@ -96,6 +100,8 @@ class TestCodes(unittest.TestCase):
             for log in ['0', '1']:
                 m_down = matching_probs[(d, log)] \
                     > matching_probs[(d + 2, log)]
+                w_down = matching_probs[(d, log)] \
+                    > weighted_matching_probs[(d + 2, log)]
                 l_down = lookup_probs[(d, log)] \
                     > lookup_probs[(d + 2, log)]
                 p_down = post_probs[(d, log)] \
@@ -107,6 +113,14 @@ class TestCodes(unittest.TestCase):
                     + "For d="+str(d)+": " + str(matching_probs[(d, log)])\
                     + ".\n"\
                     + "For d="+str(d+2)+": " + str(matching_probs[(d+2, log)])\
+                    + "."
+                w_error = "Error: Matching decoder does not improve "\
+                    + "logical error rate between repetition codes"\
+                    + " of distance " + str(d) + " and " + str(d + 2) + ".\n"\
+                    + "For d="+str(d)+" (unweighted): "\
+                    + str(matching_probs[(d, log)]) + ".\n"\
+                    + "For d="+str(d+2)+" (weighted): "\
+                    + str(weighted_matching_probs[(d+2, log)])\
                     + "."
                 l_error = "Error: Lookup decoder does not improve "\
                     + "logical error rate between repetition codes"\
@@ -125,6 +139,8 @@ class TestCodes(unittest.TestCase):
 
                 self.assertTrue(
                     m_down or matching_probs[(d, log)] == 0.0, m_error)
+                self.assertTrue(
+                    w_down or matching_probs[(d + 2, log)] == 0.0, w_error)
                 self.assertTrue(
                     l_down or lookup_probs[(d, log)] == 0.0, l_error)
                 self.assertTrue(
