@@ -17,9 +17,10 @@
     quantum devices, arXiv:1811.09709
 """
 
-import sys
+
 import numpy as np
 from qiskit import QiskitError
+from .qotp import QOTPCorrectCounts
 
 
 class accreditationFitter:
@@ -60,30 +61,30 @@ class accreditationFitter:
 
         if self.num_traps < 3:
             QiskitError("ERROR: run the protocol with at least 3 traps")
-
-        for k in range(len(outputs_list)):
+        allcounts = []
+        for output, postp in zip(outputs_list, postp_list):
 
             # Classical postprocessing
-            output = [1 if s == "1" else 0 for s in outputs_list[k][0]]
-            postp = postp_list[k][0]
-
-            for i, _ in enumerate(output):
-                output[i] = (output[i] + postp[i]) % 2
-
+            # check single shot and extract string
+            counts = output.get_counts()
+            counts = QOTPCorrectCounts(counts, postp)
+            shots = 0
+            countstring = None
+            for countstring, val in counts.items():
+                shots += val
+            if shots != 1 or countstring is None:
+                QiskitError("ERROR: not single shot data")
+            allcounts.append(countstring)
+        for k, count in enumerate(allcounts):
             if k != v_zero:
                 # Check if trap returns correct output
-                if output != [0] * len(output):
+                if count != '0' * len(count):
                     self.flag = 'rejected'
             else:
-                output_target = output
-
+                output_target = count
         if self.flag == 'accepted':
-            if self.N_acc != 0:
-                self.N_acc = self.N_acc+1
-                self.outputs = np.vstack((self.outputs, output_target))
-            else:
-                self.N_acc = self.N_acc+1
-                self.outputs = output_target
+            self.N_acc += 1
+            self.outputs.append(output_target)
 
     def bound_variation_distance(self, theta):
         """
@@ -93,7 +94,8 @@ class accreditationFitter:
                 theta (float): number between 0 and 1
         """
         if self.N_acc == 0:
-            sys.exit()
+            QiskitError("ERROR: Variation distance requires"
+                        + "at least one accepted run")
         if self.N_acc/self.num_runs > theta:
             self.bound = self.g_num*1.7/(self.num_traps+1)
             self.bound = self.bound/(self.N_acc/self.num_runs-theta)
