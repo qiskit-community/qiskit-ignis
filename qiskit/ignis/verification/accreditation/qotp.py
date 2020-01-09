@@ -69,7 +69,7 @@ def layer_parser(circ, twoqubitgate='cx', coupling_map=None):
                 current2qs = []
             elif n in ('u1', 'u2', 'u3'):
                 # single qubit gate
-                q = qsub[0].index
+                q = qsub[0]
                 if q in current2qs:
                     singlequbitlayers[-1].append(circelem, qsub, csub)
                 else:
@@ -174,10 +174,10 @@ def QOTP_fromlayers(layers):
                 raise Exception("Two qubit gate {0}".format(twoqubitgate)
                                 + "is not implemented in qotp")
         for qind, q in enumerate(qregs):
-            if paulizs[qind]:
-                tempCirc.z(q)
             if paulixs[qind]:
                 tempCirc.x(q)
+            if paulizs[qind]:
+                tempCirc.z(q)
     # add final single qubit layer
     tempCirc = tempCirc+layers['singlequbitlayers'][-1]
     # add final Paulis to create the one time pad

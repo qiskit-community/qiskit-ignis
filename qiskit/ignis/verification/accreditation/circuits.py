@@ -41,7 +41,6 @@ class accreditationCircuits:
         self.layers = layer_parser(self.target,
                                    twoqubitgate=twoqubitgate,
                                    coupling_map=coupling_map)
-        self.testlayers = copy.deepcopy(self.layers)
 
     def generateCircuits(self, num_trap):
         """
@@ -59,14 +58,14 @@ class accreditationCircuits:
         circuit_list = []
         postp_list = []
         # main loop through traps
+        testlayers = copy.deepcopy(self.layers)
         for k in range(num_trap+1):
-            s = 'singlequbitlayers'  # space saving
             if k == v_zero:  # Generating the target circuit
-                self.testlayers[s] = self.layers[s]
+                testlayers = copy.deepcopy(self.layers)
             else:  # Generating a trap circuit
-                self.testlayers[s] = self._routine_two()
+                testlayers['singlequbitlayers'] = self._routine_two()
             # apply onte time pad and add to outputlist
-            circ, postp = QOTP_fromlayers(self.testlayers)
+            circ, postp = QOTP_fromlayers(testlayers)
             circuit_list.append(circ)
             postp_list.append(postp)
         return circuit_list, postp_list, v_zero
