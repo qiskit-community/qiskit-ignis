@@ -66,6 +66,7 @@ def layer_parser(circ, twoqubitgate='cx', coupling_map=None):
                 # if a barrier append reset
                 singlequbitlayers[-1].append(circelem, qsub, csub)
                 singlequbitlayers.append(QuantumCircuit(qregs, cregs))
+                twoqubitlayers.append(QuantumCircuit(qregs, cregs))
                 current2qs = []
             elif n in ('u1', 'u2', 'u3'):
                 # single qubit gate
