@@ -447,4 +447,3 @@ class BConfig:
         new_circ = circ + meas
 
         return new_circ, q, initial_layout
-    
