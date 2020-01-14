@@ -153,4 +153,3 @@ def get_ghz_po_para(n, measure='full'):
     meas = get_measurement_circ(n, measure)
     circ = circ + meas
     return circ, [delta, deltaneg]
-
