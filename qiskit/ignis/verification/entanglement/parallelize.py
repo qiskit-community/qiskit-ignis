@@ -2,15 +2,15 @@
 
 '''
 In this package, there are three modules, linear.py,
-parallellize.py, and analysis.py.It may be more suitable
+parallellize.py, and analysis.py. It may be more suitable
 to put these in Terra rather than Ignis. The most
 important module, parallellize.py provides methods to
 parallellize CNOT gates in the preparation of the GHZ State,
-which results to the GHZ State having a much higher fidelity
+which results in the GHZ State having a much higher fidelity
 then a normal "linear" CNOT gate preparation of the
 GHZ State. Additionally, there are methods within parallelize.py
 that configure different characterization tests for the
-GHZ State, including Multiple Quantum Coherences (MQC),
+GHZ State, including Multiple Quantum Coherence (MQC),
 Parity Oscillations (PO), and Quantum Tomography.
 '''
 
@@ -20,7 +20,7 @@ from qiskit.circuit import Parameter
 
 class BConfig:
     '''
-    This class creates an object that creates a GHZ circuit
+    This class is used to create a GHZ circuit
     with parallellized CNOT gates to increase fidelity
     '''
 
@@ -46,7 +46,7 @@ class BConfig:
         Only intended for public devices (doubling and reversing
         each item in coupling map), but useful to run anyway
         '''
-        cmap_new = [i for i in self.cmap]
+        cmap_new = list(self.cmap)
         for a in self.cmap:
             if [a[1], a[0]] not in self.cmap:
                 cmap_new.append([a[1], a[0]])
@@ -154,6 +154,10 @@ class BConfig:
         and the values are the connections following pattern of:
         [controlled qubit, NOT qubit]. Thus the
         backend's GHZ state is parallelized.
+        Args:
+        Returns:
+           Tier dictionary - [step in process, control-target connection].
+            Facilitates parallelized GHZ circuits
         '''
 
         tier = {}
@@ -208,11 +212,14 @@ class BConfig:
     def get_ghz_layout(self, n, transpiled=True, barriered=True):
         '''
         Feeds the Tier Dict of the backend to create a basic
-        qiskit GHZ circuit with no mesaurement;
-        Can also toggle on/off transpilation,
-        which is useful for Tomography. Also,
-        the barriered argument barriers each "step" of CNOT gates
-        '''
+        qiskit GHZ circuit with no measurement;
+        Args:
+           n: number of qubits
+           transpiled: toggle on/off transpilation - useful for tomography
+           barriered: yes/no whether to barrier each step of CNOT gates
+        Returns:
+           A GHZ Circuit
+       '''
 
         tierdict = self.get_tier_dict()
         q = QuantumRegister(n, 'q')
@@ -250,7 +257,7 @@ class BConfig:
 
         return circ, initial_layout
 
-    def get_ghz_measurement(self, n, extent):
+    def get_measurement_circ(self, n, extent):
         '''
         Creates a measurement circuit that can toggle
         between measuring the control qubit
@@ -298,7 +305,7 @@ class BConfig:
 #         meas.barrier()
 #         meas.measure(q,cla)
 
-        meas = self.get_ghz_measurement(n, extent)
+        meas = self.get_measurement_circ(n, extent)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -312,6 +319,12 @@ class BConfig:
         Get a parametrized MQC circuit.
         Remember that get_counts() method accepts
         an index now, not a circuit
+        Args:
+           n: number of qubits
+           extent ('full', 'one'):
+            Whether to append full measurement, or only on the first qubit
+        Returns:
+           A GHZ Circuit
         '''
 
         circ, initial_layout = self.get_ghz_layout(n)
@@ -335,7 +348,7 @@ class BConfig:
 #         meas.barrier()
 #         meas.measure(q,cla)
 
-        meas = self.get_ghz_measurement(n, extent)
+        meas = self.get_measurement_circ(n, extent)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -351,7 +364,7 @@ class BConfig:
 
         if extent != 'full':
             raise Exception("Only 'full' argument can be accepted",
-                            " for extent in Parity Oscillation circuit")
+                            " for measure in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
         rotate = QuantumCircuit(q)
@@ -368,7 +381,7 @@ class BConfig:
 #         meas.barrier()
 #         meas.measure(q,cla)
 
-        meas = self.get_ghz_measurement(n, extent)
+        meas = self.get_measurement_circ(n, extent)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -377,16 +390,22 @@ class BConfig:
 
         return new_circ, initial_layout
 
-    def get_ghz_po_para(self, n, extent='full'):
+    def get_ghz_po_para(self, n, measure='full'):
         '''
         Get a parametrized PO circuit. Remember that get_counts()
         method accepts an index now, not a circuit.
         The two phase parameters are a quirk of the Parameter module
+         Args:
+           n: number of qubits
+           measure: Must be 'full' - so as to append full measurement.
+        Returns:
+           A parity oscillation circuit, its Delta/minus-delta parameters,
+            and the initial ghz layout
         '''
 
-        if extent != 'full':
+        if measure != 'full':
             raise Exception("Only 'full' argument can be accepted",
-                            " for extent in Parity Oscillation circuit")
+                            " for measure in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
         rotate = QuantumCircuit(q)
@@ -400,35 +419,28 @@ class BConfig:
         rotate = qiskit.compiler.transpile(rotate,
                                            backend=self.backend,
                                            initial_layout=initial_layout)
-
-
-#         cla = ClassicalRegister(n,'c')
-#         meas = QuantumCircuit(q,cla)
-#         meas.barrier()
-#         meas.measure(q,cla)
-
-        meas = self.get_ghz_measurement(n, extent)
+        meas = self.get_measurement_circ(n, measure)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
         new_circ = circ + rotate + meas
-
         return new_circ, [delta, deltaneg], initial_layout
 
     def get_ghz_simple(self, n, extent='full'):
         '''
         Get simple GHZ circuit with measurement
+        Args:
+           n: number of qubits
+           extent ('full', 'one'):
+            Whether to append full measurement, or only on the first qubit
+        Returns:
+           A GHZ Circuit
         '''
 
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
 
-#         cla = ClassicalRegister(n,'c')
-#         meas = QuantumCircuit(q,cla)
-#         meas.barrier()
-#         meas.measure(q,cla)
-
-        meas = self.get_ghz_measurement(n, extent)
+        meas = self.get_measurement_circ(n, extent)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
