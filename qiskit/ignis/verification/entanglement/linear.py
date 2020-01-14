@@ -1,5 +1,4 @@
 
-
 '''
 The module linear.py provides the linear
 preparation analogous of parallelize.py.
