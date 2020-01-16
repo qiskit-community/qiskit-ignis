@@ -19,6 +19,9 @@ Quantum gate set tomography fitter
 """
 
 import numpy as np
+import scipy.optimize as opt
+import itertools
+from qiskit.quantum_info import Choi, Kraus, PTM, SuperOp, Chi
 from ..basis.gatesetbasis import StandardGatesetBasis
 from .base_fitter import TomographyFitter
 
@@ -101,3 +104,231 @@ class GatesetTomographyFitter:
 
         gates = [gram_inverse @ gate_matrix for gate_matrix in gate_matrices]
         return list(zip(gates, self.gateset_basis.gate_labels))
+    
+    def fit(self):
+        linear_inversion_results = self.linear_inversion()
+        print("Linear inversion results:")
+        print(linear_inversion_results)
+        opt = GST_Optimize(self.gateset_basis.gate_labels, self.gateset_basis.spam_spec, self.probs)
+        E = np.array([[1,0,0,1]])
+        rho = np.array([[0.5],[0],[0],[0.5]])
+        Gs = [matrix for (matrix,name) in linear_inversion_results]
+        opt.set_initial_value(E, rho, Gs)
+        optimization_results = opt.optimize()
+        print("Optimization results:")
+        print(optimization_results)       
+        
+        
+def split_list(l, sizes):
+    if sum(sizes) != len(l):
+        raise RuntimeError("Length of list ({}) differs from sum of split sizes ({})".format(len(l), sizes))
+    result = []
+    i = 0
+    for s in sizes:
+        result.append(l[i:i+s])
+        i = i+s
+    return result
+
+def matrix_to_vec(A):
+    real = []
+    imag = []
+    for row in A:
+        for x in row:
+            real.append(np.real(x))
+            imag.append(np.imag(x))
+    return real + imag
+def split_list(l, sizes):
+    if sum(sizes) != len(l):
+        raise RuntimeError("Length of list ({}) differs from sum of split sizes ({})".format(len(l), sizes))
+    result = []
+    i = 0
+    for s in sizes:
+        result.append(l[i:i+s])
+        i = i+s
+    return result
+
+def matrix_to_vec(A):
+    real = []
+    imag = []
+    for row in A:
+        for x in row:
+            real.append(np.real(x))
+            imag.append(np.imag(x))
+    return real + imag
+
+def get_cholesky_like_decomposition(mat):
+    (eigenvals,P) = np.linalg.eigh(mat)
+    eigenvals[eigenvals < 0] = 0
+    DD = np.diag(np.sqrt(eigenvals))
+    return P @ DD
+
+class GST_Optimize():
+    def __init__(self, Gs, Fs, probs, qubits=1):
+        self.probs = probs
+        self.Gs = Gs
+        self.Fs = Fs
+        self.Fs_names = list(Fs.keys())
+        self.qubits = qubits
+        self.obj_fn_data = self.compute_objective_function_data()
+        self.initial_value = None
+        
+    def compute_objective_function_data(self):
+        """The objective function is sum_{ijk}(<|E*R_Fi*G_k*R_Fj*Rho|>-m_{ijk})^2
+           We expand R_Fi*G_k*R_Fj to a sequence of G-gates and store the indices
+           we also obtain the m_{ijk} value from the probs list
+           all that remains when computing the function is thus performing
+           the matrix multiplications and remaining algebra
+        """
+        m = len(self.Fs)
+        n = len(self.Gs)
+        obj_fn_data = []
+        for (i,j) in itertools.product(range(m), repeat=2):
+            for k in range(n):
+                m_ijk = (self.probs[(self.Fs_names[i],self.Gs[k], self.Fs_names[j])])
+                matrices = [self.Gs.index(gate) for gate in self.Fs[self.Fs_names[i]]] + [k] + [self.Gs.index(gate) for gate in self.Fs[self.Fs_names[j]]]
+                obj_fn_data.append((matrices, m_ijk))
+        return obj_fn_data
+    
+    def vec_to_complex_matrix(self, vec, n):
+        """
+        Constructs a nxn matrix
+        """
+        real_vec, imag_vec = split_list(vec, [n**2, n**2])
+        real = np.array([real_vec[n*i:n*(i+1)] for i in range(n)])
+        imag = np.array([imag_vec[n*i:n*(i+1)] for i in range(n)])
+        return real + 1.j*imag
+
+    def complex_matrix_var_nums(self, n):
+        return 2*n**2
+    
+    def var_num(self):
+        n = len(self.Gs)
+        d = (2**self.qubits)
+        ds = d**2 # d squared - the dimension of the density operator (4 for 1 qubit)
+        # E is 1xds; rho is dsx1; each G is dsxds
+        return 2*self.complex_matrix_var_nums(d) + n*self.complex_matrix_var_nums(ds)
+        
+    def split_input_vector(self, x):
+        n = len(self.Gs)
+        d = (2**self.qubits)
+        ds = d**2 # d squared - the dimension of the density operator (4 for 1 qubit)
+        
+        d_t = self.complex_matrix_var_nums(d)
+        ds_t = self.complex_matrix_var_nums(ds)
+        T_vars = split_list(x, [d_t, d_t] + [ds_t]*n)
+
+        E_T = self.vec_to_complex_matrix(T_vars[0],d)
+        rho_T = self.vec_to_complex_matrix(T_vars[1],d)
+        Gs_T = [self.vec_to_complex_matrix(T_vars[2+i],ds) for i in range(n)]
+        
+        E = np.reshape(E_T @ np.conj(E_T.T), (1,ds))
+        rho = np.reshape(rho_T @ np.conj(rho_T.T),(ds,1))
+        Gs = [PTM(Choi(G_T @ np.conj(G_T.T))).data for G_T in Gs_T]
+            
+        return (E, rho, Gs)
+    
+    def complex_matrix_to_vec(self, M, n):
+        return list(np.real(M).reshape(n**2)) + list(np.imag(M).reshape(n**2))
+
+    def join_input_vector(self, E,rho,Gs):
+        n = len(Gs)
+        d = (2**self.qubits)
+        ds = d**2 # d squared - the dimension of the density operator (4 for 1 qubit)
+        
+        E_T = get_cholesky_like_decomposition(E.reshape((d,d)))
+        rho_T = get_cholesky_like_decomposition(rho.reshape((d,d)))
+        Gs_Choi = [Choi(PTM(G)).data for G in Gs]
+        Gs_T = [get_cholesky_like_decomposition(G) for G in Gs_Choi]
+        result = self.complex_matrix_to_vec(E_T, d) + self.complex_matrix_to_vec(rho_T, d)
+        for G_T in Gs_T:
+            result += self.complex_matrix_to_vec(G_T, ds)
+        return result
+ 
+    def obj_fn(self, x, *args):
+        E, rho, G_matrices = self.split_input_vector(x)
+        val = 0
+        for term in self.obj_fn_data:
+            term_val = E
+            for G_index in term[0]:
+                term_val = term_val @ G_matrices[G_index]
+            term_val = term_val @ rho
+            term_val = np.real(term_val[0][0])
+            term_val = term_val - term[1] # m_{ijk}
+            term_val = term_val ** 2
+            val = val + term_val
+        return val
+    
+    def ptm_matrix_values(self, x):
+        E, rho, G_matrices = self.split_input_vector(x)
+        result = []
+        for G in G_matrices:
+            result = result + matrix_to_vec(G)
+        return result
+    
+    def rho_trace(self, x):
+        E, rho, G_matrices = self.split_input_vector(x)
+        d = (2**self.qubits) # rho is dxd and starts at variable d^2
+        rho = rho.reshape((d,d))
+        trace = sum([rho[i][i] for i in range(d)])
+        return [np.real(trace), np.imag(trace)]
+    
+    def bounds_constraints(self):
+        """ E and rho are not subject to bounds
+            For each G, all the elements of G are in [-1,1]
+            and the first row is of the form [1,0,0,...,0]
+            since this is a PTM representation
+        """
+        n = len(self.Gs)
+        d = (2**self.qubits) # rho is dxd and starts at variable d^2
+        ds = d**2    
+        lb = []
+        ub = []
+       
+        for k in range(n): # iterate over all Gs
+            lb.append(0.99)
+            ub.append(1) # G^k_{0,0} is 1
+            for i in range(ds - 1):
+                lb.append(0)
+                ub.append(0.001) # G^k_{0,i} is 0
+            for i in range((ds-1)*ds): #rest of G^k
+                lb.append(-1)
+                ub.append(1)
+            for i in range(ds**2): # the complex part of G^k
+                lb.append(0)
+                ub.append(0.001)
+        
+        return opt.NonlinearConstraint(self.ptm_matrix_values, lb, ub)
+    
+    def rho_trace_constraint(self):
+        """ The constraint Tr(rho) = 1"""
+        """ We demand real(Tr(rho)) == 1 and imag(Tr(rho)) == 0"""
+        return opt.NonlinearConstraint(self.rho_trace, [0.99,0], [1,0.01])
+        
+    def constraints(self):
+        constraints = []
+        constraints.append(self.rho_trace_constraint())
+        constraints.append(self.bounds_constraints())
+        return constraints
+    
+    def process_result(self, x):
+        E, rho, G_matrices = self.split_input_vector(x)
+        result = {}
+        result['E'] = E
+        result['rho'] = rho
+        for i in range(len(self.Gs)):
+            result[self.Gs[i]] = G_matrices[i]
+        return result
+    
+    def set_initial_value(self, E, rho, Gs):
+        self.initial_value = self.join_input_vector(E, rho, Gs)
+        
+    def optimize(self, initial_value=None):
+        if initial_value is not None:
+            self.initial_value = initial_value
+        print("initial obj_fn value: ", self.obj_fn(self.initial_value))
+        result = opt.minimize(self.obj_fn, self.initial_value, constraints=self.constraints())
+        print(result)
+        formatted_result = self.process_result(result.x)
+        return formatted_result
+        
+        
