@@ -57,6 +57,9 @@ class TestGatesetTomography(unittest.TestCase):
                                               noise_model=noise_model,
                                               gateset_basis=gateset_basis)
 
+        print("About to start optimization")
+        fitter.fit()
+        print("Optimization ended")
         gates, gate_labels = zip(*fitter.linear_inversion())
         expected_gates = [np.linalg.inv(B) @ G @ B for G in Gs]
         msg = "Number of expected gates ({}) different than actual number " \
@@ -90,8 +93,9 @@ class TestGatesetTomography(unittest.TestCase):
 
         Gs = [G0, G1, G2]
         Fs = [Gs[0], Gs[1], Gs[2], Gs[1] @ Gs[1]]
+        print("No noises")
         self.linear_inversion_on_gates(Gs, Fs)
-
+        print("Start noises")
         # Pauli X noise
         A0 = np.array([[0, 1], [1, 0]])
         # noise_PTM = PTM(Kraus([A0]))._data
