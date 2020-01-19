@@ -266,7 +266,7 @@ class Clifford:
         self._table[:, iz] = x_cache
 
     def s(self, qubit):
-        """Apply an phase "s" gate to qubit"""
+        """Apply a phase "s" gate to qubit"""
         iz, ix = qubit, self._num_qubits + qubit
         zx_and = np.logical_and(self._table[:, ix], self._table[:, iz])
         self._phases = np.logical_xor(self._phases, zx_and)

@@ -195,7 +195,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         meas_labels=('X','Z') will only contain 2 ** n measurements in X and Z
         basis etc.
 
-        Specifying a tuple is necessary when using a custom `meas_cicuit_fn` or
+        Specifying a tuple is necessary when using a custom `meas_circuit_fn` or
         `prep_circuit_fn` as these will be the str passed to the function to
         return the corresponding QuantumCircuit objects.
 
@@ -204,7 +204,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         tomography experiment we might only specify correlated measurements eg:
             meas_labels=[('X','X'), ('Y','Y'), ('Z','Z')]
 
-        Custom Measurement Circuit Funtion
+        Custom Measurement Circuit Function
         ----------------------------------
         Custom measurement circuit functions can be used by passing the
         function using the `meas_circuit_fn` keyword. These functions should
@@ -222,7 +222,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         The built-in Pauli measurement function `pauli_measurement_circuit`
         may be invoked using the meas_circuit_fn='Pauli'.
 
-        Custom Preparation Circuit Funtion
+        Custom Preparation Circuit Function
         ----------------------------------
         Custom preparation circuit functions can be used by passing the
         function using the `prep_circuit_fn` keyword. These functions should

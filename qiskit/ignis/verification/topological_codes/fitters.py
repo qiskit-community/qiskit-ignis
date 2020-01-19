@@ -154,7 +154,7 @@ class GraphDecoder():
         Additional information:
             Uses `results` to estimate the probability of the errors that
             create the pairs of nodes in S. The edge weights are then
-            replaced with the correspoinding -log(p/(1-p).
+            replaced with the corresponding -log(p/(1-p).
         """
 
         results = results['0']
