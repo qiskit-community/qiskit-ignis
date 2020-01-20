@@ -150,10 +150,11 @@ Analysis of results
 
        from qiskit.ignis.characterization.coherence import T2StarFitter
 
-       t2star_fit = T2StarFitter(t2star_backend_result, t2star_xdata, qubits,
-                                 fit_p0=[0.5, t_q0, osc_freq, 0, 0.5],
-                                 fit_bounds=([-0.5, 0, 0, -np.pi, -0.5],
-                                             [1.5, 40, 2*osc_freq, np.pi, 1.5]))
+       t2star_fit = \
+          T2StarFitter(t2star_backend_result, t2star_xdata, qubits,
+                       fit_p0=[0.5, t_q0, osc_freq, 0, 0.5],
+                       fit_bounds=([-0.5, 0, 0, -np.pi, -0.5],
+                                   [1.5, 40, 2*osc_freq, np.pi, 1.5]))
 
        plt.figure(figsize=(15, 6))
        for i in range(2):
