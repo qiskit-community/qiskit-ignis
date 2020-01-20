@@ -25,7 +25,9 @@ Generation of coherence circuits
 .. jupyter-execute::
 
     import numpy as np
-    from qiskit.ignis.characterization.coherence import t1_circuits, t2_circuits, t2star_circuits
+    from qiskit.ignis.characterization.coherence import t1_circuits, \\
+                                                        t2_circuits, \\
+                                                        t2star_circuits
 
     num_of_gates = (np.linspace(10, 300, 50)).astype(int)
     gate_time = 0.1
@@ -34,12 +36,16 @@ Generation of coherence circuits
     qubits = [0, 2]
 
     t1_circs, t1_xdata = t1_circuits(num_of_gates, gate_time, qubits)
-    t2star_circs, t2star_xdata, osc_freq = t2star_circuits(num_of_gates, gate_time, qubits, nosc=5)
-    t2echo_circs, t2echo_xdata = t2_circuits(np.floor(num_of_gates/2).astype(int),
-                                             gate_time, qubits)
-    t2cpmg_circs, t2cpmg_xdata = t2_circuits(np.floor(num_of_gates/6).astype(int),
-                                             gate_time, qubits,
-                                             n_echos=5, phase_alt_echo=True)
+    t2star_circs, t2star_xdata, osc_freq = t2star_circuits(num_of_gates,
+                                                           gate_time,
+                                                           qubits, nosc=5)
+    t2echo_circs, t2echo_xdata = \\
+       t2_circuits(np.floor(num_of_gates/2).astype(int),
+                   gate_time, qubits)
+    t2cpmg_circs, t2cpmg_xdata = \\
+       t2_circuits(np.floor(num_of_gates/6).astype(int),
+                   gate_time, qubits,
+                   n_echos=5, phase_alt_echo=True)
 
 Backend execution
 =================
@@ -47,7 +53,8 @@ Backend execution
 .. jupyter-execute::
 
     import qiskit
-    from qiskit.providers.aer.noise.errors.standard_errors import thermal_relaxation_error
+    from qiskit.providers.aer.noise.errors.standard_errors \\
+                import thermal_relaxation_error
     from qiskit.providers.aer.noise import NoiseModel
 
     backend = qiskit.Aer.get_backend('qasm_simulator')
@@ -76,7 +83,8 @@ Backend execution
 
     # Run the simulator
     t1_backend_result = qiskit.execute(t1_circs, backend, shots=shots,
-                                       noise_model=t1_noise_model, optimization_level=0).result()
+                                       noise_model=t1_noise_model,
+                                       optimization_level=0).result()
     t2star_backend_result = qiskit.execute(t2star_circs, backend, shots=shots,
                                            noise_model=t2_noise_model,
                                            optimization_level=0).result()
@@ -84,13 +92,15 @@ Backend execution
                                            noise_model=t2_noise_model,
                                            optimization_level=0).result()
 
-    # It is possible to split the circuits into multiple jobs and then give the results
-    # to the fitter as a list:
+    # It is possible to split the circuits into multiple jobs and
+    # then give the results to the fitter as a list:
     t2cpmg_backend_result1 = qiskit.execute(t2cpmg_circs[0:5], backend,
-                                            shots=shots, noise_model=t2_noise_model,
+                                            shots=shots,
+                                            noise_model=t2_noise_model,
                                             optimization_level=0).result()
     t2cpmg_backend_result2 = qiskit.execute(t2cpmg_circs[5:], backend,
-                                            shots=shots, noise_model=t2_noise_model,
+                                            shots=shots,
+                                            noise_model=t2_noise_model,
                                             optimization_level=0).result()
 
 Analysis of results
@@ -123,7 +133,8 @@ Analysis of results
     .. jupyter-execute::
 
         t1_backend_result_new = qiskit.execute(t1_circs, backend,
-                                               shots=shots, noise_model=t1_noise_model,
+                                               shots=shots,
+                                               noise_model=t1_noise_model,
                                                optimization_level=0).result()
         t1_fit.add_data(t1_backend_result_new)
 
