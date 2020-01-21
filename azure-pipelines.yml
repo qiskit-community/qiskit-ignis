@@ -63,6 +63,11 @@ jobs:
             conda install --yes --quiet --name qiskit-ignis --channel conda-forge python=%PYTHON_VERSION% scs
           displayName: Install Anaconda packages
           condition: ne(variables['python.version'], '3.5')
+        - script: |
+            call activate qiskit-ignis
+            conda install --yes --quiet --name qiskit-ignis --channel conda-forge python=%PYTHON_VERSION% osqp
+          displayName: Install Anaconda packages
+          condition: eq(variables['python.version'], '3.8')
         - powershell: (new-object System.Net.WebClient).DownloadFile($env:OPENBLAS, 'c:\openblas.zip')
           condition: eq(variables['python.version'], '3.5')
           displayName: 'Download openblas'
