@@ -20,6 +20,7 @@ expressed as solving a graph-theoretic problem.
 import copy
 import warnings
 import networkx as nx
+import numpy as np
 
 from qiskit import QuantumCircuit, Aer, execute
 
@@ -57,6 +58,22 @@ class GraphDecoder():
         for syndrome_type_string in string.split('  '):
             separated_string.append(syndrome_type_string.split(' '))
         return separated_string
+
+    def _string2nodes(self, string):
+
+        separated_string = self._separate_string(string)
+        nodes = []
+        for syn_type, _ in enumerate(separated_string):
+            for syn_round in range(
+                    len(separated_string[syn_type])):
+                elements = \
+                    separated_string[syn_type][syn_round]
+                for elem_num, element in enumerate(elements):
+                    if element == '1':
+                        nodes.append((syn_type,
+                                      syn_round,
+                                      elem_num))
+        return nodes
 
     def _make_syndrome_graph(self):
         """
@@ -108,19 +125,14 @@ class GraphDecoder():
                     results = self.code.process_results(raw_results)['0']
 
                     for string in results:
-                        separated_string = self._separate_string(string)
 
-                        nodes = []
-                        for syn_type, _ in enumerate(separated_string):
-                            for syn_round in range(
-                                    len(separated_string[syn_type])):
-                                elements = \
-                                    separated_string[syn_type][syn_round]
-                                for elem_num, element in enumerate(elements):
-                                    if element == '1':
-                                        nodes.append((syn_type,
-                                                      syn_round,
-                                                      elem_num))
+                        nodes = self._string2nodes(string)
+
+                        assert len(nodes) in [0, 2], "Error of type " + \
+                            error + " on qubit " + str(qubit) + \
+                            " at depth " + str(j) + " creates " + \
+                            str(len(nodes)) + \
+                            " nodes in syndrome graph, instead of 2."
 
                         for node in nodes:
                             S.add_node(node)
@@ -130,6 +142,48 @@ class GraphDecoder():
                                     S.add_edge(source, target, distance=1)
 
         return S
+
+    def weight_syndrome_graph(self, results):
+        """Generate weighted syndrome graph from result counts.
+
+        Args:
+            results: A results dictionary, as produced by the
+            `process_results` method of the code.
+            algorithm: Choice of which decoder to use.
+
+        Additional information:
+            Uses `results` to estimate the probability of the errors that
+            create the pairs of nodes in S. The edge weights are then
+            replaced with the correspoinding -log(p/(1-p).
+        """
+
+        results = results['0']
+
+        count = {element: {edge: 0 for edge in self.S.edges}
+                 for element in ['00', '01', '10', '11']}
+
+        for string in results:
+
+            nodes = self._string2nodes(string)
+
+            for edge in self.S.edges:
+                element = ''
+                for j in range(2):
+                    if edge[j] in nodes:
+                        element += '1'
+                    else:
+                        element += '0'
+                count[element][edge] += results[string]
+
+        for edge in self.S.edges:
+            edge_data = self.S.get_edge_data(edge[0], edge[1])
+            ratios = []
+            for elements in [('00', '11'), ('11', '00'),
+                             ('01', '10'), ('10', '01')]:
+                if count[elements[1]][edge] > 0:
+                    ratio = count[elements[0]][edge]/count[elements[1]][edge]
+                    ratios.append(ratio)
+            edge_data['distance'] = -np.log(min(ratios))
 
     def make_error_graph(self, string, subgraphs=None):
         """
@@ -173,7 +227,7 @@ class GraphDecoder():
                 for target in E[subgraph]:
                     if target != (source):
                         distance = int(nx.shortest_path_length(
-                            self.S, source, target))
+                            self.S, source, target, weight='distance'))
                         E[subgraph].add_edge(source, target, weight=-distance)
 
         return E
