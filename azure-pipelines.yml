@@ -22,7 +22,7 @@ jobs:
          displayName: 'Use Python $(python.version)'
        - bash: |
            set -e
-           python -m pip install --upgrade pip virtualenv
+           python -m pip install --upgrade pip<20 virtualenv
            pip install -U tox
            python setup.py build_ext --inplace
          displayName: 'Install dependencies'
@@ -98,7 +98,7 @@ jobs:
           displayName: 'Install MKL'
         - script: |
             call activate qiskit-ignis
-            python -m pip install -c constraints.txt --upgrade pip virtualenv setuptools
+            python -m pip install -c constraints.txt --upgrade pip<20 virtualenv setuptools
             pip install -c constraints.txt -U tox
             tox --sitepackages -e%TOXENV%
           displayName: 'Install dependencies and run tests'
