@@ -47,6 +47,7 @@ class GateSetBasis:
         self.name = name
         self.gate_labels = gates[0]
         self.gate_func = gates[1]
+        self.gate_matrices = dict(zip(self.gate_labels, gates[2]))
         self.spam_labels = spam[0]
         self.spam_spec = spam[1]
 
@@ -82,12 +83,12 @@ class GateSetBasis:
         circ.measure(qubit, clbit)
         return circ
 
-    def measurement_matrix(self):
+    def measurement_matrix(self, label):
         """
         A stub function,
         since the measurement matrix is not used yet in gate set tomography
         """
-        return None
+        return self.gate_matrices[label]
 
     def preparation_circuit(self, op, qubit):
         """
@@ -104,12 +105,11 @@ class GateSetBasis:
         self.add_to_circuit(circ, qubit, op)
         return circ
 
-    def preparation_matrix(self):
+    def preparation_matrix(self, label):
         """
-        A stub function,
-        since the preperation matrix is not used yet in gate set tomography
+
         """
-        return None
+        return self.gate_matrices[label]
 
     def get_tomography_basis(self):
         """
@@ -155,10 +155,26 @@ def standard_gates_func(circ, qubit, op):
     if op == 'Y_Rot_90':
         circ.u2(np.pi, np.pi, qubit)
 
-
+# PTM representation of Id
+G0 = np.array([[1, 0, 0, 0],
+               [0, 1, 0, 0],
+               [0, 0, 1, 0],
+               [0, 0, 0, 1]])
+# X rotation by 90 degrees
+G1 = np.array([[1, 0, 0, 0],
+               [0, 1, 0, 0],
+               [0, 0, 0, -1],
+               [0, 0, 1, 0]])
+# Y rotation by 90 degrees
+G2 = np.array([[1, 0, 0, 0],
+               [0, 0, 0, -1],
+               [0, 0, 1, 0],
+               [0, 1, 0, 0]])
+standard_gates_matrices = (G0, G1, G2)
 StandardGatesetBasis = GateSetBasis('Standard GST',
                                     (('Id', 'X_Rot_90', 'Y_Rot_90'),
-                                     standard_gates_func),
+                                     standard_gates_func,
+                                     standard_gates_matrices),
                                     (('F0', 'F1', 'F2', 'F3'),
                                      {'F0': ('Id',),
                                       'F1': ('X_Rot_90',),

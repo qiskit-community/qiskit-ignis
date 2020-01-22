@@ -107,16 +107,25 @@ class GatesetTomographyFitter:
     
     def fit(self):
         linear_inversion_results = self.linear_inversion()
-        print("Linear inversion results:")
-        print(linear_inversion_results)
-        opt = GST_Optimize(self.gateset_basis.gate_labels, self.gateset_basis.spam_spec, self.probs)
         E = np.array([[1,0,0,1]])
         rho = np.array([[0.5],[0],[0],[0.5]])
-        Gs = [matrix for (matrix,name) in linear_inversion_results]
-        opt.set_initial_value(E, rho, Gs)
+
+        Gs, Gs_E = zip(*[(self.gateset_basis.gate_matrices[name],matrix) for (matrix,name) in linear_inversion_results])
+        print("linear inversion results")
+        for G in Gs_E:
+            print(G)
+        gauge_opt = GaugeOptimize(Gs, Gs_E)
+        Gs_E = gauge_opt.optimize()
+        print("gauge optimization results")
+        for G in Gs_E:
+            print(G)
+
+        opt = GST_Optimize(self.gateset_basis.gate_labels, self.gateset_basis.spam_spec, self.probs)
+        opt.set_initial_value(E, rho, Gs_E)
         optimization_results = opt.optimize()
         print("Optimization results:")
-        print(optimization_results)       
+        print(optimization_results)
+        return optimization_results
         
         
 def split_list(l, sizes):
@@ -161,6 +170,32 @@ def get_cholesky_like_decomposition(mat):
     eigenvals[eigenvals < 0] = 0
     DD = np.diag(np.sqrt(eigenvals))
     return P @ DD
+
+
+class GaugeOptimize():
+    def __init__(self, Gs, initial_Gs_E):
+        self.Gs = Gs
+        print("Got Gs: ", Gs)
+        self.initial_Gs_E = initial_Gs_E
+        self.d = np.shape(Gs[0])[0]
+        self.n = len(Gs)
+
+    def x_to_Gs_E(self, x):
+        B = np.array(x).reshape((self.d, self.d))
+        try:
+            BB = np.linalg.inv(B)
+            return [BB @ G @ B for G in self.initial_Gs_E]
+        except np.linalg.LinAlgError:
+            return np.inf
+
+    def obj_fn(self, x):
+        Gs_E = self.x_to_Gs_E(x)
+        return sum([np.linalg.norm(G - G_E) for (G, G_E) in zip(self.Gs, Gs_E)])
+
+    def optimize(self):
+        initial_value = list(np.eye(self.d).reshape((1,self.d*self.d)))
+        result = opt.minimize(self.obj_fn, initial_value)
+        return self.x_to_Gs_E(result.x)
 
 class GST_Optimize():
     def __init__(self, Gs, Fs, probs, qubits=1):
@@ -325,9 +360,12 @@ class GST_Optimize():
     def optimize(self, initial_value=None):
         if initial_value is not None:
             self.initial_value = initial_value
+        # print("probs: ", self.probs)
+        # print("obj_fn data: ", self.obj_fn_data)
+        # print("initial value: ", self.initial_value)
         print("initial obj_fn value: ", self.obj_fn(self.initial_value))
         result = opt.minimize(self.obj_fn, self.initial_value, constraints=self.constraints())
-        print(result)
+        print("result: ", result)
         formatted_result = self.process_result(result.x)
         return formatted_result
         
