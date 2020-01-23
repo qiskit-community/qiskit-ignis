@@ -13,22 +13,23 @@
 # that they have been altered from the originals.
 
 # pylint: disable=missing-docstring
-
 import unittest
-
+import functools
 import numpy as np
 from qiskit import Aer
 from qiskit.compiler import assemble
 from qiskit.ignis.verification.tomography import GatesetTomographyFitter
 from qiskit.ignis.verification.tomography import gateset_tomography_circuits
 from qiskit.ignis.verification.tomography.basis import GateSetBasis
+from qiskit.ignis.verification.tomography.basis import StandardGatesetBasis
+
 from qiskit.providers.aer.noise.errors.quantum_error import QuantumError
 from qiskit.providers.aer.noise import NoiseModel
 
 
 class TestGatesetTomography(unittest.TestCase):
-    def collect_tomography_data(self,
-                                shots=10000,
+    @staticmethod
+    def collect_tomography_data(shots=10000,
                                 noise_model=None,
                                 gateset_basis='Standard GST'):
         backend_qasm = Aer.get_backend('qasm_simulator')
@@ -38,151 +39,72 @@ class TestGatesetTomography(unittest.TestCase):
         fitter = GatesetTomographyFitter(result, circuits, gateset_basis)
         return fitter
 
-    def linear_inversion_on_gates(self, Gs, Fs,
-                                  shots=10000,
-                                  noise_model=None,
-                                  gateset_basis='Standard GST'):
-        # in PTM: [(1,0),(0,0)] == 0.5 I + 0.5 Z
+    @staticmethod
+    def expected_linear_inversion_gates(Gs, Fs):
         rho = np.array([[0.5], [0], [0], [0.5]])
-
-        # Z-basis |0> measurement in PTM
-        # E = np.array([[1, 0, 0, 1]])
-
-        # linear inversion should result in gates of the form B^-1*G*B where
-        # the columns of B are F_k * rho, F_k being the SPAM circuits
-        print("Test began, expecting gates:")
-        for G in Gs:
-            print(G)
-
         B = np.array([(F @ rho).T[0] for F in Fs]).T
-        expected_gates = [np.linalg.inv(B) @ G @ B for G in Gs]
+        return {label: np.linalg.inv(B) @ G @ B for (label, G) in Gs.items()}
 
-        fitter = self.collect_tomography_data(shots=shots,
+    @staticmethod
+    def hs_distance(A,B):
+        return sum([np.abs(x) ** 2 for x in np.nditer(A-B)])
+
+    def compare_gates(self, expected_gates, result_gates, labels, delta=0.2):
+        for label in labels:
+            expected_gate = expected_gates[label]
+            result_gate = result_gates[label]
+            msg = "Failure on gate {}: Expected gate = \n{}\n" \
+                  "vs Actual gate = \n{}".format(label, expected_gate, result_gate)
+            self.assertAlmostEqual(self.hs_distance(expected_gate, result_gate), 0, delta=delta, msg=msg)
+
+    def run_test_on_basis_and_noise(self,
+                                    gateset_basis=StandardGatesetBasis,
+                                    noise_model = None,
+                                    noise_ptm = None):
+        labels = gateset_basis.gate_labels
+        gates = gateset_basis.gate_matrices
+
+        # apply noise if given
+        for label in labels:
+            if label != "Id" and noise_ptm is not None:
+                gates[label] = noise_ptm @ gates[label]
+
+        Fs_gate_list = [[gates[label] for label in spec]
+            for spec in gateset_basis.spam_spec.values()]
+        Fs = [functools.reduce(lambda a,b: a @ b, gates) for gates in Fs_gate_list]
+
+        # prepare the fitter
+        fitter = self.collect_tomography_data(shots=1000,
                                               noise_model=noise_model,
                                               gateset_basis=gateset_basis)
 
-        print("About to start optimization")
-        fit_results = fitter.fit()
-        print("Optimization ended")
-        print("fit_results: ", fit_results)
-        gate_labels, gates = zip(*fit_results.items())
+        # linear inversion test
+        expected_gates = self.expected_linear_inversion_gates(gates, Fs)
+        result_gates = fitter.linear_inversion()
+        self.compare_gates(expected_gates, result_gates, labels)
 
-        # msg = "Number of expected gates ({}) different than actual number " \
-        #     "of gates ({})".format(len(expected_gates), len(gates))
-        # self.assertEqual(len(expected_gates), len(gates), msg=msg)
-        # compare = zip(expected_gates, gates, gate_labels)
-        # for expected_gate, gate, label in compare:
-        #     hs_distance = sum([np.abs(x) ** 2 for x
-        #                        in np.nditer(expected_gate - gate)])
-        #     msg = "Failure on gate {}: Expected gate = \n{}\n" \
-        #         "vs Actual gate = \n{}".format(label, expected_gate, gate)
-        #     self.assertAlmostEqual(hs_distance, 0, delta=0.1, msg=msg)
+        # fitter optimization test
+        expected_gates = gates
+        result_gates = fitter.fit()
+        self.compare_gates(expected_gates, result_gates, labels)
 
-    def test_linear_inversion(self):
-        # based on linear inversion in	arXiv:1310.4492
-        # PTM representation of Id
-        G0 = np.array([[1, 0, 0, 0],
-                       [0, 1, 0, 0],
-                       [0, 0, 1, 0],
-                       [0, 0, 0, 1]])
-        # X rotation by 90 degrees
-        G1 = np.array([[1, 0, 0, 0],
-                       [0, 1, 0, 0],
-                       [0, 0, 0, -1],
-                       [0, 0, 1, 0]])
-        # Y rotation by 90 degrees
-        G2 = np.array([[1, 0, 0, 0],
-                       [0, 0, 0, -1],
-                       [0, 0, 1, 0],
-                       [0, 1, 0, 0]])
+    def test_noiseless_standard_basis(self):
+        self.run_test_on_basis_and_noise()
 
-        Gs = [G0, G1, G2]
-        Fs = [Gs[0], Gs[1], Gs[2], Gs[1] @ Gs[1]]
-        print("No noises")
-        self.linear_inversion_on_gates(Gs, Fs)
-        print("Start noises")
-        # Pauli X noise
-        A0 = np.array([[0, 1], [1, 0]])
-        # noise_PTM = PTM(Kraus([A0]))._data
-        noise_PTM = np.array([[1, 0, 0, 0],
-                              [0, 1, 0, 0],
-                              [0, 0, -1, 0],
-                              [0, 0, 0, -1]])
-        Gs = [G0, noise_PTM @ G1, noise_PTM @ G2]
-        Fs = [Gs[0], Gs[1], Gs[2], Gs[1] @ Gs[1]]
-        noise = QuantumError([([{'name': 'kraus',
-                                 'qubits': [0],
-                                 'params': [A0]}], 1)])
-        noise_model = NoiseModel()
-        noise_model.add_all_qubit_quantum_error(noise, ['u1', 'u2', 'u3'])
-        print("X noise experiment")
-        self.linear_inversion_on_gates(Gs, Fs, noise_model=noise_model)
-
-        # Amplitude Damping noise
+    def test_amplitude_damping_standard_basis(self):
         gamma = 0.05
         A0 = [[1, 0], [0, np.sqrt(1 - gamma)]]
         A1 = [[0, np.sqrt(gamma)], [0, 0]]
-        # noise_PTM = PTM(Kraus([A0, A1]))._data
-        noise_PTM = np.array([[1, 0, 0, 0],
+        noise_ptm = np.array([[1, 0, 0, 0],
                               [0, np.sqrt(1-gamma), 0, 0],
                               [0, 0, np.sqrt(1-gamma), 0],
                               [gamma, 0, 0, 1-gamma]])
-        Gs = [G0, noise_PTM @ G1, noise_PTM @ G2]
-        Fs = [Gs[0], Gs[1], Gs[2], Gs[1] @ Gs[1]]
         noise = QuantumError([([{'name': 'kraus',
                                  'qubits': [0],
                                  'params': [A0, A1]}], 1)])
         noise_model = NoiseModel()
         noise_model.add_all_qubit_quantum_error(noise, ['u1', 'u2', 'u3'])
-        print("Amplitude damping experiment")
-        self.linear_inversion_on_gates(Gs, Fs, noise_model=noise_model)
-
-        # different gateset_basis
-        def alt_gates_func(circ, qubit, op):
-            if op == 'Id':
-                pass
-            if op == 'X_Rot_90':
-                circ.u2(-np.pi / 2, np.pi / 2, qubit)
-            if op == 'Y_Rot_90':
-                circ.u2(np.pi, np.pi, qubit)
-            if op == 'X_Rot_180':
-                circ.x(qubit)
-
-        G0 = np.array([[1, 0, 0, 0],
-                       [0, 1, 0, 0],
-                       [0, 0, 1, 0],
-                       [0, 0, 0, 1]])
-        G1 = np.array([[1, 0, 0, 0],
-                       [0, 1, 0, 0],
-                       [0, 0, 0, -1],
-                       [0, 0, 1, 0]])
-        G2 = np.array([[1, 0, 0, 0],
-                       [0, 0, 0, -1],
-                       [0, 0, 1, 0],
-                       [0, 1, 0, 0]])
-        G3 = np.array([[1, 0, 0, 0],
-                       [0, 1, 0, 0],
-                       [0, 0, -1, 0],
-                       [0, 0, 0, -1]])
-
-        Gs = [G0, G1, G2, G3]
-        Fs = [Gs[0], Gs[1], Gs[2], Gs[3]]
-
-        AltGatesetBasis = GateSetBasis('Standard GST',
-                                       (('Id',
-                                         'X_Rot_90',
-                                         'Y_Rot_90',
-                                         'X_Rot_180'),
-                                        alt_gates_func, Gs),
-                                       (('F0', 'F1', 'F2', 'F3'),
-                                        {'F0': ('Id',),
-                                         'F1': ('X_Rot_90',),
-                                         'F2': ('Y_Rot_90',),
-                                         'F3': ('X_Rot_180',)
-                                         })
-                                       )
-        self.linear_inversion_on_gates(Gs, Fs, gateset_basis=AltGatesetBasis)
-
+        self.run_test_on_basis_and_noise(noise_model=noise_model, noise_ptm=noise_ptm)
 
 if __name__ == '__main__':
     unittest.main()
