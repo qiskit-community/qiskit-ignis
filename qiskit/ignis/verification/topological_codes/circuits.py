@@ -75,17 +75,19 @@ class RepetitionCode():
         circuit_list = [self.circuit[log] for log in ['0', '1']]
         return circuit_list
 
-    def x(self, logs=('0', '1')):
+    def x(self, logs=('0', '1'), barrier=False):
         """
         Applies a logical x to the circuits for the given logical values.
 
         Args:
             logs: List or tuple of logical values expressed as strings.
+            barrier: Boolean denoting whether to include a barrier at the end.
         """
         for log in logs:
             for j in range(self.d):
                 self.circuit[log].x(self.code_qubit[j])
-            self.circuit[log].barrier()
+            if barrier:
+                self.circuit[log].barrier()
 
     def _preparation(self):
         """
@@ -95,8 +97,12 @@ class RepetitionCode():
         self.x(['1'])
 
     def syndrome_measurement(self, reset=True):
-        """Application of a syndrome measurement round."""
+        """
+        Application of a syndrome measurement round.
 
+        Args:
+            barrier: Boolean denoting whether to include a barrier at the end.
+        """
         self.link_bits.append(ClassicalRegister(
             (self.d - 1), 'round_' + str(self.T) + '_link_bit'))
 
@@ -117,7 +123,8 @@ class RepetitionCode():
                 if reset:
                     self.circuit[log].reset(self.link_qubit[j])
 
-            self.circuit[log].barrier()
+            if barrier:
+                self.circuit[log].barrier()
 
         self.T += 1
 
