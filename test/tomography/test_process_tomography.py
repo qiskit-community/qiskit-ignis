@@ -25,7 +25,7 @@ import qiskit.ignis.verification.tomography as tomo
 
 
 def run_circuit_and_tomography(circuit, qubits):
-    job = qiskit.execute(circuit, Aer.get_backend('unitary_simulator'))
+    job = qiskit.execute(circuit, Aer.get_backend('unitary_simulator'),shots=1)
     U = job.result().get_unitary(circuit)
     choi_ideal = outer(U.ravel(order='F'))
     qst = tomo.process_tomography_circuits(circuit, qubits)

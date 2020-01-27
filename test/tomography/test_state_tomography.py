@@ -26,7 +26,7 @@ import qiskit.ignis.verification.tomography.fitters.cvx_fit as cvx_fit
 
 
 def run_circuit_and_tomography(circuit, qubits):
-    job = qiskit.execute(circuit, Aer.get_backend('statevector_simulator'))
+    job = qiskit.execute(circuit, Aer.get_backend('statevector_simulator'), shots=1)
     psi = job.result().get_statevector(circuit)
     qst = tomo.state_tomography_circuits(circuit, qubits)
     job = qiskit.execute(qst, Aer.get_backend('qasm_simulator'),
