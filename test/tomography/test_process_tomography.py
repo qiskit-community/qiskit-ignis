@@ -19,15 +19,13 @@ import unittest
 import qiskit
 from qiskit import QuantumRegister, QuantumCircuit, Aer
 from qiskit.quantum_info import state_fidelity
-from qiskit.tools.qi.qi import outer
+from qiskit.quantum_info import Choi
 
 import qiskit.ignis.verification.tomography as tomo
 
 
 def run_circuit_and_tomography(circuit, qubits):
-    job = qiskit.execute(circuit, Aer.get_backend('unitary_simulator'),shots=1)
-    U = job.result().get_unitary(circuit)
-    choi_ideal = outer(U.ravel(order='F'))
+    choi_ideal = Choi(circuit).data
     qst = tomo.process_tomography_circuits(circuit, qubits)
     job = qiskit.execute(qst, Aer.get_backend('qasm_simulator'),
                          shots=5000)

@@ -20,14 +20,13 @@ import numpy
 import qiskit
 from qiskit import QuantumRegister, QuantumCircuit, Aer
 from qiskit.quantum_info import state_fidelity
-
+from qiskit.quantum_info import Statevector
 import qiskit.ignis.verification.tomography as tomo
 import qiskit.ignis.verification.tomography.fitters.cvx_fit as cvx_fit
 
 
 def run_circuit_and_tomography(circuit, qubits):
-    job = qiskit.execute(circuit, Aer.get_backend('statevector_simulator'), shots=1)
-    psi = job.result().get_statevector(circuit)
+    psi = Statevector.from_instruction(circuit)
     qst = tomo.state_tomography_circuits(circuit, qubits)
     job = qiskit.execute(qst, Aer.get_backend('qasm_simulator'),
                          shots=5000)
