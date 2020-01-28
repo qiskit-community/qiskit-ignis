@@ -32,9 +32,7 @@ except ImportError:
 
 
 class QVFitter:
-    """
-        Class for fitters for quantum volume
-    """
+    """Class for fitters for quantum volume."""
 
     def __init__(self, backend_result=None, statevector_result=None,
                  qubit_lists=None):
@@ -43,7 +41,7 @@ class QVFitter:
             backend_result: list of results (qiskit.Result).
             statevector_result: the ideal statevectors of each circuit
             qubit_lists: list of qubit lists (what was passed to the
-            circuit generation)
+                circuit generation)
         """
 
         self._qubit_lists = qubit_lists
@@ -96,7 +94,8 @@ class QVFitter:
 
     def add_statevectors(self, new_statevector_result):
         """
-        Add the ideal results and convert to the heavy outputs
+        Add the ideal results and convert to the heavy outputs.
+
         Assume the result is from 'statevector_simulator'
 
         Args:
@@ -178,10 +177,9 @@ class QVFitter:
 
     def calc_data(self):
         """
-        Make a count dictionary for each unique circuit from all the
-        results.
+        Make a count dictionary for each unique circuit from all the results.
 
-        Calculate the heavy output probability
+        Calculate the heavy output probability.
 
         Additional information:
             Assumes that 'result' was executed is
@@ -216,7 +214,7 @@ class QVFitter:
     def calc_statistics(self):
         """
         Convert the heavy outputs in the different trials into mean and error
-        for plotting
+        for plotting.
 
         Here we assume the error is due to a binomial distribution
         """
@@ -339,13 +337,15 @@ class QVFitter:
     def _heavy_strings(self, ideal_distribution, ideal_median):
         """Return the set of heavy output strings.
 
-        ideal_distribution = dict of ideal output distribution
-        where keys are bit strings (as strings) and values are
-        probabilities of observing those strings
-        ideal_mean = median probability across all outputs
+        Args:
+            ideal_distribution: dict of ideal output distribution
+                where keys are bit strings (as strings) and values are
+                probabilities of observing those strings
+            ideal_median = median probability across all outputs
 
-        Return the set of heavy output strings, i.e. those strings
-        whose ideal probability of occurrence exceeds the median.
+        Returns:
+            the set of heavy output strings, i.e. those strings
+            whose ideal probability of occurrence exceeds the median.
         """
         return list(filter(lambda x: ideal_distribution[x] > ideal_median,
                            list(ideal_distribution.keys())))
@@ -353,10 +353,12 @@ class QVFitter:
     def _median_probabilities(self, distributions):
         """Return a list of median probabilities.
 
-        distributions = list of dicts mapping binary strings
-        (as strings) to probabilities.
+        Args:
+            distributions: list of dicts mapping binary strings
+                (as strings) to probabilities.
 
-        Return a list of median probabilities.
+        Returns:
+            a list of median probabilities.
         """
         medians = []
         for dist in distributions:
@@ -368,12 +370,14 @@ class QVFitter:
     def _subset_probability(self, strings, distribution):
         """Return the probability of a subset of outcomes.
 
-        strings = list of bit strings (as strings)
-        distribution = dict where keys are bit strings (as strings)
-        and values are probabilities of observing those strings
+        Args:
+            strings: list of bit strings (as strings)
+            distribution: dict where keys are bit strings (as strings)
+                and values are probabilities of observing those strings
 
-        Return the probability of the subset of strings, i.e. the sum
-        of the probabilities of each string as given by the
-        distribution.
+        Returns:
+            the probability of the subset of strings, i.e. the sum
+            of the probabilities of each string as given by the
+            distribution.
         """
         return sum([distribution.get(value, 0) for value in strings])

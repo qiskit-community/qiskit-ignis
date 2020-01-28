@@ -1,0 +1,109 @@
+# -*- coding: utf-8 -*-
+
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2019.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+# pylint: disable=undefined-loop-variable, no-member
+
+"""
+Run through Accreditation
+"""
+
+import unittest
+import os
+import pickle
+import qiskit.ignis.verification.accreditation as accred
+
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+
+
+class TestAccred(unittest.TestCase):
+    """ The test class """
+
+    def test_accred_circuits(self):
+        """ Test circuit generation """
+        n_qb = 4
+        v = 10
+
+        # Create a Quantum Register with n_qb qubits.
+        q_reg = QuantumRegister(n_qb, 'q')
+        # Create a Classical Register with n_qb bits.
+        c_reg = ClassicalRegister(n_qb, 's')
+        # Create a Quantum Circuit acting on the q register
+        target_circuit = QuantumCircuit(q_reg, c_reg)
+
+        # dummy circuit
+        target_circuit.h(0)
+        target_circuit.h(1)
+        target_circuit.h(2)
+        target_circuit.h(3)
+        target_circuit.cz(0, 1)
+        target_circuit.cz(0, 2)
+        target_circuit.cz(0, 3)
+        target_circuit.h(1)
+        target_circuit.h(2)
+        target_circuit.h(3)
+        target_circuit.measure(q_reg, c_reg)
+
+        # make trap circuits
+        circ_list, postp_list, \
+            v_zero = accred.accreditation_circuits(target_circuit, v)
+
+        self.assertEqual(len(circ_list), v + 1,
+                         "Error: Not correct number of trap circuits")
+        print(len(postp_list[0]))
+        self.assertEqual(len(postp_list)*len(postp_list[0][0]),
+                         (v + 1) * n_qb,
+                         "Error: Not correct number of outcome bits")
+
+        self.assertTrue(-1 < v_zero < v + 1,
+                        "Error: marked element outside of list of circuits")
+
+    def test_accred_fitter(self):
+
+        """ Test the fitter with some pickled result data"""
+
+        f0 = open(os.path.join(os.path.dirname(__file__),
+                               'accred_ideal_results.pkl'), 'rb')
+        ideal_results = pickle.load(f0)
+        f0.close()
+
+        all_outputs = ideal_results['all_outputs']
+        all_postp_list = ideal_results['all_postp_list']
+        all_v_zero = ideal_results['all_v_zero']
+
+        test_1 = accred.accreditationFitter()
+        for a, b, c in zip(all_outputs, all_postp_list, all_v_zero):
+            test_1.single_protocol_run(a, b, c)
+            self.assertEqual(test_1.flag, 'accepted',
+                             "Error: Ideal outcomes not passing accred")
+
+        f0 = open(os.path.join(os.path.dirname(__file__),
+                               'accred_noisy_results.pkl'), 'rb')
+        noisy_results = pickle.load(f0)
+        f0.close()
+
+        all_outputs = noisy_results['all_outputs']
+        all_postp_list = noisy_results['all_postp_list']
+        all_v_zero = noisy_results['all_v_zero']
+        all_acc = noisy_results['all_acc']
+
+        test_1 = accred.accreditationFitter()
+        for a, b, c, d in zip(all_outputs, all_postp_list,
+                              all_v_zero, all_acc):
+            test_1.single_protocol_run(a, b, c)
+            self.assertEqual(test_1.flag, d,
+                             "Error: Noisy outcomes not correct accred")
+
+
+if __name__ == '__main__':
+    unittest.main()
