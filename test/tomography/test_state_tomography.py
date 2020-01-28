@@ -20,8 +20,7 @@ import unittest
 import numpy
 import qiskit
 from qiskit import QuantumRegister, QuantumCircuit, Aer
-from qiskit.quantum_info import state_fidelity
-from qiskit.quantum_info import Statevector
+from qiskit.quantum_info import state_fidelity, Statevector
 import qiskit.ignis.verification.tomography as tomo
 import qiskit.ignis.verification.tomography.fitters.cvx_fit as cvx_fit
 
