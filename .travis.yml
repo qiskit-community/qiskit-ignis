@@ -11,6 +11,8 @@ addons:
     packages:
       - gcc-4.8
       - g++-4.8
+      - libblas-dev
+      - liblapack-dev
 
 install_osx: &stage_osx
   os: osx
@@ -103,8 +105,10 @@ matrix:
         - twine upload dist/qiskit*
 
 language: python
-install: pip install -U tox pip virtualenv
+install: pip install -U tox pip virtualenv setuptools
 script:
+  - tox --notest
+  - .tox/$TOXENV/bin/pip install --no-cache-dir --ignore-installed scs
   - tox
 
 notifications:

@@ -32,14 +32,14 @@ def qv_circuits(qubit_lists=None, ntrials=1,
 
     Args:
         qubit_lists: list of list of qubits to apply qv circuits to. Assume
-        the list is ordered in increasing number of qubits
+            the list is ordered in increasing number of qubits
         ntrials: number of random iterations
         qr: quantum register to act on (if None one is created)
         cr: classical register to measure to (if None one is created)
 
     Returns:
         qv_circs: list of lists of circuits for the qv sequences
-        (separate list for each trial)
+        (separate list for each trial).
         qv_circs_nomeas: same as above with no measurements for the ideal
         simulation
     """
