@@ -183,16 +183,16 @@ def calculate_1q_epg(qobj_list: List['QasmQobj'],
     Convert EPC into EPGs of U1, U2 and U3 gate.
     The EPC of single qubit RB sequence is written as::
 
-        EPC = 1 - (1 - EPG_U1)^N_U1 * (1 - EPG_U2)^N_U2 * (1 - EPG_U3)^N_U3.   (1)
+        EPC = 1 - (1-EPG_U1)^N_U1 * (1-EPG_U2)^N_U2 * (1-EPG_U3)^N_U3. (1)
 
     Since U1 gate is implemented as a virtual-Z gate and has no error,
     Eq (1) is approximated by::
 
-        EPC = 1 - (1 - EPG_U2)^N_U2 * (1 - 2 EPG_U2)^N_U3.   (2)
+        EPC = 1 - (1-EPG_U2)^N_U2 * (1-2 EPG_U2)^N_U3. (2)
 
-    This is because U3 gate consists of two half-pi pulses while U2 gate consists
-    of single half-pi pulse. Thus, in this model, the EPG is induced by
-    the rotation angle error of the half-pi pulse.
+    This is because U3 gate consists of two half-pi pulses while U2 gate
+    consists of single half-pi pulse. Thus, in this model,
+    the EPG is induced by the rotation angle error of the half-pi pulse.
 
     In the limit EPG << 1, the Eq (2) becomes::
 
@@ -200,7 +200,8 @@ def calculate_1q_epg(qobj_list: List['QasmQobj'],
         EPG_U3 ~ 2 * EPG_U2
 
     Note:
-        This function presupposes the basis gate consists of `u1`, `u2` and `u3`.
+        This function presupposes the basis gate consists
+        of `u1`, `u2` and `u3`.
 
     Args:
         qobj_list: compiled qobjs for each seed.
@@ -215,7 +216,9 @@ def calculate_1q_epg(qobj_list: List['QasmQobj'],
                              qubits=[qubit])
 
     pulse_per_cliff = gpc[0][1] + 2 * gpc[0][2]
-    epg = {'u1': 0, 'u2': epc / pulse_per_cliff, 'u3': 2 * epc / pulse_per_cliff}
+    epg = {'u1': 0,
+           'u2': epc / pulse_per_cliff,
+           'u3': 2 * epc / pulse_per_cliff}
 
     return epg
 
@@ -235,13 +238,13 @@ def calculate_2q_epg(qobj_list: List['QasmQobj'],
     and the EPG of each single-qubit gate should be provided as a dictionary.
     With IBM Quantum provider, ``calculate_1q_epg`` function can be used to
     create dictionary of EPGs from the result of single-qubit RB experiment.
-    If the single-qubit EPGs are not provided, these contribution is just ignored
-    and EPG = EPC / N_2Q_gate, where N_2Q_gate is the number of two-qubit gate
-    per Clifford which is usually designed to be 1.5.
+    If the single-qubit EPGs are not provided, these contribution is just
+    ignored and EPG = EPC / N_2Q_gate, where N_2Q_gate is the number of
+    two-qubit gate per Clifford which is usually designed to be 1.5.
 
     References:
-        [1] D. C. McKay, S. Sheldon, J. A. Smolin, J. M. Chow, and J. M. Gambetta,
-        “Three-Qubit Randomized Benchmarking,”
+        [1] D. C. McKay, S. Sheldon, J. A. Smolin, J. M. Chow,
+        and J. M. Gambetta, “Three-Qubit Randomized Benchmarking,”
         Phys. Rev. Lett., vol. 122, no. 20, 2019 (arxiv:1712.06550).
 
     Args:
@@ -271,7 +274,8 @@ def calculate_2q_epg(qobj_list: List['QasmQobj'],
             except ValueError:
                 gate_num = 0
             alpha_1q[qind] *= (1 - 2 * epg) * gate_num
-    alpha_c_1q = 1/5 * (alpha_1q[0] + alpha_1q[1] + 3 * alpha_1q[0] * alpha_1q[1])
+    alpha_c_1q = 1/5 * (alpha_1q[0] + alpha_1q[1]
+                        + 3 * alpha_1q[0] * alpha_1q[1])
 
     alpha_c_2q = (1 - 4 / 3 * epc) / alpha_c_1q
     try:
