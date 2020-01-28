@@ -13,6 +13,7 @@
 # that they have been altered from the originals.
 
 # pylint: disable=missing-docstring
+# pylint: disable=unexpected-keyword-arg
 
 import unittest
 
