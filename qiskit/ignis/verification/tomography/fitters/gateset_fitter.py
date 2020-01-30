@@ -111,11 +111,14 @@ class GatesetTomographyFitter:
         rho = np.array([[0.5], [0], [0], [0.5]])
 
         Gs, Gs_E = zip(
-            *[(self.gateset_basis.gate_matrices[name], matrix) for (name, matrix) in linear_inversion_results.items()])
+            *[(self.gateset_basis.gate_matrices[name], matrix)
+              for (name, matrix) in linear_inversion_results.items()])
         gauge_opt = GaugeOptimize(Gs, Gs_E)
         Gs_E = gauge_opt.optimize()
 
-        opt = GST_Optimize(self.gateset_basis.gate_labels, self.gateset_basis.spam_spec, self.probs)
+        opt = GST_Optimize(self.gateset_basis.gate_labels,
+                           self.gateset_basis.spam_spec,
+                           self.probs)
         opt.set_initial_value(E, rho, Gs_E)
         optimization_results = opt.optimize()
         return optimization_results
@@ -123,7 +126,9 @@ class GatesetTomographyFitter:
 
 def split_list(l, sizes):
     if sum(sizes) != len(l):
-        raise RuntimeError("Length of list ({}) differs from sum of split sizes ({})".format(len(l), sizes))
+        msg = "Length of list ({}) " \
+              "differs from sum of split sizes ({})".format(len(l), sizes)
+        raise RuntimeError(msg)
     result = []
     i = 0
     for s in sizes:
@@ -144,7 +149,9 @@ def matrix_to_vec(A):
 
 def split_list(l, sizes):
     if sum(sizes) != len(l):
-        raise RuntimeError("Length of list ({}) differs from sum of split sizes ({})".format(len(l), sizes))
+        msg = "Length of list ({}) " \
+              "differs from sum of split sizes ({})".format(len(l), sizes)
+        raise RuntimeError(msg)
     result = []
     i = 0
     for s in sizes:
@@ -187,7 +194,9 @@ class GaugeOptimize():
 
     def obj_fn(self, x):
         Gs_E = self.x_to_Gs_E(x)
-        return sum([np.linalg.norm(G - G_E) for (G, G_E) in zip(self.Gs, Gs_E)])
+        return sum([np.linalg.norm(G - G_E)
+                    for (G, G_E)
+                    in zip(self.Gs, Gs_E)])
 
     def optimize(self):
         initial_value = list(np.eye(self.d).reshape((1, self.d * self.d)))
@@ -206,8 +215,9 @@ class GST_Optimize():
         self.initial_value = None
 
     def compute_objective_function_data(self):
-        """The objective function is sum_{ijk}(<|E*R_Fi*G_k*R_Fj*Rho|>-m_{ijk})^2
-           We expand R_Fi*G_k*R_Fj to a sequence of G-gates and store the indices
+        """The objective function is
+           sum_{ijk}(<|E*R_Fi*G_k*R_Fj*Rho|>-m_{ijk})^2
+           We expand R_Fi*G_k*R_Fj to a sequence of G-gates and store indices
            we also obtain the m_{ijk} value from the probs list
            all that remains when computing the function is thus performing
            the matrix multiplications and remaining algebra
@@ -217,10 +227,12 @@ class GST_Optimize():
         obj_fn_data = []
         for (i, j) in itertools.product(range(m), repeat=2):
             for k in range(n):
-                m_ijk = (self.probs[(self.Fs_names[i], self.Gs[k], self.Fs_names[j])])
-                matrices = [self.Gs.index(gate) for gate in self.Fs[self.Fs_names[i]]] + [k] + [self.Gs.index(gate) for
-                                                                                                gate in self.Fs[
-                                                                                                    self.Fs_names[j]]]
+                Fi = self.Fs_names[i]
+                Fj = self.Fs_names[j]
+                m_ijk = (self.probs[(Fi, self.Gs[k], Fj)])
+                Fi_matrices = [self.Gs.index(gate) for gate in self.Fs[Fi]]
+                Fj_matrices = [self.Gs.index(gate) for gate in self.Fs[Fj]]
+                matrices = Fi_matrices + [k] + Fj_matrices
                 obj_fn_data.append((matrices, m_ijk))
         return obj_fn_data
 
@@ -236,17 +248,10 @@ class GST_Optimize():
     def complex_matrix_var_nums(self, n):
         return 2 * n ** 2
 
-    def var_num(self):
-        n = len(self.Gs)
-        d = (2 ** self.qubits)
-        ds = d ** 2  # d squared - the dimension of the density operator (4 for 1 qubit)
-        # E is 1xds; rho is dsx1; each G is dsxds
-        return 2 * self.complex_matrix_var_nums(d) + n * self.complex_matrix_var_nums(ds)
-
     def split_input_vector(self, x):
         n = len(self.Gs)
         d = (2 ** self.qubits)
-        ds = d ** 2  # d squared - the dimension of the density operator (4 for 1 qubit)
+        ds = d ** 2  # d squared - the dimension of the density operator
 
         d_t = self.complex_matrix_var_nums(d)
         ds_t = self.complex_matrix_var_nums(ds)
@@ -254,7 +259,7 @@ class GST_Optimize():
 
         E_T = self.vec_to_complex_matrix(T_vars[0], d)
         rho_T = self.vec_to_complex_matrix(T_vars[1], d)
-        Gs_T = [self.vec_to_complex_matrix(T_vars[2 + i], ds) for i in range(n)]
+        Gs_T = [self.vec_to_complex_matrix(T_vars[2+i], ds) for i in range(n)]
 
         E = np.reshape(E_T @ np.conj(E_T.T), (1, ds))
         rho = np.reshape(rho_T @ np.conj(rho_T.T), (ds, 1))
@@ -263,18 +268,20 @@ class GST_Optimize():
         return (E, rho, Gs)
 
     def complex_matrix_to_vec(self, M, n):
-        return list(np.real(M).reshape(n ** 2)) + list(np.imag(M).reshape(n ** 2))
+        return list(np.real(M).reshape(n ** 2)) + \
+               list(np.imag(M).reshape(n ** 2))
 
     def join_input_vector(self, E, rho, Gs):
         n = len(Gs)
         d = (2 ** self.qubits)
-        ds = d ** 2  # d squared - the dimension of the density operator (4 for 1 qubit)
+        ds = d ** 2  # d squared - the dimension of the density operator
 
         E_T = get_cholesky_like_decomposition(E.reshape((d, d)))
         rho_T = get_cholesky_like_decomposition(rho.reshape((d, d)))
         Gs_Choi = [Choi(PTM(G)).data for G in Gs]
         Gs_T = [get_cholesky_like_decomposition(G) for G in Gs_Choi]
-        result = self.complex_matrix_to_vec(E_T, d) + self.complex_matrix_to_vec(rho_T, d)
+        result = self.complex_matrix_to_vec(E_T, d) + \
+                 self.complex_matrix_to_vec(rho_T, d)
         for G_T in Gs_T:
             result += self.complex_matrix_to_vec(G_T, ds)
         return result
@@ -360,6 +367,7 @@ class GST_Optimize():
     def optimize(self, initial_value=None):
         if initial_value is not None:
             self.initial_value = initial_value
-        result = opt.minimize(self.obj_fn, self.initial_value, constraints=self.constraints())
+        result = opt.minimize(self.obj_fn, self.initial_value,
+                              constraints=self.constraints())
         formatted_result = self.process_result(result.x)
         return formatted_result
