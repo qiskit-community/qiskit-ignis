@@ -117,8 +117,8 @@ class GatesetTomographyFitter:
         Gs_E = gauge_opt.optimize()
 
         optimizer = GST_Optimize(self.gateset_basis.gate_labels,
-                           self.gateset_basis.spam_spec,
-                           self.probs)
+                                 self.gateset_basis.spam_spec,
+                                 self.probs)
         optimizer.set_initial_value(E, rho, Gs_E)
         optimization_results = optimizer.optimize()
         return optimization_results
