@@ -155,6 +155,7 @@ def standard_gates_func(circ, qubit, op):
     if op == 'Y_Rot_90':
         circ.u2(np.pi, np.pi, qubit)
 
+
 # PTM representation of Id
 G0 = np.array([[1, 0, 0, 0],
                [0, 1, 0, 0],
