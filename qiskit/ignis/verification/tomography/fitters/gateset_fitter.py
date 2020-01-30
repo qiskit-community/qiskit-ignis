@@ -18,10 +18,10 @@
 Quantum gate set tomography fitter
 """
 
+import itertools
 import numpy as np
 import scipy.optimize as opt
-import itertools
-from qiskit.quantum_info import Choi, Kraus, PTM, SuperOp, Chi
+from qiskit.quantum_info import Choi, PTM
 from ..basis.gatesetbasis import StandardGatesetBasis
 from .base_fitter import TomographyFitter
 
@@ -116,11 +116,11 @@ class GatesetTomographyFitter:
         gauge_opt = GaugeOptimize(Gs, Gs_E)
         Gs_E = gauge_opt.optimize()
 
-        opt = GST_Optimize(self.gateset_basis.gate_labels,
+        optimizer = GST_Optimize(self.gateset_basis.gate_labels,
                            self.gateset_basis.spam_spec,
                            self.probs)
-        opt.set_initial_value(E, rho, Gs_E)
-        optimization_results = opt.optimize()
+        optimizer.set_initial_value(E, rho, Gs_E)
+        optimization_results = optimizer.optimize()
         return optimization_results
 
 
@@ -240,9 +240,9 @@ class GST_Optimize():
         """
         Constructs a nxn matrix
         """
-        real_vec, imag_vec = split_list(vec, [n ** 2, n ** 2])
-        real = np.array([real_vec[n * i:n * (i + 1)] for i in range(n)])
-        imag = np.array([imag_vec[n * i:n * (i + 1)] for i in range(n)])
+        vects = split_list(vec, [n ** 2, n ** 2])
+        real = np.array([vects[0][n * i:n * (i + 1)] for i in range(n)])
+        imag = np.array([vects[1][n * i:n * (i + 1)] for i in range(n)])
         return real + 1.j * imag
 
     def complex_matrix_var_nums(self, n):
@@ -272,7 +272,6 @@ class GST_Optimize():
                list(np.imag(M).reshape(n ** 2))
 
     def join_input_vector(self, E, rho, Gs):
-        n = len(Gs)
         d = (2 ** self.qubits)
         ds = d ** 2  # d squared - the dimension of the density operator
 
@@ -287,7 +286,7 @@ class GST_Optimize():
             result += self.complex_matrix_to_vec(G_T, ds)
         return result
 
-    def obj_fn(self, x, *args):
+    def obj_fn(self, x):
         E, rho, G_matrices = self.split_input_vector(x)
         val = 0
         for term in self.obj_fn_data:
@@ -302,14 +301,14 @@ class GST_Optimize():
         return val
 
     def ptm_matrix_values(self, x):
-        E, rho, G_matrices = self.split_input_vector(x)
+        _, _, G_matrices = self.split_input_vector(x)
         result = []
         for G in G_matrices:
             result = result + matrix_to_vec(G)
         return result
 
     def rho_trace(self, x):
-        E, rho, G_matrices = self.split_input_vector(x)
+        _, rho, _ = self.split_input_vector(x)
         d = (2 ** self.qubits)  # rho is dxd and starts at variable d^2
         rho = rho.reshape((d, d))
         trace = sum([rho[i][i] for i in range(d)])
@@ -327,16 +326,16 @@ class GST_Optimize():
         lb = []
         ub = []
 
-        for k in range(n):  # iterate over all Gs
+        for _ in range(n):  # iterate over all Gs
             lb.append(0.99)
             ub.append(1)  # G^k_{0,0} is 1
-            for i in range(ds - 1):
+            for _ in range(ds - 1):
                 lb.append(0)
                 ub.append(0.001)  # G^k_{0,i} is 0
-            for i in range((ds - 1) * ds):  # rest of G^k
+            for _ in range((ds - 1) * ds):  # rest of G^k
                 lb.append(-1)
                 ub.append(1)
-            for i in range(ds ** 2):  # the complex part of G^k
+            for _ in range(ds ** 2):  # the complex part of G^k
                 lb.append(0)
                 ub.append(0.001)
 
