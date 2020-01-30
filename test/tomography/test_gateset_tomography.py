@@ -20,7 +20,6 @@ from qiskit import Aer
 from qiskit.compiler import assemble
 from qiskit.ignis.verification.tomography import GatesetTomographyFitter
 from qiskit.ignis.verification.tomography import gateset_tomography_circuits
-from qiskit.ignis.verification.tomography.basis import GateSetBasis
 from qiskit.ignis.verification.tomography.basis import StandardGatesetBasis
 
 from qiskit.providers.aer.noise.errors.quantum_error import QuantumError
@@ -46,7 +45,7 @@ class TestGatesetTomography(unittest.TestCase):
         return {label: np.linalg.inv(B) @ G @ B for (label, G) in Gs.items()}
 
     @staticmethod
-    def hs_distance(A,B):
+    def hs_distance(A, B):
         return sum([np.abs(x) ** 2 for x in np.nditer(A-B)])
 
     def compare_gates(self, expected_gates, result_gates, labels, delta=0.2):
@@ -54,13 +53,16 @@ class TestGatesetTomography(unittest.TestCase):
             expected_gate = expected_gates[label]
             result_gate = result_gates[label]
             msg = "Failure on gate {}: Expected gate = \n{}\n" \
-                  "vs Actual gate = \n{}".format(label, expected_gate, result_gate)
-            self.assertAlmostEqual(self.hs_distance(expected_gate, result_gate), 0, delta=delta, msg=msg)
+                  "vs Actual gate = \n{}".format(label,
+                                                 expected_gate,
+                                                 result_gate)
+            distance = self.hs_distance(expected_gate, result_gate)
+            self.assertAlmostEqual(distance, 0, delta=delta, msg=msg)
 
     def run_test_on_basis_and_noise(self,
                                     gateset_basis=StandardGatesetBasis,
-                                    noise_model = None,
-                                    noise_ptm = None):
+                                    noise_model=None,
+                                    noise_ptm=None):
         labels = gateset_basis.gate_labels
         gates = gateset_basis.gate_matrices
 
@@ -70,8 +72,9 @@ class TestGatesetTomography(unittest.TestCase):
                 gates[label] = noise_ptm @ gates[label]
 
         Fs_gate_list = [[gates[label] for label in spec]
-            for spec in gateset_basis.spam_spec.values()]
-        Fs = [functools.reduce(lambda a,b: a @ b, gates) for gates in Fs_gate_list]
+                        for spec in gateset_basis.spam_spec.values()]
+        Fs = [functools.reduce(lambda a, b: a @ b, gates)
+              for gates in Fs_gate_list]
 
         # prepare the fitter
         fitter = self.collect_tomography_data(shots=1000,
@@ -104,7 +107,9 @@ class TestGatesetTomography(unittest.TestCase):
                                  'params': [A0, A1]}], 1)])
         noise_model = NoiseModel()
         noise_model.add_all_qubit_quantum_error(noise, ['u1', 'u2', 'u3'])
-        self.run_test_on_basis_and_noise(noise_model=noise_model, noise_ptm=noise_ptm)
+        self.run_test_on_basis_and_noise(noise_model=noise_model,
+                                         noise_ptm=noise_ptm)
+
 
 if __name__ == '__main__':
     unittest.main()

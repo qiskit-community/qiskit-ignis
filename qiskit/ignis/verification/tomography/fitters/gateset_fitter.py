@@ -280,8 +280,9 @@ class GST_Optimize():
         rho_T = get_cholesky_like_decomposition(rho.reshape((d, d)))
         Gs_Choi = [Choi(PTM(G)).data for G in Gs]
         Gs_T = [get_cholesky_like_decomposition(G) for G in Gs_Choi]
-        result = self.complex_matrix_to_vec(E_T, d) + \
-                 self.complex_matrix_to_vec(rho_T, d)
+        E_vec = self.complex_matrix_to_vec(E_T, d)
+        rho_vec = self.complex_matrix_to_vec(rho_T, d)
+        result = E_vec + rho_vec
         for G_T in Gs_T:
             result += self.complex_matrix_to_vec(G_T, ds)
         return result
