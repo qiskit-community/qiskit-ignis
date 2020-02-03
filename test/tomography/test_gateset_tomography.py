@@ -77,7 +77,7 @@ class TestGatesetTomography(unittest.TestCase):
               for gates in Fs_gate_list]
 
         # prepare the fitter
-        fitter = self.collect_tomography_data(shots=1000,
+        fitter = self.collect_tomography_data(shots=10000,
                                               noise_model=noise_model,
                                               gateset_basis=gateset_basis)
 
