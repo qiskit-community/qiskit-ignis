@@ -82,7 +82,6 @@ class GatesetTomographyFitter:
             unless the probabilities are accurate, the resulting gateset
             need not be physical.
         """
-
         n = len(self.gateset_basis.spam_labels)
         m = len(self.gateset_basis.gate_labels)
         gram_matrix = np.zeros((n, n))
@@ -109,13 +108,12 @@ class GatesetTomographyFitter:
         linear_inversion_results = self.linear_inversion()
         E = np.array([[1, 0, 0, 1]])
         rho = np.array([[0.5], [0], [0], [0.5]])
-
-        Gs, Gs_E = zip(
-            *[(self.gateset_basis.gate_matrices[name], matrix)
-              for (name, matrix) in linear_inversion_results.items()])
+        Gs = [self.gateset_basis.gate_matrices[label]
+              for label in self.gateset_basis.gate_labels]
+        Gs_E = [linear_inversion_results[label]
+                for label in self.gateset_basis.gate_labels]
         gauge_opt = GaugeOptimize(Gs, Gs_E)
         Gs_E = gauge_opt.optimize()
-
         optimizer = GST_Optimize(self.gateset_basis.gate_labels,
                                  self.gateset_basis.spam_spec,
                                  self.probs)
