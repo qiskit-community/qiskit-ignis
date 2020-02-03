@@ -17,6 +17,7 @@ Gate set tomography preparation and measurement basis
 """
 
 # Needed for functions
+import functools
 import numpy as np
 
 # Import QISKit classes
@@ -87,7 +88,7 @@ class GateSetBasis:
         """
          Returns the matrix corresponding to a gate label
 
-        Params:
+        Params:פן
             label (str): Gate label
 
         Returns:
@@ -121,6 +122,23 @@ class GateSetBasis:
             The corresponding matrix (usually numpy.array)
         """
         return self.gate_matrices[label]
+
+    def spam_matrix(self, label):
+        """
+        Returns the matrix corresponding to a spam label
+        Every spam is a sequence of gates, and so the result matrix
+        is the product of the matrices corresponding to those gates
+
+        Params:
+            label (str): Spam label
+
+        Returns:
+            The corresponding matrix (usually numpy.array)
+        """
+        spec = self.spam_spec[label]
+        F_matrices = [self.gate_matrices[gate_label] for gate_label in spec]
+        result = functools.reduce(lambda a, b: a @ b, F_matrices)
+        return result
 
     def get_tomography_basis(self):
         """

@@ -14,7 +14,6 @@
 
 # pylint: disable=missing-docstring
 import unittest
-import functools
 import numpy as np
 from qiskit import Aer
 from qiskit.compiler import assemble
@@ -70,11 +69,8 @@ class TestGatesetTomography(unittest.TestCase):
         for label in labels:
             if label != "Id" and noise_ptm is not None:
                 gates[label] = noise_ptm @ gates[label]
-
-        Fs_gate_list = [[gates[label] for label in spec]
-                        for spec in gateset_basis.spam_spec.values()]
-        Fs = [functools.reduce(lambda a, b: a @ b, gates)
-              for gates in Fs_gate_list]
+        Fs = [gateset_basis.spam_matrix(label)
+              for label in gateset_basis.spam_labels]
 
         # prepare the fitter
         fitter = self.collect_tomography_data(shots=10000,
