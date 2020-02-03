@@ -339,16 +339,62 @@ class GST_Optimize():
 
         return opt.NonlinearConstraint(self.ptm_matrix_values, lb, ub)
 
-    def rho_trace_constraint(self):
+    def bounds_eq_constraint(self, x):
+        ptm_matrix = self.ptm_matrix_values(x)
+        bounds_eq = []
+        n = len(self.Gs)
+        d = (2 ** self.qubits)  # rho is dxd and starts at variable d^2
+        ds = d ** 2
+
+        i = 0
+        for _ in range(n):  # iterate over all Gs
+            bounds_eq.append(ptm_matrix[i] - 1)  # G^k_{0,0} is 1
+            i += 1
+            for _ in range(ds - 1):
+                bounds_eq.append(ptm_matrix[i] - 0)  # G^k_{0,i} is 0
+                i += 1
+            for _ in range((ds - 1) * ds):  # rest of G^k
+                i += 1
+            for _ in range(ds ** 2):  # the complex part of G^k
+                bounds_eq.append(ptm_matrix[i] - 0)  # G^k_{0,i} is 0
+                i += 1
+        return bounds_eq
+
+    def bounds_ineq_constraint(self, x):
+        ptm_matrix = self.ptm_matrix_values(x)
+        bounds_ineq = []
+        n = len(self.Gs)
+        d = (2 ** self.qubits)  # rho is dxd and starts at variable d^2
+        ds = d ** 2
+
+        i = 0
+        for _ in range(n):  # iterate over all Gs
+            i += 1
+            for _ in range(ds - 1):
+                i += 1
+            for _ in range((ds - 1) * ds):  # rest of G^k
+                bounds_ineq.append(ptm_matrix[i] + 1)  # G_k[i] >= -1
+                bounds_ineq.append(-ptm_matrix[i] + 1)  # G_k[i] <= 1
+                i += 1
+            for _ in range(ds ** 2):  # the complex part of G^k
+                i += 1
+        return bounds_ineq
+
+    def rho_trace_constraint(self, x):
         """ The constraint Tr(rho) = 1"""
         """ We demand real(Tr(rho)) == 1 and imag(Tr(rho)) == 0"""
-        return opt.NonlinearConstraint(self.rho_trace, [0.99, 0], [1, 0.01])
+        trace = self.rho_trace(x)
+        return [trace[0] - 1, trace[1]]
+        # return opt.NonlinearConstraint(self.rho_trace, [0.99, 0], [1, 0.01])
 
     def constraints(self):
-        constraints = []
-        constraints.append(self.rho_trace_constraint())
-        constraints.append(self.bounds_constraints())
-        return constraints
+        cons = []
+        # constraints.append(self.rho_trace_constraint())
+        # constraints.append(self.bounds_constraints())
+        cons.append({'type': 'eq', 'fun': self.rho_trace_constraint})
+        cons.append({'type': 'eq', 'fun': self.bounds_eq_constraint})
+        cons.append({'type': 'ineq', 'fun': self.bounds_ineq_constraint})
+        return cons
 
     def process_result(self, x):
         E, rho, G_matrices = self.split_input_vector(x)
@@ -366,6 +412,7 @@ class GST_Optimize():
         if initial_value is not None:
             self.initial_value = initial_value
         result = opt.minimize(self.obj_fn, self.initial_value,
+                              method='SLSQP',
                               constraints=self.constraints())
         formatted_result = self.process_result(result.x)
         return formatted_result
