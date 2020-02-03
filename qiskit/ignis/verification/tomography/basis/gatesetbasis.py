@@ -85,8 +85,13 @@ class GateSetBasis:
 
     def measurement_matrix(self, label):
         """
-        A stub function,
-        since the measurement matrix is not used yet in gate set tomography
+         Returns the matrix corresponding to a gate label
+
+        Params:
+            label (str): Gate label
+
+        Returns:
+            The corresponding matrix (usually numpy.array)
         """
         return self.gate_matrices[label]
 
@@ -107,7 +112,13 @@ class GateSetBasis:
 
     def preparation_matrix(self, label):
         """
+        Returns the matrix corresponding to a gate label
 
+        Params:
+            label (str): Gate label
+
+        Returns:
+            The corresponding matrix (usually numpy.array)
         """
         return self.gate_matrices[label]
 
