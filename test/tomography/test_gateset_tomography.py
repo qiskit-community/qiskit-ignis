@@ -21,8 +21,8 @@ from qiskit.ignis.verification.tomography import GatesetTomographyFitter
 from qiskit.ignis.verification.tomography import gateset_tomography_circuits
 from qiskit.ignis.verification.tomography.basis import StandardGatesetBasis
 
-from qiskit.providers.aer.noise.errors.quantum_error import QuantumError
-from qiskit.providers.aer.noise.errors.standard_errors import depolarizing_error
+from qiskit.providers.aer.noise.errors import QuantumError
+from qiskit.providers.aer.noise.errors import depolarizing_error
 from qiskit.providers.aer.noise import NoiseModel
 
 
@@ -113,7 +113,7 @@ class TestGatesetTomography(unittest.TestCase):
                               [0, 1-p, 0, 0],
                               [0, 0, 1-p, 0],
                               [0, 0, 0, 1-p]])
-        noise = depolarizing_error(p, 1) # 1-qubit error
+        noise = depolarizing_error(p, 1)  # 1-qubit error
         noise_model = NoiseModel()
         noise_model.add_all_qubit_quantum_error(noise, ['u1', 'u2', 'u3'])
         self.run_test_on_basis_and_noise(noise_model=noise_model,
