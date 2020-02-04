@@ -110,9 +110,11 @@ class GatesetTomographyFitter:
         rho = np.array([[0.5], [0], [0], [0.5]])
         Gs = [self.gateset_basis.gate_matrices[label]
               for label in self.gateset_basis.gate_labels]
+        Fs = [self.gateset_basis.spam_matrix(label)
+              for label in self.gateset_basis.spam_labels]
         Gs_E = [linear_inversion_results[label]
                 for label in self.gateset_basis.gate_labels]
-        gauge_opt = GaugeOptimize(Gs, Gs_E)
+        gauge_opt = GaugeOptimize(Gs, Gs_E, Fs, rho)
         Gs_E = gauge_opt.optimize()
         optimizer = GST_Optimize(self.gateset_basis.gate_labels,
                                  self.gateset_basis.spam_spec,
@@ -176,11 +178,15 @@ def get_cholesky_like_decomposition(mat):
 
 
 class GaugeOptimize():
-    def __init__(self, Gs, initial_Gs_E):
+    def __init__(self, Gs, initial_Gs_E, Fs, rho=None):
         self.Gs = Gs
         self.initial_Gs_E = initial_Gs_E
         self.d = np.shape(Gs[0])[0]
         self.n = len(Gs)
+        self.Fs = Fs
+        self.rho = rho
+        if self.rho is None:
+            self.rho = np.array([[0.5], [0], [0], [0.5]])
 
     def x_to_Gs_E(self, x):
         B = np.array(x).reshape((self.d, self.d))
@@ -197,7 +203,7 @@ class GaugeOptimize():
                     in zip(self.Gs, Gs_E)])
 
     def optimize(self):
-        initial_value = list(np.eye(self.d).reshape((1, self.d * self.d)))
+        initial_value = np.array([(F @ self.rho).T[0] for F in self.Fs]).T
         result = opt.minimize(self.obj_fn, initial_value)
         return self.x_to_Gs_E(result.x)
 
