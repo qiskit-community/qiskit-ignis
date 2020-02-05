@@ -1,5 +1,6 @@
 cvxpy>=1.0.15
-pylint
+pylint==2.4.4
+pylintfileheader>=0.0.2
 qiskit-aer>=0.1.1
 scikit-learn>=0.17
 Sphinx>=1.8.3
