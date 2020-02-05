@@ -12,9 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Advanced Clifford operations needed for randomized benchmarking
-"""
+"""Advanced Clifford operations needed for randomized benchmarking."""
 
 import numpy as np
 from .Clifford import Clifford
@@ -27,9 +25,7 @@ except ImportError:
 
 
 class CliffordUtils(BasicUtils):
-    """
-        Class for util functions for the Clifford group
-    """
+    """Class for util functions for the Clifford group."""
 
     def __init__(self, num_qubits=2, group_tables=None, elmnt=None,
                  gatelist=None, elmnt_key=None):
@@ -40,7 +36,7 @@ class CliffordUtils(BasicUtils):
             elmnt: a group element.
             elmnt_key: a unique index of a Clifford object.
             gatelist: a list of gates corresponding to a
-            Cliffor object
+                Clifford object.
         """
 
         self._num_qubits = num_qubits
@@ -66,8 +62,7 @@ class CliffordUtils(BasicUtils):
         return self._elmnt_key
 
     def gatelist(self):
-        """Return a list of gates corresponding to
-        a Clifford object."""
+        """Return a list of gates corresponding to a Clifford object."""
         return self._gatelist
 
     # ----------------------------------------------------------------------------------------
@@ -109,6 +104,7 @@ class CliffordUtils(BasicUtils):
             else:
                 raise ValueError("Unknown gate type: ", op)
 
+        self._gatelist = gatelist
         self._elmnt = cliff
         return cliff
 
@@ -132,7 +128,7 @@ class CliffordUtils(BasicUtils):
     # --------------------------------------------------------
 
     def pauli_gates(self, gatelist, q, pauli):
-        """adds a pauli gate on qubit q"""
+        """Adds a pauli gate on qubit q"""
         if pauli == 2:
             gatelist.append('x ' + str(q))
         elif pauli == 3:
@@ -141,12 +137,12 @@ class CliffordUtils(BasicUtils):
             gatelist.append('z ' + str(q))
 
     def h_gates(self, gatelist, q, h):
-        """adds a hadamard gate or not on qubit q"""
+        """Adds a hadamard gate or not on qubit q"""
         if h == 1:
             gatelist.append('h ' + str(q))
 
     def v_gates(self, gatelist, q, v):
-        """adds an axis-swap-gates on qubit q"""
+        """Adds an axis-swap-gates on qubit q."""
         #  rotation is V=HSHS = [[0,1],[1,1]] tableau
         #  takes Z->X->Y->Z
         #  V is of order 3, and two V-gates is W-gate, so: W=VV and WV=I
@@ -156,7 +152,7 @@ class CliffordUtils(BasicUtils):
             gatelist.append('w ' + str(q))
 
     def cx_gates(self, gatelist, ctrl, tgt):
-        """adds a controlled=x gates"""
+        """Adds a controlled=x gates."""
         gatelist.append('cx ' + str(ctrl) + ' ' + str(tgt))
 
     # --------------------------------------------------------
@@ -314,15 +310,15 @@ class CliffordUtils(BasicUtils):
     def pickle_clifford_table(self, picklefile='cliffords2.pickle',
                               num_qubits=2):
         """
-         Create pickled versions of the 1 and 2 qubit Clifford tables.
+        Create pickled versions of the 1 and 2 qubit Clifford tables.
 
-         Args:
-             picklefile - pickle file name.
-             num_qubits - number of qubits.
+        Args:
+            picklefile: pickle file name.
+            num_qubits: number of qubits.
 
-         Returns:
-             A pickle file with the 1 and 2 qubit Clifford tables.
-         """
+        Returns:
+            A pickle file with the 1 and 2 qubit Clifford tables.
+        """
         cliffords = {}
         if num_qubits == 1:
             cliffords = self.clifford1_gates_table()
@@ -334,19 +330,22 @@ class CliffordUtils(BasicUtils):
 
         with open(picklefile, "wb") as pf:
             pickle.dump(cliffords, pf)
+        pf.close()
 
     def load_clifford_table(self, picklefile='cliffords2.pickle'):
         """
-          Load pickled files of the tables of 1 and 2 qubit Clifford tables.
+        Load pickled files of the tables of 1 and 2 qubit Clifford tables.
 
-          Args:
-              picklefile - pickle file name.
+        Args:
+            picklefile: pickle file name.
 
-          Returns:
-              A table of 1 and 2 qubit Clifford gates.
-          """
+        Returns:
+            A table of 1 and 2 qubit Clifford gates.
+        """
         with open(picklefile, "rb") as pf:
-            return pickle.load(pf)
+            pickletable = pickle.load(pf)
+        pf.close()
+        return pickletable
 
     def load_tables(self, num_qubits):
         """
@@ -372,7 +371,7 @@ class CliffordUtils(BasicUtils):
             try:
                 clifford_tables = self.load_clifford_table(
                     picklefile='cliffords%d.pickle' % num_qubits)
-            except OSError:
+            except (OSError, EOFError):
                 # table doesn't exist, so save it
                 # this will save time next run
                 print('Making the n=%d Clifford Table' % num_qubits)
@@ -381,9 +380,14 @@ class CliffordUtils(BasicUtils):
                     num_qubits=num_qubits)
                 clifford_tables = self.load_clifford_table(
                     picklefile='cliffords%d.pickle' % num_qubits)
+            except pickle.UnpicklingError:
+                # handle error
+                clifford_tables = self.self.clifford2_gates_table()
+
         else:
             raise ValueError("The number of qubits should be only 1 or 2")
 
+        self._group_tables = clifford_tables
         return clifford_tables
 
     # --------------------------------------------------------
@@ -438,14 +442,18 @@ class CliffordUtils(BasicUtils):
             return inv_gatelist
         raise ValueError("The number of qubits should be only 1 or 2")
 
-    def find_key(self, cliff):
+    def find_key(self, cliff, num_qubits):
         """
         Find the Clifford index.
 
         Args:
             cliff: a Clifford object.
+            num_qubits: the dimension of the Clifford.
 
         Returns:
             Clifford index (an integer).
         """
+        G_table = self.load_tables(num_qubits)
+        assert cliff.index() in G_table, \
+            "inverse not found in lookup table!\n%s" % cliff
         return cliff.index()

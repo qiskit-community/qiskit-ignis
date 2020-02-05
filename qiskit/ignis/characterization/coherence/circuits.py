@@ -28,12 +28,11 @@ def t1_circuits(num_of_gates, gate_time, qubits):
     gates.
 
     Args:
-       num_of_gates (list of integers): the number of identity gates in each
-                                        circuit. Must be in an increasing
-                                        order.
-       gate_time (float): time of running a single gate.
-       qubits (list of integers): indices of the qubits whose T1 are
-       to be measured.
+        num_of_gates (list of integers): the number of identity gates in each
+            circuit. Must be in an increasing order.
+        gate_time (float): time of running a single gate.
+        qubits (list of integers): indices of the qubits whose T1 are
+            to be measured.
 
     Returns:
        A list of QuantumCircuit
@@ -69,17 +68,16 @@ def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
     Hadamard gate.
 
     Args:
-       num_of_gates (list of integers): the number of identity gates in each
-                                        circuit. Must be in an increasing
-                                        order.
-       gate_time (float): time of running a single gate.
-       qubits (list of integers): indices of the qubits
-       whose T2* are to be measured.
-       nosc: number of oscillations to induce using the phase gate
+        num_of_gates (list of integers): the number of identity gates in each
+            circuit. Must be in an increasing order.
+        gate_time (float): time of running a single gate.
+        qubits (list of integers): indices of the qubits
+            whose T2* are to be measured.
+        nosc: number of oscillations to induce using the phase gate
     Returns:
-       A list of QuantumCircuit
-       xdata: a list of delay times
-       osc_freq: the induced oscillation frequency
+        A list of QuantumCircuit
+        xdata: a list of delay times
+        osc_freq: the induced oscillation frequency
     """
 
     xdata = gate_time * num_of_gates
@@ -120,20 +118,20 @@ def t2_circuits(num_of_gates, gate_time, qubits, n_echos=1,
     Standard T2 echo is n_echos=1
 
     Args:
-       num_of_gates (list of integers):
-          Each element of the list corresponds to a circuit.
-          num_of_gates[i] is the number of identity gates in each section
-          "t" of the pulse sequeence in circuit no. i.
-          Must be in an increasing order.
-       gate_time (float): time of running a single gate.
-       qubits (list of integers): indices of the qubits whose
-       T2 are to be measured.
-       n_echos (integer): number of echo gates (X or Y).
-       phase_alt_echo (bool): if True then alternate the echo between
-       X and Y.
+        num_of_gates (list of integers):
+            Each element of the list corresponds to a circuit.
+            num_of_gates[i] is the number of identity gates in each section
+            "t" of the pulse sequence in circuit no. i.
+            Must be in an increasing order.
+        gate_time (float): time of running a single gate.
+        qubits (list of integers): indices of the qubits whose
+            T2 are to be measured.
+        n_echos (integer): number of echo gates (X or Y).
+        phase_alt_echo (bool): if True then alternate the echo between
+            X and Y.
     Returns:
-       A list of QuantumCircuit
-       xdata: the delay times
+        A list of QuantumCircuit
+        xdata: the delay times
     """
 
     if n_echos < 1:

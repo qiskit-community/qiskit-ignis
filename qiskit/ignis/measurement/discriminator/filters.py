@@ -67,6 +67,7 @@ class DiscriminationFilter:
 
         Args:
             raw_data: list of qiskit.Result or qiskit.Result.
+
         Returns:
             A list of qiskit.Result or qiskit.Result.
         """
@@ -83,14 +84,15 @@ class DiscriminationFilter:
 
         new_results.results = to_be_discriminated
 
-        x_data = self.discriminator.get_xdata(new_results)
+        x_data = self.discriminator.get_xdata(new_results, 2)
         y_data = self.discriminator.discriminate(x_data)
 
         start = 0
         for idx, n_shots in enumerate(shots_per_experiment_result):
-            counts = Obj.from_dict(self.count(y_data[start:(start+n_shots)]))
+            memory = y_data[start:(start+n_shots)]
+            counts = Obj.from_dict(self.count(memory))
             new_results.results[idx].data = ExperimentResultData(counts=counts,
-                                                                 memory=y_data)
+                                                                 memory=memory)
             start += n_shots
 
         for result in new_results.results:
@@ -111,8 +113,12 @@ class DiscriminationFilter:
         22 the basis will be 3.
 
         With this implementation the basis can be at most 10.
-        :param expected_states:
-        :return: the base inferred from the expected states
+
+        Args:
+            expected_states:
+
+        Returns:
+            the base inferred from the expected states
         """
         base = 0
         for key in expected_states:
@@ -130,8 +136,10 @@ class DiscriminationFilter:
     def count(self, y_data: List[str]) -> dict:
         """
         Converts discriminated results into raw counts.
+
         Args:
             y_data: result of a discrimination.
+
         Returns:
             A dict of raw counts.
         """
