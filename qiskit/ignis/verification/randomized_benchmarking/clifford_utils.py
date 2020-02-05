@@ -382,7 +382,7 @@ class CliffordUtils(BasicUtils):
                     picklefile='cliffords%d.pickle' % num_qubits)
             except pickle.UnpicklingError:
                 # handle error
-                clifford_tables = self.self.clifford2_gates_table()
+                clifford_tables = self.clifford2_gates_table()
 
         else:
             raise ValueError("The number of qubits should be only 1 or 2")
