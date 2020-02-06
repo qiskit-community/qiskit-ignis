@@ -348,7 +348,7 @@ def accreditation_parser(target_circuit):
     # Initialize empty list
     # This is used to check if in a band, a qubit can still be entangled with
     # other qubits (qubits can be entanged one time per band)
-    unavailiable_qubits = []
+    unavailable_qubits = []
 
     # Keep track of current band
     current_band_no = 0
@@ -377,7 +377,7 @@ def accreditation_parser(target_circuit):
 
             # If a new band is required, converts the current band's single
             # qubit gates to Euler angles and prepares for the next band
-            if((not set(gate_qubits).isdisjoint(set(unavailiable_qubits)))
+            if((not set(gate_qubits).isdisjoint(set(unavailable_qubits)))
                or circuit_end_band):
                 band_gates_angles = []
                 u3_gates_temp = []
@@ -390,7 +390,7 @@ def accreditation_parser(target_circuit):
                     band_gates_angles = []
                 gates_target.append(u3_gates_temp)
                 current_band_no += 1
-                unavailiable_qubits = []
+                unavailable_qubits = []
                 single_qubit_gates = [[] for _ in circuit_qubits]
             if last_element:
                 break
@@ -403,7 +403,7 @@ def accreditation_parser(target_circuit):
             else:
                 cz_gate.append([current_band_no, gate_qubits[0].index,
                                 gate_qubits[1].index])
-                unavailiable_qubits += gate_qubits
+                unavailable_qubits += gate_qubits
 
     # Adds a band of identity gates if circuit ends with cz gates
     if last_cz == current_band_no - 1:

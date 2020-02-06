@@ -51,7 +51,7 @@ def handle_length_multiplier(length_multiplier, len_pattern,
                 "In case of Purity RB the length multiplier should be None")
         if len(length_multiplier) != len_pattern:
             raise ValueError(
-                "Length mulitiplier must be the same length as the pattern")
+                "Length multiplier must be the same length as the pattern")
         length_multiplier = np.array(length_multiplier)
         if length_multiplier.dtype != 'int' or (length_multiplier < 1).any():
             raise ValueError("Invalid length multiplier")
