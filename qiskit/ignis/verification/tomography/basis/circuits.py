@@ -195,8 +195,8 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         meas_labels=('X','Z') will only contain 2 ** n measurements in X and Z
         basis etc.
 
-        Specifying a tuple is necessary when using a custom `meas_cicuit_fn` or
-        `prep_circuit_fn` as these will be the str passed to the function to
+        Specifying a tuple is necessary when using a custom `meas_circuit_fn`
+        or `prep_circuit_fn` as these will be the str passed to the function to
         return the corresponding QuantumCircuit objects.
 
         Specifying a list of tuples will override an automatic generation. This
@@ -204,7 +204,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         tomography experiment we might only specify correlated measurements eg:
             meas_labels=[('X','X'), ('Y','Y'), ('Z','Z')]
 
-        Custom Measurement Circuit Funtion
+        Custom Measurement Circuit Function
         ----------------------------------
         Custom measurement circuit functions can be used by passing the
         function using the `meas_circuit_fn` keyword. These functions should
@@ -222,7 +222,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         The built-in Pauli measurement function `pauli_measurement_circuit`
         may be invoked using the meas_circuit_fn='Pauli'.
 
-        Custom Preparation Circuit Funtion
+        Custom Preparation Circuit Function
         ----------------------------------
         Custom preparation circuit functions can be used by passing the
         function using the `prep_circuit_fn` keyword. These functions should
@@ -322,7 +322,7 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
 
     # Note if the input circuit already has classical registers defined
     # the returned circuits add a new classical register for the tomography
-    # measurments which will be inserted as the first classical register in
+    # measurements which will be inserted as the first classical register in
     # the list of returned circuits.
     registers = qubit_registers.copy()
     if measurement is not None:
@@ -373,14 +373,14 @@ def default_basis(basis):
             return SICBasis
     if isinstance(basis, TomographyBasis):
         return basis
-    raise ValueError('Unrecognised basis: {}'.format(basis))
+    raise ValueError('Unrecognized basis: {}'.format(basis))
 
 
 def _default_measurement_labels(basis):
     """Built in measurement basis labels."""
     if default_basis(basis) == PauliBasis:
         return ('X', 'Y', 'Z')
-    raise ValueError('Unrecognised basis string "{}"'.format(basis))
+    raise ValueError('Unrecognized basis string "{}"'.format(basis))
 
 
 def _default_preparation_labels(basis):
@@ -390,7 +390,7 @@ def _default_preparation_labels(basis):
         return ('Zp', 'Zm', 'Xp', 'Yp')
     if tomo_basis == SICBasis:
         return ('S0', 'S1', 'S2', 'S3')
-    raise ValueError('Unrecognised basis string "{}"'.format(basis))
+    raise ValueError('Unrecognized basis string "{}"'.format(basis))
 
 
 ###########################################################################
