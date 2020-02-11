@@ -154,7 +154,7 @@ class GraphDecoder():
         Additional information:
             Uses `results` to estimate the probability of the errors that
             create the pairs of nodes in S. The edge weights are then
-            replaced with the correspoinding -log(p/(1-p).
+            replaced with the corresponding -log(p/(1-p).
         """
 
         results = results['0']
@@ -189,7 +189,7 @@ class GraphDecoder():
         """
         Args:
             string: A string describing the output from the code.
-            subgraphs: Used when multiple, semi-indepedent graphs need
+            subgraphs: Used when multiple, semi-independent graphs need
             need to created.
 
         Returns:
@@ -283,7 +283,7 @@ class GraphDecoder():
         # do the matching on this
         matches = nx.max_weight_matching(E_matching, maxcardinality=True)
 
-        # use it to construct and return a correcetd logical string
+        # use it to construct and return a corrected logical string
         logicals = self._separate_string(string)[0]
         for (source, target) in matches:
             if source[0] == 0 and target[0] != 0:
