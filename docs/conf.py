@@ -59,6 +59,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.extlinks',
     'sphinx_tabs.tabs',
+    'jupyter_sphinx.execute',
     'sphinx_autodoc_typehints',
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive'
