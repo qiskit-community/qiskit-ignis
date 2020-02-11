@@ -8,5 +8,6 @@ sphinx-tabs>=1.1.11
 sphinx-autodoc_typehints
 stestr>=2.5.0
 ddt>=1.2.0
+matplotlib>=2.1
 jupyter
 jupyter-sphinx
