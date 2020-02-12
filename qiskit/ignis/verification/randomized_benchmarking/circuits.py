@@ -130,55 +130,117 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
                                 interleaved_gates=None,
                                 is_purity=False,
                                 group_gates=None):
-    """Get a generic randomized benchmarking sequence
+    """Generate generic randomized benchmarking (RB) sequences.
 
     Args:
-        nseeds: number of seeds
-        length_vector: 'm' length vector of sequence lengths. Must be in
+        nseeds: The number of seeds. For each seed the function generates
+            a separate list of output RB circuits.
+
+        length_vector: Length vector of the RB sequence lengths. Must be in
             ascending order. RB sequences of increasing length grow on top of
             the previous sequences.
-        rb_pattern: A list of the form [[i,j],[k],...] which will make
-            simultaneous RB sequences where
-            Qi,Qj are a 2Q RB sequence and Qk is a 1Q sequence, etc.
-            E.g. [[0,3],[2],[1]] would create RB sequences that are
-            2Q for Q0/Q3, 1Q for Q1+Q2
-            The number of qubits is the sum of the entries.
-            For 'regular' RB the qubit_pattern is just [[0]],[[0,1]].
-        length_multiplier: if this is an array it scales each rb_sequence by
-            the multiplier
-        seed_offset: What to start the seeds at (e.g. if we
-            want to add more seeds later)
-        align_cliffs: If true adds a barrier across all qubits in rb_pattern
-            after each set of elements, not necessarily Cliffords
-            (note: aligns after each increment of elements including the
-            length multiplier so if the multiplier is [1,3] it will barrier
-            after 1 element for the first pattern and 3 for the second).
-        interleaved_gates: A list of gates of elements that
-            will be interleaved (for interleaved randomized benchmarking)
-            The length of the list would equal the length of the rb_pattern.
-        is_purity: True only for purity rb (default is False)
-        group_gates: On which group (or gate set) we perform RB
-            (default is the Clifford group)
-            '0' or None or 'Clifford': Clifford group
-            '1' or 'CNOT-Dihedral' or 'Non-Clifford': CNOT-Dihedral group
 
+            For example:
+
+            * ``length_vector = [1, 10, 20, 50, 75, 100, 125, 150, 175]``
+
+        rb_pattern: A list of the form ``[[i,j],[k],...]`` which will make
+            simultaneous RB sequences, where
+            there is a 2-qubit RB sequence on qbits Qi and Qj,
+            and a 1-qubit RB sequence on qubit Qk, etc.
+            The number of qubits is the sum of the arrays sizes.
+
+            For example:
+
+            * ``rb_pattern = [[0]]``
+
+            create a 1-qubit RB sequence on qubit Q0.
+
+            * ``rb_pattern = [[0,1]]``
+
+            create a 2-qubit RB sequence on qubits Q0 and Q1.
+
+            * ``rb_pattern = [[0,3],[2],[1]]``
+
+            create RB sequences that are 2-qubit RB for qubits Q0 and Q3,
+            1-qubit RB for qubit Q1, and 1-qubit RB for qubit Q2.
+
+        length_multiplier: An array that scales each RB sequence by
+            the multiplier.
+
+            For example:
+
+            * ``length_multiplier = [1,3,3]``
+
+            If ``rb_pattern = [[0,3],[2],[1]]``, then it generates
+            three times as many 1-qubit RB sequence elements,
+            than 2-qubit elements.
+
+        seed_offset: What to start the seeds at, if we
+            want to add more seeds later.
+
+        align_cliffs: If ``True`` adds a barrier across all qubits in
+            the pattern after each set of elements
+            (not necessarily Cliffords).
+
+            **Note:** aligns after each increment of elements including
+            the length multiplier, so if ``length_multiplier = [1,3,3]``
+            it will barrier after 1 element for the first pattern
+            and 3 for the second and third pattern.
+
+        interleaved_gates: A list of gates of elements that
+            will be interleaved (for interleaved randomized benchmarking).
+            The length of the list should be equal to the length of the
+            ``rb_pattern``.
+
+            For example,
+
+            * ``interleaved_gates = [['cx 0 1'], ['x 0'], ['h 0']]``
+
+            interleaving the 2-qubit gate ``cx``, 1-qubit gate  ``x``
+            and 1-qubit gate ``h``.
+
+        is_purity: ``True`` only for purity randomized benchmarking
+            (default is ``False``)
+
+        group_gates: On which group (or set of gates) we perform RB
+            (the default is the Clifford group).
+
+            * ``group_gates='0'`` or ``group_gates=None`` or \
+            ``group_gates='Clifford'``: Clifford group.
+
+            * ``group_gates='1'`` or ``group_gates='CNOT-Dihedral'`` \
+            or ``group_gates='Non-Clifford'``: CNOT-Dihedral group.
 
     Returns:
-        A tuple of different fields depending on inputs. The different fields
+        A tuple of different fields depending on the inputs. The different fields
         are:
 
-         * ``circuits``: list of lists of circuits for the rb sequences
-            (separate list for each seed)
-         * ``xdata``: the sequences lengths (with multiplier if applicable)
-         * ``circuits_interleaved`` `(only if interleaved_gates is not None)`:
-           list of lists of circuits for the interleaved rb sequences
-           (separate list for each seed)
-         * ``circuits_purity`` `(only if is_purity=True)`:
-           list of lists of lists of circuits for purity rb
-           (separate list for each seed and each of the 3^n circuits)
-         * ``npurity`` `(only if is_purity=True)`:
-            the number of purity rb circuits (per seed)
-            which equals to 3^n, where n is the dimension
+         * ``circuits``: list of lists of circuits for the RB sequences \
+            (a separate list for each seed).
+         * ``xdata``: the sequences lengths (with multiplier if applicable).
+
+            For example, if ``rb_pattern=[[0,2],[1]]``, \
+            ``length_vector = [1,10,20]`` and \
+            ``length_multiplier = [1,3]`` then \
+            ``xdata=[[1,10,20],[3,30,60]]``.
+
+         * ``circuits_interleaved``: \
+           (only if ``interleaved_gates`` is not ``None``): \
+           list of lists of circuits for the interleaved RB sequences \
+           (a separate list for each seed).
+         * ``circuits_purity``: (only if ``is_purity=True``): \
+           list of lists of lists of circuits for purity RB \
+           (a separate list for each seed and each of the 3^n circuits).
+         * ``npurity``: (only if ``is_purity=True``): \
+            the number of purity RB circuits (per seed) \
+            which equals to 3^n, where n is the dimension.
+
+    Raises:
+
+        ValueError: if ``group_gates`` is unknown.
+        ValueError: if ``rb_pattern`` is not valid.
+        ValueError: if ``length_multiplier`` is not valid.
 
     """
     # Set modules (default is Clifford)
