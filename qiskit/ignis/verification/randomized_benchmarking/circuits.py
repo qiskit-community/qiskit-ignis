@@ -213,8 +213,8 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
             or ``group_gates='Non-Clifford'``: CNOT-Dihedral group.
 
     Returns:
-        A tuple of different fields depending on the inputs. The different fields
-        are:
+        A tuple of different fields depending on the inputs.
+        The different fields are:
 
          * ``circuits``: list of lists of circuits for the RB sequences \
             (a separate list for each seed).
