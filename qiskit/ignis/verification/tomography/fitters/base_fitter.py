@@ -21,9 +21,11 @@ import logging
 import itertools as it
 from ast import literal_eval
 import numpy as np
+from typing import List, Union, Optional
 
 from qiskit import QiskitError
 from qiskit import QuantumCircuit
+from qiskit.result import Result
 from ..basis import TomographyBasis, default_basis
 from ..data import marginal_counts, combine_counts, count_keys
 from .cvx_fit import cvxpy, cvx_fit
@@ -37,23 +39,23 @@ class TomographyFitter:
     """Base maximum-likelihood estimate tomography fitter class"""
 
     def __init__(self,
-                 result,
-                 circuits,
-                 meas_basis='Pauli',
-                 prep_basis='Pauli'):
+                 result: Result,
+                 circuits: Union[List[QuantumCircuit], List[str]],
+                 meas_basis: Union[TomographyBasis, str]='Pauli',
+                 prep_basis: Union[TomographyBasis, str]='Pauli'):
         """Initialize tomography fitter with experimental data.
 
         Args:
-            result (Result): a Qiskit Result object obtained from executing
+            result: a Qiskit Result object obtained from executing
                 tomography circuits.
-            circuits (list): a list of circuits or circuit names to extract
+            circuits: a list of circuits or circuit names to extract
                 count information from the result object.
-            meas_basis (TomographyBasis, str): A function to return
+            meas_basis: A function to return
                 measurement operators corresponding to measurement
-                outcomes. See Additional Information. (default: 'Pauli')
-            prep_basis (TomographyBasis, str): A function to return
+                outcomes. See Additional Information.
+            prep_basis: A function to return
                 preparation operators. See Additional
-                Information (default: 'Pauli')
+                Information
         """
 
         # Set the measure and prep basis
@@ -66,22 +68,25 @@ class TomographyFitter:
         self._data = {}
         self.add_data(result, circuits)
 
-    def set_measure_basis(self, basis):
+    def set_measure_basis(self, basis: Union[TomographyBasis, str]):
         """Set the measurement basis
 
         Args:
-            basis (TomographyBasis or str): measurement basis
+            basis: measurement basis
+
+        Raises:
+            QiskitError: In case of invalid measurement or preparation basis.
         """
         self._meas_basis = default_basis(basis)
         if isinstance(self._meas_basis, TomographyBasis):
             if self._meas_basis.measurement is not True:
                 raise QiskitError("Invalid measurement basis")
 
-    def set_preparation_basis(self, basis):
+    def set_preparation_basis(self, basis: Union[TomographyBasis, str]):
         """Set the preparation basis function
 
         Args:
-            basis (TomographyBasis or str): preparation basis
+            basis: preparation basis
         """
         self._prep_basis = default_basis(basis)
         if isinstance(self._prep_basis, TomographyBasis):
@@ -98,7 +103,14 @@ class TomographyFitter:
         """Return the tomography preparation basis."""
         return self._prep_basis
 
-    def fit(self, method='auto', standard_weights=True, beta=0.5, **kwargs):
+    def fit(self,
+            method:str='auto',
+            standard_weights:Optional[bool] = True,
+            beta: float=0.5,
+            PSD: Optional[bool] = True,
+            trace: Optional[int] = None,
+            trace_preserving: Optional[bool] = False,
+            **kwargs):
         r"""Reconstruct a quantum state using CVXPY convex optimization.
 
                 **Fitter method**
@@ -111,11 +123,11 @@ class TomographyFitter:
         **Objective function**
 
         This fitter solves the constrained least-squares minimization:
-        :math:`minimize: ||a * x - b ||_2`
+        minimize: :math:`||a \cdot x - b ||_2`
 
         subject to:
 
-         * :math:`x >> 0`
+         * :math:`x \succeq 0`
          * :math:`\text{trace}(x) = 1`
 
         where:
@@ -123,7 +135,7 @@ class TomographyFitter:
          * a is the matrix of measurement operators
            :math:`a[i] = \text{vec}(M_i).H`
          * b is the vector of expectation value data for each projector
-           :math:`b[i] ~ \text{Tr}[M_i.H * x] = (a * x)[i]`
+           :math:`b[i] \sim \text{Tr}[M_i.H \cdot x] = (a \cdot x)[i]`
          * x is the vectorized density matrix to be fitted
 
         **PSD constraint**
@@ -153,28 +165,26 @@ class TomographyFitter:
         References:
 
         [1] J Smolin, JM Gambetta, G Smith, Phys. Rev. Lett. 108, 070502
-            (2012). Open access: arXiv:1106.5458 [quant-ph].
+            (2012). Open access:
+            `arXiv:1106.5458 <https://arxiv.org/abs/1106.5458>`_ [quant-ph].
 
         Args:
-            method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
-            standard_weights (bool, optional): Apply weights to
+            method: The fitter method 'auto', 'cvx' or 'lstsq'.
+            standard_weights: Apply weights to
                 tomography data based on count probability
-                (default: True)
-            beta (float): hedging parameter for converting counts
-                to probabilities (default: 0.5)
-            PSD (bool, optional): Enforced the fitted matrix to be positive
-                semidefinite (default: True)
-            trace (int, optional): trace constraint for the fitted matrix
-                (default: None).
-            trace_preserving (bool, optional): Enforce the fitted matrix to be
+            beta: hedging parameter for converting counts
+                to probabilities
+            PSD: Enforced the fitted matrix to be positive semidefinite.
+            trace: trace constraint for the fitted matrix.
+            trace_preserving: Enforce the fitted matrix to be
                 trace preserving when fitting a Choi-matrix in quantum process
                 tomography. Note this method does not apply for 'lstsq' fitter
-                method (default: False).
-            **kwargs (optional): kwargs for fitter method.
+                method.
+            **kwargs: kwargs for fitter method.
 
         Returns:
             The fitted matrix rho that minimizes
-            :math:`||basis_matrix * vec(rho) - data||_2`.
+            :math:`||\text{basis_matrix} * \text{vec(rho)} - \text{data}||_2`.
         """
         # Get fitter data
         data, basis_matrix, weights = self._fitter_data(standard_weights,
@@ -186,10 +196,19 @@ class TomographyFitter:
             else:
                 method = 'cvx'
         if method == 'lstsq':
-            return lstsq_fit(data, basis_matrix, weights=weights, **kwargs)
+            return lstsq_fit(data, basis_matrix,
+                             weights=weights,
+                             PSD=PSD,
+                             trace=trace,
+                             **kwargs)
 
         if method == 'cvx':
-            return cvx_fit(data, basis_matrix, weights=weights, **kwargs)
+            return cvx_fit(data, basis_matrix,
+                           weights=weights,
+                           PSD=PSD,
+                           trace=trace,
+                           trace_preserving=trace_preserving,
+                           **kwargs)
 
         raise QiskitError('Unrecognized fit method {}'.format(method))
 
