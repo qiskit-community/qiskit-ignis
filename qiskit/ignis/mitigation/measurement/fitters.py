@@ -47,14 +47,15 @@ class CompleteMeasFitter():
 
         Args:
             results: the results of running the measurement calibration
-                circuits. If this is ``None`` the user will set a calibration
+                circuits. If this is `None` the user will set a calibration
                 matrix later.
-            state_labels: list of calibration state labels
+            state_labels (list[string]): list of calibration state labels
                 returned from `measurement_calibration_circuits`.
                 The output matrix will obey this ordering.
-            qubit_list: List of the qubits (for reference and if the
-                subset is needed)
-            circlabel: if the qubits were labeled
+            qubit_list (list[integer]): List of the qubits (for reference and if the
+                subset is needed). If `None`, the qubit_list will be
+                created according to the length of state_labels[0].
+            circlabel (string): if the qubits were labeled.
         """
 
         if qubit_list is None:
@@ -93,7 +94,7 @@ class CompleteMeasFitter():
 
     @property
     def filter(self):
-        """Return a measurement filter using the cal matrix"""
+        """Return a measurement filter using the cal matrix."""
         return MeasurementFilter(self.cal_matrix, self.state_labels)
 
     def add_data(self, new_results, rebuild_cal_matrix=True):
@@ -178,11 +179,11 @@ class CompleteMeasFitter():
 
     def readout_fidelity(self, label_list=None):
         """
-        Based on the results output the readout fidelity which is the
+        Based on the results, output the readout fidelity which is the
         normalized trace of the calibration matrix
 
         Args:
-            label_list: If none returns the average assignment fidelity
+            label_list: If `None`, returns the average assignment fidelity
                 of a single state. Otherwise it returns the assignment fidelity
                 to be in any one of these states averaged over the second
                 index.
@@ -211,27 +212,27 @@ class CompleteMeasFitter():
 
 class TensoredMeasFitter():
     """
-    Measurement correction fitter for a tensored calibration
+    Measurement correction fitter for a tensored calibration.
     """
 
     def __init__(self, results, mit_pattern,
                  substate_labels_list=None, circlabel=''):
         """
         Initialize a measurement calibration matrix from the results of running
-        the circuits returned by `measurement_calibration_circuits`
+        the circuits returned by `measurement_calibration_circuits`.
 
         Args:
             results: the results of running the measurement calibration
-                circuits. If this is None the user will set calibration
-                matrices later
+                circuits. If this is `None`, the user will set calibration
+                matrices later.
 
-            mit_pattern (list of lists of integers): qubits to perform the
+            mit_pattern (list[list[integers]]): qubits to perform the
                 measurement correction on, divided to groups according to
                 tensors
 
             substate_labels_list (list of lists of strings): for each
                 calibration matrix, the labels of its rows and columns.
-                If ``None`` then the labels are ordered lexicographically
+                If `None`, the labels are ordered lexicographically
         """
 
         self._result_list = []
@@ -266,7 +267,7 @@ class TensoredMeasFitter():
 
     @cal_matrices.setter
     def cal_matrices(self, new_cal_matrices):
-        """Set cal_matrices."""
+        """Set _cal_matrices."""
         self._cal_matrices = copy.deepcopy(new_cal_matrices)
 
     @property
@@ -307,14 +308,14 @@ class TensoredMeasFitter():
 
     def readout_fidelity(self, cal_index=0, label_list=None):
         """
-        Based on the results output the readout fidelity, which is the average
-        of the diagonal entries in the calibration matrices
+        Based on the results, output the readout fidelity, which is the average
+        of the diagonal entries in the calibration matrices.
 
         Args:
-            cal_index: readout fidelity of which sub cal?
+            cal_index(integer): readout fidelity for this index in _cal_matrices
             label_list (list of lists on states):
                 Returns the average fidelity over of the groups of states.
-                If None then each state used in the construction of the
+                If `None`, then each state used in the construction of the
                 calibration matrices forms a group of size 1
 
         Returns:
@@ -324,7 +325,7 @@ class TensoredMeasFitter():
         Additional Information:
             The on-diagonal elements of the calibration matrices are the
             probabilities of measuring state 'x' given preparation of state
-            'x'
+            'x'.
         """
 
         if self._cal_matrices is None:
@@ -421,8 +422,14 @@ class TensoredMeasFitter():
         Plot one of the calibration matrices (2D color grid plot).
 
         Args:
-            cal_index: calibration matrix to plot
+            cal_index(integer): calibration matrix to plot
+            ax(matplotlib.axes): settings for the graph
             show_plot (bool): call plt.show()
+
+        Raises:
+            QiskitError: if _cal_matrices was not set.
+
+            ImportError: if matplotlib was not installed.
 
         """
 
