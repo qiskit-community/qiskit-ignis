@@ -50,6 +50,9 @@ from qiskit.ignis.characterization.calibrations import (rabi_schedules,
 import qiskit.pulse as pulse
 from qiskit.test.mock import FakeOpenPulse2Q
 
+# Fix seed for simulations
+SEED = 9000
+
 
 class TestT2Star(unittest.TestCase):
     """
@@ -84,6 +87,7 @@ class TestT2Star(unittest.TestCase):
                                           qubits)
         backend_result = qiskit.execute(
             circs, backend, shots=shots,
+            seed_simulator=SEED,
             backend_options={'max_parallel_experiments': 0},
             noise_model=noise_model,
             optimization_level=0).result()
@@ -106,6 +110,7 @@ class TestT2Star(unittest.TestCase):
         backend_result = qiskit.execute(
             circs_osc, backend,
             shots=shots,
+            seed_simulator=SEED,
             backend_options={'max_parallel_experiments': 0},
             noise_model=noise_model,
             optimization_level=0).result()
@@ -155,6 +160,7 @@ class TestT1(unittest.TestCase):
         backend_result = qiskit.execute(
             circs, backend,
             shots=shots,
+            seed_simulator=SEED,
             backend_options={'max_parallel_experiments': 0},
             noise_model=noise_model,
             optimization_level=0).result()
@@ -199,6 +205,7 @@ class TestT2(unittest.TestCase):
         backend_result = qiskit.execute(
             circs, backend,
             shots=shots,
+            seed_simulator=SEED,
             backend_options={'max_parallel_experiments': 0},
             noise_model=noise_model,
             optimization_level=0).result()
@@ -247,6 +254,7 @@ class TestZZ(unittest.TestCase):
         # For demonstration purposes split the execution into two jobs
         backend_result = qiskit.execute(circs, backend,
                                         shots=shots,
+                                        seed_simulator=SEED,
                                         noise_model=noise_model,
                                         optimization_level=0).result()
 
@@ -273,13 +281,12 @@ class TestCals(unittest.TestCase):
         """
 
         unittest.TestCase.__init__(self, *args, **kwargs)
-
         self._qubits = [0, 2]
         self._controls = [1, 3]
         self._maxrep = 10
         self._circs = []
 
-    def run_sim(self, noise):
+    def run_sim(self, noise=None):
         """
         Run the simulator for these test cals
         """
@@ -289,6 +296,7 @@ class TestCals(unittest.TestCase):
         shots = 500
         # For demonstration purposes split the execution into two jobs
         backend_result = qiskit.execute(self._circs, backend,
+                                        seed_simulator=SEED,
                                         shots=shots,
                                         noise_model=noise).result()
 
@@ -337,7 +345,7 @@ class TestCals(unittest.TestCase):
         initial_theta = 0.18
         initial_c = 0.5
 
-        fit = AngleCalFitter(self.run_sim([]), xdata, self._qubits,
+        fit = AngleCalFitter(self.run_sim(), xdata, self._qubits,
                              fit_p0=[initial_theta, initial_c],
                              fit_bounds=([-np.pi, -1],
                                          [np.pi, 1]))
@@ -390,7 +398,7 @@ class TestCals(unittest.TestCase):
         initial_theta = 0.18
         initial_c = 0.5
 
-        fit = AngleCalCXFitter(self.run_sim([]), xdata, self._qubits,
+        fit = AngleCalCXFitter(self.run_sim(), xdata, self._qubits,
                                fit_p0=[initial_theta, initial_c],
                                fit_bounds=([-np.pi, -1],
                                            [np.pi, 1]))
