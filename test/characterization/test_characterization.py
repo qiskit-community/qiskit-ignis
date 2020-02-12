@@ -279,7 +279,7 @@ class TestCals(unittest.TestCase):
         self._maxrep = 10
         self._circs = []
 
-    def run_sim(self, noise):
+    def run_sim(self, noise=None):
         """
         Run the simulator for these test cals
         """
@@ -337,7 +337,7 @@ class TestCals(unittest.TestCase):
         initial_theta = 0.18
         initial_c = 0.5
 
-        fit = AngleCalFitter(self.run_sim([]), xdata, self._qubits,
+        fit = AngleCalFitter(self.run_sim(), xdata, self._qubits,
                              fit_p0=[initial_theta, initial_c],
                              fit_bounds=([-np.pi, -1],
                                          [np.pi, 1]))
@@ -390,7 +390,7 @@ class TestCals(unittest.TestCase):
         initial_theta = 0.18
         initial_c = 0.5
 
-        fit = AngleCalCXFitter(self.run_sim([]), xdata, self._qubits,
+        fit = AngleCalCXFitter(self.run_sim(), xdata, self._qubits,
                                fit_p0=[initial_theta, initial_c],
                                fit_bounds=([-np.pi, -1],
                                            [np.pi, 1]))
