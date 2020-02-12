@@ -63,11 +63,13 @@ def layer_parser(circ, twoqubitgate='cx', coupling_map=None):
         for circelem, qsub, csub in circuit_layer:
             n = circelem.name
             if n == "barrier":
-                # if a barrier append reset
-                singlequbitlayers[-1].append(circelem, qsub, csub)
-                singlequbitlayers.append(QuantumCircuit(qregs, cregs))
-                twoqubitlayers.append(QuantumCircuit(qregs, cregs))
-                current2qs = []
+                # if a barrier separates any two qubit gates 
+                # start a new layer
+                if current2qs != []:
+                    singlequbitlayers.append(QuantumCircuit(qregs, cregs))
+                    twoqubitlayers.append(QuantumCircuit(qregs, cregs))
+                    current2qs = []
+                singlequbitlayers[-2].append(circelem, qsub, csub)
             elif n in ('u1', 'u2', 'u3'):
                 # single qubit gate
                 q = qsub[0]
@@ -103,6 +105,9 @@ def layer_parser(circ, twoqubitgate='cx', coupling_map=None):
             else:
                 raise Exception("Circuit element {0}".format(n)
                                 + " is not implemented in qotp")
+    if current2qs == []:
+        del singlequbitlayers[-1]
+        del twoqubitlayers[-1]
     for ind, circlayer in enumerate(singlequbitlayers):
         singlequbitlayers[ind] = transpile(circlayer,
                                            basis_gates=['u1', 'u2', 'u3'])
