@@ -18,6 +18,7 @@ Quantum tomography circuit generation.
 """
 
 import logging
+from typing import List, Union, Dict, Tuple, Optional
 import itertools as it
 
 from qiskit import QuantumRegister
@@ -34,34 +35,32 @@ from .sicbasis import SICBasis
 # Create logger
 logger = logging.getLogger(__name__)
 
-
-# TODO: Update docstrings
-
 ###########################################################################
 # State tomography circuits for measurement in Pauli basis
 ###########################################################################
 
-def state_tomography_circuits(circuit, measured_qubits,
-                              meas_labels='Pauli', meas_basis='Pauli',):
+def state_tomography_circuits(
+        circuit: QuantumCircuit,
+        measured_qubits: QuantumRegister,
+        meas_labels: Union[str, Tuple[str], List[Tuple[str]]]='Pauli',
+        meas_basis: Union[str, TomographyBasis]='Pauli'
+) -> List[QuantumCircuit]:
     """
     Return a list of quantum state tomography circuits.
 
-    This performs measurement in the Pauli-basis resulting in 3 ** n
+    This performs measurement in the Pauli-basis resulting in :math:`3^n`
     circuits for an n-qubit state tomography experiment.
 
     Args:
-        circuit (QuantumCircuit): the state preparation circuit to be
-            tomographed.
-        measured_qubits (QuantumRegister): the qubits to be measured.
+        circuit: the state preparation circuit to be tomographed.
+        measured_qubits: the qubits to be measured.
             This can also be a list of whole QuantumRegisters or
             individual QuantumRegister qubit tuples.
-        meas_labels (str, tuple, list(tuple)): The measurement operator
-            labels. See additional information for details (Default: 'Pauli').
-        meas_basis (str, TomographyBasis): The measurement basis.
-            See additional information for details (Default: 'Pauli').
+        meas_labels: The measurement operator labels.
+        meas_basis: The measurement basis.
 
     Returns:
-        A list of QuantumCircuit objects containing the original circuit
+        A list containing copies of the original circuit
         with state tomography measurements appended at the end.
 
     Additional Information:
@@ -80,35 +79,36 @@ def state_tomography_circuits(circuit, measured_qubits,
 # Process tomography circuits for preparation and measurement in Pauli basis
 ###########################################################################
 
-def process_tomography_circuits(circuit, measured_qubits,
-                                prepared_qubits=None,
-                                meas_labels='Pauli', meas_basis='Pauli',
-                                prep_labels='Pauli', prep_basis='Pauli'):
-    """Return a list of quantum process tomography circuits.
+def process_tomography_circuits(
+        circuit: QuantumCircuit,
+        measured_qubits : QuantumRegister,
+        prepared_qubits: Optional[QuantumRegister] = None,
+        meas_labels: Union[str, Tuple[str], List[Tuple[str]]]='Pauli',
+        meas_basis: Union[str, TomographyBasis]='Pauli',
+        prep_labels: Union[str, Tuple[str], List[Tuple[str]]]='Pauli',
+        prep_basis: Union[str, TomographyBasis]='Pauli'
+) -> List[QuantumCircuit]:
+    r"""Return a list of quantum process tomography circuits.
 
     This performs preparation in the minimial Pauli-basis eigenstates
-    :math:`Z_p`, :math: `Z_m`, :math:`X_p`, :math:`Y_m` (:math:`|0>`,
-    :math:`|1>`, :math:`|+>`, :math:`|+i>`) on each qubit, and measurement
-    in the Pauli-basis X, Y, Z resulting in :math:`(4 ** n) * (3 ** n)`
+    :math:`Z_p`, :math:`Z_m`, :math:`X_p`, :math:`Y_m` (:math:`|0\rangle`,
+    :math:`|1\rangle`, :math:`|+\rangle`, :math:`|+i\rangle`) on each qubit, and measurement
+    in the Pauli-basis X, Y, Z resulting in :math:`(4^n) \cdot (3^n)`
     circuits for an n-qubit process tomography experiment.
 
     Args:
-        circuit (QuantumCircuit): the QuantumCircuit circuit to be
+        circuit: the QuantumCircuit circuit to be
             tomographed.
-        measured_qubits (QuantumRegister): the qubits to be measured.
+        measured_qubits: the qubits to be measured.
             This can also be a list of whole QuantumRegisters or
             individual QuantumRegister qubit tuples.
-        prepared_qubits (QuantumRegister or None): the qubits to have state
+        prepared_qubits: the qubits to have state
             preparation applied, if different from measured_qubits. If None
-            measured_qubits will be used for prepared qubits (Default: None).
-        meas_labels (str, tuple, list(tuple)): The measurement operator
-            labels. See additional information for details (Default: 'Pauli').
-        meas_basis (str, TomographyBasis): The measurement basis.
-            See additional information for details (Default: 'Pauli').
-        prep_labels (str, tuple, list(tuple)): The preparation operator
-            labels. See additional information for details (Default: 'Pauli').
-        prep_basis (str, TomographyBasis): The preparation basis.
-            See additional information for details (Default: 'Pauli').
+            measured_qubits will be used for prepared qubits
+        meas_labels: The measurement operator labels.
+        meas_basis: The measurement basis.
+        prep_labels: The preparation operator labels.
+        prep_basis: The preparation basis.
 
     Returns:
         A list of QuantumCircuit objects containing the original circuit
@@ -117,12 +117,12 @@ def process_tomography_circuits(circuit, measured_qubits,
 
     The returned circuits are named by the preparation and measurement
     basis. These circuit names can be recovered using the
-    :func:`process_tomography_circuit_names`` function to retrieve count
+    :func:`process_tomography_circuit_names` function to retrieve count
     data from a :class:`qiskit.result.Result` object at a later time.
 
     To perform tomography measurement in a custom basis, or to generate
     a subset of process tomography circuits for a partial tomography
-    experiment use the general function `tomography_circuits`.
+    experiment use the general function :func:`tomography_circuits`.
     """
     return _tomography_circuits(circuit, measured_qubits, prepared_qubits,
                                 meas_labels=meas_labels, meas_basis=meas_basis,
@@ -397,8 +397,10 @@ def _default_preparation_labels(basis):
 # Helper functions
 ###########################################################################
 
-def tomography_circuit_tuples(measured_qubits, meas_labels='Pauli',
-                              prep_labels=None):
+def tomography_circuit_tuples(
+        measured_qubits,
+        meas_labels='Pauli',
+        prep_labels=None):
     """Return list of tomography circuit label tuples."""
 
     if isinstance(meas_labels, (str, TomographyBasis)):
