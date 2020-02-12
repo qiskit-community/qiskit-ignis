@@ -12,15 +12,14 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Pauli tomography preparation and measurement basis
+"""Pauli tomography preparation and measurement basis
 """
 
 # Needed for functions
 import numpy as np
 
 # Import QISKit classes
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from .tomographybasis import TomographyBasis
 
 
@@ -28,17 +27,20 @@ from .tomographybasis import TomographyBasis
 # Built-in circuit functions
 ###########################################################################
 
-def pauli_measurement_circuit(op, qubit, clbit):
-    """
-    Return a qubit Pauli operator measurement circuit.
+def pauli_measurement_circuit(
+        op: str,
+        qubit: QuantumRegister,
+        clbit: ClassicalRegister
+) -> QuantumCircuit:
+    """Return a qubit Pauli operator measurement circuit.
 
     Params:
-        op (str): Pauli operator 'X', 'Y', 'Z'.
-        qubit (QuantumRegister tuple): qubit to be measured.
-        clbit (ClassicalRegister tuple): clbit for measurement outcome.
+        op: Pauli operator 'X', 'Y', 'Z'.
+        qubit: qubit to be measured.
+        clbit: clbit for measurement outcome.
 
     Returns:
-        A QuantumCircuit object.
+        The measurement circuit for the given Pauli.
     """
 
     circ = QuantumCircuit(qubit.register, clbit.register)
@@ -54,15 +56,18 @@ def pauli_measurement_circuit(op, qubit, clbit):
     return circ
 
 
-def pauli_preparation_circuit(op, qubit):
-    """
-    Return a qubit Pauli eigenstate preparation circuit.
+def pauli_preparation_circuit(
+        op: str,
+        qubit: QuantumRegister
+) -> QuantumCircuit:
+    """Return a qubit Pauli eigenstate preparation circuit.
 
-    This circuit assumes the qubit is initialized in the Zp eigenstate [1, 0].
+    This circuit assumes the qubit is initialized
+    in the :math:`Zp` eigenstate :math:`[1, 0]`.
 
     Params:
-        op (str): Pauli eigenstate 'Zp', 'Zm', 'Xp', 'Xm', 'Yp', or 'Ym'.
-        qubit (QuantumRegister tuple): qubit to be prepared.
+        op: Pauli eigenstate 'Zp', 'Zm', 'Xp', 'Xm', 'Yp', or 'Ym'.
+        qubit: qubit to be prepared.
 
     Returns:
         A QuantumCircuit object.
