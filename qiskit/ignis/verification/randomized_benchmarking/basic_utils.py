@@ -54,7 +54,7 @@ class BasicUtils(ABC):
     @abstractmethod
     def load_tables(self):
         """Load pickled group tables,
-        or generate them if they do not exist"""
+        or generate them if they do not exist."""
         return
 
     @abstractmethod
