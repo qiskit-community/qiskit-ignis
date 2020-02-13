@@ -17,7 +17,7 @@ Fitters for hamiltonian parameters
 """
 
 import numpy as np
-from .. import BaseGateFitter
+from ..fitters import BaseGateFitter
 
 
 class AmpCalFitter(BaseGateFitter):
