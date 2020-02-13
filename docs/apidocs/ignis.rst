@@ -16,7 +16,7 @@ Submodules
 ==========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    characterization/characterization
    mitigation/mitigation

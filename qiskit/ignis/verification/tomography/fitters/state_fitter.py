@@ -13,8 +13,7 @@
 # that they have been altered from the originals.
 
 
-"""
-Maximum-Likelihood estimation quantum state tomography fitter
+"""Maximum-Likelihood estimation quantum state tomography fitter
 """
 
 from .base_fitter import TomographyFitter
@@ -42,6 +41,9 @@ class StateTomographyFitter(TomographyFitter):
 
     def fit(self, method='auto', standard_weights=True, beta=0.5, **kwargs):
         r"""Reconstruct a quantum state using CVXPY convex optimization.
+        .. jupyter-execute::
+
+            print("Hello world!!!!!")
 
         **Fitter method**
 
@@ -110,6 +112,9 @@ class StateTomographyFitter(TomographyFitter):
         Returns:
             The fitted matrix rho that minimizes
             :math:`||basis_matrix * vec(rho) - data||_2`.
+
+        Example:
+
         """
         return super().fit(method, standard_weights, beta,
                            trace=1, PSD=True, **kwargs)

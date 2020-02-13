@@ -11,3 +11,11 @@ qiskit.ignis.verification.tomography
   :no-heading:
   :no-inheritance-diagram:
   :inherited-members:
+
+Submodules
+==========
+
+.. toctree::
+   :maxdepth: 1
+
+   basis/basis
