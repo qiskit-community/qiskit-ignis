@@ -97,18 +97,20 @@ def get_single_q_pulse(cmd_def, qubits):
 
 def update_u_gates(drag_params, pi2_pulse_schedules=None,
                    qubits=None, inst_map=None, cmd_def=None, drives=None):
-    """
-    Update the cmd_def with new single qubit gate values
+    """Update the cmd_def with new single qubit gate values
+
     Will update U2, U3
+
     Args:
         drag_params: list of drag params
         pi2_pulse_schedules: list of new pi/2 gate as a pulse schedule
-        will use the drag_params if this is None
+                             will use the drag_params if this is None.
         qubits: list of qubits to update
         inst_map: InstructionScheduleMap providing circuit instruction to
                   schedule definitions.
         cmd_def: CmdDef object for the device (deprecated)
         drives: List of drive chs
+
     Returns:
         updated cmd_def
     """
