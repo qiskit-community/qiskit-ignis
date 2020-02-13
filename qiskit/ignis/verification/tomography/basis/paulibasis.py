@@ -70,7 +70,7 @@ def pauli_preparation_circuit(
         qubit: qubit to be prepared.
 
     Returns:
-        A QuantumCircuit object.
+        The preparation circuit for the given Pauli eigenstate.
     """
 
     circ = QuantumCircuit(qubit.register)
@@ -95,22 +95,33 @@ def pauli_preparation_circuit(
 # Matrix functions for built-in bases
 ###########################################################################
 
-def pauli_preparation_matrix(label):
-    """
-    Return the matrix corresponding to a Pauli eigenstate preparation.
+def pauli_preparation_matrix(label: str) -> np.array:
+    r"""Return the matrix corresponding to a Pauli eigenstate preparation.
 
     Args:
-        label (str): single-qubit Pauli eigenstate operator label.
+        label: single-qubit Pauli eigenstate operator label.
 
     Returns:
-        numpy.array: A Numpy array for the Pauli eigenstate. Allowed inputs
+        A Numpy array for the Pauli eigenstate. Allowed inputs
             and corresponding returned matrices are:
-            'Xp' : [[1, 1], [1, 1]] / sqrt(2)
-            'Xm' : [[1, -1], [1, -1]] / sqrt(2)
-            'Yp' : [[1, -1j], [1j, 1]] / sqrt(2)
-            'Ym' : [[1, 1j], [-1j, 1]] / sqrt(2)
-            'Zp' : [[1, 0], [0, 0]]
-            'Zm' : [[0, 0], [0, 1]]
+
+            'Xp' : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & 1\\1 & 1\end{array}\right)`
+
+            'Xm' : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & -1\\1 & -1\end{array}\right)`
+
+            'Yp' : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & -i\\i & 1\end{array}\right)`
+
+            'Ym' : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & i\\-i & 1\end{array}\right)`
+
+            'Zp' : :math:`\left(\begin{array}
+            {cc}1 & 0\\0 & 0\end{array}\right)`
+
+            'Zm' : :math:`\left(\begin{array}
+            {cc}01 & 0\\0 & 1\end{array}\right)`
     """
     res = np.array([])
     # Return matrix for allowed label
@@ -129,24 +140,34 @@ def pauli_preparation_matrix(label):
     return res
 
 
-def pauli_measurement_matrix(label, outcome):
-    """
-    Return the matrix corresponding to a Pauli measurement outcome.
+def pauli_measurement_matrix(label: str, outcome: int) -> np.array:
+    r"""Return the matrix corresponding to a Pauli measurement outcome.
 
     Args:
-        label (str): single-qubit Pauli measurement operator label.
-        outcome (int): measurement outcome.
+        label: single-qubit Pauli measurement operator label.
+        outcome: measurement outcome.
 
     Returns:
-        numpy.array: A Numpy array for measurement outcome operator.
+        A Numpy array for measurement outcome operator.
             Allowed inputs and corresponding returned matrices are:
 
-            'X', 0 : [[1, 1], [1, 1]] / sqrt(2)
-            'X', 1 : [[1, -1], [1, -1]] / sqrt(2)
-            'Y', 0 : [[1, -1j], [1j, 1]] / sqrt(2)
-            'Y', 1 : [[1, 1j], [-1j, 1]] / sqrt(2)
-            'Z', 0 : [[1, 0], [0, 0]]
-            'Z', 1 : [[0, 0], [0, 1]]
+            'X', 0 : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & 1\\1 & 1\end{array}\right)`
+
+            'X', 1 : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & -1\\1 & -1\end{array}\right)`
+
+            'Y', 0 : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & -i\\i & 1\end{array}\right)`
+
+            'Y', 1 : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & i\\-i & 1\end{array}\right)`
+
+            'Z', 0 : :math:`\left(\begin{array}
+            {cc}1 & 0\\0 & 0\end{array}\right)`
+
+            'Z', 1 : :math:`\left(\begin{array}
+            {cc}01 & 0\\0 & 1\end{array}\right)`
     """
     res = np.array([])
     # Return matrix
