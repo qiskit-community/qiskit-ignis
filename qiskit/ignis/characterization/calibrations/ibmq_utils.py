@@ -96,7 +96,7 @@ def get_single_q_pulse(cmd_def, qubits):
 
 
 def update_u_gates(drag_params, pi2_pulse_schedules=None,
-                   qubits=None, cmd_def=None, drives=None):
+                   qubits=None, inst_map=None, cmd_def=None, drives=None):
     """
     Update the cmd_def with new single qubit gate values
     Will update U2, U3
@@ -105,7 +105,9 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
         pi2_pulse_schedules: list of new pi/2 gate as a pulse schedule
         will use the drag_params if this is None
         qubits: list of qubits to update
-        cmd_def: CmdDef object for the device
+        inst_map: InstructionScheduleMap providing circuit instruction to
+                  schedule definitions.
+        cmd_def: CmdDef object for the device (deprecated)
         drives: List of drive chs
     Returns:
         updated cmd_def
@@ -113,6 +115,9 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
 
     # U2 is -P1.Y90p.-P0
     # U3 is -P2.X90p.-P0.X90m.-P1
+
+    if cmd_def and not inst_map:
+        inst_map = cmd_def
 
     def parametrized_fc(kw_name, phi0, chan, t_offset):
         def _parametrized_fc(**kwargs):
@@ -134,7 +139,7 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
         # find channel dependency for u2
         for _u2_group in _find_channel_groups('u2',
                                               qubits=qubit,
-                                              cmd_def=cmd_def):
+                                              inst_map=inst_map):
             if drive_ch in _u2_group:
                 break
         else:
@@ -148,7 +153,7 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
         # find channel dependency for u2
         for _u3_group in _find_channel_groups('u3',
                                               qubits=qubit,
-                                              cmd_def=cmd_def):
+                                              inst_map=inst_map):
             if drive_ch in _u3_group:
                 break
         else:
@@ -177,23 +182,25 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
                                           parameters=['P0', 'P1', 'P2'],
                                           name='u3_%d' % qubit)
 
-        cmd_def.add(cmd_name='u2', qubits=qubit, schedule=schedule1)
-        cmd_def.add(cmd_name='u3', qubits=qubit, schedule=schedule2)
+        inst_map.add('u2', qubits=qubit, schedule=schedule1)
+        inst_map.add('u3', qubits=qubit, schedule=schedule2)
 
 
-def _find_channel_groups(command, qubits, cmd_def):
+def _find_channel_groups(command, qubits, inst_map):
     """
     Extract frame dependency of control channel on drive channel.
 
     Args:
         command: name of command.
         qubits: target qubit index.
+        inst_map: InstructionScheduleMap providing circuit instruction to
+                  schedule definitions.
     Returns:
         channel_groups: group of channels in the same frame.
     """
-    params = cmd_def.get_parameters(command, qubits=qubits)
-    temp_sched = cmd_def.get(command, qubits=qubits,
-                             **dict(zip(params, np.zeros(len(params)))))
+    params = inst_map.get_parameters(command, qubits=qubits)
+    temp_sched = inst_map.get(command, qubits=qubits,
+                              **dict(zip(params, np.zeros(len(params)))))
 
     synced_fcs = defaultdict(list)
     for t0, inst in temp_sched.instructions:
