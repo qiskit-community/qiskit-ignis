@@ -2,9 +2,9 @@
 
 .. module:: qiskit.ignis
 
-=============
-API Reference
-=============
+==========================
+Qiskit Ignis API Reference
+==========================
 
 .. toctree::
    :maxdepth: 1
