@@ -406,7 +406,7 @@ class TestCals(unittest.TestCase):
         self.assertAlmostEqual(fit.angle_err(0), 0.1, 2)
         self.assertAlmostEqual(fit.angle_err(1), 0.1, 2)
 
-
+@unittest.skip
 class TestCalibs(unittest.TestCase):
     """
     Test calibration module which creates pulse schedules
