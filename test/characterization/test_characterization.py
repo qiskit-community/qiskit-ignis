@@ -47,7 +47,6 @@ from qiskit.ignis.characterization.calibrations import (rabi_schedules,
                                                         drag_schedules,
                                                         update_u_gates)
 
-import qiskit.pulse as pulse
 from qiskit.test.mock import FakeOpenPulse2Q
 
 # Fix seed for simulations
@@ -472,9 +471,9 @@ class TestCalibs(unittest.TestCase):
 
         update_u_gates(
             single_q_params,
-           qubits=[0],
-           inst_map=self.inst_map,
-           drives=[self.config.drive(i) for i in range(self.n_qubits)])
+            qubits=[0],
+            inst_map=self.inst_map,
+            drives=[self.config.drive(i) for i in range(self.n_qubits)])
 
 
 if __name__ == '__main__':

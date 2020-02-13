@@ -200,7 +200,7 @@ def _find_channel_groups(command, qubits, inst_map):
     """
     params = inst_map.get_parameters(command, qubits=qubits)
     temp_sched = inst_map.get(command, qubits=qubits,
-                             **dict(zip(params, np.zeros(len(params)))))
+                              **dict(zip(params, np.zeros(len(params)))))
 
     synced_fcs = defaultdict(list)
     for t0, inst in temp_sched.instructions:
