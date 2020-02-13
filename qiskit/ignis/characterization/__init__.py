@@ -93,5 +93,7 @@ from .coherence import (t1_circuits,
                         t2_circuits,
                         t2star_circuits)
 from .gates import (ampcal_1Q_circuits, anglecal_1Q_circuits,
-                    ampcal_cx_circuits, anglecal_cx_circuits)
+                    ampcal_cx_circuits, anglecal_cx_circuits,
+                    AmpCalFitter, AngleCalFitter,
+                    AmpCalCXFitter, AngleCalCXFitter)
 from .hamiltonian import (zz_circuits, ZZFitter)
