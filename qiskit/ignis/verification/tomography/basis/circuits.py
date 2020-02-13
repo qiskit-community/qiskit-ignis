@@ -133,11 +133,16 @@ def process_tomography_circuits(
 # General state and process tomography circuit functions
 ###########################################################################
 
-def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
-                         meas_labels='Pauli', meas_basis='Pauli',
-                         prep_labels=None, prep_basis=None):
-    """
-    Return a list of quantum tomography circuits.
+def _tomography_circuits(
+        circuit: QuantumCircuit,
+        measured_qubits: QuantumRegister,
+        prepared_qubits: Optional[QuantumRegister] = None,
+        meas_labels: Union[str, Tuple[str], List[Tuple[str]]] = 'Pauli',
+        meas_basis: Union[str, TomographyBasis] = 'Pauli',
+        prep_labels: Union[str, Tuple[str], List[Tuple[str]]] = 'Pauli',
+        prep_basis: Union[str, TomographyBasis] = 'Pauli'
+) -> List[QuantumCircuit]:
+    """Return a list of quantum tomography circuits.
 
     This is the general circuit preparation function called by
     `state_tomography_circuits` and `process_tomography_circuits` and
@@ -145,23 +150,22 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
     circuits with custom preparation and measurement operators.
 
     Args:
-        circuit (QuantumCircuit): the QuantumCircuit circuit to be
-            tomographed.
-        measured_qubits (QuantumRegister): the qubits to be measured.
+        circuit: the QuantumCircuit circuit to be tomographed.
+        measured_qubits: the qubits to be measured.
             This can also be a list of whole QuantumRegisters or
             individual QuantumRegister qubit tuples.
-        prepared_qubits (QuantumRegister or None): the qubits to have state
+        prepared_qubits: the qubits to have state
             preparation applied, if different from measured_qubits. If None
             measured_qubits will be used for prepared qubits (Default: None).
-        meas_labels (None, str, tuple, list(tuple)): The measurement operator
+        meas_labels: The measurement operator
             labels. If None no measurements will be appended. See additional
             information for details (Default: 'Pauli').
-        prep_labels (None, str, tuple, list(tuple)): The preparation operator
+        prep_labels: The preparation operator
             labels. If None no preparations will be appended. See additional
             information for details (Default: None).
-        meas_circuit_fn (None, str, function): The measurement circuit
+        meas_circuit_fn: The measurement circuit
             function. See additional information for details (Default: None).
-        prep_circuit_fn (None, str, function): The preparation circuit
+        prep_circuit_fn: The preparation circuit
             function. See additional information for details (Default: None).
 
     Returns:
@@ -190,10 +194,10 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
         documentation.)
 
         Specifying a tuple can be used to only measure certain operators.
-        For example if we specify meas_labels=('Z', ) the resulting circuits
+        For example if we specify `meas_labels=('Z', )` the resulting circuits
         will only contain measurements in the Z-basis. Specifying
-        meas_labels=('X','Z') will only contain 2 ** n measurements in X and Z
-        basis etc.
+        `meas_labels=('X','Z')` will only contain :math:`2^n` measurements
+        in X and Z basis etc.
 
         Specifying a tuple is necessary when using a custom `meas_circuit_fn`
         or `prep_circuit_fn` as these will be the str passed to the function to
@@ -362,8 +366,18 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
 # Built-in circuit functions
 ###########################################################################
 
-def default_basis(basis):
-    """Built in Tomography Bases."""
+def default_basis(basis: Union[str, TomographyBasis]) -> TomographyBasis:
+    """Built in Tomography Bases.
+
+    Args:
+        basis: Either a **TomographyBasis** element
+        (which is simply returned) or a string describing one of the
+        built-it bases (currently: 'Pauli' and 'SIC')
+    Raises:
+        ValueError: In case the given basis is not recognized
+    Returns:
+        The requested tomography basis.
+    """
     if basis is None:
         return None
     if isinstance(basis, str):
@@ -376,15 +390,35 @@ def default_basis(basis):
     raise ValueError('Unrecognized basis: {}'.format(basis))
 
 
-def _default_measurement_labels(basis):
-    """Built in measurement basis labels."""
+def _default_measurement_labels(basis:Union[str, TomographyBasis]
+                                ) -> Tuple[str] :
+    """Built in measurement basis labels.
+
+    Args:
+        basis: A tomography basis or a name of standard one.
+    Raises:
+        ValueError: In case the basis is not recognized
+    Returns:
+        In case the base is Pauli: The labels ('X','Y','Z').
+    """
     if default_basis(basis) == PauliBasis:
         return ('X', 'Y', 'Z')
     raise ValueError('Unrecognized basis string "{}"'.format(basis))
 
 
-def _default_preparation_labels(basis):
-    """Built in preparation basis labels."""
+def _default_preparation_labels(basis: Union[str, TomographyBasis]
+                                ) -> Tuple[str]:
+    """Built in preparation basis labels.
+
+    Args:
+        basis: A tomography basis or a name of standard one.
+    Raises:
+        ValueError: In case the basis is not recognized
+    Returns:
+        - In case the base is Pauli: The labels ('Zp', 'Zm', 'Xp', 'Yp').
+        - In case the base is SIC: The labels ('S0', 'S1', 'S2', 'S3').
+
+    """
     tomo_basis = default_basis(basis)
     if tomo_basis == PauliBasis:
         return ('Zp', 'Zm', 'Xp', 'Yp')
@@ -429,7 +463,7 @@ def _generate_labels(labels, measured_qubits):
 def _format_registers(*registers):
     """Return a list of qubit QuantumRegister tuples."""
     if not registers:
-        raise Exception('No registers are being measured!')
+        raise QiskitError('No registers are being measured!')
     qubits = []
     for tuple_element in registers:
         if isinstance(tuple_element, QuantumRegister):
@@ -439,12 +473,29 @@ def _format_registers(*registers):
             qubits.append(tuple_element)
     # Check registers are unique
     if len(qubits) != len(set(qubits)):
-        raise Exception('Qubits to be measured are not unique!')
+        raise QiskitError('Qubits to be measured are not unique!')
     return qubits
 
 
-def _operator_tuples(labels, qubits):
-    """Return a list of all length-n tuples."""
+def _operator_tuples(labels: Tuple[str],
+                     qubits: Union[int,
+                                   QuantumRegister,
+                                   List[QuantumRegister]
+                     ]) -> List[Tuple[str]]:
+    """Return a list of all length-n tuples of labels.
+
+    Args:
+        labels: The basis labels to build tuples from
+        qubits: Either qubits the tomography will be applied to
+            or their length
+    Returns:
+        All n-length sequences of elements of **labels**.
+        For example, if **labels** = ('X', 'Y', 'Z')
+        and the number of qubits n=2, then the result will be the list
+        [('X', 'X'), ('X', 'Y'), ('X', 'Z'),
+         ('Y', 'X'), ('Y', 'Y'), ('Y', 'Z'),
+         ('Z', 'X'), ('Z', 'Y'), ('Z', 'Z')]
+    """
     if isinstance(qubits, int):
         num_qubits = qubits
     elif isinstance(qubits, list):
