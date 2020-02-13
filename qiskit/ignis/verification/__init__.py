@@ -94,9 +94,11 @@ from .randomized_benchmarking import (Clifford, BasicUtils, CliffordUtils,
 from .topological_codes import (RepetitionCode, GraphDecoder,
                                 lookuptable_decoding,
                                 postselection_decoding)
-from .tomography import (state_tomography_circuits, process_tomography_circuits, basis,
+from .tomography import (state_tomography_circuits,
+                         process_tomography_circuits, basis,
                          StateTomographyFitter,
                          ProcessTomographyFitter,
                          TomographyFitter,
-                         marginal_counts, combine_counts, expectation_counts, count_keys)
+                         marginal_counts, combine_counts,
+                         expectation_counts, count_keys)
 from .accreditation import accreditation_circuits, accreditationFitter
