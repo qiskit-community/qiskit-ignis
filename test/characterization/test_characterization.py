@@ -421,24 +421,25 @@ class TestCalibs(unittest.TestCase):
 
         backend_fake = FakeOpenPulse2Q()
 
+        self.config = backend_fake.configuration()
+        self.meas_map = self.config.meas_map
+        self.n_qubits = self.config.n_qubits
         back_defaults = backend_fake.defaults()
-        self.meas_map = backend_fake.configuration().meas_map
-        self.system = pulse.PulseChannelSpec.from_backend(backend_fake)
-        self.cmd_def = pulse.CmdDef.from_defaults(back_defaults.cmd_def,
-                                                  back_defaults.pulse_library)
+        self.inst_map = back_defaults.instruction_schedule_map
 
     def test_rabi(self):
         """
         make sure the rabi function will create a schedule
         """
 
-        rabi, xdata = rabi_schedules(np.linspace(-1, 1, 10),
-                                     [0, 1],
-                                     10,
-                                     2.5,
-                                     drives=self.system.drives,
-                                     cmd_def=self.cmd_def,
-                                     meas_map=self.meas_map)
+        rabi, xdata = rabi_schedules(
+            np.linspace(-1, 1, 10),
+            [0, 1],
+            10,
+            2.5,
+            drives=[self.config.drive(i) for i in range(self.n_qubits)],
+            inst_map=self.inst_map,
+            meas_map=self.meas_map)
 
         self.assertEqual(len(rabi), 10)
         self.assertEqual(len(xdata), 10)
@@ -448,14 +449,15 @@ class TestCalibs(unittest.TestCase):
         Make sure the drag function will create a schedule
         """
 
-        drag_scheds, xdata = drag_schedules(np.linspace(-3, 3, 11),
-                                            [0, 1],
-                                            [0.5, 0.6],
-                                            10,
-                                            pulse_sigma=2.5,
-                                            drives=self.system.drives,
-                                            cmd_def=self.cmd_def,
-                                            meas_map=self.meas_map)
+        drag_scheds, xdata = drag_schedules(
+            np.linspace(-3, 3, 11),
+            [0, 1],
+            [0.5, 0.6],
+            10,
+            pulse_sigma=2.5,
+            drives=[self.config.drive(i) for i in range(self.n_qubits)],
+            inst_map=self.inst_map,
+            meas_map=self.meas_map)
 
         self.assertEqual(len(drag_scheds), 11)
         self.assertEqual(len(xdata), 11)
@@ -468,10 +470,11 @@ class TestCalibs(unittest.TestCase):
         single_q_params = [{'amp': 0.1, 'duration': 15,
                             'beta': 0.1, 'sigma': 3}]
 
-        update_u_gates(single_q_params,
-                       qubits=[0],
-                       cmd_def=self.cmd_def,
-                       drives=self.system.drives)
+        update_u_gates(
+            single_q_params,
+           qubits=[0],
+           inst_map=self.inst_map,
+           drives=[self.config.drive(i) for i in range(self.n_qubits)])
 
 
 if __name__ == '__main__':
