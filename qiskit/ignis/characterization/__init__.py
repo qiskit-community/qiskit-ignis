@@ -89,9 +89,9 @@ from .fitters import BaseCoherenceFitter, BaseGateFitter
 from .calibrations import (rabi_schedules, drag_schedules,
                            RabiFitter, DragFitter,
                            get_single_q_pulse, update_u_gates)
-from .coherence import (t1_circuits,
-                        t2_circuits,
-                        t2star_circuits)
+from .coherence import (t1_circuits, t2_circuits,
+                        t2star_circuits,
+                        T1Fitter, T2Fitter, T2StarFitter)
 from .gates import (ampcal_1Q_circuits, anglecal_1Q_circuits,
                     ampcal_cx_circuits, anglecal_cx_circuits,
                     AmpCalFitter, AngleCalFitter,
