@@ -58,7 +58,7 @@ def get_single_q_pulse(cmd_def, qubits):
     Returns:
         List of dictionaries with the parameters for the DRAG
 
-    TODO:
+    Notes:
         Deprecated once parameterized pulses are supported
     """
 

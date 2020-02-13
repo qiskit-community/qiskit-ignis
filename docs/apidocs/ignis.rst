@@ -1,19 +1,10 @@
 .. _qiskit-ignis:
 
-************
-qiskit.ignis
-************
+.. module:: qiskit.ignis
 
-.. currentmodule:: qiskit.ignis
-
-
-.. automodapi:: qiskit.ignis
-  :no-heading:
-  :no-inheritance-diagram:
-  :inherited-members:
-
-Submodules
-==========
+=============
+API Reference
+=============
 
 .. toctree::
    :maxdepth: 1

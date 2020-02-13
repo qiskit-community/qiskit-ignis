@@ -28,13 +28,15 @@ def routine_one(gate, cz_gate, type_circ):
     """
     Routine 1.
     It appends QOTP to gate in the circuit.
-        Args:
-            gate (list): list of all 1-qubit gate in circuit
-            cz_gate (list): list of all cz gate in circuit
-            type_circ (integer): 0 if circuit is target, 1 if circuit is trap
-        Returns:
-            qotp_gate (list): list of all 1-qubit gate and QOTP
-            postp (list): string used in classical post-processing
+
+    Args:
+        gate (list): list of all 1-qubit gate in circuit
+        cz_gate (list): list of all cz gate in circuit
+        type_circ (integer): 0 if circuit is target, 1 if circuit is trap
+
+    Returns:
+        qotp_gate (list): list of all 1-qubit gate and QOTP
+        postp (list): string used in classical post-processing
     """
 
     # Size of un-encoded circuit
@@ -149,13 +151,14 @@ def routine_two(n_qb, m_bands, cz_gate):
     """
     Routine 2.
     It returns random 1-qubit gate for trap circuits
-        Args:
-            n_qb (int): number of qubits
-            m_bands (int): number of bands
-            cz_gate (list): list of all cz gate in circuit
+    
+    Args:
+        n_qb (int): number of qubits
+        m_bands (int): number of bands
+        cz_gate (list): list of all cz gate in circuit
 
-        Returns:
-            gate_trap (list): list of all 1-qubit gates in trap circuit
+    Returns:
+        gate_trap (list): list of all 1-qubit gates in trap circuit
     """
 
     # Define a new set of 1-qubit gates initialized to identity
@@ -206,16 +209,17 @@ def routine_two(n_qb, m_bands, cz_gate):
 def accreditation_circuits(target_circuit, num_trap):
     """
     Simulation of quantum circuit on backend
-        Args:
-            target_circuit (QuantumCircuit): Quantum circuit consisting of
-                cZ gates and arbitrary single qubit gates, followed by Z
-                measurements on all qubits
-            num_trap (int): number of trap circuits
+    
+    Args:
+        target_circuit (QuantumCircuit): Quantum circuit consisting of
+            cZ gates and arbitrary single qubit gates, followed by Z
+            measurements on all qubits
+        num_trap (int): number of trap circuits
 
-        Returns:
-            circuit_list (list): accreditation circuits
-            postp_list (list): strings used for classical post-processing
-            v_zero (int): position of target circuit
+    Returns:
+        circuit_list (list): accreditation circuits
+        postp_list (list): strings used for classical post-processing
+        v_zero (int): position of target circuit
     """
     gate_target, cz_gate = accreditation_parser(target_circuit)
 
@@ -323,16 +327,17 @@ def accreditation_circuits(target_circuit, num_trap):
 
 
 def accreditation_parser(target_circuit):
-    """
-        Converts an input quantum circuit to lists representing the input
-            Args:
-                target_circuit (QuantumCircuit): Quantum circuit consisting of
-                cZ gates and single qubit gates, followed by Pauli-Z measure-
-                ments on all qubits
-            Returns:
-                gates_target (list): A 2D list of all 1-qubit gates in the
-                    target circuit
-                cz_gate (list): list of all cz gate in target circuit
+    """Converts an input quantum circuit to lists representing the input
+    
+    Args:
+        target_circuit (QuantumCircuit): Quantum circuit consisting of
+        cZ gates and single qubit gates, followed by Pauli-Z measure-
+        ments on all qubits
+    
+    Returns:
+        gates_target (list): A 2D list of all 1-qubit gates in the
+            target circuit
+        cz_gate (list): list of all cz gate in target circuit
         """
     # Initialize empty lists gates_target and cz_gate
     gates_target = []

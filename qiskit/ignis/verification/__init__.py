@@ -43,7 +43,10 @@ Randomized Benchmarking
    CliffordUtils
    CNOTDihedral
    DihedralUtils
-   rb_utils
+   count_gates
+   gates_per_clifford
+   coherence_limit
+   twoQ_clifford_error
 
 
 Tomography
@@ -75,6 +78,7 @@ Topological Codes
    lookuptable_decoding
    postselection_decoding
 
+
 Accreditation
 =============
 
@@ -90,7 +94,9 @@ from .randomized_benchmarking import (Clifford, BasicUtils, CliffordUtils,
                                       CNOTDihedral, DihedralUtils,
                                       randomized_benchmarking_seq,
                                       RBFitter, InterleavedRBFitter,
-                                      PurityRBFitter, CNOTDihedralRBFitter)
+                                      PurityRBFitter, CNOTDihedralRBFitter,
+                                      count_gates, gates_per_clifford,
+                                      coherence_limit, twoQ_clifford_error)
 from .topological_codes import (RepetitionCode, GraphDecoder,
                                 lookuptable_decoding,
                                 postselection_decoding)
