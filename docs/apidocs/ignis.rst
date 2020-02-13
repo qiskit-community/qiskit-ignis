@@ -1,8 +1,8 @@
 .. _qiskit-ignis:
 
-****************
+************
 qiskit.ignis
-****************
+************
 
 .. currentmodule:: qiskit.ignis
 
@@ -18,6 +18,6 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   characterization/characterization
-   mitigation/mitigation
-   verification/verification
+   characterization
+   mitigation
+   verification
