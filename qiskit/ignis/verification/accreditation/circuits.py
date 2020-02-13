@@ -151,7 +151,7 @@ def routine_two(n_qb, m_bands, cz_gate):
     """
     Routine 2.
     It returns random 1-qubit gate for trap circuits
-    
+
     Args:
         n_qb (int): number of qubits
         m_bands (int): number of bands
@@ -209,7 +209,7 @@ def routine_two(n_qb, m_bands, cz_gate):
 def accreditation_circuits(target_circuit, num_trap):
     """
     Simulation of quantum circuit on backend
-    
+
     Args:
         target_circuit (QuantumCircuit): Quantum circuit consisting of
             cZ gates and arbitrary single qubit gates, followed by Z
@@ -328,12 +328,12 @@ def accreditation_circuits(target_circuit, num_trap):
 
 def accreditation_parser(target_circuit):
     """Converts an input quantum circuit to lists representing the input
-    
+
     Args:
         target_circuit (QuantumCircuit): Quantum circuit consisting of
         cZ gates and single qubit gates, followed by Pauli-Z measure-
         ments on all qubits
-    
+
     Returns:
         gates_target (list): A 2D list of all 1-qubit gates in the
             target circuit
