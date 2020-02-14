@@ -22,7 +22,7 @@ randomized model circuits", arXiv:1811.12926
 import math
 import numpy as np
 from qiskit import QiskitError
-from ...characterization.fitters import build_counts_dict_from_list
+from ...utils import build_counts_dict_from_list
 
 try:
     from matplotlib import pyplot as plt

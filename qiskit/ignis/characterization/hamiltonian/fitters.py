@@ -20,7 +20,7 @@ Fitters for hamiltonian parameters
 """
 
 import numpy as np
-from .. import BaseCoherenceFitter
+from ..fitters import BaseCoherenceFitter
 
 
 class ZZFitter(BaseCoherenceFitter):
