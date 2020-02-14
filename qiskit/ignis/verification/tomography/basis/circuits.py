@@ -18,10 +18,11 @@ Quantum tomography circuit generation.
 """
 
 import logging
-from typing import List, Union, Dict, Tuple, Optional
+from typing import List, Union, Tuple, Optional
 import itertools as it
 
 from qiskit import QuantumRegister
+from qiskit.circuit import Qubit
 from qiskit import ClassicalRegister
 from qiskit import QuantumCircuit
 from qiskit import QiskitError
@@ -432,10 +433,27 @@ def _default_preparation_labels(basis: Union[str, TomographyBasis]
 ###########################################################################
 
 def tomography_circuit_tuples(
-        measured_qubits,
-        meas_labels='Pauli',
-        prep_labels=None):
-    """Return list of tomography circuit label tuples."""
+        measured_qubits: Union[int,
+                               QuantumRegister,
+                               List[QuantumRegister]],
+        meas_labels: Union[str, TomographyBasis, Tuple]='Pauli',
+        prep_labels: Optional[Union[str, TomographyBasis, Tuple]]=None
+        ) -> List:
+    """Return list of tomography circuit label tuples.
+    Args:
+        measured_qubits: Either qubits the tomography will be applied to
+        or their length
+        meas_labels: The measurement basis labels or the basis itself.
+        prep_labels: The preparation basis labels or the basis itself.
+    Returns:
+        A list of all pairs :math:`[m_l, p_k]` where
+        :math:`m_1,\ldots m_t` are all the n-qubit measurement labels
+        and :math:`p_1,\ldots, p_s` are all the n-qubit preparation labels
+
+        Note that if prep_labels are empty, it will be considered
+        as containing only the empty string "", so a list with
+        all measurement lables will still be generated.
+    """
 
     if isinstance(meas_labels, (str, TomographyBasis)):
         meas_labels = _default_measurement_labels(meas_labels)
@@ -447,21 +465,51 @@ def tomography_circuit_tuples(
     return [(ml, pl) for pl, ml in it.product(mls, pls)]
 
 
-def _generate_labels(labels, measured_qubits):
-    """Return list of n-qubit measurement circuit labels."""
+def _generate_labels(labels: Optional[Union[Tuple[str],
+                                            List[Tuple[str]],
+                                            str]],
+                     measured_qubits: Union[int,
+                                   QuantumRegister,
+                                   List[QuantumRegister]]
+                     ) -> List[Tuple[str]]:
+    """Return list of n-qubit measurement circuit labels.
+    Args:
+        labels: A tuple of the basis labels, or a string of the basis
+            labels separated by spaces, or a list of pre-made tuples.
+        measured_qubits: Either qubits the tomography will be applied to
+            or their length
+    Raises:
+        ValueError: if the label specification is wrong.
+    Returns:
+        A list of length n-tuples containing all possible
+            combinations of the given labels.
+    """
     if labels is None:
         return [None]
     # Generate n-qubit tuples for single qubit tuples
     if isinstance(labels, tuple):
         labels = _operator_tuples(labels, measured_qubits)
+    if isinstance(labels, str):
+        labels = _operator_tuples(labels.split(" "), measured_qubits)
     if isinstance(labels, list):
         return labels
     raise ValueError(
         'Invalid labels specification: must be None, list, string, or tuple')
 
 
-def _format_registers(*registers):
-    """Return a list of qubit QuantumRegister tuples."""
+def _format_registers(*registers: Union[Qubit, QuantumRegister]
+                      ) -> List[Qubit]:
+    """Return a list of qubit QuantumRegister tuples.
+
+    Args:
+        registers: Any nonzero number of qubits or
+        quantum registers, all unique
+    Raises:
+         QiskitError: If no qubits/registers were passed
+            or non-unique qubits passed
+    Returns:
+        A flat list of all qubits passed.
+    """
     if not registers:
         raise QiskitError('No registers are being measured!')
     qubits = []
