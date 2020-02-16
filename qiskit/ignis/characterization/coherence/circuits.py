@@ -66,24 +66,30 @@ def t1_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
     return circuits, xdata
 
 
-def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
+def t2star_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
+                                    ],
+                    gate_time: float,
+                    qubits: List[int],
+                    nosc: (int, 0)) -> Tuple[List[qiskit.QuantumCircuit], Any #Array[np.float]
+                                          , float
+                                          ]:
     """
     Generate circuits for T2* measurement.
-    Each circuit consists of a Hadamard gate, followed by a sequence of
+    | Each circuit consists of a Hadamard gate, followed by a sequence of
     identity gates, a phase gate (with a linear phase), and an additional
     Hadamard gate.
 
     Args:
-        num_of_gates (list of integers): the number of identity gates in each
+        num_of_gates: the number of identity gates in each
             circuit. Must be in an increasing order.
-        gate_time (float): time of running a single gate.
-        qubits (list of integers): indices of the qubits
-            whose T2* are to be measured.
+        gate_time: time of running a single identity gate.
+        qubits: indices of the qubits
+            whose T2*'s are to be measured.
         nosc: number of oscillations to induce using the phase gate
     Returns:
-        A list of QuantumCircuit
-        xdata: a list of delay times
-        osc_freq: the induced oscillation frequency
+        The generated circuits
+        | Delay times, i.e., `gate_time` multiplied by the numbers in `num_of_gates`
+        | osc_freq: the induced oscillation frequency
     """
 
     xdata = gate_time * num_of_gates

@@ -38,10 +38,7 @@ Coherence
 =========
 
 Design and analyze experiments for characterizing device coherence
-(e.g. T1, T2).
-
-Example: T1 estimation
-======================
+(e.g. T1, T2). See the following example of T1 estimation.
 
 Generation of coherence circuits: these circuits set the qubit in
 the excited state, wait different time intervals, then measure
