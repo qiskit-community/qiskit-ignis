@@ -34,7 +34,7 @@ the qubit.
     import numpy as np
     from qiskit.ignis.characterization.coherence import t1_circuits
 
-    num_of_gates = (np.linspace(10, 300, 5)).astype(int)
+    num_of_gates = np.linspace(10, 300, 5, dtype='int')
     gate_time = 0.1
 
     # Note that it is possible to measure several qubits in parallel
