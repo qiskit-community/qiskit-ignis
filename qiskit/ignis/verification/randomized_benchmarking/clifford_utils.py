@@ -81,6 +81,9 @@ class CliffordUtils(BasicUtils):
         Returns:
             A Clifford class object, after composing cliff and
             the gates from gatelist.
+
+        Raises:
+            ValueError: unknown gate type.
         """
 
         for op in gatelist:
@@ -385,6 +388,10 @@ class CliffordUtils(BasicUtils):
         Returns:
             A pickle file with the 1 or 2 qubit Clifford group
             tables.
+
+        Raises:
+            ValueError: number of qubits bigger than 2 is
+                not supported.
         """
 
         cliffords = {}
@@ -426,6 +433,10 @@ class CliffordUtils(BasicUtils):
 
         Returns:
             A table of all the Clifford objects.
+
+        Raises:
+            ValueError: number of qubits bigger than 2 is
+                not supported.
         """
 
         # load the clifford tables, but only if we're using that particular
@@ -465,13 +476,17 @@ class CliffordUtils(BasicUtils):
     # --------------------------------------------------------
     def random_gates(self, num_qubits):
         """
-        Pick a random Clifford gate.
+        Pick a random Clifford gate on num_qubits.
 
         Args:
             num_qubits: dimension of the Clifford object.
 
         Returns:
             A 1 or 2 qubit random Clifford gate.
+
+        Raises:
+            ValueError: number of qubits bigger than 2 is
+                not supported.
         """
 
         if num_qubits == 1:
@@ -497,6 +512,10 @@ class CliffordUtils(BasicUtils):
 
         Returns:
             An inverse Clifford gate.
+
+        Raises:
+            ValueError: number of qubits bigger than 2 is
+                not supported.
         """
 
         if num_qubits in (1, 2):
