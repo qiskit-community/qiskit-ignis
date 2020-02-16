@@ -92,7 +92,7 @@ def t2star_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
         | osc_freq: the induced oscillation frequency
     """
 
-    xdata = gate_time * num_of_gates
+    xdata = gate_time * np.array(num_of_gates)
 
     qr = qiskit.QuantumRegister(max(qubits)+1)
     cr = qiskit.ClassicalRegister(len(qubits))
@@ -142,7 +142,7 @@ def t2_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
             Must be in an increasing order.
         gate_time: time of running a single identity gate.
         qubits: indices of the qubits whose
-            T2 are to be measured.
+            T2's are to be measured.
         n_echos: number of echo gates (X or Y).
         phase_alt_echo: if True then alternate the echo between
             X and Y.
@@ -154,7 +154,7 @@ def t2_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
     if n_echos < 1:
         raise ValueError('Must be at least one echo')
 
-    xdata = 2 * gate_time * num_of_gates * n_echos
+    xdata = 2 * gate_time * np.array(num_of_gates) * n_echos
 
     qr = qiskit.QuantumRegister(max(qubits)+1)
     cr = qiskit.ClassicalRegister(len(qubits))
