@@ -17,29 +17,35 @@ Circuit generation for coherence experiments
 """
 
 import numpy as np
+from typing import List, Union, Tuple, Any
+#from nptyping import Array
 import qiskit
 from ..characterization_utils import pad_id_gates
 
-
-def t1_circuits(num_of_gates, gate_time, qubits):
+def t1_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
+                                    ],
+                gate_time: float,
+                qubits: List[int]) -> Tuple[List[qiskit.QuantumCircuit], Any #Array[np.float]
+                                            ]:
     """
-    Generates circuit for T1 measurement.
-    Each circuit consists of an X gate, followed by a sequence of identity
+    Generate circuits for T1 measurement.
+    |  Each circuit consists of an X gate, followed by a sequence of identity
     gates.
 
     Args:
-        num_of_gates (list of integers): the number of identity gates in each
+        num_of_gates: the number of identity gates in each
             circuit. Must be in an increasing order.
-        gate_time (float): time of running a single gate.
-        qubits (list of integers): indices of the qubits whose T1 are
+        gate_time: time of running a single identity gate.
+        qubits: indices of the qubits whose T1's are
             to be measured.
 
     Returns:
-       A list of QuantumCircuit
-       xdata: a list of delay times
+        Generated circuits
+        |  Delay times, i.e., `gate_time` multiplied by the numbers in `num_of_gates`
+
     """
 
-    xdata = gate_time * num_of_gates
+    xdata = gate_time * np.array(num_of_gates)
 
     qr = qiskit.QuantumRegister(max(qubits)+1)
     cr = qiskit.ClassicalRegister(len(qubits))
@@ -62,7 +68,7 @@ def t1_circuits(num_of_gates, gate_time, qubits):
 
 def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
     """
-    Generates circuit for T2* measurement.
+    Generate circuits for T2* measurement.
     Each circuit consists of a Hadamard gate, followed by a sequence of
     identity gates, a phase gate (with a linear phase), and an additional
     Hadamard gate.
@@ -108,7 +114,7 @@ def t2star_circuits(num_of_gates, gate_time, qubits, nosc=0):
 def t2_circuits(num_of_gates, gate_time, qubits, n_echos=1,
                 phase_alt_echo=False):
     """
-    Generates circuit for T2 (echo) measurement, by a CPMG sequence.
+    Generate circuits for T2 (echo) measurement, by a CPMG sequence.
     Each circuit consists of:
     - Y90-t-Y-[t-t-X/Y]^m-t-Y90
     - n_echos = n+1
