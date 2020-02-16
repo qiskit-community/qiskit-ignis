@@ -12,26 +12,27 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-'''
+"""
 Decoders for quantum error correction codes, with a focus on those that can be
 expressed as solving a graph-theoretic problem.
-'''
+"""
 
 import copy
 import warnings
 import networkx as nx
+import numpy as np
 
 from qiskit import QuantumCircuit, Aer, execute
 
 
 class GraphDecoder():
-    '''
-        Class to construct the graph corresponding to the possible syndromes
-        of a quantum error correction code, and then run suitable decoders.
-    '''
+    """
+    Class to construct the graph corresponding to the possible syndromes
+    of a quantum error correction code, and then run suitable decoders.
+    """
 
     def __init__(self, code, S=None):
-        '''
+        """
         Args:
             code: The QEC Code object for which this decoder will be used.
             S: Graph describing connectivity between syndrome elements. Will
@@ -42,7 +43,7 @@ class GraphDecoder():
             time, it is also possible to load in a premade `S`. However,
             if this was created for a differently defined `code`,it won't work
             properly.
-        '''
+        """
 
         self.code = code
 
@@ -58,14 +59,32 @@ class GraphDecoder():
             separated_string.append(syndrome_type_string.split(' '))
         return separated_string
 
+    def _string2nodes(self, string):
+
+        separated_string = self._separate_string(string)
+        nodes = []
+        for syn_type, _ in enumerate(separated_string):
+            for syn_round in range(
+                    len(separated_string[syn_type])):
+                elements = \
+                    separated_string[syn_type][syn_round]
+                for elem_num, element in enumerate(elements):
+                    if element == '1':
+                        nodes.append((syn_type,
+                                      syn_round,
+                                      elem_num))
+        return nodes
+
     def _make_syndrome_graph(self):
-        '''
+        """
         This method injects all possible Pauli errors into the circuit for
-        `code`. This is done by examining the qubits used in each gate of the
+        `code`.
+
+        This is done by examining the qubits used in each gate of the
         circuit for a stored logical 0. A graph is then created with a node
         for each non-trivial syndrome element, and an edge between all such
         elements that can be created by the same error.
-        '''
+        """
 
         S = nx.Graph()
 
@@ -106,19 +125,14 @@ class GraphDecoder():
                     results = self.code.process_results(raw_results)['0']
 
                     for string in results:
-                        separated_string = self._separate_string(string)
 
-                        nodes = []
-                        for syn_type, _ in enumerate(separated_string):
-                            for syn_round in range(
-                                    len(separated_string[syn_type])):
-                                elements = \
-                                    separated_string[syn_type][syn_round]
-                                for elem_num, element in enumerate(elements):
-                                    if element == '1':
-                                        nodes.append((syn_type,
-                                                      syn_round,
-                                                      elem_num))
+                        nodes = self._string2nodes(string)
+
+                        assert len(nodes) in [0, 2], "Error of type " + \
+                            error + " on qubit " + str(qubit) + \
+                            " at depth " + str(j) + " creates " + \
+                            str(len(nodes)) + \
+                            " nodes in syndrome graph, instead of 2."
 
                         for node in nodes:
                             S.add_node(node)
@@ -129,17 +143,59 @@ class GraphDecoder():
 
         return S
 
+    def weight_syndrome_graph(self, results):
+        """Generate weighted syndrome graph from result counts.
+
+        Args:
+            results: A results dictionary, as produced by the
+            `process_results` method of the code.
+            algorithm: Choice of which decoder to use.
+
+        Additional information:
+            Uses `results` to estimate the probability of the errors that
+            create the pairs of nodes in S. The edge weights are then
+            replaced with the corresponding -log(p/(1-p).
+        """
+
+        results = results['0']
+
+        count = {element: {edge: 0 for edge in self.S.edges}
+                 for element in ['00', '01', '10', '11']}
+
+        for string in results:
+
+            nodes = self._string2nodes(string)
+
+            for edge in self.S.edges:
+                element = ''
+                for j in range(2):
+                    if edge[j] in nodes:
+                        element += '1'
+                    else:
+                        element += '0'
+                count[element][edge] += results[string]
+
+        for edge in self.S.edges:
+            edge_data = self.S.get_edge_data(edge[0], edge[1])
+            ratios = []
+            for elements in [('00', '11'), ('11', '00'),
+                             ('01', '10'), ('10', '01')]:
+                if count[elements[1]][edge] > 0:
+                    ratio = count[elements[0]][edge]/count[elements[1]][edge]
+                    ratios.append(ratio)
+            edge_data['distance'] = -np.log(min(ratios))
+
     def make_error_graph(self, string, subgraphs=None):
-        '''
+        """
         Args:
             string: A string describing the output from the code.
-            subgraphs: Used when multiple, semi-indepedent graphs need
+            subgraphs: Used when multiple, semi-independent graphs need
             need to created.
 
         Returns:
             E: The subgraph(s) of S which corresponds to the non-trivial
             syndrome elements in the given string.
-        '''
+        """
 
         if subgraphs is None:
             subgraphs = []
@@ -171,13 +227,13 @@ class GraphDecoder():
                 for target in E[subgraph]:
                     if target != (source):
                         distance = int(nx.shortest_path_length(
-                            self.S, source, target))
+                            self.S, source, target, weight='distance'))
                         E[subgraph].add_edge(source, target, weight=-distance)
 
         return E
 
     def matching(self, string):
-        '''
+        """
         Args:
             string: A string describing the output from the code.
 
@@ -188,7 +244,7 @@ class GraphDecoder():
         Additional information:
             This function can be run directly, or used indirectly to
             calculate a logical error probability with `get_logical_prob`
-        '''
+        """
 
         # this matching algorithm is designed for a single graph
         E = self.make_error_graph(string)['0']
@@ -227,7 +283,7 @@ class GraphDecoder():
         # do the matching on this
         matches = nx.max_weight_matching(E_matching, maxcardinality=True)
 
-        # use it to construct and return a correcetd logical string
+        # use it to construct and return a corrected logical string
         logicals = self._separate_string(string)[0]
         for (source, target) in matches:
             if source[0] == 0 and target[0] != 0:
@@ -243,7 +299,7 @@ class GraphDecoder():
         return logical_string
 
     def get_logical_prob(self, results, algorithm='matching'):
-        '''
+        """
         Args:
             results: A results dictionary, as produced by the
             `process_results` method of the code.
@@ -253,7 +309,7 @@ class GraphDecoder():
             logical_prob: Dictionary of logical error probabilities for
             each of the encoded logical states whose results were given in
             the input.
-        '''
+        """
 
         logical_prob = {}
         for log in results:
@@ -287,19 +343,20 @@ class GraphDecoder():
 
 
 def postselection_decoding(results):
-    '''
+    """
     Calculates the logical error probability using postselection decoding.
+
     This postselects all results with trivial syndrome.
 
     Args:
         results: A results dictionary, as produced by the
-                `process_results` method of a code.
+            `process_results` method of a code.
 
     Returns:
         logical_prob: Dictionary of logical error probabilities for
         each of the encoded logical states whose results were given in
         the input.
-    '''
+    """
     logical_prob = {}
     postselected_results = {}
     for log in results:
@@ -331,15 +388,15 @@ def postselection_decoding(results):
 
 
 def lookuptable_decoding(training_results, real_results):
-    '''
+    """
     Calculates the logical error probability using postselection decoding.
     This postselects all results with trivial syndrome.
 
     Args:
         training_results: A results dictionary, as produced by the
-                `process_results` method of a code.
+            `process_results` method of a code.
         real_results: A results dictionary, as produced by the
-                `process_results` method of a code.
+            `process_results` method of a code.
 
     Returns:
         logical_prob: Dictionary of logical error probabilities for
@@ -353,7 +410,7 @@ def lookuptable_decoding(training_results, real_results):
         decoding. This is done using `training_results` as a guide to which
         syndrome is most probable for each logical value, and the
         probability is calculated for the results in `real_results`.
-    '''
+    """
 
     logical_prob = {}
     for log in real_results:

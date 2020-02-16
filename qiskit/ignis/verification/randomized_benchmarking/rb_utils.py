@@ -59,9 +59,7 @@ def count_gates(qobj, basis, qubits):
 
 
 def gates_per_clifford(qobj_list, clifford_length, basis, qubits):
-
-    """
-    Take a list of compiled qobjs (for each seed) and use these
+    """Take a list of compiled qobjs (for each seed) and use these
     to calculate the number of gates per clifford
 
     Args:
@@ -71,10 +69,10 @@ def gates_per_clifford(qobj_list, clifford_length, basis, qubits):
         qubits: qubits to count over
 
     Returns:
-        l x m list of number of gates per clifford
-        (same order as basis).
-            l: number of qubits
-            m: length of basis
+        list: l x m of number of gates per clifford
+              (same order as basis).
+                l: number of qubits
+                m: length of basis
     """
 
     ncliffs = 0
@@ -99,7 +97,7 @@ def coherence_limit(nQ=2, T1_list=None, T2_list=None,
         nQ: number of qubits (1 and 2 supported)
         T1_list: list of T1's (Q1,...,Qn)
         T2_list: list of T2's (as measured, not Tphi).
-                 If not given assume T2=2*T1
+            If not given assume T2=2*T1
         gatelen: length of the gate
 
     Returns:
@@ -152,8 +150,8 @@ def twoQ_clifford_error(ngates, gate_qubit, gate_err):
 
     Args:
         ngates: list of the number of gates per 2Q Clifford
-        gate_qubit: list of the qubit corresponding to the gate (0, 1 or
-                    -1). -1 corresponds to the 2Q gate.
+        gate_qubit: list of the qubit corresponding to the gate (0, 1 or -1).
+            -1 corresponds to the 2Q gate.
         gate_err: list of the gate errors
 
     Returns:

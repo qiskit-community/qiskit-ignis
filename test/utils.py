@@ -12,15 +12,14 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Functions of general purpose utility for Ignis.
-"""
+"""Functions of general purpose utility for Ignis."""
 import random
 from typing import List
 
 
-def qubit_shot(i_mean, q_mean, i_std, q_std):
+def qubit_shot(i_mean: float, q_mean: float, i_std: float, q_std: float):
     """Creates a random IQ point using a Gaussian distribution.
+
     Args:
         i_mean: mean of I distribution
         q_mean: mean of Q distribution
@@ -36,6 +35,7 @@ def qubit_shot(i_mean, q_mean, i_std, q_std):
 def create_shots(i_mean: float, q_mean: float, i_std: float, q_std: float,
                  shots: int, qubits: List[int]):
     """Creates random IQ points for qubits using a Gaussian distribution.
+
     Args:
         i_mean: mean of I distribution
         q_mean: mean of Q distribution

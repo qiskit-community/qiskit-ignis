@@ -30,11 +30,11 @@ def lstsq_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
         data (vector like): vector of expectation values
         basis_matrix (matrix like): matrix of measurement operators
         weights (vector like, optional): vector of weights to apply to the
-                                         objective function (default: None)
+            objective function (default: None)
         PSD (bool, optional): Enforced the fitted matrix to be positive
-                              semidefinite (default: True)
+            semidefinite (default: True)
         trace (int, optional): trace constraint for the fitted matrix
-                               (default: None).
+            (default: None).
 
     Returns:
         The fitted matrix rho that minimizes
@@ -120,7 +120,7 @@ def make_positive_semidefinite(mat, epsilon=0):
         mat (array like): a hermitian matrix.
         epsilon (float >=0, optional): the threshold for setting
             eigenvalues to zero. If epsilon > 0 positive eigenvalues
-            below epislon will also be set to zero (Default 0).
+            below epsilon will also be set to zero (Default 0).
     Returns:
         The input matrix rescaled to have non-negative eigenvalues.
 

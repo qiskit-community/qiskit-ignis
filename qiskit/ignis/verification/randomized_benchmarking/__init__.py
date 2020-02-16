@@ -21,6 +21,10 @@ Randomized Benchmarking module
 from .Clifford import Clifford
 from .basic_utils import BasicUtils
 from .clifford_utils import CliffordUtils
+from .dihedral import CNOTDihedral
+from .dihedral_utils import DihedralUtils
 from .circuits import randomized_benchmarking_seq
-from .fitters import RBFitter, InterleavedRBFitter, PurityRBFitter
-from . import rb_utils
+from .fitters import (RBFitter, InterleavedRBFitter, PurityRBFitter,
+                      CNOTDihedralRBFitter)
+from .rb_utils import (count_gates, gates_per_clifford,
+                       coherence_limit, twoQ_clifford_error)

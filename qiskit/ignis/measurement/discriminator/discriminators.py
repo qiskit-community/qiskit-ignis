@@ -12,6 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 from abc import ABC, abstractmethod
+import re
 from typing import Union, List
 from sklearn.preprocessing import StandardScaler
 
@@ -28,7 +29,7 @@ class BaseDiscriminationFitter(ABC):
     """
 
     def __init__(self, cal_results: Union[Result, List[Result]],
-                 qubit_mask: List[int], expected_states: List[str],
+                 qubit_mask: List[int], expected_states: List[str] = None,
                  standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None):
         """
@@ -49,12 +50,18 @@ class BaseDiscriminationFitter(ABC):
                 instead of the schedules. If schedules is None, then all the
                 schedules in cal_results are used.
         """
+        # Regex pattern used to identify calibration schedules
+        self._cal_pattern = r'cal_\d+$'
 
         # Use all results in cal_results if schedules is None
         if schedules is None:
-            schedules = self._get_schedules(cal_results)
+            schedules = self._get_schedules(cal_results, 0)
 
+        # Dict of form schedule name: expected state
         self._expected_state = {}
+        if expected_states is None:
+            expected_states = self._get_expected_states(schedules)
+
         self._add_expected_states(expected_states, schedules)
 
         # Used to rescale the xdata qubit by qubit.
@@ -73,15 +80,16 @@ class BaseDiscriminationFitter(ABC):
             else:
                 self._backend_result_list.append(cal_results)
 
-        self._xdata = self.get_xdata(self._backend_result_list, schedules)
-        self._ydata = self.get_ydata(self._backend_result_list, schedules)
+        self._xdata = self.get_xdata(self._backend_result_list, 0, schedules)
+        self._ydata = self.get_ydata(self._backend_result_list, 0, schedules)
 
     def _add_ydata(self, schedule: Union[Schedule, str]):
         """
         Adds the expected state of schedule to self._ydata.
+
         Args:
             schedule (Union[Schedule, str]): schedule or schedule name.
-            Used to get the expected state.
+                Used to get the expected state.
         """
         if isinstance(schedule, Schedule):
             self._ydata.append(self._expected_state[schedule.name])
@@ -101,13 +109,13 @@ class BaseDiscriminationFitter(ABC):
             schedules (Union[List[Schedule], List[str]]):
         """
         if schedules is None:
-            schedules = self._get_schedules(result)
+            schedules = self._get_schedules(result, 0)
 
         self._backend_result_list.append(result)
         self._add_expected_states(expected_states, schedules)
         self._schedules.extend(schedules)
-        self._xdata = self.get_xdata(self._backend_result_list, schedules)
-        self._ydata = self.get_ydata(self._backend_result_list, schedules)
+        self._xdata = self.get_xdata(self._backend_result_list, 0, schedules)
+        self._ydata = self.get_ydata(self._backend_result_list, 0, schedules)
 
         if refit:
             self.fit()
@@ -116,6 +124,7 @@ class BaseDiscriminationFitter(ABC):
                              schedules: Union[List[Schedule], List[str]]):
         """
         Adds the given expected states to self._expected_states.
+
         Args:
             expected_states (List[str]): list of expected states. Must have the
                 same length as the number of schedules.
@@ -134,25 +143,105 @@ class BaseDiscriminationFitter(ABC):
             expected_state = expected_states[idx]
             self._expected_state[name] = expected_state
 
-    @staticmethod
-    def _get_schedules(results: Union[Result, List[Result]]) -> List[str]:
+    def is_calibration(self, result_name: str) -> bool:
+        """
+        Identify if a name corresponds to a calibration name identified by
+        the regex pattern self._cal_pattern.
+
+        Args:
+            result_name (str): name of the result to be tested.
+
+        Returns (bool):
+            True if the name of the result indicates that it is a calibration
+            result.
+        """
+        return re.match(self._cal_pattern, result_name) is not None
+
+    def _get_schedules(self, results: Union[Result, List[Result]],
+                       schedule_type_to_get: int) -> List[str]:
         """
         Extracts the names of all Schedules in a Result or a list of Result.
+        Only the results with a name that matches self._cal_pattern are
+        returned.
+
         Args:
             results (Union[Result, List[Result]]): the results for which to
-            extract the names,
+                extract the names,
+            schedule_type_to_get (int): defines which schedule type to include
+                in the returned schedules.
+                type == 0: only calibration schedules.
+                type == 1: only non-calibration schedules.
+                type == 2: all schedules in the results.
         Returns (List[str]):
             The name of the schedules in results.
         """
-        schedules = []
         if isinstance(results, Result):
-            for res in results.results:
-                schedules.append(res.header.name)
+            results_list = [results]
         else:
-            for result in results:
-                schedules.extend([_.header.name for _ in result.results])
+            results_list = results
+
+        schedules = []
+        for res in results_list:
+            for result in res.results:
+                self._append_to_schedules(result.header.name,
+                                          schedule_type_to_get, schedules)
 
         return schedules
+
+    def _append_to_schedules(self, name: str, schedule_type: int,
+                             schedules: list):
+        """
+        Helper function to append schedule names.
+
+        Args:
+            name (str): name of the schedule that may be appended to schedules.
+            schedule_type (int): defines which schedule type to include
+                in the returned schedules.
+                type == 0: only calibration schedules.
+                type == 1: only non-calibration schedules.
+                type == 2: all schedules in the results.
+            schedules (list): a list of schedule names.
+        """
+        if schedule_type == 0:
+            if self.is_calibration(name):
+                schedules.append(name)
+        elif schedule_type == 1:
+            if not self.is_calibration(name):
+                schedules.append(name)
+        elif schedule_type == 2:
+            schedules.append(name)
+        else:
+            raise QiskitError('schedule_type must be either\n'
+                              '0: get only calibration schedules\n'
+                              '1: get only non-calibration schedules\n'
+                              '2: get all schedules in results.')
+
+    @staticmethod
+    def _get_expected_states(schedules: Union[List[Schedule], List[str]]) \
+            -> List[str]:
+        """
+        Get the names of the expected_states based on the schedule names by
+        replacing the substring 'cal_' in the name with ''. E.g. the name
+        'cal_01' becomes '01'.
+
+        Args:
+            schedules (Union[List[Schedule], List[str]]): a list of schedules
+            or a list of schedule names. These schedules are used to identify
+            the names of the expected states.
+
+        Returns (List[str]):
+            expected_states extracted from the schedules.
+        """
+        expected_states = []
+        for schedule in schedules:
+            if isinstance(schedules, Schedule):
+                name = schedule.name
+            else:
+                name = schedule
+
+            expected_states.append(name.replace('cal_', ''))
+
+        return expected_states
 
     @property
     def expected_states(self):
@@ -174,12 +263,14 @@ class BaseDiscriminationFitter(ABC):
         """
         Scales xdata, for instance, by transforming it to zero mean and unit
         variance data.
+
         Args:
             xdata (List[List[float]]): data as a list of features. Each
                 feature is itself a list.
             refit (bool): if true than self._scaler is refit using the given
                 xdata.
-        Returns (List[List[float]]): the scaled xdata as a list of features.
+        Returns (List[List[float]]):
+            the scaled xdata as a list of features.
         """
         if not self._standardize:
             return xdata
@@ -192,33 +283,49 @@ class BaseDiscriminationFitter(ABC):
 
     @abstractmethod
     def get_xdata(self, results: Union[Result, List[Result]],
+                  schedule_type_to_get: int,
                   schedules: Union[List[str], List[Schedule]] = None) \
             -> List[List[float]]:
         """
         Retrieves feature data (xdata) for the discriminator.
+
         Args:
             results (Union[Result, List[Result]]): the get_memory() method is
                 used to retrieve the level 1 data. If result is a list of
                 Result then the first Result to return the data of schedule in
                 schedules is used.
+            schedule_type_to_get (int): use to specify if we should return data
+                corresponding to:
+                0: calibration data only
+                1: non-calibration data
+                2: both calibration and non-calibration data
             schedules (Union[List[str], List[Schedule]]): Either the names of
                 the schedules or the schedules themselves.
-        Returns (List[List[float]]): data as a list of features. Each feature
-            is a list.
+
+        Returns (List[List[float]]):
+            data as a list of features. Each feature is a list.
         """
         pass
 
     @abstractmethod
     def get_ydata(self, results: Union[Result, List[Result]],
+                  schedule_type_to_get: int,
                   schedules: Union[List[str], List[Schedule]] = None) \
             -> List[str]:
         """
         Args:
             results (Union[Result, List[Result]]): results for which to
                 retrieve the y data (i.e. expected states).
+            schedule_type_to_get (int): use to specify if we should return data
+                corresponding to:
+                0: calibration data only
+                1: non-calibration data
+                2: both calibration and non-calibration data
             schedules (Union[List[str], List[Schedule]]): the schedules for
                 which to get the y data.
-        Returns (List[str]): the y data, i.e. expected states. get_ydata is
+
+        Returns (List[str]):
+            the y data, i.e. expected states. get_ydata is
             designed to produce y data with the same length as the x data.
         """
         pass
@@ -232,9 +339,68 @@ class BaseDiscriminationFitter(ABC):
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
         """
         Applies the discriminator to x_data
+
         Args:
             x_data (List[List[float]]): list of features. Each feature is
                 itself a list.
-        Returns (List[str]): the discriminated x_data as a list of labels.
+
+        Returns (List[str]):
+            the discriminated x_data as a list of labels.
+        """
+        pass
+
+    @abstractmethod
+    def plot(self, axs=None,
+             show_boundary: bool = False,
+             show_fitting_data: bool = True,
+             flag_misclassified: bool = False,
+             qubits_to_plot: list = None,
+             title: bool = True):
+        """
+        Creates a plot of the data used to fit the discriminator.
+
+        Args:
+            axs (Union[ndarray, axes]): the axis to use for the plot. If it
+                is none, the plot method will create its own axis instance. If
+                the number of axis instances provided is less than the number
+                of qubits then only the data for the first len(axs) qubits will
+                be plotted.
+            show_boundary (bool): plot the decision regions if true. Some
+                discriminators may put additional constraints on whether the
+                decision regions are plotted or not.
+            show_fitting_data (bool): if True the x data and labels used to
+                fit the discriminator are shown in the plot.
+            flag_misclassified (bool): plot the misclassified training data
+                points if true.
+            qubits_to_plot (list): each qubit in this list will receive its
+                own plot. The qubits in qubits to plot must be in the qubit
+                mask. If qubits_to_plot is None then the qubit mask will be
+                used.
+            title (bool): adds a title to each subplot with the number of
+                the qubit.
+
+        Returns: (Union[List[axes], axes], figure):
+            the axes object used for the plot as well as the figure handle.
+            The figure handle returned is not ``None`` only when the figure
+            handle is created by the discriminator's plot method.
+        """
+        pass
+
+    @abstractmethod
+    def plot_xdata(self, axs,
+                   results: Union[Result, List[Result]], color: str = None):
+        """
+        Add the relevant IQ data from the Qiskit Result, or list thereof, to
+        the given axes as a scatter plot.
+
+        Args:
+            axs (Union[ndarray, axes]): the axis to use for the plot. If
+                the number of axis instances provided is less than the number
+                of qubits then only the data for the first len(axs) qubits will
+                be plotted.
+            results (Union[Result, List[Result]]): the discriminators
+                get_xdata will be used to retrieve the x data from the Result
+                or list of Results.
+            color (str): color of the IQ points in the scatter plot.
         """
         pass

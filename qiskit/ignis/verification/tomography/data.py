@@ -36,8 +36,8 @@ def marginal_counts(counts, meas_qubits=True, pad_zeros=False):
     Args:
         counts (dict): a counts dictionary.
         meas_qubits (True, list(int)): the qubits to NOT be marinalized over
-                                       if this is True meas_qubits will be
-                                       all measured qubits (default: True).
+            if this is True meas_qubits will be all measured qubits
+            (default: True).
         pad_zeros (Bool): Include zero count outcomes in return dict.
 
     Returns:
@@ -120,15 +120,14 @@ def combine_counts(counts1, counts2):
 
 
 def expectation_counts(counts):
-    """
-    Converts count dict to an expectation counts dict.
+    """Converts count dict to an expectation counts dict.
 
     The returned dictionary is also a counts dictionary but the keys
     correspond to the which subsystems the operators are acting on
     and the counts are the un-normalized expectation values. The counts
     can be converted to expectation values by dividing by the value of the
     all '0's entry. The '0's key is the expectation value of the identity
-    operator, and its value is equal to the number of shots .
+    operator, and its value is equal to the number of shots.
 
     Args:
         counts (dict): a counts dictionary.
@@ -138,14 +137,14 @@ def expectation_counts(counts):
         expectation values for the subsystem measurement operators.
 
 
-    Example:
-        Consider a input counts dictionary for `s` shots of measurement of
-        the two-qubit operator XZ (X on qubit-1, Z on qubit-0). The
-        dictionary returned will have keys corresponding to:
-            '00': s * <II>,
-            '01': s * <IZ>,
-            '10': s * <XI>,
-            '11': s * <XZ>
+    Consider a input counts dictionary for `s` shots of measurement of
+    the two-qubit operator XZ (X on qubit-1, Z on qubit-0). The
+    dictionary returned will have keys corresponding to:
+
+     * ``00``: :math:`s * <II>`,
+     * ``01``: :math:`s * <IZ>`,
+     * ``10``: :math:`s * <XI>`,
+     * ``11``: :math:`s * <XZ>`
     """
 
     # Get total shots for data set
