@@ -117,33 +117,38 @@ def t2star_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
     return circuits, xdata, osc_freq
 
 
-def t2_circuits(num_of_gates, gate_time, qubits, n_echos=1,
-                phase_alt_echo=False):
+def t2_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
+                                    ],
+                gate_time: float,
+                qubits: List[int],
+                n_echos: (int, 1),
+                phase_alt_echo: (bool, False)) -> Tuple[List[qiskit.QuantumCircuit], Any #Array[np.float]
+                                                        ]:
     """
     Generate circuits for T2 (echo) measurement, by a CPMG sequence.
-    Each circuit consists of:
-    - Y90-t-Y-[t-t-X/Y]^m-t-Y90
-    - n_echos = n+1
-    - if phase_alt_echo the X/Y alternate, if phase_alt_echo=False the
+    | Each circuit consists of:
+    | - Y90-t-Y-[t-t-X/Y]^m-t-Y90
+    | - n_echos = n+1
+    | - if phase_alt_echo the X/Y alternate, if phase_alt_echo=False the
     pulses are always Y
 
-    Standard T2 echo is n_echos=1
+    | Standard T2 echo is n_echos=1
 
     Args:
-        num_of_gates (list of integers):
+        num_of_gates:
             Each element of the list corresponds to a circuit.
             num_of_gates[i] is the number of identity gates in each section
             "t" of the pulse sequence in circuit no. i.
             Must be in an increasing order.
-        gate_time (float): time of running a single gate.
-        qubits (list of integers): indices of the qubits whose
+        gate_time: time of running a single identity gate.
+        qubits: indices of the qubits whose
             T2 are to be measured.
-        n_echos (integer): number of echo gates (X or Y).
-        phase_alt_echo (bool): if True then alternate the echo between
+        n_echos: number of echo gates (X or Y).
+        phase_alt_echo: if True then alternate the echo between
             X and Y.
     Returns:
-        A list of QuantumCircuit
-        xdata: the delay times
+        Generated circuits
+        |  Delay times, i.e., `gate_time` multiplied by the numbers in `num_of_gates`
     """
 
     if n_echos < 1:
