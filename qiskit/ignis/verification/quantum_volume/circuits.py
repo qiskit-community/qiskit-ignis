@@ -16,16 +16,16 @@
 Generates quantum volume circuits
 """
 
+from typing import List, Union, Tuple, Any, Optional
 import numpy as np
 import qiskit
 from qiskit.quantum_info.random import random_unitary
-from typing import List, Union, Tuple, Any, Optional
 
 
-def qv_circuits(qubit_lists: Optional[List[List[int]]]=None,
-                ntrials: int=1,
-                qr: Optional[qiskit.QuantumRegister]=None,
-                cr: Optional[qiskit.ClassicalRegister]=None):
+def qv_circuits(qubit_lists: Optional[List[List[int]]] = None,
+                ntrials: int = 1,
+                qr: Optional[qiskit.QuantumRegister] = None,
+                cr: Optional[qiskit.ClassicalRegister] = None):
     """
     Return a list of square quantum volume circuits (depth=width)
 
