@@ -20,9 +20,9 @@ Generates randomized benchmarking sequences
 """
 
 import copy
+from typing import List, Optional
 import numpy as np
 import qiskit
-from typing import List, Optional
 
 from .Clifford import Clifford
 from .clifford_utils import CliffordUtils as clutils
