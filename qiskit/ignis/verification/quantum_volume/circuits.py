@@ -17,7 +17,7 @@ Generates quantum volume circuits
 """
 
 from typing import List, Optional
-#Union, Tuple, Any
+# Union, Tuple, Any
 import numpy as np
 import qiskit
 from qiskit.quantum_info.random import random_unitary
