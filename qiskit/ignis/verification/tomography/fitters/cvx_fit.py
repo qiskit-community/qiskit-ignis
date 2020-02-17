@@ -17,6 +17,7 @@
 CVXPY convex optimization quantum tomography fitter
 """
 
+from typing import Optional
 import numpy as np
 from scipy import sparse as sps
 
@@ -27,8 +28,14 @@ except ImportError:
     cvxpy = None
 
 
-def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
-            trace_preserving=False, **kwargs):
+def cvx_fit(data: np.array,
+            basis_matrix: np.array,
+            weights: Optional[np.array] = None,
+            PSD: bool = True,
+            trace: Optional[int] = None,
+            trace_preserving: bool = False,
+            **kwargs
+            ) -> np.array:
     r"""
     Reconstruct a quantum state using CVXPY convex optimization.
 
@@ -82,16 +89,16 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
     Args:
         data (vector like): vector of expectation values
         basis_matrix (matrix like): matrix of measurement operators
-        weights (vector like, optional): vector of weights to apply to the
+        weights (vector like): vector of weights to apply to the
             objective function (default: None)
-        PSD (bool, optional): Enforced the fitted matrix to be positive
+        PSD: enforces the fitted matrix to be positive
             semidefinite (default: True)
-        trace (int, optional): trace constraint for the fitted matrix
+        trace: trace constraint for the fitted matrix
             (default: None).
-        trace_preserving (bool, optional): Enforce the fitted matrix to be
+        trace_preserving: Enforce the fitted matrix to be
             trace preserving when fitting a Choi-matrix in quantum process
             tomography (default: False).
-        **kwargs (optional): kwargs for cvxpy solver.
+        **kwargs: kwargs for cvxpy solver.
 
     Returns:
         The fitted matrix rho that minimizes
@@ -220,7 +227,7 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
 ###########################################################################
 
 
-def partial_trace_super(d1, d2):
+def partial_trace_super(d1: int, d2: int) -> np.array:
     """
     Return the partial trace superoperator in the column-major basis.
 

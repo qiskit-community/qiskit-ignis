@@ -16,24 +16,29 @@
 """
 Maximum-Likelihood estimation quantum tomography fitter
 """
-
+from typing import Optional
 import numpy as np
 from scipy import linalg as la
 from scipy.linalg import lstsq
 
 
-def lstsq_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
+def lstsq_fit(data: np.array,
+              basis_matrix: np.array,
+              weights: Optional[np.array] = None,
+              PSD: bool = True,
+              trace: Optional[int] = None
+              ) -> np.array:
     """
     Reconstruct a density matrix using MLE least-squares fitting.
 
     Args:
         data (vector like): vector of expectation values
         basis_matrix (matrix like): matrix of measurement operators
-        weights (vector like, optional): vector of weights to apply to the
+        weights (vector like): vector of weights to apply to the
             objective function (default: None)
-        PSD (bool, optional): Enforced the fitted matrix to be positive
+        PSD: Enforced the fitted matrix to be positive
             semidefinite (default: True)
-        trace (int, optional): trace constraint for the fitted matrix
+        trace: trace constraint for the fitted matrix
             (default: None).
 
     Returns:
@@ -112,15 +117,19 @@ def lstsq_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
 # Wizard Method rescaling
 ###########################################################################
 
-def make_positive_semidefinite(mat, epsilon=0):
+def make_positive_semidefinite(mat: np.array,
+                               epsilon: Optional[float] = 0
+                               ) -> np.array:
     """
     Rescale a Hermitian matrix to nearest postive semidefinite matrix.
 
     Args:
         mat (array like): a hermitian matrix.
-        epsilon (float >=0, optional): the threshold for setting
+        epsilon: the threshold for setting
             eigenvalues to zero. If epsilon > 0 positive eigenvalues
             below epsilon will also be set to zero (Default 0).
+    Raises:
+        ValueError: If epsilon is negative
     Returns:
         The input matrix rescaled to have non-negative eigenvalues.
 
