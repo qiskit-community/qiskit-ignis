@@ -50,9 +50,6 @@ class StateTomographyFitter(TomographyFitter):
             beta: float = 0.5,
             **kwargs) -> np.array:
         r"""Reconstruct a quantum state using CVXPY convex optimization.
-        .. jupyter-execute::
-
-            print("Hello world!!!!!")
 
         **Fitter method**
 
@@ -64,7 +61,7 @@ class StateTomographyFitter(TomographyFitter):
         **Objective function**
 
         This fitter solves the constrained least-squares minimization:
-        :math:`minimize: ||a * x - b ||_2`
+        :math:`minimize: ||a \cdot x - b ||_2`
 
         subject to:
 
@@ -76,7 +73,7 @@ class StateTomographyFitter(TomographyFitter):
          * a is the matrix of measurement operators
            :math:`a[i] = \text{vec}(M_i).H`
          * b is the vector of expectation value data for each projector
-           :math:`b[i] ~ \text{Tr}[M_i.H * x] = (a * x)[i]`
+           :math:`b[i] \sim \text{Tr}[M_i.H \cdot x] = (a \cdot x)[i]`
          * x is the vectorized density matrix to be fitted
 
         **PSD constraint**
@@ -119,7 +116,7 @@ class StateTomographyFitter(TomographyFitter):
             QiskitError: In case the fitting method is unrecognized.
         Returns:
             The fitted matrix rho that minimizes
-            :math:`||basis_matrix * vec(rho) - data||_2`.
+            :math:`||\text{basis_matrix} \cdot \text{vec}(\text{rho}) - \text{data}||_2`.
         """
         return super().fit(method, standard_weights, beta,
                            trace=1, PSD=True, **kwargs)

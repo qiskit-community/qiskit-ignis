@@ -53,12 +53,12 @@ class ProcessTomographyFitter(TomographyFitter):
         **Objective function**
 
         This fitter solves the constrained least-squares
-        minimization: :math:`minimize: ||a * x - b ||_2`
+        minimization: :math:`minimize: ||a \cdot x - b ||_2`
 
         subject to:
 
          * :math:`x >> 0` (PSD)
-         * :math:`\text{trace}(x) = dim` (trace)
+         * :math:`\text{trace}(x) = \text{dim}` (trace)
          * :math:`\text{partial_trace}(x) = \text{identity}` (trace_preserving)
 
         where:
@@ -66,7 +66,7 @@ class ProcessTomographyFitter(TomographyFitter):
          * a is the matrix of measurement operators
            :math:`a[i] = \text{vec}(M_i).H`
          * b is the vector of expectation value data for each projector
-           :math:`b[i] ~ \text{Tr}[M_i.H * x] = (a * x)[i]`
+           :math:`b[i] \sim \text{Tr}[M_i.H \cdot x] = (a \cdot x)[i]`
          * x is the vectorized Choi-matrix to be fitted
 
         **PSD constraint**
@@ -108,12 +108,11 @@ class ProcessTomographyFitter(TomographyFitter):
             (2012). Open access: arXiv:1106.5458 [quant-ph].
 
         Args:
-            method: The fitter method 'auto', 'cvx' or 'lstsq'.
-            standard_weights: Apply weights
+            method: the fitter method 'auto', 'cvx' or 'lstsq'.
+            standard_weights: (default: True) apply weights
                 to tomography data based on count probability
-                (default: True)
-            beta: hedging parameter for converting counts
-                to probabilities (default: 0.5)
+            beta: (default: 0.5) hedging parameter for converting counts
+                to probabilities
             **kwargs: kwargs for fitter method.
 
         Raises:
@@ -122,7 +121,7 @@ class ProcessTomographyFitter(TomographyFitter):
 
         Returns:
             Choi: The fitted Choi-matrix J for the channel that maximizes
-            :math:`||basis_matrix * vec(J) - data||_2`. The Numpy matrix can be
+            :math:`||\text{basis_matrix} \cdot \text{vec}(J) - \text{data}||_2`. The Numpy matrix can be
             obtained from `Choi.data`.
         """
         # Get fitter data
