@@ -29,7 +29,8 @@ def t1_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
                                             ]:
     """
     Generate circuits for T1 measurement.
-    |  Each circuit consists of an X gate, followed by a sequence of identity
+    
+    Each circuit consists of an X gate, followed by a sequence of identity
     gates.
 
     Args:
@@ -40,8 +41,8 @@ def t1_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
             to be measured.
 
     Returns:
-        Generated circuits
-        |  Delay times, i.e., `gate_time` multiplied by the numbers in `num_of_gates`
+        *   Generated circuits
+        *   Delay times, i.e., `gate_time` multiplied by the numbers in `num_of_gates`
 
     """
 
@@ -75,7 +76,8 @@ def t2star_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
                                           ]:
     """
     Generate circuits for T2* measurement.
-    | Each circuit consists of a Hadamard gate, followed by a sequence of
+    
+    Each circuit consists of a Hadamard gate, followed by a sequence of
     identity gates, a phase gate (with a linear phase), and an additional
     Hadamard gate.
 
@@ -87,9 +89,9 @@ def t2star_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
             whose T2*'s are to be measured.
         nosc: number of oscillations to induce using the phase gate
     Returns:
-        The generated circuits
-        | Delay times, i.e., `gate_time` multiplied by the numbers in `num_of_gates`
-        | osc_freq: the induced oscillation frequency
+        *   The generated circuits
+        *   Delay times, i.e., `gate_time` multiplied by the numbers in `num_of_gates`
+        *   The induced oscillation frequency
     """
 
     xdata = gate_time * np.array(num_of_gates)
@@ -126,13 +128,14 @@ def t2_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
                                                         ]:
     """
     Generate circuits for T2 (echo) measurement, by a CPMG sequence.
-    | Each circuit consists of:
-    | - Y90-t-Y-[t-t-X/Y]^m-t-Y90
-    | - n_echos = n+1
-    | - if phase_alt_echo the X/Y alternate, if phase_alt_echo=False the
+    
+    Each circuit consists of:
+    *   Y90-t-Y-[t-t-X/Y]^m-t-Y90
+    *   n_echos = n+1
+    *   if phase_alt_echo the X/Y alternate, if phase_alt_echo=False the
     pulses are always Y
 
-    | Standard T2 echo is n_echos=1
+    Standard T2 echo is n_echos=1
 
     Args:
         num_of_gates:
@@ -147,8 +150,8 @@ def t2_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
         phase_alt_echo: if True then alternate the echo between
             X and Y.
     Returns:
-        Generated circuits
-        |  Delay times, i.e., `gate_time` multiplied by the numbers in `num_of_gates`
+        *   Generated circuits
+        *   Delay times, i.e., `gate_time` multiplied by the numbers in `num_of_gates`
     """
 
     if n_echos < 1:
