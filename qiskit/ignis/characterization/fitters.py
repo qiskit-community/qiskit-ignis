@@ -20,32 +20,43 @@ Fitters of characteristic times
 
 from scipy.optimize import curve_fit
 import numpy as np
+from typing import Union, List, Any, Callable, Optional, Tuple
 from qiskit import QiskitError
+from qiskit.result import Result
 from ..verification.tomography import marginal_counts
 from ..utils import build_counts_dict_from_list
-
 
 class BaseFitter:
     """
     Base class for a data fitter
     """
 
-    def __init__(self, description, backend_result, xdata,
-                 qubits, fit_fun, fit_p0,
-                 fit_bounds, circuit_names,
-                 series=None, expected_state='0'):
+    def __init__(self, description: str,
+                 backend_result: Union[Result, List[Result]],
+                 xdata: Union[List[float], Any # Array[np.float]
+                              ],
+                 qubits: List[int],
+                 fit_fun: Callable[..., float],
+                 fit_p0: List[float], # any way to enforce length 3?,
+                 fit_bounds: Tuple[List[float], List[float]],  # any way to enforce lists oflength 3?,
+                 circuit_names: List[str],
+                 series: Optional[List[str]] = None,
+                 expected_state: str = '0'):
         """
+        .
+        
         Args:
-            description: a string describing the fitter's purpose, e.g. 'T1'
-            backend_result: a qiskit.result or list of results
+            description: description of the fitter's purpose, e.g. 'T1'.
+            backend_result: result of execution on the backend.
             xdata: a list of the independent parameter
                 (which will be fit against).
-            qubits: the qubits for which we measured coherence
-            fit_fun, fit_p0, fit_bounds: equivalent to parameters of
-                scipy.curve_fit.
+            qubits: the qubits to be characterized.
+            fit_fun: equivalent to parameter `f` of scipy.curve_fit.
+            fit_p0: equivalent to parameter `p0` of scipy.curve_fit.
+            fit_bounds: equivalent to parameter `bounds` of scipy.curve_fit.
             circuit_names: names of the circuits, should be the same length
-                as xdata. Full circuit name will be these plus the
-                series name
+                as `xdata`. Full circuit name will be these plus the
+                series name.
             series: list of circuit name tags
             expected_state: is the circuit supposed to end up in '0' or '1'?
         """
@@ -515,17 +526,38 @@ class BaseCoherenceFitter(BaseFitter):
     Base class for fitters of characteristic times
     """
 
-    def __init__(self, description, backend_result, xdata,
-                 qubits, fit_fun, fit_p0,
-                 fit_bounds, circuit_names,
-                 series=None, expected_state='0',
-                 time_index=0, time_unit='micro-seconds'):
-
+    def __init__(self, description: str,
+                 backend_result: Union[Result, List[Result]],
+                 xdata: Union[List[float], Any # Array[np.float]
+                              ],
+                 qubits: List[int],
+                 fit_fun: Callable[..., float],
+                 fit_p0: List[float], # any way to enforce length 3?,
+                 fit_bounds: Tuple[List[float], List[float]],  # any way to enforce lists oflength 3?,
+                 circuit_names: List[str],
+                 series: Optional[List[str]] = None,
+                 expected_state: str = '0',
+                 time_index: int = 0,
+                 time_unit: str = 'micro-seconds'):
         """
-        See BaseFitter __init__
-
+        .
+        
         Args:
-           time_index: fit parameter corresponding to the characteristic time
+            description: description of the fitter's purpose, e.g. 'T1'.
+            backend_result: result of execution on the backend.
+            xdata: delay times of the circuits.
+            qubits: the qubits to be characterized.
+            fit_fun: equivalent to parameter `f` of scipy.curve_fit.
+            fit_p0: equivalent to parameter `p0` of scipy.curve_fit.
+            fit_bounds: equivalent to parameter `bounds` of scipy.curve_fit.
+            circuit_names: names of the circuits, should be the same length
+                as `xdata`. Full circuit name will be these plus the
+                series name.
+            series: list of circuit name tags
+            expected_state: is the circuit supposed to end up in '0' or '1'?
+            time_index: among parameters of `fit_fun`,
+                        which one is the characteristic time.
+            time_unit: unit of delay times in `xdata`.
         """
 
         BaseFitter.__init__(self, description,

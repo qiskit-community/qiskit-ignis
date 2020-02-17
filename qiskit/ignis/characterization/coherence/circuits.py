@@ -70,7 +70,7 @@ def t2star_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
                                     ],
                     gate_time: float,
                     qubits: List[int],
-                    nosc: (int, 0)) -> Tuple[List[qiskit.QuantumCircuit], Any #Array[np.float]
+                    nosc: int = 0) -> Tuple[List[qiskit.QuantumCircuit], Any #Array[np.float]
                                           , float
                                           ]:
     """
@@ -121,8 +121,8 @@ def t2_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
                                     ],
                 gate_time: float,
                 qubits: List[int],
-                n_echos: (int, 1),
-                phase_alt_echo: (bool, False)) -> Tuple[List[qiskit.QuantumCircuit], Any #Array[np.float]
+                n_echos: int = 1,
+                phase_alt_echo: bool = False) -> Tuple[List[qiskit.QuantumCircuit], Any #Array[np.float]
                                                         ]:
     """
     Generate circuits for T2 (echo) measurement, by a CPMG sequence.

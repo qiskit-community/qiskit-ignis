@@ -17,18 +17,42 @@ Fitters of characteristic times
 """
 
 import numpy as np
+from typing import TYPE_CHECKING, Union, List, Tuple, Any
 from ..fitters import BaseCoherenceFitter
+
+import qiskit
 
 
 class T1Fitter(BaseCoherenceFitter):
     """
-    T1 fitter
+    Estimate T1, based on experiments outcomess
+    
+    The experiments were created by `t1_circuits`, and executed on the device.
+    
+    The probabilities of measuring 1 is assumed to be of the form `Ae^{-t/T1}+B`,
+    for unknown parameters A, B, and T1.
     """
 
-    def __init__(self, backend_result, xdata,
-                 qubits,
-                 fit_p0, fit_bounds,
-                 time_unit='micro-seconds'):
+    def __init__(self, backend_result: qiskit.result.Result,
+                 xdata: Union[List[float], Any #Array[np.float]
+                              ],
+                 qubits: List[int],
+                 fit_p0: List[float], # any way to enforce length 3?
+                 fit_bounds: Tuple[List[float], List[float]],  # any way to enforce lists oflength 3?
+                 time_unit: str = 'micro-seconds'):
+        """
+        Args:
+            backend_result: result of execution of `t1_circuits` on the backend.
+            xdata: delay times of the T1 circuits.
+            qubits:  indices of the qubits whose T1's are to be measured.
+            fit_p0: initial values to the fit parameters. 
+                    The fitting function for T1 is `f(t) = Ae^{-t/T1}+B`.
+                    The order of the initial values in `fit_p0` is: `(A, T1, B)`.
+            fit_bounds: bounds on the parameters to fit.
+                        The first tuple is the lower bounds, in the order `(A, T1, B)`.
+                        The second tuple is the upper bounds.
+            time_unit: unit of delay times in `xdata`.
+        """
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
