@@ -20,7 +20,6 @@ from qiskit import QiskitError
 from qiskit.circuit import Qubit, Clbit, QuantumCircuit
 
 
-
 class TomographyBasis:
     """Tomography basis class.
     """
