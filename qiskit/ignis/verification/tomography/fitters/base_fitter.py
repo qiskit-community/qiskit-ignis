@@ -19,9 +19,10 @@ Maximum-Likelihood estimation quantum tomography fitter
 
 import logging
 import itertools as it
+from typing import List, Union, Optional
 from ast import literal_eval
 import numpy as np
-from typing import List, Union, Optional
+
 
 from qiskit import QiskitError
 from qiskit import QuantumCircuit
@@ -41,8 +42,8 @@ class TomographyFitter:
     def __init__(self,
                  result: Result,
                  circuits: Union[List[QuantumCircuit], List[str]],
-                 meas_basis: Union[TomographyBasis, str]='Pauli',
-                 prep_basis: Union[TomographyBasis, str]='Pauli'):
+                 meas_basis: Union[TomographyBasis, str] = 'Pauli',
+                 prep_basis: Union[TomographyBasis, str] = 'Pauli'):
         """Initialize tomography fitter with experimental data.
 
         Args:
@@ -104,13 +105,13 @@ class TomographyFitter:
         return self._prep_basis
 
     def fit(self,
-            method:str='auto',
-            standard_weights:Optional[bool] = True,
-            beta: float=0.5,
-            PSD: Optional[bool] = True,
+            method: str = 'auto',
+            standard_weights: bool = True,
+            beta: float = 0.5,
+            PSD: bool = True,
             trace: Optional[int] = None,
-            trace_preserving: Optional[bool] = False,
-            **kwargs):
+            trace_preserving: bool = False,
+            **kwargs) -> np.array:
         r"""Reconstruct a quantum state using CVXPY convex optimization.
 
                 **Fitter method**
@@ -181,7 +182,8 @@ class TomographyFitter:
                 tomography. Note this method does not apply for 'lstsq' fitter
                 method.
             **kwargs: kwargs for fitter method.
-
+        Raises:
+            QiskitError: In case the fitting method is unrecognized.
         Returns:
             The fitted matrix rho that minimizes
             :math:`||\text{basis_matrix} * \text{vec(rho)} - \text{data}||_2`.

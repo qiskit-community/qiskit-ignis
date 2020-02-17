@@ -15,17 +15,19 @@
 """TomographyBasis class
 """
 from typing import Optional, Tuple, Union
+import numpy as np
 from qiskit import QiskitError
 from qiskit.circuit import Qubit, Clbit, QuantumCircuit
-import numpy as np
+
+
 
 class TomographyBasis:
     """Tomography basis class.
     """
 
     def __init__(self, name: str,
-                 measurement: Optional[Tuple]=None,
-                 preparation: Optional[Tuple]=None
+                 measurement: Optional[Tuple] = None,
+                 preparation: Optional[Tuple] = None
                  ):
         """Initializes the tomography basis with given basis data
 
@@ -101,7 +103,7 @@ class TomographyBasis:
     def measurement_circuit(self, op: str,
                             qubit: Qubit,
                             clbit: Clbit
-                            ) ->  QuantumCircuit:
+                            ) -> QuantumCircuit:
         """Return the measurement circuit on the given qubit and clbit
 
         Args:

@@ -28,7 +28,11 @@ from .lstsq_fit import lstsq_fit
 class ProcessTomographyFitter(TomographyFitter):
     """Maximum-Likelihood estimation process tomography fitter."""
 
-    def fit(self, method='auto', standard_weights=True, beta=0.5, **kwargs):
+    def fit(self,
+            method: str = 'auto',
+            standard_weights: bool = True,
+            beta: float = 0.5,
+            **kwargs) -> Choi:
         r"""Reconstruct a quantum channel using CVXPY convex optimization.
 
         **Choi matrix**
@@ -104,19 +108,22 @@ class ProcessTomographyFitter(TomographyFitter):
             (2012). Open access: arXiv:1106.5458 [quant-ph].
 
         Args:
-            method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
-            standard_weights (bool, optional): Apply weights
+            method: The fitter method 'auto', 'cvx' or 'lstsq'.
+            standard_weights: Apply weights
                 to tomography data based on count probability
                 (default: True)
-            beta (float): hedging parameter for converting counts
+            beta: hedging parameter for converting counts
                 to probabilities (default: 0.5)
-            **kwargs (optional): kwargs for fitter method.
+            **kwargs: kwargs for fitter method.
+
+        Raises:
+            ValueError: In case the input data is no a valid process matrix
+            QiskitError: If the fit method is unrecognized
 
         Returns:
             Choi: The fitted Choi-matrix J for the channel that maximizes
             :math:`||basis_matrix * vec(J) - data||_2`. The Numpy matrix can be
             obtained from `Choi.data`.
-
         """
         # Get fitter data
         data, basis_matrix, weights = self._fitter_data(standard_weights,

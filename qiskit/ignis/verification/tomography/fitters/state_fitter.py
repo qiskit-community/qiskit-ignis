@@ -29,7 +29,7 @@ class StateTomographyFitter(TomographyFitter):
     def __init__(self,
                  result: Result,
                  circuits: List[QuantumCircuit],
-                 meas_basis: Union[TomographyBasis, str]='Pauli'
+                 meas_basis: Union[TomographyBasis, str] = 'Pauli'
                  ):
         """Initialize state tomography fitter with experimental data.
 
@@ -45,9 +45,9 @@ class StateTomographyFitter(TomographyFitter):
         super().__init__(result, circuits, meas_basis, None)
 
     def fit(self,
-            method: str='auto',
-            standard_weights: bool=True,
-            beta: float=0.5,
+            method: str = 'auto',
+            standard_weights: bool = True,
+            beta: float = 0.5,
             **kwargs) -> np.array:
         r"""Reconstruct a quantum state using CVXPY convex optimization.
         .. jupyter-execute::
@@ -115,13 +115,11 @@ class StateTomographyFitter(TomographyFitter):
             beta: hedging parameter for converting counts
                 to probabilities
             **kwargs: kwargs for fitter method.
-
+        Raises:
+            QiskitError: In case the fitting method is unrecognized.
         Returns:
             The fitted matrix rho that minimizes
             :math:`||basis_matrix * vec(rho) - data||_2`.
-
-        Example:
-
         """
         return super().fit(method, standard_weights, beta,
                            trace=1, PSD=True, **kwargs)

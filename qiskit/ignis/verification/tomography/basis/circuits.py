@@ -40,11 +40,12 @@ logger = logging.getLogger(__name__)
 # State tomography circuits for measurement in Pauli basis
 ###########################################################################
 
+
 def state_tomography_circuits(
         circuit: QuantumCircuit,
         measured_qubits: QuantumRegister,
-        meas_labels: Union[str, Tuple[str], List[Tuple[str]]]='Pauli',
-        meas_basis: Union[str, TomographyBasis]='Pauli'
+        meas_labels: Union[str, Tuple[str], List[Tuple[str]]] = 'Pauli',
+        meas_basis: Union[str, TomographyBasis] = 'Pauli'
 ) -> List[QuantumCircuit]:
     """
     Return a list of quantum state tomography circuits.
@@ -82,20 +83,21 @@ def state_tomography_circuits(
 
 def process_tomography_circuits(
         circuit: QuantumCircuit,
-        measured_qubits : QuantumRegister,
+        measured_qubits: QuantumRegister,
         prepared_qubits: Optional[QuantumRegister] = None,
-        meas_labels: Union[str, Tuple[str], List[Tuple[str]]]='Pauli',
-        meas_basis: Union[str, TomographyBasis]='Pauli',
-        prep_labels: Union[str, Tuple[str], List[Tuple[str]]]='Pauli',
-        prep_basis: Union[str, TomographyBasis]='Pauli'
+        meas_labels: Union[str, Tuple[str], List[Tuple[str]]] = 'Pauli',
+        meas_basis: Union[str, TomographyBasis] = 'Pauli',
+        prep_labels: Union[str, Tuple[str], List[Tuple[str]]] = 'Pauli',
+        prep_basis: Union[str, TomographyBasis] = 'Pauli'
 ) -> List[QuantumCircuit]:
     r"""Return a list of quantum process tomography circuits.
 
     This performs preparation in the minimial Pauli-basis eigenstates
     :math:`Z_p`, :math:`Z_m`, :math:`X_p`, :math:`Y_m` (:math:`|0\rangle`,
-    :math:`|1\rangle`, :math:`|+\rangle`, :math:`|+i\rangle`) on each qubit, and measurement
-    in the Pauli-basis X, Y, Z resulting in :math:`(4^n) \cdot (3^n)`
-    circuits for an n-qubit process tomography experiment.
+    :math:`|1\rangle`, :math:`|+\rangle`, :math:`|+i\rangle`) on each qubit,
+    and measurement in the Pauli-basis X, Y, Z resulting
+    in :math:`(4^n) \cdot (3^n)` circuits for an n-qubit process
+    tomography experiment.
 
     Args:
         circuit: the QuantumCircuit circuit to be
@@ -391,8 +393,8 @@ def default_basis(basis: Union[str, TomographyBasis]) -> TomographyBasis:
     raise ValueError('Unrecognized basis: {}'.format(basis))
 
 
-def _default_measurement_labels(basis:Union[str, TomographyBasis]
-                                ) -> Tuple[str] :
+def _default_measurement_labels(basis: Union[str, TomographyBasis]
+                                ) -> Tuple[str]:
     """Built in measurement basis labels.
 
     Args:
@@ -436,10 +438,10 @@ def tomography_circuit_tuples(
         measured_qubits: Union[int,
                                QuantumRegister,
                                List[QuantumRegister]],
-        meas_labels: Union[str, TomographyBasis, Tuple]='Pauli',
-        prep_labels: Optional[Union[str, TomographyBasis, Tuple]]=None
+        meas_labels: Union[str, TomographyBasis, Tuple] = 'Pauli',
+        prep_labels: Optional[Union[str, TomographyBasis, Tuple]] = None
         ) -> List:
-    """Return list of tomography circuit label tuples.
+    r"""Return list of tomography circuit label tuples.
     Args:
         measured_qubits: Either qubits the tomography will be applied to
         or their length
@@ -469,8 +471,8 @@ def _generate_labels(labels: Optional[Union[Tuple[str],
                                             List[Tuple[str]],
                                             str]],
                      measured_qubits: Union[int,
-                                   QuantumRegister,
-                                   List[QuantumRegister]]
+                                            QuantumRegister,
+                                            List[QuantumRegister]]
                      ) -> List[Tuple[str]]:
     """Return list of n-qubit measurement circuit labels.
     Args:
@@ -528,8 +530,8 @@ def _format_registers(*registers: Union[Qubit, QuantumRegister]
 def _operator_tuples(labels: Tuple[str],
                      qubits: Union[int,
                                    QuantumRegister,
-                                   List[QuantumRegister]
-                     ]) -> List[Tuple[str]]:
+                                   List[QuantumRegister]]
+                     ) -> List[Tuple[str]]:
     """Return a list of all length-n tuples of labels.
 
     Args:
