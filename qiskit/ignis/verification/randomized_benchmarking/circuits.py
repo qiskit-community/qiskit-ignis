@@ -22,6 +22,7 @@ Generates randomized benchmarking sequences
 import copy
 import numpy as np
 import qiskit
+from typing import List, Optional
 
 from .Clifford import Clifford
 from .clifford_utils import CliffordUtils as clutils
@@ -123,13 +124,19 @@ def calc_xdata(length_vector, length_multiplier):
     return np.array(xdata)
 
 
-def randomized_benchmarking_seq(nseeds=1, length_vector=None,
-                                rb_pattern=None,
-                                length_multiplier=1, seed_offset=0,
-                                align_cliffs=False,
-                                interleaved_gates=None,
-                                is_purity=False,
-                                group_gates=None):
+def randomized_benchmarking_seq(nseeds: int = 1,
+                                length_vector: Optional[List[int]] = None,
+                                rb_pattern: Optional[List[List[int]]] = None,
+                                length_multiplier: Optional[List[int]] = 1,
+                                seed_offset: int = 0,
+                                align_cliffs: bool = False,
+                                interleaved_gates: Optional[List[List[str]]] = None,
+                                is_purity: bool = False,
+                                group_gates: Optional[str] = None) -> \
+        (List[List[qiskit.QuantumCircuit]], List[List[int]],
+         Optional[List[List[qiskit.QuantumCircuit]]],
+         Optional[List[List[List[qiskit.QuantumCircuit]]]],
+         Optional[int]):
     """Generate generic randomized benchmarking (RB) sequences.
 
     Args:
@@ -231,10 +238,10 @@ def randomized_benchmarking_seq(nseeds=1, length_vector=None,
            (a separate list for each seed).
          * ``circuits_purity``: (only if ``is_purity=True``): \
            list of lists of lists of circuits for purity RB \
-           (a separate list for each seed and each of the 3^n circuits).
+           (a separate list for each seed and each of the :math:`3^n` circuits).
          * ``npurity``: (only if ``is_purity=True``): \
             the number of purity RB circuits (per seed) \
-            which equals to 3^n, where n is the dimension.
+            which equals to :math:`3^n`, where n is the dimension.
 
     Raises:
 
