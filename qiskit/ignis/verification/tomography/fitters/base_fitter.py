@@ -19,7 +19,7 @@ Maximum-Likelihood estimation quantum tomography fitter
 
 import logging
 import itertools as it
-from typing import List, Union, Optional, Dict, Tuple
+from typing import List, Union, Optional, Dict, Tuple, Callable
 from ast import literal_eval
 import numpy as np
 
@@ -392,7 +392,7 @@ class TomographyFitter:
         # Return gaussian weights for 2-outcome measurements.
         return np.sqrt(shots / (freqs_hedged * (1 - freqs_hedged)))
 
-    def _basis_operator_matrix(self, basis:List[np.array]) -> np.array:
+    def _basis_operator_matrix(self, basis: List[np.array]) -> np.array:
         """Return a basis measurement matrix of the input basis.
 
         Args:
@@ -414,15 +414,15 @@ class TomographyFitter:
 
     def _preparation_op(self,
                         label: Tuple[str],
-                        prep_matrix_fn
+                        prep_matrix_fn: Callable[[str], np.array]
                         ) -> np.array:
         """
         Return the multi-qubit matrix for a state preparation label.
 
         Args:
-            label (tuple(str)): a preparation configuration label for a
+            label: a preparation configuration label for a
                 tomography circuit.
-            prep_matrix_fn (function): a function that returns the matrix
+            prep_matrix_fn: a function that returns the matrix
                 corresponding to a single qubit preparation label.
                 The functions should have signature:
                     ``prep_matrix_fn(str) -> np.array``
@@ -442,18 +442,21 @@ class TomographyFitter:
 
         # Construct preparation matrix
         op = np.eye(1, dtype=complex)
-        for l in label:
-            op = np.kron(prep_matrix_fn(l), op)
+        for label_inst in label:
+            op = np.kron(prep_matrix_fn(label_inst), op)
         return op
 
-    def _measurement_ops(self, label, meas_matrix_fn):
+    def _measurement_ops(self,
+                         label: Tuple[str],
+                         meas_matrix_fn: Callable[[str, int], np.array]
+                         ) -> List[np.array]:
         """
         Return a list multi-qubit matrices for a measurement label.
 
         Args:
-            label (tuple(str)): a measurement configuration label for a
+            label: a measurement configuration label for a
                 tomography circuit.
-            meas_matrix_fn (function): a function that returns the matrix
+            meas_matrix_fn: a function that returns the matrix
                 corresponding to a single qubit measurement label
                 for a given outcome. The functions should have
                 signature meas_matrix_fn(str, int) -> np.array
@@ -475,10 +478,10 @@ class TomographyFitter:
         # Construct measurement POVM for all measurement outcomes for a given
         # measurement label. This will be a list of 2 ** n operators.
 
-        for l in sorted(it.product((0, 1), repeat=num_qubits)):
+        for outcomes in sorted(it.product((0, 1), repeat=num_qubits)):
             op = np.eye(1, dtype=complex)
             # Reverse label to correspond to QISKit bit ordering
-            for m, outcome in zip(reversed(label), l):
+            for m, outcome in zip(reversed(label), outcomes):
                 op = np.kron(op, meas_matrix_fn(m, outcome))
             meas_ops.append(op)
         return meas_ops
