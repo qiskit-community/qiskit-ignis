@@ -121,8 +121,9 @@ class ProcessTomographyFitter(TomographyFitter):
 
         Returns:
             Choi: The fitted Choi-matrix J for the channel that maximizes
-            :math:`||\text{basis_matrix} \cdot \text{vec}(J) - \text{data}||_2`. The Numpy matrix can be
-            obtained from `Choi.data`.
+            :math:`||\text{basis_matrix} \cdot
+            \text{vec}(J) - \text{data}||_2`.
+            The Numpy matrix can be obtained from `Choi.data`.
         """
         # Get fitter data
         data, basis_matrix, weights = self._fitter_data(standard_weights,

@@ -116,7 +116,8 @@ class StateTomographyFitter(TomographyFitter):
             QiskitError: In case the fitting method is unrecognized.
         Returns:
             The fitted matrix rho that minimizes
-            :math:`||\text{basis_matrix} \cdot \text{vec}(\text{rho}) - \text{data}||_2`.
+            :math:`||\text{basis_matrix} \cdot
+            \text{vec}(\text{rho}) - \text{data}||_2`.
         """
         return super().fit(method, standard_weights, beta,
                            trace=1, PSD=True, **kwargs)
