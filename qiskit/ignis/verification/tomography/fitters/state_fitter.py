@@ -120,4 +120,4 @@ class StateTomographyFitter(TomographyFitter):
             \text{vec}(\text{rho}) - \text{data}||_2`.
         """
         return super().fit(method, standard_weights, beta,
-                           trace=1, PSD=True, **kwargs)
+                           trace=1, psd=True, **kwargs)

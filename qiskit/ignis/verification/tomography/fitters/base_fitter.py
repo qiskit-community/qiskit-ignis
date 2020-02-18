@@ -19,7 +19,7 @@ Maximum-Likelihood estimation quantum tomography fitter
 
 import logging
 import itertools as it
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Dict, Tuple
 from ast import literal_eval
 import numpy as np
 
@@ -88,6 +88,8 @@ class TomographyFitter:
 
         Args:
             basis: preparation basis
+        Raises:
+            QiskitError: in case the basis has no preperation data
         """
         self._prep_basis = default_basis(basis)
         if isinstance(self._prep_basis, TomographyBasis):
@@ -108,7 +110,7 @@ class TomographyFitter:
             method: str = 'auto',
             standard_weights: bool = True,
             beta: float = 0.5,
-            PSD: bool = True,
+            psd: bool = True,
             trace: Optional[int] = None,
             trace_preserving: bool = False,
             **kwargs) -> np.array:
@@ -175,7 +177,7 @@ class TomographyFitter:
                 tomography data based on count probability
             beta: hedging parameter for converting counts
                 to probabilities
-            PSD: Enforced the fitted matrix to be positive semidefinite.
+            psd: Enforced the fitted matrix to be positive semidefinite.
             trace: trace constraint for the fitted matrix.
             trace_preserving: Enforce the fitted matrix to be
                 trace preserving when fitting a Choi-matrix in quantum process
@@ -200,14 +202,14 @@ class TomographyFitter:
         if method == 'lstsq':
             return lstsq_fit(data, basis_matrix,
                              weights=weights,
-                             PSD=PSD,
+                             psd=psd,
                              trace=trace,
                              **kwargs)
 
         if method == 'cvx':
             return cvx_fit(data, basis_matrix,
                            weights=weights,
-                           PSD=PSD,
+                           psd=psd,
                            trace=trace,
                            trace_preserving=trace_preserving,
                            **kwargs)
@@ -333,20 +335,21 @@ class TomographyFitter:
 
         return data, np.vstack(basis_blocks), weights
 
-    def _binomial_weights(self, counts, beta=0.5):
+    def _binomial_weights(self, counts: Dict[str, int], beta: float = 0.5
+                          ) -> np.array:
         """
         Compute binomial weights for list or dictionary of counts.
 
         Args:
-            counts (dict, vector): A set of measurement counts for
+            counts: A set of measurement counts for
                 all outcomes of a given measurement configuration.
-            beta (float >= 0): A hedging parameter used to bias probabilities
+            beta: A nonnegative hedging parameter used to bias probabilities
                 computed from input counts away from 0 or 1.
 
         Returns:
-            A numpy array of binomial weights for the input counts and beta
-            parameter.
-
+            The binomial weights for the input counts and beta parameter.
+        Raises:
+            ValueError: In case beta is negative.
         Additional Information:
 
             The weights are determined by
@@ -382,19 +385,18 @@ class TomographyFitter:
                    "dividing by zero.".format(beta))
             logger.warning(msg)
 
-        K = len(counts)  # Number of possible outcomes.
+        outcomes_num = len(counts)
         # Compute hedged frequencies which are shifted to never be 0 or 1.
-        freqs_hedged = (counts + beta) / (shots + K * beta)
+        freqs_hedged = (counts + beta) / (shots + outcomes_num * beta)
 
         # Return gaussian weights for 2-outcome measurements.
         return np.sqrt(shots / (freqs_hedged * (1 - freqs_hedged)))
 
-    def _basis_operator_matrix(self, basis):
-        """
-        Return a basis measurement matrix of the input basis.
+    def _basis_operator_matrix(self, basis:List[np.array]) -> np.array:
+        """Return a basis measurement matrix of the input basis.
 
         Args:
-            basis (list (array like)): a list of basis matrices.
+            basis: a list of basis matrices.
 
         Returns:
             A numpy array of shape (n, col * row) where n is the number
@@ -410,7 +412,10 @@ class TomographyFitter:
             ret[j] = np.array(b).reshape((1, size), order='F').conj()
         return ret
 
-    def _preparation_op(self, label, prep_matrix_fn):
+    def _preparation_op(self,
+                        label: Tuple[str],
+                        prep_matrix_fn
+                        ) -> np.array:
         """
         Return the multi-qubit matrix for a state preparation label.
 

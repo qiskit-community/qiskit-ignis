@@ -25,7 +25,7 @@ from scipy.linalg import lstsq
 def lstsq_fit(data: np.array,
               basis_matrix: np.array,
               weights: Optional[np.array] = None,
-              PSD: bool = True,
+              psd: bool = True,
               trace: Optional[int] = None
               ) -> np.array:
     """
@@ -36,7 +36,7 @@ def lstsq_fit(data: np.array,
         basis_matrix (matrix like): matrix of measurement operators
         weights (vector like): vector of weights to apply to the
             objective function (default: None)
-        PSD: Enforced the fitted matrix to be positive
+        psd: Enforced the fitted matrix to be positive
             semidefinite (default: True)
         trace: trace constraint for the fitted matrix
             (default: None).
@@ -104,7 +104,7 @@ def lstsq_fit(data: np.array,
     rho_fit = rho_fit.reshape(dim, dim, order='F')
 
     # Rescale fitted density matrix be positive-semidefinite
-    if PSD is True:
+    if psd is True:
         rho_fit = make_positive_semidefinite(rho_fit)
 
     # Rescale fitted density matrix to satisfy trace constraint
