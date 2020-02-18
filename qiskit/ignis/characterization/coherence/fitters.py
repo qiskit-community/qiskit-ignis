@@ -17,7 +17,7 @@ Fitters of characteristic times
 """
 
 import numpy as np
-from typing import TYPE_CHECKING, Union, List, Tuple, Any
+from typing import TYPE_CHECKING, Union, List, Tuple
 from ..fitters import BaseCoherenceFitter
 
 import qiskit
@@ -34,8 +34,7 @@ class T1Fitter(BaseCoherenceFitter):
     """
 
     def __init__(self, backend_result: qiskit.result.Result,
-                 xdata: Union[List[float], Any #Array[np.float]
-                              ],
+                 xdata: Union[List[float], np.array],
                  qubits: List[int],
                  fit_p0: List[float], # any way to enforce length 3?
                  fit_bounds: Tuple[List[float], List[float]],  # any way to enforce lists oflength 3?

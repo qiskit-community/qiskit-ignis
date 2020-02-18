@@ -20,7 +20,7 @@ Fitters of characteristic times
 
 from scipy.optimize import curve_fit
 import numpy as np
-from typing import Union, List, Any, Callable, Optional, Tuple
+from typing import Union, List, Callable, Optional, Tuple
 from qiskit import QiskitError
 from qiskit.result import Result
 from ..verification.tomography import marginal_counts
@@ -33,8 +33,7 @@ class BaseFitter:
 
     def __init__(self, description: str,
                  backend_result: Union[Result, List[Result]],
-                 xdata: Union[List[float], Any # Array[np.float]
-                              ],
+                 xdata: Union[List[float], np.array],
                  qubits: List[int],
                  fit_fun: Callable[..., float],
                  fit_p0: List[float], # any way to enforce length 3?,
@@ -528,8 +527,7 @@ class BaseCoherenceFitter(BaseFitter):
 
     def __init__(self, description: str,
                  backend_result: Union[Result, List[Result]],
-                 xdata: Union[List[float], Any # Array[np.float]
-                              ],
+                 xdata: Union[List[float], np.array],
                  qubits: List[int],
                  fit_fun: Callable[..., float],
                  fit_p0: List[float], # any way to enforce length 3?,

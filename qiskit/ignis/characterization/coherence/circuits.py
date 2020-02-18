@@ -17,16 +17,14 @@ Circuit generation for coherence experiments
 """
 
 import numpy as np
-from typing import List, Union, Tuple, Any
+from typing import List, Union, Tuple
 #from nptyping import Array
 import qiskit
 from ..characterization_utils import pad_id_gates
 
-def t1_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
-                                    ],
+def t1_circuits(num_of_gates: Union[List[int], np.array],
                 gate_time: float,
-                qubits: List[int]) -> Tuple[List[qiskit.QuantumCircuit], Any #Array[np.float]
-                                            ]:
+                qubits: List[int]) -> Tuple[List[qiskit.QuantumCircuit], np.array]:
     """
     Generate circuits for T1 measurement.
     
@@ -67,13 +65,10 @@ def t1_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
     return circuits, xdata
 
 
-def t2star_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
-                                    ],
+def t2star_circuits(num_of_gates: Union[List[int], np.array],
                     gate_time: float,
                     qubits: List[int],
-                    nosc: int = 0) -> Tuple[List[qiskit.QuantumCircuit], Any #Array[np.float]
-                                          , float
-                                          ]:
+                    nosc: int = 0) -> Tuple[List[qiskit.QuantumCircuit], np.array, float]:
     """
     Generate circuits for T2* measurement.
     
@@ -119,13 +114,11 @@ def t2star_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
     return circuits, xdata, osc_freq
 
 
-def t2_circuits(num_of_gates: Union[List[int], Any #Array[np.int]
-                                    ],
+def t2_circuits(num_of_gates: Union[List[int], np.array],
                 gate_time: float,
                 qubits: List[int],
                 n_echos: int = 1,
-                phase_alt_echo: bool = False) -> Tuple[List[qiskit.QuantumCircuit], Any #Array[np.float]
-                                                        ]:
+                phase_alt_echo: bool = False) -> Tuple[List[qiskit.QuantumCircuit], np.array]:
     """
     Generate circuits for T2 (echo) measurement, by a CPMG sequence.
     
