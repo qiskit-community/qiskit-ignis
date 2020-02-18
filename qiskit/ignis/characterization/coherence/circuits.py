@@ -25,8 +25,8 @@ from ..characterization_utils import pad_id_gates
 def t1_circuits(num_of_gates: Union[List[int], np.array],
                 gate_time: float,
                 qubits: List[int]) -> Tuple[List[qiskit.QuantumCircuit], np.array]:
-    """
-    Generate circuits for T1 measurement.
+    r"""
+    Generate circuits for T\ :sub:`1` measurement.
     
     Each circuit consists of an X gate, followed by a sequence of identity
     gates.
@@ -35,7 +35,7 @@ def t1_circuits(num_of_gates: Union[List[int], np.array],
         num_of_gates: the number of identity gates in each
             circuit. Must be in an increasing order.
         gate_time: time of running a single identity gate.
-        qubits: indices of the qubits whose T1's are
+        qubits: indices of the qubits whose T\ :sub:`1`\ 's are
             to be measured.
 
     Returns:
@@ -69,8 +69,8 @@ def t2star_circuits(num_of_gates: Union[List[int], np.array],
                     gate_time: float,
                     qubits: List[int],
                     nosc: int = 0) -> Tuple[List[qiskit.QuantumCircuit], np.array, float]:
-    """
-    Generate circuits for T2* measurement.
+    r"""
+    Generate circuits for T\ :sub:`2`:sup:`*` measurement.
     
     Each circuit consists of a Hadamard gate, followed by a sequence of
     identity gates, a phase gate (with a linear phase), and an additional
@@ -81,7 +81,7 @@ def t2star_circuits(num_of_gates: Union[List[int], np.array],
             circuit. Must be in an increasing order.
         gate_time: time of running a single identity gate.
         qubits: indices of the qubits
-            whose T2*'s are to be measured.
+            whose T\ :sub:`2`:sup:`*`\ 's are to be measured.
         nosc: number of oscillations to induce using the phase gate
     Returns:
         *   The generated circuits
@@ -119,29 +119,29 @@ def t2_circuits(num_of_gates: Union[List[int], np.array],
                 qubits: List[int],
                 n_echos: int = 1,
                 phase_alt_echo: bool = False) -> Tuple[List[qiskit.QuantumCircuit], np.array]:
-    """
-    Generate circuits for T2 (echo) measurement, by a CPMG sequence.
+    r"""
+    Generate circuits for T\ :sub:`2` (echo) measurement, by a CPMG sequence.
     
     Each circuit consists of:
-    *   Y90-t-Y-[t-t-X/Y]^m-t-Y90
-    *   n_echos = n+1
-    *   if phase_alt_echo the X/Y alternate, if phase_alt_echo=False the
-    pulses are always Y
+       *   :math:`Y90-t-Y-[t-t-X/Y]^m-t-Y90`
+       *   :math:`n_{echos} = n+1`
+       *   if `phase_alt_echo` then the `X/Y` alternate, if `phase_alt_echo=False` \
+           tthen he pulses are always `Y`
 
-    Standard T2 echo is n_echos=1
+    Standard T\ :sub:`2`:sup:`*` echo is :math:`n_echos=1`
 
     Args:
         num_of_gates:
             Each element of the list corresponds to a circuit.
-            num_of_gates[i] is the number of identity gates in each section
+            `num_of_gates[i]` is the number of identity gates in each section
             "t" of the pulse sequence in circuit no. i.
             Must be in an increasing order.
         gate_time: time of running a single identity gate.
         qubits: indices of the qubits whose
-            T2's are to be measured.
-        n_echos: number of echo gates (X or Y).
+            T\ :sub:`2`:sup:`*`\ 's are to be measured.
+        n_echos: number of echo gates (`X` or `Y`).
         phase_alt_echo: if True then alternate the echo between
-            X and Y.
+            `X` and `Y`.
     Returns:
         *   Generated circuits
         *   Delay times, i.e., `gate_time` multiplied by the numbers in `num_of_gates`

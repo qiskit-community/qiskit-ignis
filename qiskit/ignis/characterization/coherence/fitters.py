@@ -24,13 +24,13 @@ import qiskit
 
 
 class T1Fitter(BaseCoherenceFitter):
-    """
-    Estimate T1, based on experiments outcomess
+    r"""
+    Estimate T\ :sub:`1`\ , based on experiments outcomess
     
     The experiments were created by `t1_circuits`, and executed on the device.
     
-    The probabilities of measuring 1 is assumed to be of the form `Ae^{-t/T1}+B`,
-    for unknown parameters A, B, and T1.
+    The probabilities of measuring 1 is assumed to be of the form :math:`Ae^{-t/T_1}+B`,
+    for unknown parameters `A`, `B`, and T\ :sub:`1`\ .
     """
 
     def __init__(self, backend_result: qiskit.result.Result,
@@ -42,13 +42,13 @@ class T1Fitter(BaseCoherenceFitter):
         """
         Args:
             backend_result: result of execution of `t1_circuits` on the backend.
-            xdata: delay times of the T1 circuits.
-            qubits:  indices of the qubits whose T1's are to be measured.
+            xdata: delay times of the T\ :sub:`1` circuits.
+            qubits:  indices of the qubits whose T\ :sub:`1`\ 's are to be measured.
             fit_p0: initial values to the fit parameters. 
-                    The fitting function for T1 is `f(t) = Ae^{-t/T1}+B`.
-                    The order of the initial values in `fit_p0` is: `(A, T1, B)`.
+                    The fitting function for T\ :sub:`1` is :math:`f(t) = Ae^{-t/T1}+B`.
+                    The order of the initial values in `fit_p0` is: :math:`(A, T_1, B)`.
             fit_bounds: bounds on the parameters to fit.
-                        The first tuple is the lower bounds, in the order `(A, T1, B)`.
+                        The first tuple is the lower bounds, in the order :math:`(A, T_1, B)`.
                         The second tuple is the upper bounds.
             time_unit: unit of delay times in `xdata`.
         """

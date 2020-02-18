@@ -38,7 +38,7 @@ Coherence
 =========
 
 Design and analyze experiments for characterizing device coherence
-(e.g. T1, T2). See the following example of T1 estimation.
+(e.g. T\ :sub:`1`\ , T\ :sub:`2`\ ). See the following example of T\ :sub:`1` estimation.
 
 Generation of coherence circuits: these circuits set the qubit in
 the excited state, wait different time intervals, then measure
@@ -74,7 +74,7 @@ Backend execution: actually performing the experiment on the device
     t_q0 = 25.0
     t_q2 = 15.0
 
-    # Define T1 noise:
+    # Define T\ :sub:`1` noise:
     t1_noise_model = NoiseModel()
     t1_noise_model.add_quantum_error(
     thermal_relaxation_error(t_q0, 2*t_q0, gate_time),
@@ -88,7 +88,7 @@ Backend execution: actually performing the experiment on the device
                                        noise_model=t1_noise_model,
                                        optimization_level=0).result()
 
-Analysis of results: deduction of T1, based on the experiments outcomes.
+Analysis of results: deduction of T\ :sub:`1`\ , based on the experiments outcomes.
 
 .. jupyter-execute::
 
