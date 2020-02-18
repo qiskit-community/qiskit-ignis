@@ -14,6 +14,7 @@
 
 # pylint: disable=missing-docstring
 # pylint: disable=unexpected-keyword-arg
+# pylint: disable=invalid-name
 
 import unittest
 
