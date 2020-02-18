@@ -1,23 +1,14 @@
 .. _qiskit-ignis:
 
-****************
-qiskit.ignis
-****************
+.. module:: qiskit.ignis
 
-.. currentmodule:: qiskit.ignis
-
-
-.. automodapi:: qiskit.ignis
-  :no-heading:
-  :no-inheritance-diagram:
-  :inherited-members:
-
-Submodules
-==========
+==========================
+Qiskit Ignis API Reference
+==========================
 
 .. toctree::
    :maxdepth: 1
 
-   characterization/characterization
-   mitigation/mitigation
-   verification/verification
+   characterization
+   mitigation
+   verification
