@@ -193,7 +193,7 @@ def pauli_measurement_matrix(label: str, outcome: int) -> np.array:
 # PauliBasis Object
 ###########################################################################
 
-PauliBasis = TomographyBasis('Pauli',
+PauliBasis = TomographyBasis('Pauli',  # pylint: disable=invalid-name
                              measurement=(('X', 'Y', 'Z'),
                                           pauli_measurement_circuit,
                                           pauli_measurement_matrix),

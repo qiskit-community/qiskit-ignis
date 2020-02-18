@@ -135,7 +135,7 @@ class TomographyBasis:
 
         return self._measurement_circuit(op, qubit, clbit)
 
-    def preparation_circuit(self, op: str, qubit: Qubit):
+    def preparation_circuit(self, op: str, qubit: Qubit) -> QuantumCircuit:
         """Return the preparation circuit on the given qubit
 
         Args:
@@ -177,7 +177,8 @@ class TomographyBasis:
             QiskitError: If the TomographyBasis has no measurement data
             ValueError: if **label** does not describe an element of the
                 measurement data, or if **outcome** is not a valid outcome.
-        Returns: The measurement matrix.
+        Returns:
+            The measurement matrix.
         """
         if self.measurement is False:
             raise QiskitError("{} is not a measurement basis".format(
@@ -206,7 +207,8 @@ class TomographyBasis:
             QiskitError: If the TomographyBasis has no preparation data
             ValueError: if **label** does not describe an element of the
                 preparation data.
-        Returns: The preparation matrix.
+        Returns:
+            The preparation matrix.
         """
 
         if self.preparation is False:

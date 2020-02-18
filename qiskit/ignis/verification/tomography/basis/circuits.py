@@ -163,14 +163,14 @@ def _tomography_circuits(
         meas_labels: The measurement operator
             labels. If None no measurements will be appended. See additional
             information for details (Default: 'Pauli').
+        meas_basis: The measurement basis.
         prep_labels: The preparation operator
             labels. If None no preparations will be appended. See additional
             information for details (Default: None).
-        meas_circuit_fn: The measurement circuit
-            function. See additional information for details (Default: None).
-        prep_circuit_fn: The preparation circuit
-            function. See additional information for details (Default: None).
-
+        prep_basis: The preparation basis.
+    Raises:
+        QiskitError: If the measurement/preparation basis is invalid.
+        ValueError: If the measurement/preparation basis is not specified
     Returns:
         A list of QuantumCircuit objects containing the original circuit
         with state preparation circuits prepended, and measurement circuits
@@ -338,29 +338,31 @@ def _tomography_circuits(
 
     # Generate the circuits
     qst_circs = []
-    for pl in prep_labels:
+    for prep_label in prep_labels:
         prep = QuantumCircuit(*registers)
         # Generate preparation circuit
-        if pl is not None:
+        if prep_label is not None:
             for j in range(num_qubits):
-                prep += preparation(pl[j], prep_qubits[j])
+                prep += preparation(prep_label[j], prep_qubits[j])
             prep.barrier(*qubit_registers)
         # Add circuit being tomographed
         prep += circuit
         # Generate Measurement circuit
-        for ml in meas_labels:
+        for meas_label in meas_labels:
             meas = QuantumCircuit(*registers)
-            if ml is not None:
+            if meas_label is not None:
                 meas.barrier(*qubit_registers)
                 for j in range(num_qubits):
-                    meas += measurement(ml[j], meas_qubits[j], clbits[j])
+                    meas += measurement(meas_label[j],
+                                        meas_qubits[j],
+                                        clbits[j])
             circ = prep + meas
-            if pl is None:
+            if prep_label is None:
                 # state tomography circuit
-                circ.name = str(ml)
+                circ.name = str(meas_label)
             else:
                 # process tomography circuit
-                circ.name = str((pl, ml))
+                circ.name = str((prep_label, meas_label))
             qst_circs.append(circ)
     return qst_circs
 

@@ -28,7 +28,7 @@ from .lstsq_fit import lstsq_fit
 class ProcessTomographyFitter(TomographyFitter):
     """Maximum-Likelihood estimation process tomography fitter."""
 
-    def fit(self,
+    def fit(self,  # pylint: disable=arguments-differ
             method: str = 'auto',
             standard_weights: bool = True,
             beta: float = 0.5,

@@ -44,7 +44,7 @@ class StateTomographyFitter(TomographyFitter):
         """
         super().__init__(result, circuits, meas_basis, None)
 
-    def fit(self,
+    def fit(self,  # pylint: disable=arguments-differ
             method: str = 'auto',
             standard_weights: bool = True,
             beta: float = 0.5,

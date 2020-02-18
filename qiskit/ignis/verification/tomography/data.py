@@ -68,17 +68,17 @@ def marginal_counts(counts: Dict[str, int],
     # Since bitstrings have qubit-0 as least significant bit
     if meas_qubits is True:
         meas_qubits = range(num_qubits)  # All measured
-    qs = sorted(meas_qubits, reverse=True)
+    qubits = sorted(meas_qubits, reverse=True)
 
     # Generate bitstring keys for measured qubits
-    meas_keys = count_keys(len(qs))
+    meas_keys = count_keys(len(qubits))
 
     # Get regex match strings for suming outcomes of other qubits
     rgx = []
     for key in meas_keys:
         def helper(x, y):
-            if y in qs:
-                return key[qs.index(y)] + x
+            if y in qubits:
+                return key[qubits.index(y)] + x
             return '\\d' + x
         rgx.append(reduce(helper, range(num_qubits), ''))
 
@@ -173,25 +173,27 @@ def expectation_counts(counts: Dict[str, int]) -> Dict[str, int]:
     shots = np.sum(list(counts.values()))
 
     # Compute measured operators subsets in a data set
-    nq = len(list(counts.keys())[0])
+    numq = len(list(counts.keys())[0])
 
     # Get operator subsets
     subsets = []
-    for r in range(nq):
-        subsets += list(combinations(range(nq), r + 1))
+    for r in range(numq):
+        subsets += list(combinations(range(numq), r + 1))
 
     # Compute expectation values
     exp_data = {'00': shots}
-    for s in subsets:
+    for subset in subsets:
         exp_counts = 0
-        exp_op = nq * ['0']
+        exp_op = numq * ['0']
 
         # Get expectation operator
-        for qubit in s:
+        for qubit in subset:
             exp_op[qubit] = '1'
 
         # Get expectation value
-        for key, val in marginal_counts(counts, s, pad_zeros=True).items():
+        for key, val in marginal_counts(counts,
+                                        subset,
+                                        pad_zeros=True).items():
             exp_counts += (-1) ** (key.count('1')) * val
         exp_data[''.join(exp_op)] = exp_counts
 

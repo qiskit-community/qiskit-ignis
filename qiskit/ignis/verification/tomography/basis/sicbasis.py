@@ -102,7 +102,8 @@ def sicpovm_preparation_matrix(label: str) -> np.array:
 # SICBasis Object
 ###########################################################################
 
-SICBasis = TomographyBasis('SIC', measurement=None,
+SICBasis = TomographyBasis('SIC',  # pylint: disable=invalid-name
+                           measurement=None,
                            preparation=(('S0', 'S1', 'S2', 'S3'),
                                         sicpovm_preparation_circuit,
                                         sicpovm_preparation_matrix))
