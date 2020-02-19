@@ -20,7 +20,7 @@ Fitters of characteristic times
 
 from scipy.optimize import curve_fit
 import numpy as np
-from typing import Union, List, Callable, Optional, Tuple
+from typing import Union, List, Callable, Optional, Tuple, Dict
 from qiskit import QiskitError
 from qiskit.result import Result
 from ..verification.tomography import marginal_counts
@@ -105,42 +105,43 @@ class BaseFitter:
             self.fit_data()
 
     @property
-    def description(self):
+    def description(self) -> str:
         """
         Return the fitter's purpose, e.g. 'T1'
         """
         return self._description
 
     @property
-    def backend_result(self):
+    def backend_result(self) -> Union[Result, List[Result]]:
         """
-        Return the execution results (qiskit.Result)
+        Return the execution results
         """
         return self._backend_result
 
     @property
-    def series(self):
+    def series(self) -> Optional[List[str]]:
         """
         Return the list of series for the data
         """
         return self._series
 
     @property
-    def measured_qubits(self):
+    def measured_qubits(self) -> List[int]:
         """
-        Return the indices of the qubits whose characteristic time is measured
+        Return the indices of the qubits to be characterized
         """
         return self._qubits
 
     @property
-    def xdata(self):
+    def xdata(self) -> Union[List[float], np.array]:
         """
-        Return the data points on the x-axis (a list of floats)
+        Return the data points on the x-axis, the independenet
+        parameter which is fit against
         """
         return self._xdata
 
     @property
-    def ydata(self):
+    def ydata(self) -> List[Dict]:
         """Return the data points on the y-axis
 
         The data points are returning in the form of a list of dictionaries:
@@ -154,7 +155,7 @@ class BaseFitter:
         return self._ydata
 
     @property
-    def fit_fun(self):
+    def fit_fun(self) -> Callable:
         """
         Return the function used in the fit,
         e.g. BaseFitter._exp_fit_fun
@@ -162,29 +163,36 @@ class BaseFitter:
         return self._fit_fun
 
     @property
-    def params(self):
+    def params(self) -> List[float]:
         """
         Return the fit function parameters that were calculated by curve_fit
         """
         return self._params
 
     @property
-    def params_err(self):
+    def params_err(self) -> List[float]:
         """
         Return the error of the fit function parameters
         """
         return self._params_err
 
-    def _get_param(self, param_ind, qid=-1, series='0', err=False):
+    def _get_param(self,
+                   param_ind: int,
+                   qid: int = -1,
+                   series: str = '0',
+                   err: bool = False) -> Union[float, List[float]]:
         """
-        Helper function that gets a parameter (or parameter err)
-        if qid=-1 returns a list of the parameters for all qubits
+        Return the fitted value, or fitting error, of a given
+        parameter and q given qubit
 
         Args:
             param_ind: the parameter index to get
             qid: the qubit index (or all qubits if -1)
             series: the series to get
             err: get param or param err
+
+        Returns:
+            The fitted value or error
         """
 
         if qid != -1:
@@ -203,14 +211,17 @@ class BaseFitter:
 
         return param_list
 
-    def add_data(self, results, recalc=True, refit=True):
+    def add_data(self,
+                 results: Union[Result, List[Result]],
+                 recalc: bool = True,
+                 refit: bool = True):
         """
-        Adds more data
+        Add new execution results to previous execution results
 
         Args:
-            results: a result (qiskit.result) or list of results
-            recalc: Recalculate the data
-            refit: Refit the data
+            results: new execution results
+            recalc: whether tp recalculate the data
+            refit: whether to refit the data
         """
 
         if isinstance(results, list):
@@ -270,14 +281,20 @@ class BaseFitter:
                     if self._ydata[serieslbl][-1]['std'][-1] == 0:
                         self._ydata[serieslbl][-1]['std'][-1] = 1e-4
 
-    def fit_data(self, qid=-1, p0=None, bounds=None, series=None):
+    def fit_data(self,
+                 qid: int = -1,
+                 p0: Optional[List[float]] = None,
+                 bounds: Optional[Tuple[List[float], List[float]]] = None,
+                 series: Optional[str] = None):
         """
         Fit the curve.
-        Computes self._params and self._params_err:
+        
+        Compute self._params and self._params_err
+        
         Args:
-            qid: Qubit data to fit. If -1 fit all the data
-            p0: initial guess
-            bounds: bounds
+            qid: qubit for fitting. If -1 fit for all the qubits
+            p0: initial guess, equivalent to `p0` in `scipy.optimize`
+            bounds: bounds, equivalent to `bounds` in `scipy.optimize`
             series: series to fit (if None fit all)
         """
 
@@ -312,7 +329,7 @@ class BaseFitter:
     @staticmethod
     def _exp_fit_fun(x, a, tau, c):
         """
-        Function used to fit the exponential decay
+        Exponential decay
         """
 
         return a * np.exp(-x / tau) + c
@@ -320,7 +337,7 @@ class BaseFitter:
     @staticmethod
     def _osc_fit_fun(x, a, tau, f, phi, c):
         """
-        Function used to fit the decay cosine
+        Decay cosine
         """
 
         return a * np.exp(-x / tau) * np.cos(2 * np.pi * f * x + phi) + c
@@ -328,7 +345,7 @@ class BaseFitter:
     @staticmethod
     def _osc_nodecay_fit_fun(x, a, f, phi, c):
         """
-        Function used to fit the decay cosine
+        Oscilliator cosine
         """
 
         return a * np.cos(2 * np.pi * f * x + phi) + c
@@ -336,7 +353,7 @@ class BaseFitter:
     @staticmethod
     def _cal_fit_fun(x, a, thetaerr, phierr, theta0, phi0, c):
         """
-        Function used to fit gate calibrations
+        Gate calibrations fitting function
         """
 
         return a*np.cos((theta0+thetaerr) * x + phi0 + phierr) + c
@@ -344,7 +361,7 @@ class BaseFitter:
     @staticmethod
     def _quadratic(x, a, x0, c):
         """
-        Function used to fit drag
+        Drag fitting function
         """
 
         return a * (x-x0)**2 + c

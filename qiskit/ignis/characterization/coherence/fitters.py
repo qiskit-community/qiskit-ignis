@@ -37,7 +37,7 @@ class T1Fitter(BaseCoherenceFitter):
                  xdata: Union[List[float], np.array],
                  qubits: List[int],
                  fit_p0: List[float], # any way to enforce length 3?
-                 fit_bounds: Tuple[List[float], List[float]],  # any way to enforce lists oflength 3?
+                 fit_bounds: Tuple[List[float], List[float]],  # any way to enforce lists of length 3?
                  time_unit: str = 'micro-seconds'):
         """
         Args:
