@@ -55,7 +55,7 @@ matrix:
     - python: "3.5"
       env: TOXENV=py35
       name: "Python 3.5 Tests"
-      stage: lint_and_python
+      stage: all_python
     - python: "3.6"
       env: TOXENV=py36
       name: "Python 3.6 Tests"
@@ -65,7 +65,7 @@ matrix:
       python: "3.7"
       env: TOXENV=py37
       name: "Python 3.7 Tests"
-      stage: all_python
+      stage: lint_and_python
     - os: linux
       dist: xenial
       python: "3.8"
@@ -77,37 +77,33 @@ matrix:
       env: TOXENV=lint
       name: "Linter Checks"
       stage: lint_and_python
-    # OSX, Python 3.5.6 (via pyenv)
     - stage: all_python
       name: "Python 3.5 Tests on OSX"
       <<: *stage_osx
       env:
         - MPLBACKEND=ps
-        - PYTHON_VERSION=3.5.6
+        - PYTHON_VERSION=3.5.9
         - TOXENV=py35
-    # OSX, Python 3.6.5 (via pyenv)
     - stage: all_python
       name: "Python 3.6 Tests on OSX"
       <<: *stage_osx
       env:
         - MPLBACKEND=ps
-        - PYTHON_VERSION=3.6.5
+        - PYTHON_VERSION=3.6.10
         - TOXENV=py36
-    # OSX, Python 3.7.2 (via pyenv)
-    - stage: all_python
+    - stage: lint_and_python
       <<: *stage_osx
       name: "Python 3.7 Tests on OSX"
       env:
         - MPLBACKEND=ps
-        - PYTHON_VERSION=3.7.2
+        - PYTHON_VERSION=3.7.6
         - TOXENV=py37
-    # OSX, Python 3.8.0 (via pyenv)
     - stage: all_python
       <<: *stage_osx
       name: "Python 3.8 Tests on OSX"
       env:
         - MPLBACKEND=ps
-        - PYTHON_VERSION=3.8.0
+        - PYTHON_VERSION=3.8.1
         - TOXENV=py38
     - if: tag IS present
       python: "3.6"
