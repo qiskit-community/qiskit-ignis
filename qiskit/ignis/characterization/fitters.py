@@ -31,6 +31,21 @@ from ..utils import build_counts_dict_from_list
 class BaseFitter:
     """
     Base class for a data fitter
+
+    Args:
+        description: description of the fitter's purpose, e.g. 'T1'.
+        backend_result: result of execution on the backend.
+        xdata: a list of the independent parameter
+               (which will be fit against).
+        qubits: the qubits to be characterized.
+        fit_fun: equivalent to parameter `f` of scipy.curve_fit.
+        fit_p0: equivalent to parameter `p0` of scipy.curve_fit.
+        fit_bounds: equivalent to parameter `bounds` of scipy.curve_fit.
+        circuit_names: names of the circuits, should be the same length
+                       as `xdata`. Full circuit name will be these plus the
+                       series name.
+        series: list of circuit name tags
+        expected_state: is the circuit supposed to end up in '0' or '1'?
     """
 
     def __init__(self, description: str,
@@ -43,24 +58,6 @@ class BaseFitter:
                  circuit_names: List[str],
                  series: Optional[List[str]] = None,
                  expected_state: str = '0'):
-        """
-        .
-        
-        Args:
-            description: description of the fitter's purpose, e.g. 'T1'.
-            backend_result: result of execution on the backend.
-            xdata: a list of the independent parameter
-                (which will be fit against).
-            qubits: the qubits to be characterized.
-            fit_fun: equivalent to parameter `f` of scipy.curve_fit.
-            fit_p0: equivalent to parameter `p0` of scipy.curve_fit.
-            fit_bounds: equivalent to parameter `bounds` of scipy.curve_fit.
-            circuit_names: names of the circuits, should be the same length
-                as `xdata`. Full circuit name will be these plus the
-                series name.
-            series: list of circuit name tags
-            expected_state: is the circuit supposed to end up in '0' or '1'?
-        """
 
         if fit_bounds is None:
             fit_bounds = ([-np.inf for e in range(len(fit_p0))],
@@ -540,6 +537,23 @@ class IQFitter(BaseFitter):
 class BaseCoherenceFitter(BaseFitter):
     """
     Base class for fitters of characteristic times
+
+    Args:
+        description: description of the fitter's purpose, e.g. 'T1'.
+        backend_result: result of execution on the backend.
+        xdata: delay times of the circuits.
+        qubits: the qubits to be characterized.
+        fit_fun: equivalent to parameter `f` of scipy.curve_fit.
+        fit_p0: equivalent to parameter `p0` of scipy.curve_fit.
+        fit_bounds: equivalent to parameter `bounds` of scipy.curve_fit.
+        circuit_names: names of the circuits, should be the same length
+                       as `xdata`. Full circuit name will be these plus the
+                       series name.
+        series: list of circuit name tags
+        expected_state: is the circuit supposed to end up in '0' or '1'?
+        time_index: among parameters of `fit_fun`,
+                    which one is the characteristic time.
+        time_unit: unit of delay times in `xdata`.
     """
 
     def __init__(self, description: str,
@@ -554,26 +568,6 @@ class BaseCoherenceFitter(BaseFitter):
                  expected_state: str = '0',
                  time_index: int = 0,
                  time_unit: str = 'micro-seconds'):
-        """
-        .
-        
-        Args:
-            description: description of the fitter's purpose, e.g. 'T1'.
-            backend_result: result of execution on the backend.
-            xdata: delay times of the circuits.
-            qubits: the qubits to be characterized.
-            fit_fun: equivalent to parameter `f` of scipy.curve_fit.
-            fit_p0: equivalent to parameter `p0` of scipy.curve_fit.
-            fit_bounds: equivalent to parameter `bounds` of scipy.curve_fit.
-            circuit_names: names of the circuits, should be the same length
-                as `xdata`. Full circuit name will be these plus the
-                series name.
-            series: list of circuit name tags
-            expected_state: is the circuit supposed to end up in '0' or '1'?
-            time_index: among parameters of `fit_fun`,
-                        which one is the characteristic time.
-            time_unit: unit of delay times in `xdata`.
-        """
 
         BaseFitter.__init__(self, description,
                             backend_result, xdata,
