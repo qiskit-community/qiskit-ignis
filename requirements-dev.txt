@@ -1,11 +1,14 @@
 cvxpy>=1.0.15
 pylint==2.4.4
-qiskit-aer>=0.1.1
+pycodestyle
+qiskit-aer>=0.3.0
 scikit-learn>=0.17
-Sphinx>=1.8.3
+Sphinx>=2.1
 sphinx-rtd-theme>=0.4.0
 sphinx-tabs>=1.1.11 
-sphinx-automodapi
+sphinx-autodoc-typehints
 stestr>=2.5.0
 ddt>=1.2.0
 jupyter
+jupyter-sphinx
+reno
