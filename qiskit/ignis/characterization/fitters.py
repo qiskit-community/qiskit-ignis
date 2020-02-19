@@ -18,11 +18,11 @@
 Fitters of characteristic times
 """
 
+from typing import Union, List, Callable, Optional, Tuple, Dict
 from scipy.optimize import curve_fit
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import axes
-from typing import Union, List, Callable, Optional, Tuple, Dict
 from qiskit import QiskitError
 from qiskit.result import Result
 from ..verification.tomography import marginal_counts
@@ -53,8 +53,8 @@ class BaseFitter:
                  xdata: Union[List[float], np.array],
                  qubits: List[int],
                  fit_fun: Callable[..., float],
-                 fit_p0: List[float], # any way to enforce length 3?,
-                 fit_bounds: Tuple[List[float], List[float]],  # any way to enforce lists oflength 3?,
+                 fit_p0: List[float], # any way to enforce length 3?
+                 fit_bounds: Tuple[List[float], List[float]],
                  circuit_names: List[str],
                  series: Optional[List[str]] = None,
                  expected_state: str = '0'):
@@ -287,9 +287,9 @@ class BaseFitter:
                  series: Optional[str] = None):
         """
         Fit the curve.
-        
+
         Compute self._params and self._params_err
-        
+
         Args:
             qid: qubit for fitting. If -1 fit for all the qubits
             p0: initial guess, equivalent to `p0` in `scipy.optimize`
@@ -561,8 +561,8 @@ class BaseCoherenceFitter(BaseFitter):
                  xdata: Union[List[float], np.array],
                  qubits: List[int],
                  fit_fun: Callable[..., float],
-                 fit_p0: List[float], # any way to enforce length 3?,
-                 fit_bounds: Tuple[List[float], List[float]],  # any way to enforce lists oflength 3?,
+                 fit_p0: List[float], # any way to enforce length 3?
+                 fit_bounds: Tuple[List[float], List[float]],
                  circuit_names: List[str],
                  series: Optional[List[str]] = None,
                  expected_state: str = '0',
@@ -595,8 +595,8 @@ class BaseCoherenceFitter(BaseFitter):
         return self._get_param(self._time_index, qid, series)
 
     def time_err(self,
-qid: int = -1,
-             series: str = '0') -> Union[float, List[float]]:
+                 qid: int = -1,
+                 series: str = '0') -> Union[float, List[float]]:
         """
         Return the error of characteristic time for the given qubit and series
 
@@ -607,7 +607,7 @@ qid: int = -1,
         Returns:
            The error of the characteristic time of the qubit, or all qubits
         """
-        
+
         return self._get_param(self._time_index,
                                qid, series, err=True)
 
@@ -628,8 +628,6 @@ qid: int = -1,
         Returns:
             The axes object
         """
-
-        from matplotlib import pyplot as plt
 
         if ax is None:
             plt.figure()
@@ -691,8 +689,6 @@ class BaseGateFitter(BaseFitter):
         Returns:
             The axes object
         """
-
-        from matplotlib import pyplot as plt
 
         if ax is None:
             plt.figure()

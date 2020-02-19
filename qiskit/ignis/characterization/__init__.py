@@ -13,7 +13,7 @@
 # that they have been altered from the originals.
 
 
-"""
+r"""
 =======================================================
 Characterization (:mod:`qiskit.ignis.characterization`)
 =======================================================

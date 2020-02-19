@@ -16,31 +16,30 @@
 Fitters of characteristic times
 """
 
+from typing import Union, List, Tuple
 import numpy as np
-from typing import TYPE_CHECKING, Union, List, Tuple
-from ..fitters import BaseCoherenceFitter
-
 import qiskit
+from ..fitters import BaseCoherenceFitter
 
 
 class T1Fitter(BaseCoherenceFitter):
     r"""
     Estimate T\ :sub:`1`\ , based on experiments outcomes,
-    
+
     The experiments were created by `t1_circuits`, and executed on the device.
-    
+
     The probabilities of measuring 1 is assumed to be of the form
-    
+
     .. math::
         f(t) = A\mathrm{e}^{-t/T_1}+B,
-        
+
     for unknown parameters `A`, `B`, and T\ :sub:`1`\ .
 
     Args:
         backend_result: result of execution of `t1_circuits` on the backend.
         xdata: delay times of the T\ :sub:`1` circuits.
         qubits:  indices of the qubits whose T\ :sub:`1`\ 's are to be measured.
-        fit_p0: initial values to the fit parameters, 
+        fit_p0: initial values to the fit parameters,
                 where the order is :math:`(A, T_1, B)`.
         fit_bounds: bounds on the parameters to fit.
                     The first tuple is the lower bounds, in the order :math:`(A, T_1, B)`.
@@ -53,7 +52,7 @@ class T1Fitter(BaseCoherenceFitter):
                  xdata: Union[List[float], np.array],
                  qubits: List[int],
                  fit_p0: List[float], # any way to enforce length 3?
-                 fit_bounds: Tuple[List[float], List[float]],  # any way to enforce lists of length 3?
+                 fit_bounds: Tuple[List[float], List[float]],
 
                  time_unit: str = 'micro-seconds'):
 
@@ -81,26 +80,26 @@ class T1Fitter(BaseCoherenceFitter):
 class T2Fitter(BaseCoherenceFitter):
     r"""
     Estimate T\ :sub:`2`\ , based on experiments outcomes.
-    
+
     The experiments were created by `t2_circuits`, and executed on the device.
-    
+
     The probabilities of measuring 0 is assumed to be of the form
-        
+
     .. math::
         f(t) = A\mathrm{e}^{-t/T_2}+B,
-        
+
     for unknown parameters `A`, `B`, and T\ :sub:`2`\ .
 
     Args:
         backend_result: result of execution of `t2_circuits` on the backend.
         xdata: delay times of the T\ :sub:`2` circuits.
         qubits:  indices of the qubits whose T\ :sub:`2`\ 's are to be measured.
-        fit_p0: initial values to the fit parameters, 
+        fit_p0: initial values to the fit parameters,
                 where the order is :math:`(A, T_2, B)`.
         fit_bounds: bounds on the parameters to fit.
                     The first tuple is the lower bounds, in the order :math:`(A, T_2, B)`.
                     The second tuple is the upper bounds.
-        circuitbasename: prefix to all circuit names.
+        circbasename: prefix to all circuit names.
         time_unit: unit of delay times in `xdata`.
     """
 
@@ -109,8 +108,8 @@ class T2Fitter(BaseCoherenceFitter):
                  xdata: Union[List[float], np.array],
                  qubits: List[int],
                  fit_p0: List[float], # any way to enforce length 3?
-                 fit_bounds: Tuple[List[float], List[float]],  # any way to enforce lists of length 3?
-                 circuitbasename: str = 't2',
+                 fit_bounds: Tuple[List[float], List[float]],
+                 circbasename: str = 't2',
                  time_unit: str = 'micro-seconds'):
 
 
@@ -138,24 +137,25 @@ class T2Fitter(BaseCoherenceFitter):
 class T2StarFitter(BaseCoherenceFitter):
     r"""
     Estimate T\ :sub:`2`:sup:`*`\ , based on experiments outcomes.
-    
+
     The experiments were created by `t2star_circuits`, and executed on the device.
-    
+
     The probabilities of measuring 0 is assumed to be of the form
-    
+
     .. math::
         f(t) = A\mathrm{e}^{-t / T_2^*}\cos(2\pi ft + \phi) + B
-        
+
     for unknown parameters :math:`A, B, f, \phi, T_2^*`.
 
     Args:
         backend_result: result of execution of `t2star_circuits` on the backend.
         xdata: delay times of the T\ :sub:`2`:sup:`*` circuits.
         qubits:  indices of the qubits whose T\ :sub:`2`\:sup:`*` 's are to be measured.
-        fit_p0: initial values to the fit parameters, 
+        fit_p0: initial values to the fit parameters,
                 where the order is :math:`(A, T_2^*, f, \phi, B)`.
         fit_bounds: bounds on the parameters to fit.
-                    The first tuple is the lower bounds, in the order :math:`(A, T_2^*, f, \phi, B)`.
+                    The first tuple is the lower bounds,
+                    in the order :math:`(A, T_2^*, f, \phi, B)`.
                     The second tuple is the upper bounds.
         time_unit: unit of delay times in `xdata`.
     """
@@ -165,7 +165,7 @@ class T2StarFitter(BaseCoherenceFitter):
                  xdata: Union[List[float], np.array],
                  qubits: List[int],
                  fit_p0: List[float], # any way to enforce length 5?
-                 fit_bounds: Tuple[List[float], List[float]],  # any way to enforce lists of length 5?
+                 fit_bounds: Tuple[List[float], List[float]],
                  time_unit: str = 'micro-seconds'):
 
         circuit_names = []

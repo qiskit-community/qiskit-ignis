@@ -16,8 +16,8 @@
 Circuit generation for coherence experiments
 """
 
-import numpy as np
 from typing import List, Union, Tuple
+import numpy as np
 #from nptyping import Array
 import qiskit
 from ..characterization_utils import pad_id_gates
@@ -27,7 +27,7 @@ def t1_circuits(num_of_gates: Union[List[int], np.array],
                 qubits: List[int]) -> Tuple[List[qiskit.QuantumCircuit], np.array]:
     r"""
     Generate circuits for T\ :sub:`1` measurement.
-    
+
     Each circuit consists of an X gate, followed by a sequence of identity
     gates.
 
@@ -71,7 +71,7 @@ def t2star_circuits(num_of_gates: Union[List[int], np.array],
                     nosc: int = 0) -> Tuple[List[qiskit.QuantumCircuit], np.array, float]:
     r"""
     Generate circuits for T\ :sub:`2`:sup:`*` measurement.
-    
+
     Each circuit consists of a Hadamard gate, followed by a sequence of
     identity gates, a phase gate (with a linear phase), and an additional
     Hadamard gate.
@@ -121,7 +121,7 @@ def t2_circuits(num_of_gates: Union[List[int], np.array],
                 phase_alt_echo: bool = False) -> Tuple[List[qiskit.QuantumCircuit], np.array]:
     r"""
     Generate circuits for T\ :sub:`2` (echo) measurement, by a CPMG sequence.
-    
+
     Each circuit consists of:
        *   :math:`Y90-t-Y-[t-t-X/Y]^m-t-Y90`
        *   :math:`n_{echos} = n+1`
