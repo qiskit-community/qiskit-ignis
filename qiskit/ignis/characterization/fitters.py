@@ -20,6 +20,8 @@ Fitters of characteristic times
 
 from scipy.optimize import curve_fit
 import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib import axes
 from typing import Union, List, Callable, Optional, Tuple, Dict
 from qiskit import QiskitError
 from qiskit.result import Result
@@ -183,7 +185,7 @@ class BaseFitter:
                    err: bool = False) -> Union[float, List[float]]:
         """
         Return the fitted value, or fitting error, of a given
-        parameter and q given qubit
+        parameter and a given qubit
 
         Args:
             param_ind: the parameter index to get
@@ -508,8 +510,6 @@ class IQFitter(BaseFitter):
             The axes object
         """
 
-        from matplotlib import pyplot as plt
-
         if ax is None:
             plt.figure()
             ax = plt.gca()
@@ -584,30 +584,52 @@ class BaseCoherenceFitter(BaseFitter):
         self._time_index = time_index
         self._time_unit = time_unit
 
-    def time(self, qid=-1, series='0'):
+    def time(self,
+             qid: int = -1,
+             series: str = '0') -> Union[float, List[float]]:
         """
-        Return the characteristic time for qid and series
-        If qid==-1 return all the qubit data
+        Return the characteristic time for the given qubit and series
+
+        Args:
+           qid: the qubit index (or all qubits if -1)
+           series: the series to get
+
+        Returns:
+           The characteristic time of the qubit, or all qubits
         """
 
         return self._get_param(self._time_index, qid, series)
 
-    def time_err(self, qid=-1, series='0'):
+    def time_err(self,
+qid: int = -1,
+             series: str = '0') -> Union[float, List[float]]:
         """
-        Return the error of the characteristic time
+        Return the error of characteristic time for the given qubit and series
+
+        Args:
+           qid: the qubit index (or all qubits if -1)
+           series: the series to get
+
+        Returns:
+           The error of the characteristic time of the qubit, or all qubits
         """
+        
         return self._get_param(self._time_index,
                                qid, series, err=True)
 
-    def plot(self, qind, series, ax=None, show_plot=True):
+    def plot(self,
+             qind: int,
+             series: str,
+             ax: Optional[axes.Axes] = None,
+             show_plot: bool = True) -> axes.Axes:
         """
         Plot coherence data.
 
         Args:
             qind: qubit index to plot
-            series: which series to plot (if list plots multiple)
+            series: which series to plot (if list then plot multiple)
             ax: plot axes
-            show_plot: call plt.show()
+            show_plot: whether to call plt.show()
 
         Returns:
             The axes object
