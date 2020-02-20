@@ -63,7 +63,7 @@ Backend execution: actually performing the experiment on the device
 .. jupyter-execute::
 
     import qiskit
-    from qiskit.providers.aer.noise.errors.standard_errors \\
+    from qiskit.providers.aer.noise.errors.standard_errors \
                 import thermal_relaxation_error
     from qiskit.providers.aer.noise import NoiseModel
 
