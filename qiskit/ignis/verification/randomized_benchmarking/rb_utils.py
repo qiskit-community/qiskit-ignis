@@ -59,9 +59,7 @@ def count_gates(qobj, basis, qubits):
 
 
 def gates_per_clifford(qobj_list, clifford_length, basis, qubits):
-
-    """
-    Take a list of compiled qobjs (for each seed) and use these
+    """Take a list of compiled qobjs (for each seed) and use these
     to calculate the number of gates per clifford
 
     Args:
@@ -71,10 +69,10 @@ def gates_per_clifford(qobj_list, clifford_length, basis, qubits):
         qubits: qubits to count over
 
     Returns:
-        l x m list of number of gates per clifford
-        (same order as basis).
-            l: number of qubits
-            m: length of basis
+        list: l x m of number of gates per clifford
+              (same order as basis).
+                l: number of qubits
+                m: length of basis
     """
 
     ncliffs = 0
