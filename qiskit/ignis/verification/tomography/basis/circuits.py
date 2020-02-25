@@ -93,10 +93,13 @@ def process_tomography_circuits(
     r"""Return a list of quantum process tomography circuits.
 
     This performs preparation in the minimial Pauli-basis eigenstates
-    :math:`Z_p`, :math:`Z_m`, :math:`X_p`, :math:`Y_m` (:math:`|0\rangle`,
-    :math:`|1\rangle`, :math:`|+\rangle`, :math:`|+i\rangle`) on each qubit,
-    and measurement in the Pauli-basis X, Y, Z resulting
-    in :math:`(4^n) \cdot (3^n)` circuits for an n-qubit process
+        * ``"Z_p"``: :math:`|0\rangle`
+        * ``"Z_m"``: :math:`|1\rangle`
+        * ``"X_p"``: :math:`|+\rangle`
+        * ``"Y_m"``: :math:`|+i\rangle`
+
+    on each qubit, and measurement in the Pauli-basis X, Y, Z resulting
+    in :math:`4^n 3^n` circuits for an n-qubit process
     tomography experiment.
 
     Args:
@@ -119,13 +122,7 @@ def process_tomography_circuits(
         appended.
 
     The returned circuits are named by the preparation and measurement
-    basis. These circuit names can be recovered using the
-    :func:`process_tomography_circuit_names` function to retrieve count
-    data from a :class:`qiskit.result.Result` object at a later time.
-
-    To perform tomography measurement in a custom basis, or to generate
-    a subset of process tomography circuits for a partial tomography
-    experiment use the general function :func:`tomography_circuits`.
+    basis.
     """
     return _tomography_circuits(circuit, measured_qubits, prepared_qubits,
                                 meas_labels=meas_labels, meas_basis=meas_basis,
@@ -159,14 +156,14 @@ def _tomography_circuits(
             individual QuantumRegister qubit tuples.
         prepared_qubits: the qubits to have state
             preparation applied, if different from measured_qubits. If None
-            measured_qubits will be used for prepared qubits (Default: None).
+            measured_qubits will be used for prepared qubits
         meas_labels: (default: 'Pauli') The measurement operator
             labels. If None no measurements will be appended. See additional
-            information for details (Default: 'Pauli').
+            information for details
         meas_basis: (default: 'Pauli') The measurement basis.
         prep_labels: (default: 'Pauli') The preparation operator
             labels. If None no preparations will be appended. See additional
-            information for details (Default: None).
+            information for details
         prep_basis: (default: 'Pauli') The preparation basis.
     Raises:
         QiskitError: If the measurement/preparation basis is invalid.
@@ -371,17 +368,20 @@ def _tomography_circuits(
 # Built-in circuit functions
 ###########################################################################
 
-def default_basis(basis: Union[str, TomographyBasis]) -> TomographyBasis:
+def default_basis(basis: Optional[Union[str, TomographyBasis]]) -> TomographyBasis:
     """Built in Tomography Bases.
 
     Args:
-        basis: Either a **TomographyBasis** element
-        (which is simply returned) or a string describing one of the
-        built-it bases (currently: 'Pauli' and 'SIC')
+        basis: the tomography basis.
     Raises:
         ValueError: In case the given basis is not recognized
     Returns:
         The requested tomography basis.
+    Additional Information:
+        If the input basis is ``None`` or a :class:`TomographyBasis` it will
+        be returned unchanged.
+        If it is a `"Pauli"` or `"SIC"` it will return the built in tomography
+        basis object for that basis.
     """
     if basis is None:
         return None
