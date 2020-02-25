@@ -36,7 +36,7 @@ def lstsq_fit(data: np.array,
         basis_matrix: (matrix like) measurement operators
         weights: (vector like) of weights to apply to the
             objective function (default: None)
-        psd: Enforced the fitted matrix to be positive
+        psd: (default: true) Enforced the fitted matrix to be positive
             semidefinite (default: True)
         trace: trace constraint for the fitted matrix
             (default: None).
@@ -129,9 +129,9 @@ def make_positive_semidefinite(mat: np.array,
 
     Args:
         mat: a hermitian matrix.
-        epsilon: the threshold for setting
+        epsilon: (default: 0) the threshold for setting
             eigenvalues to zero. If epsilon > 0 positive eigenvalues
-            below epsilon will also be set to zero (Default 0).
+            below epsilon will also be set to zero.
     Raises:
         ValueError: If epsilon is negative
     Returns:

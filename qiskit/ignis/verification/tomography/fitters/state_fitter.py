@@ -38,7 +38,7 @@ class StateTomographyFitter(TomographyFitter):
                 tomography circuits.
             circuits: a list of circuits or circuit names to extract
                 count information from the result object.
-            meas_basis: A function to return measurement
+            meas_basis: (default: 'Pauli') A function to return measurement
                 operators corresponding to measurement outcomes. See
                 Additional Information (default: 'Pauli')
         """
@@ -107,9 +107,9 @@ class StateTomographyFitter(TomographyFitter):
 
         Args:
             method: The fitter method 'auto', 'cvx' or 'lstsq'.
-            standard_weights: Apply weights to
+            standard_weights: (default: True) Apply weights to
                 tomography data based on count probability
-            beta: hedging parameter for converting counts
+            beta: (default: 0.5) hedging parameter for converting counts
                 to probabilities
             **kwargs: kwargs for fitter method.
         Raises:

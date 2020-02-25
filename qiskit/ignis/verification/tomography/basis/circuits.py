@@ -58,8 +58,8 @@ def state_tomography_circuits(
         measured_qubits: the qubits to be measured.
             This can also be a list of whole QuantumRegisters or
             individual QuantumRegister qubit tuples.
-        meas_labels: The measurement operator labels.
-        meas_basis: The measurement basis.
+        meas_labels: (default: 'Pauli') The measurement operator labels.
+        meas_basis: (default: 'Pauli') The measurement basis.
 
     Returns:
         A list containing copies of the original circuit
@@ -108,10 +108,10 @@ def process_tomography_circuits(
         prepared_qubits: the qubits to have state
             preparation applied, if different from measured_qubits. If None
             measured_qubits will be used for prepared qubits
-        meas_labels: The measurement operator labels.
-        meas_basis: The measurement basis.
-        prep_labels: The preparation operator labels.
-        prep_basis: The preparation basis.
+        meas_labels: (default: 'Pauli') The measurement operator labels.
+        meas_basis: (default: 'Pauli') The measurement basis.
+        prep_labels: (default: 'Pauli') The preparation operator labels.
+        prep_basis: (default: 'Pauli') The preparation basis.
 
     Returns:
         A list of QuantumCircuit objects containing the original circuit
@@ -160,14 +160,14 @@ def _tomography_circuits(
         prepared_qubits: the qubits to have state
             preparation applied, if different from measured_qubits. If None
             measured_qubits will be used for prepared qubits (Default: None).
-        meas_labels: The measurement operator
+        meas_labels: (default: 'Pauli') The measurement operator
             labels. If None no measurements will be appended. See additional
             information for details (Default: 'Pauli').
-        meas_basis: The measurement basis.
-        prep_labels: The preparation operator
+        meas_basis: (default: 'Pauli') The measurement basis.
+        prep_labels: (default: 'Pauli') The preparation operator
             labels. If None no preparations will be appended. See additional
             information for details (Default: None).
-        prep_basis: The preparation basis.
+        prep_basis: (default: 'Pauli') The preparation basis.
     Raises:
         QiskitError: If the measurement/preparation basis is invalid.
         ValueError: If the measurement/preparation basis is not specified
@@ -447,7 +447,7 @@ def tomography_circuit_tuples(
     Args:
         measured_qubits: Either qubits the tomography will be applied to
         or their length
-        meas_labels: The measurement basis labels or the basis itself.
+        meas_labels: (default: 'Pauli') The measurement basis labels or the basis itself.
         prep_labels: The preparation basis labels or the basis itself.
     Returns:
         A list of all pairs :math:`[m_l, p_k]` where

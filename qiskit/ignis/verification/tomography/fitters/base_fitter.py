@@ -51,10 +51,10 @@ class TomographyFitter:
                 tomography circuits.
             circuits: a list of circuits or circuit names to extract
                 count information from the result object.
-            meas_basis: A function to return
+            meas_basis: (default: 'Pauli') A function to return
                 measurement operators corresponding to measurement
                 outcomes. See Additional Information.
-            prep_basis: A function to return
+            prep_basis: (default: 'Pauli') A function to return
                 preparation operators. See Additional
                 Information
         """
@@ -173,7 +173,7 @@ class TomographyFitter:
 
         Args:
             method: The fitter method 'auto', 'cvx' or 'lstsq'.
-            standard_weights: Apply weights to
+            standard_weights: (default: True) Apply weights to
                 tomography data based on count probability
             beta: hedging parameter for converting counts
                 to probabilities
@@ -335,7 +335,8 @@ class TomographyFitter:
 
         return data, np.vstack(basis_blocks), weights
 
-    def _binomial_weights(self, counts: Dict[str, int], beta: float = 0.5
+    def _binomial_weights(self, counts: Dict[str, int],
+                          beta: float = 0.5
                           ) -> np.array:
         """
         Compute binomial weights for list or dictionary of counts.
@@ -343,8 +344,8 @@ class TomographyFitter:
         Args:
             counts: A set of measurement counts for
                 all outcomes of a given measurement configuration.
-            beta: A nonnegative hedging parameter used to bias probabilities
-                computed from input counts away from 0 or 1.
+            beta: (default: 0.5) A nonnegative hedging parameter used to bias
+            probabilities computed from input counts away from 0 or 1.
 
         Returns:
             The binomial weights for the input counts and beta parameter.

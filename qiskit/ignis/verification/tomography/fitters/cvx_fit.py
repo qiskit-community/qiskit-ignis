@@ -91,11 +91,11 @@ def cvx_fit(data: np.array,
         basis_matrix: (matrix like) measurement operators
         weights: (vector like) weights to apply to the
             objective function (default: None)
-        psd: enforces the fitted matrix to be positive
+        psd: (default: True) enforces the fitted matrix to be positive
             semidefinite (default: True)
         trace: trace constraint for the fitted matrix
             (default: None).
-        trace_preserving: Enforce the fitted matrix to be
+        trace_preserving: (default: False) Enforce the fitted matrix to be
             trace preserving when fitting a Choi-matrix in quantum process
             tomography (default: False).
         **kwargs: kwargs for cvxpy solver.

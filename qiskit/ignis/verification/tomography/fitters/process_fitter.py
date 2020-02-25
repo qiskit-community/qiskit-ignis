@@ -108,7 +108,7 @@ class ProcessTomographyFitter(TomographyFitter):
             (2012). Open access: arXiv:1106.5458 [quant-ph].
 
         Args:
-            method: the fitter method 'auto', 'cvx' or 'lstsq'.
+            method: (default: 'auto') the fitter method 'auto', 'cvx' or 'lstsq'.
             standard_weights: (default: True) apply weights
                 to tomography data based on count probability
             beta: (default: 0.5) hedging parameter for converting counts
