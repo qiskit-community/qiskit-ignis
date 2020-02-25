@@ -24,6 +24,7 @@ from .clifford_utils import CliffordUtils
 from .dihedral import CNOTDihedral
 from .dihedral_utils import DihedralUtils
 from .circuits import randomized_benchmarking_seq
-from .fitters import RBFitter, InterleavedRBFitter, PurityRBFitter, \
-    CNOTDihedralRBFitter
-from . import rb_utils
+from .fitters import (RBFitter, InterleavedRBFitter, PurityRBFitter,
+                      CNOTDihedralRBFitter)
+from .rb_utils import (count_gates, gates_per_clifford,
+                       coherence_limit, twoQ_clifford_error)

@@ -65,7 +65,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.extlinks',
     'sphinx_tabs.tabs',
-    'sphinx_automodapi.automodapi',
     'jupyter_sphinx.execute',
     'sphinx_autodoc_typehints',
     'reno.sphinxext',

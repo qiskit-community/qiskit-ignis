@@ -22,7 +22,7 @@ import numpy as np
 from qiskit import QiskitError
 from qiskit.quantum_info.analysis.average import average_data
 from ..tomography import marginal_counts
-from ...characterization.fitters import build_counts_dict_from_list
+from ...utils import build_counts_dict_from_list
 
 try:
     from matplotlib import pyplot as plt

@@ -20,7 +20,7 @@ import sys
 
 requirements = [
     "numpy>=1.13",
-    "qiskit-terra>=0.8.0",
+    "qiskit-terra>=0.12.0",
     "scipy>=0.19,!=0.19.1",
     "setuptools>=40.1.0",
 ]
@@ -59,9 +59,11 @@ setuptools.setup(
         "Operating System :: Microsoft :: Windows",
         "Operating System :: MacOS",
         "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Topic :: Scientific/Engineering",
     ],
     keywords="qiskit sdk quantum",
