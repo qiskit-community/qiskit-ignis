@@ -248,13 +248,17 @@ def _tomography_circuits(circuit, measured_qubits, prepared_qubits=None,
     if prepared_qubits is None:
         prepared_qubits = measured_qubits
     # Check input circuit for measurements and measured qubits
-    if isinstance(measured_qubits, list):
+    if isinstance(measured_qubits, (list, tuple)):
         # Unroll list of registers
+        if isinstance((measured_qubits[0]), int):
+            measured_qubits = [circuit.qubits[i] for i in measured_qubits]
         meas_qubits = _format_registers(*measured_qubits)
     else:
         meas_qubits = _format_registers(measured_qubits)
-    if isinstance(prepared_qubits, list):
+    if isinstance(prepared_qubits, (list, tuple)):
         # Unroll list of registers
+        if isinstance(prepared_qubits[0], int):
+            prepared_qubits = [circuit.qubits[i] for i in prepared_qubits]
         prep_qubits = _format_registers(*prepared_qubits)
     else:
         prep_qubits = _format_registers(prepared_qubits)
