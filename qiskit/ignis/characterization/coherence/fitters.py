@@ -17,7 +17,7 @@ Fitters of characteristic times
 """
 
 import numpy as np
-from .. import BaseCoherenceFitter
+from ..fitters import BaseCoherenceFitter
 
 
 class T1Fitter(BaseCoherenceFitter):

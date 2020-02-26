@@ -120,7 +120,7 @@ def make_positive_semidefinite(mat, epsilon=0):
         mat (array like): a hermitian matrix.
         epsilon (float >=0, optional): the threshold for setting
             eigenvalues to zero. If epsilon > 0 positive eigenvalues
-            below epislon will also be set to zero (Default 0).
+            below epsilon will also be set to zero (Default 0).
     Returns:
         The input matrix rescaled to have non-negative eigenvalues.
 
