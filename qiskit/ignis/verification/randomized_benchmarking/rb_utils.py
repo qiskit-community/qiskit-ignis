@@ -75,9 +75,9 @@ def gates_per_clifford(transpiled_circuits_list: List[List['QuantumCircuit']],
 
     Example:
         This example shows how to calculate gate per Clifford of 2Q RB sequence for
-        qubit 0 and qubit 1. You can refer to
+        qubit 0 and qubit 1. You can refer to the function
         ``qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq``
-        for the detail of RB circuit generation part.::
+        for the detail of RB circuit generation.::
 
             # create RB circuits
             rb_circs_list, xdata = randomized_benchmarking_seq(**rb_opts)
