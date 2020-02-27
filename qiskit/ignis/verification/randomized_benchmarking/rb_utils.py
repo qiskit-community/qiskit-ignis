@@ -104,7 +104,7 @@ def gates_per_clifford(transpiled_circuits_list: List[List['QuantumCircuit']],
         clifford_length: Deprecated. see ``clifford_lengths``
 
     Returns:
-        Nested dictionary of gate counts per clifford.
+        Nested dictionary of gate counts per Clifford.
     """
     if qobj_list is not None:
         transpiled_circuits_list = qobj_list
@@ -120,10 +120,10 @@ def gates_per_clifford(transpiled_circuits_list: List[List['QuantumCircuit']],
     for transpiled_circuits in transpiled_circuits_list:
         if isinstance(transpiled_circuits, list):
             for ncliff, transpiled_circuit in zip(clifford_lengths, transpiled_circuits):
-                for instr, qubits, _ in transpiled_circuit.data:
-                    for qubit in qubits:
+                for instr, qregs, _ in transpiled_circuit.data:
+                    for qreg in qregs:
                         try:
-                            ngates[qubit.index][instr.name] += 1
+                            ngates[qreg.index][instr.name] += 1
                         except KeyError:
                             pass
                 # include inverse
@@ -134,9 +134,9 @@ def gates_per_clifford(transpiled_circuits_list: List[List['QuantumCircuit']],
             # TODO: remove this code block after deprecation period
             for ncliff, experiment in zip(clifford_lengths, transpiled_circuits.experiments):
                 for instr in experiment.instructions:
-                    for qubit in instr.qubits:
+                    for q_ind in instr.qubits:
                         try:
-                            ngates[qubit][instr.name] += 1
+                            ngates[q_ind][instr.name] += 1
                         except KeyError:
                             pass
                 # include inverse
