@@ -44,7 +44,7 @@ def count_gates(qobj, basis, qubits):
     Additional Information:
         nQ gates are counted in each qubit's set of gates
     """
-    warn('The function `count_gates` will be deprecated.')
+    warn('The function `count_gates` will be deprecated.', DeprecationWarning)
 
     nexp = len(qobj.experiments)
     ngates = np.zeros([nexp, len(qubits), len(basis)], dtype=int)
@@ -108,11 +108,13 @@ def gates_per_clifford(transpiled_circuits_list: List[List['QuantumCircuit']],
     """
     if qobj_list is not None:
         transpiled_circuits_list = qobj_list
-        warn('The argument `qobj_list` will be deprecated. Use `transpiled_circuit_list`.')
+        warn('The argument `qobj_list` will be deprecated. Use `transpiled_circuit_list`.',
+             DeprecationWarning)
 
     if clifford_length is not None:
         clifford_lengths = clifford_length
-        warn('The argument `clifford_length` will be deprecated. Use `clifford_lengths`.')
+        warn('The argument `clifford_length` will be deprecated. Use `clifford_lengths`.',
+             DeprecationWarning)
 
     ncliffs = 0
     ngates = {qubit: {base: 0 for base in basis} for qubit in qubits}
@@ -129,8 +131,9 @@ def gates_per_clifford(transpiled_circuits_list: List[List['QuantumCircuit']],
                 # include inverse
                 ncliffs += ncliff + 1
         else:
-            warn('Specify the list of transpiled `QuantumCircuit` instead of `QasmQobj`. '
-                 'Gate counts based on `QasmQobj` has no unittest and may return wrong counts.')
+            warn('`QasmQobj` input will be deprecated. Use `QuantumCircuit` instead. '
+                 'Gate counts based on `QasmQobj` has no unittest and may return wrong counts.',
+                 DeprecationWarning)
             # TODO: remove this code block after deprecation period
             for ncliff, experiment in zip(clifford_lengths, transpiled_circuits.experiments):
                 for instr in experiment.instructions:
