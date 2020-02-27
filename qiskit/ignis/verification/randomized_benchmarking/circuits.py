@@ -158,9 +158,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
         rb_pattern: A list of the lists of integers representing the
             qubits indexes. For example, ``[[i,j],[k],...]`` will make
             simultaneous RB sequences, where
-            there is a 2-qubit RB sequence on qbits Q\ :sub:`i`\
-            and Q\ :sub:`j`\ , and a 1-qubit RB sequence on qubit
-            Q\ :sub:`k`\ , etc.
+            there is a 2-qubit RB sequence on qbits Qi and Qj,
+            and a 1-qubit RB sequence on qubit Qk, etc.
             Each qubit appers at most once.
             The number of qubits on which RB is done is the sum of the lists
             sizes.
@@ -169,23 +168,21 @@ def randomized_benchmarking_seq(nseeds: int = 1,
 
             * ``rb_pattern = [[0]]`` or ``rb_pattern = None``
 
-            create a 1-qubit RB sequence on qubit Q\ :sub:`0`\ .
+            create a 1-qubit RB sequence on qubit Q0.
 
             * ``rb_pattern = [[0,1]]``
 
-            create a 2-qubit RB sequence on qubits Q\ :sub:`0`\
-            and Q\ :sub:`1`\ .
+            create a 2-qubit RB sequence on qubits Q0 and Q1.
 
             * ``rb_pattern = [[0,3],[2],[1]]``
 
-            create RB sequences that are 2-qubit RB for qubits Q\ :sub:`0`\
-            and Q\ :sub:`3`\ , 1-qubit RB for qubit Q\ :sub:`1`\ ,
-            and 1-qubit RB for qubit Q\ :sub:`2`\ .
+            create RB sequences that are 2-qubit RB for qubits Q0 and Q3,
+            1-qubit RB for qubit Q1, and 1-qubit RB for qubit Q2.
 
             * ``rb_pattern = [[2],[6,4]]``
 
-            create RB sequences that are 2-qubit RB for qubits Q\ :sub:`6`\
-            and Q\ :sub:`4`\, and 1-qubit RB for qubit Q\ :sub:`2`\ .
+            create RB sequences that are 2-qubit RB for qubits Q6 and Q4,
+            and 1-qubit RB for qubit Q2.
 
         length_multiplier: An array that scales each RB sequence by
             the multiplier.
@@ -233,9 +230,9 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                 rb_pattern = [[0,3],[2],[1]]
                 interleaved_gates = [['cx 0 1'], ['x 0'], ['h 0']]
 
-            interleaves the 2-qubit gate ``cx`` on qubits Q\ :sub:`0`\
-            and Q\ :sub:`3`\ , a 1-qubit gate ``x`` on qubit Q\ :sub:`2`\ ,
-            and a 1-qubit gate ``h`` on qubit Q\ :sub:`1`\ .
+            interleaves the 2-qubit gate ``cx`` on qubits Q0 and Q3,
+            a 1-qubit gate ``x`` on qubit Q2,
+            and a 1-qubit gate ``h`` on qubit Q1.
 
         is_purity: ``True`` only for purity randomized benchmarking
             (default is ``False``)
@@ -255,6 +252,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
 
          * ``circuits``: list of lists of circuits for the RB sequences \
             (a separate list for each seed).
+
          * ``xdata``: the sequences lengths (with multiplier if applicable).
 
             For example, if
@@ -275,9 +273,11 @@ def randomized_benchmarking_seq(nseeds: int = 1,
            (only if ``interleaved_gates`` is not ``None``): \
            list of lists of circuits for the interleaved RB sequences \
            (a separate list for each seed).
+
          * ``circuits_purity``: (only if ``is_purity=True``): \
            list of lists of lists of circuits for purity RB \
            (a separate list for each seed and each of the :math:`3^n` circuits).
+
          * ``npurity``: (only if ``is_purity=True``): \
             the number of purity RB circuits (per seed) \
             which equals to :math:`3^n`, where n is the dimension.
