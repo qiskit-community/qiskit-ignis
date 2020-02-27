@@ -20,10 +20,10 @@ RB Helper functions
 """
 
 
-import numpy as np
 from typing import List, Optional, Union, Dict
 from warnings import warn
-from qiskit.qobj import QasmQobj
+
+import numpy as np
 
 
 def count_gates(qobj, basis, qubits):
@@ -76,7 +76,7 @@ def gates_per_clifford(transpiled_circuits_list: List[List['QuantumCircuit']],
     Example:
         This example shows how to calculate gate per Clifford of 2Q RB sequence for
         qubit 0 and qubit 1. You can refer to the function
-        ``qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq``
+        :mod:``~qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq``
         for the detail of RB circuit generation.::
 
             # create RB circuits
