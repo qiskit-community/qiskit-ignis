@@ -149,63 +149,93 @@ def randomized_benchmarking_seq(nseeds: int = 1,
 
             For example:
 
-            * ``length_vector = [1, 10, 20, 50, 75, 100, 125, 150, 175]``
+            .. code-block::
 
-        rb_pattern: A list of the form ``[[i,j],[k],...]`` which will make
+                length_vector = [1, 10, 20, 50, 75, 100, 125, 150, 175]
+
+            ``length_vector = None`` is the same as ``length_vector = [1, 10, 20]``
+
+        rb_pattern: A list of the lists of integers representing the
+            qubits indexes. For example, ``[[i,j],[k],...]`` will make
             simultaneous RB sequences, where
-            there is a 2-qubit RB sequence on qbits Qi and Qj,
-            and a 1-qubit RB sequence on qubit Qk, etc.
-            The number of qubits is the sum of the arrays sizes.
+            there is a 2-qubit RB sequence on qbits Q\ :sub:`i`\
+            and Q\ :sub:`j`\ , and a 1-qubit RB sequence on qubit
+            Q\ :sub:`k`\ , etc.
+            Each qubit appers at most once.
+            The number of qubits on which RB is done is the sum of the lists
+            sizes.
 
             For example:
 
-            * ``rb_pattern = [[0]]``
+            * ``rb_pattern = [[0]]`` or ``rb_pattern = None``
 
-            create a 1-qubit RB sequence on qubit Q0.
+            create a 1-qubit RB sequence on qubit Q\ :sub:`0`\ .
 
             * ``rb_pattern = [[0,1]]``
 
-            create a 2-qubit RB sequence on qubits Q0 and Q1.
+            create a 2-qubit RB sequence on qubits Q\ :sub:`0`\
+            and Q\ :sub:`1`\ .
 
             * ``rb_pattern = [[0,3],[2],[1]]``
 
-            create RB sequences that are 2-qubit RB for qubits Q0 and Q3,
-            1-qubit RB for qubit Q1, and 1-qubit RB for qubit Q2.
+            create RB sequences that are 2-qubit RB for qubits Q\ :sub:`0`\
+            and Q\ :sub:`3`\ , 1-qubit RB for qubit Q\ :sub:`1`\ ,
+            and 1-qubit RB for qubit Q\ :sub:`2`\ .
+
+            * ``rb_pattern = [[2],[6,4]]``
+
+            create RB sequences that are 2-qubit RB for qubits Q\ :sub:`6`\
+            and Q\ :sub:`4`\, and 1-qubit RB for qubit Q\ :sub:`2`\ .
 
         length_multiplier: An array that scales each RB sequence by
             the multiplier.
 
             For example:
 
-            * ``length_multiplier = [1,3,3]``
+            .. code-block::
 
-            If ``rb_pattern = [[0,3],[2],[1]]``, then it generates
-            three times as many 1-qubit RB sequence elements,
+                rb_pattern = [[0,3],[2],[1]]
+                length_multiplier = [1,3,3]
+
+            generates three times as many 1-qubit RB sequence elements,
             than 2-qubit elements.
 
         seed_offset: What to start the seeds at, if we
             want to add more seeds later.
 
         align_cliffs: If ``True`` adds a barrier across all qubits in
-            the pattern after each set of elements
+            the pattern after each set of group elements
             (not necessarily Cliffords).
 
-            **Note:** aligns after each increment of elements including
-            the length multiplier, so if ``length_multiplier = [1,3,3]``
-            it will barrier after 1 element for the first pattern
-            and 3 for the second and third pattern.
+            **Note:** the alignment considers the group multiplier.
 
-        interleaved_gates: A list of gates of elements that
-            will be interleaved (for interleaved randomized benchmarking).
-            The length of the list should be equal to the length of the
-            ``rb_pattern``.
+            For example:
 
-            For example,
+            .. code-block::
 
-            * ``interleaved_gates = [['cx 0 1'], ['x 0'], ['h 0']]``
+                rb_pattern = [[0,3],[2],[1]]
+                length_multiplier = [1,3,3]
+                align_cliffs = True
 
-            interleaving the 2-qubit gate ``cx``, 1-qubit gate  ``x``
-            and 1-qubit gate ``h``.
+            place a barrier after 1 group element for the first pattern
+            and after 3 group elements for the second and third patterns.
+
+        interleaved_gates: A list of lists of gates that
+            will be interleaved. It is not ``None`` only for interleaved
+            randomized benchmarking.
+            The lengths of the lists should be equal to the length of the
+            lists in ``rb_pattern``.
+
+            For example:
+
+            .. code-block::
+
+                rb_pattern = [[0,3],[2],[1]]
+                interleaved_gates = [['cx 0 1'], ['x 0'], ['h 0']]
+
+            interleaves the 2-qubit gate ``cx`` on qubits Q\ :sub:`0`\
+            and Q\ :sub:`3`\ , a 1-qubit gate ``x`` on qubit Q\ :sub:`2`\ ,
+            and a 1-qubit gate ``h`` on qubit Q\ :sub:`1`\ .
 
         is_purity: ``True`` only for purity randomized benchmarking
             (default is ``False``)
@@ -227,10 +257,19 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             (a separate list for each seed).
          * ``xdata``: the sequences lengths (with multiplier if applicable).
 
-            For example, if ``rb_pattern=[[0,2],[1]]``, \
-            ``length_vector = [1,10,20]`` and \
-            ``length_multiplier = [1,3]`` then \
-            ``xdata=[[1,10,20],[3,30,60]]``.
+            For example, if
+
+            .. code-block::
+
+                rb_pattern=[[0,2],[1]]
+                length_vector = [1,10,20]
+                length_multiplier = [1,3]
+
+            then
+
+            .. code-block::
+
+                xdata=[[1,10,20],[3,30,60]]
 
          * ``circuits_interleaved``: \
            (only if ``interleaved_gates`` is not ``None``): \
