@@ -24,6 +24,8 @@ from typing import List, Optional, Union, Dict
 from warnings import warn
 
 import numpy as np
+from qiskit import QuantumCircuit
+from qiskit.qobj import QasmQobj
 
 
 def count_gates(qobj, basis, qubits):
@@ -61,11 +63,11 @@ def count_gates(qobj, basis, qubits):
     return ngates
 
 
-def gates_per_clifford(transpiled_circuits_list: List[List['QuantumCircuit']],
+def gates_per_clifford(transpiled_circuits_list: List[List[QuantumCircuit]],
                        clifford_lengths: Union[np.ndarray, List[int]],
                        basis: List[str],
                        qubits: List[int],
-                       qobj_list: Optional[List['QasmQobj']] = None,
+                       qobj_list: Optional[List[QasmQobj]] = None,
                        clifford_length: Optional[np.ndarray] = None) \
         -> Dict[int, Dict[str, float]]:
     """Take a list of transpiled ``QuantumCircuit`` and use these to calculate
@@ -76,7 +78,7 @@ def gates_per_clifford(transpiled_circuits_list: List[List['QuantumCircuit']],
     Example:
         This example shows how to calculate gate per Clifford of 2Q RB sequence for
         qubit 0 and qubit 1. You can refer to the function
-        :mod:``~qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq``
+        :mod:`~qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq`
         for the detail of RB circuit generation.::
 
             # create RB circuits
