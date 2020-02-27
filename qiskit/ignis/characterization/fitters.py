@@ -28,6 +28,7 @@ from qiskit.result import Result
 from ..verification.tomography import marginal_counts
 from ..utils import build_counts_dict_from_list
 
+
 class BaseFitter:
     """
     Base class for a data fitter
@@ -53,7 +54,7 @@ class BaseFitter:
                  xdata: Union[List[float], np.array],
                  qubits: List[int],
                  fit_fun: Callable[..., float],
-                 fit_p0: List[float], # any way to enforce length 3?
+                 fit_p0: List[float],  # any way to enforce length 3?
                  fit_bounds: Tuple[List[float], List[float]],
                  circuit_names: List[str],
                  series: Optional[List[str]] = None,
@@ -561,7 +562,7 @@ class BaseCoherenceFitter(BaseFitter):
                  xdata: Union[List[float], np.array],
                  qubits: List[int],
                  fit_fun: Callable[..., float],
-                 fit_p0: List[float], # any way to enforce length 3?
+                 fit_p0: List[float],  # any way to enforce length 3?
                  fit_bounds: Tuple[List[float], List[float]],
                  circuit_names: List[str],
                  series: Optional[List[str]] = None,

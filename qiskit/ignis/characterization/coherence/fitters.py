@@ -51,9 +51,8 @@ class T1Fitter(BaseCoherenceFitter):
                  backend_result: qiskit.result.Result,
                  xdata: Union[List[float], np.array],
                  qubits: List[int],
-                 fit_p0: List[float], # any way to enforce length 3?
+                 fit_p0: List[float],  # any way to enforce length 3?
                  fit_bounds: Tuple[List[float], List[float]],
-
                  time_unit: str = 'micro-seconds'):
 
         circuit_names = []
@@ -107,11 +106,10 @@ class T2Fitter(BaseCoherenceFitter):
                  backend_result: qiskit.result.Result,
                  xdata: Union[List[float], np.array],
                  qubits: List[int],
-                 fit_p0: List[float], # any way to enforce length 3?
+                 fit_p0: List[float],  # any way to enforce length 3?
                  fit_bounds: Tuple[List[float], List[float]],
                  circbasename: str = 't2',
                  time_unit: str = 'micro-seconds'):
-
 
         circuit_names = []
         for cind, _ in enumerate(xdata):
@@ -164,7 +162,7 @@ class T2StarFitter(BaseCoherenceFitter):
                  backend_result: qiskit.result.Result,
                  xdata: Union[List[float], np.array],
                  qubits: List[int],
-                 fit_p0: List[float], # any way to enforce length 5?
+                 fit_p0: List[float],  # any way to enforce length 5?
                  fit_bounds: Tuple[List[float], List[float]],
                  time_unit: str = 'micro-seconds'):
 

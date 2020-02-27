@@ -18,9 +18,9 @@ Circuit generation for coherence experiments
 
 from typing import List, Union, Tuple
 import numpy as np
-#from nptyping import Array
 import qiskit
 from ..characterization_utils import pad_id_gates
+
 
 def t1_circuits(num_of_gates: Union[List[int], np.array],
                 gate_time: float,
