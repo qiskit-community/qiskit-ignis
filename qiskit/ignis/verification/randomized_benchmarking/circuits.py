@@ -235,7 +235,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             and a 1-qubit gate ``h`` on qubit Q1.
 
         is_purity: ``True`` only for purity randomized benchmarking
-            (default is ``False``)
+            (default is ``False``).
 
         group_gates: On which group (or set of gates) we perform RB
             (the default is the Clifford group).
