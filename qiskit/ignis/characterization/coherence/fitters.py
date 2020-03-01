@@ -166,7 +166,7 @@ class T2StarFitter(BaseCoherenceFitter):
                  fit_bounds: Tuple[List[float], List[float]],
                  time_unit: str = 'micro-seconds'):
 
-        circuit_names = []
+        circuit_names = [] 
         for cind, _ in enumerate(xdata):
             circuit_names.append('t2starcircuit_%d_' % cind)
 
