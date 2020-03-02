@@ -17,6 +17,7 @@ import os
 import glob
 from datetime import datetime
 import re
+from typing import List, Union
 
 
 class IgnisLogger(logging.getLoggerClass()):
@@ -48,7 +49,7 @@ class IgnisLogger(logging.getLoggerClass()):
         self._conf_file_exists = False
         self._warning_omitted = False
 
-    def configure(self, sh, conf_file_exists):
+    def configure(self, sh: logging.StreamHandler, conf_file_exists: bool):
         """
         Internal configuration method of IgnisLogger. Should only be called
         by IgnisLogger
@@ -61,7 +62,7 @@ class IgnisLogger(logging.getLoggerClass()):
         self.addHandler(sh)
         self._conf_file_exists = conf_file_exists
 
-    def log_to_file(self, **kargs):
+    def log_to_file(self, **kargs: str):
         """
         Log key:value pairs to a log file.
 
@@ -198,7 +199,7 @@ class IgnisLogging:
         IgnisLogging._max_rotations = int(max_rotations) if \
             max_rotations is not None and max_rotations.isdigit() else 0
 
-    def get_logger(self, __name__):
+    def get_logger(self, __name__: str) -> IgnisLogger:
         """
         Return an IgnisLogger object
 
@@ -213,7 +214,7 @@ class IgnisLogging:
         logger = logging.getLogger(__name__)
         assert(isinstance(logger, IgnisLogger)), \
             "IgnisLogger class was not registered"
-        self._configure_logger(logger)
+        self.configure_logger(logger)
 
         return logger
 
@@ -258,7 +259,7 @@ class IgnisLogging:
         if IgnisLogging._file_logging_enabled:
             logger.enable_file_logging()
 
-    def get_log_file(self):
+    def get_log_file(self) -> str:
         """
         Get the name of the log file
 
@@ -267,7 +268,7 @@ class IgnisLogging:
         """
         return IgnisLogging._log_file
 
-    def default_datetime_fmt(self):
+    def default_datetime_fmt(self) -> str:
         """
         Get the default date time format used for writing log entries
 
@@ -285,7 +286,7 @@ class IgnisLogReader:
     date/time and key criteria
     """
 
-    def get_log_files(self):
+    def get_log_files(self) -> List[str]:
         """
         Get Names of all log files (several may be present due to logging
         file rotation). File names are sorted by modification time.
@@ -308,9 +309,12 @@ class IgnisLogReader:
 
         return result
 
-    def read_values(self, log_files=None, keys=None, from_datetime=None,
-                    from_datetime_format=None, to_datetime=None,
-                    to_datetime_format=None):
+    def read_values(self, log_files: List[str] = None, keys: List[str] = None,
+                    from_datetime: str = None,
+                    from_datetime_format: Union[str, datetime.datetime] = None,
+                    to_datetime: str = None,
+                    to_datetime_format: Union[str, datetime.datetime] = None)\
+            -> List[List[str]]:
         """
         Retrieve log lines using key and date/time filtering criteria
 
