@@ -13,8 +13,68 @@
 # that they have been altered from the originals.
 
 
-"""
-Quantum State and Process Tomography module
+"""Quantum State and Process Tomography module
+
+==========================================================
+Base Objects (:mod:`qiskit.ignis.verification.tomography`)
+==========================================================
+
+.. currentmodule:: qiskit.ignis.verification.tomography
+
+Base Fitter
+===========
+
+.. autosummary::
+    :toctree:
+
+   TomographyFitter
+
+
+Utility functions
+=================
+
+.. autosummary::
+
+    marginal_counts
+    combine_counts
+    expectation_counts
+    count_keys
+
+==============================================================
+State Tomography (:mod:`qiskit.ignis.verification.tomography`)
+==============================================================
+
+.. currentmodule:: qiskit.ignis.verification.tomography
+
+Fitter
+======
+.. autosummary::
+
+    StateTomographyFitter
+
+Circuits
+========
+.. autosummary::
+
+    state_tomography_circuits
+
+================================================================
+Process Tomography (:mod:`qiskit.ignis.verification.tomography`)
+================================================================
+
+.. currentmodule:: qiskit.ignis.verification.tomography
+
+Fitter
+======
+.. autosummary::
+
+    ProcessTomographyFitter
+
+Circuits
+========
+.. autosummary::
+
+    process_tomography_circuits
 """
 
 # Tomography circuit generation
