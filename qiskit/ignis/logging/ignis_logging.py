@@ -295,6 +295,7 @@ class IgnisLogReader:
             list of all log file names
 
         """
+
         file_name = IgnisLogging().get_log_file()
         search_path = os.path.abspath(file_name + "*")
         files = sorted(glob.glob(search_path), key=os.path.getmtime)
@@ -311,9 +312,9 @@ class IgnisLogReader:
 
     def read_values(self, log_files: List[str] = None, keys: List[str] = None,
                     from_datetime: str = None,
-                    from_datetime_format: Union[str, datetime.datetime] = None,
+                    from_datetime_format: Union[str, datetime] = None,
                     to_datetime: str = None,
-                    to_datetime_format: Union[str, datetime.datetime] = None)\
+                    to_datetime_format: Union[str, datetime] = None)\
             -> List[List[str]]:
         """
         Retrieve log lines using key and date/time filtering criteria
