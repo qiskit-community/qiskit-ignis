@@ -28,7 +28,11 @@ from .lstsq_fit import lstsq_fit
 class ProcessTomographyFitter(TomographyFitter):
     """Maximum-Likelihood estimation process tomography fitter."""
 
-    def fit(self, method='auto', standard_weights=True, beta=0.5, **kwargs):
+    def fit(self,  # pylint: disable=arguments-differ
+            method: str = 'auto',
+            standard_weights: bool = True,
+            beta: float = 0.5,
+            **kwargs) -> Choi:
         r"""Reconstruct a quantum channel using CVXPY convex optimization.
 
         **Choi matrix**
@@ -49,12 +53,12 @@ class ProcessTomographyFitter(TomographyFitter):
         **Objective function**
 
         This fitter solves the constrained least-squares
-        minimization: :math:`minimize: ||a * x - b ||_2`
+        minimization: :math:`minimize: ||a \cdot x - b ||_2`
 
         subject to:
 
          * :math:`x >> 0` (PSD)
-         * :math:`\text{trace}(x) = dim` (trace)
+         * :math:`\text{trace}(x) = \text{dim}` (trace)
          * :math:`\text{partial_trace}(x) = \text{identity}` (trace_preserving)
 
         where:
@@ -62,7 +66,7 @@ class ProcessTomographyFitter(TomographyFitter):
          * a is the matrix of measurement operators
            :math:`a[i] = \text{vec}(M_i).H`
          * b is the vector of expectation value data for each projector
-           :math:`b[i] ~ \text{Tr}[M_i.H * x] = (a * x)[i]`
+           :math:`b[i] \sim \text{Tr}[M_i.H \cdot x] = (a \cdot x)[i]`
          * x is the vectorized Choi-matrix to be fitted
 
         **PSD constraint**
@@ -104,19 +108,22 @@ class ProcessTomographyFitter(TomographyFitter):
             (2012). Open access: arXiv:1106.5458 [quant-ph].
 
         Args:
-            method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
-            standard_weights (bool, optional): Apply weights
+            method: (default: 'auto') the fitter method 'auto', 'cvx' or 'lstsq'.
+            standard_weights: (default: True) apply weights
                 to tomography data based on count probability
-                (default: True)
-            beta (float): hedging parameter for converting counts
-                to probabilities (default: 0.5)
-            **kwargs (optional): kwargs for fitter method.
+            beta: (default: 0.5) hedging parameter for converting counts
+                to probabilities
+            **kwargs: kwargs for fitter method.
+
+        Raises:
+            ValueError: In case the input data is no a valid process matrix
+            QiskitError: If the fit method is unrecognized
 
         Returns:
             Choi: The fitted Choi-matrix J for the channel that maximizes
-            :math:`||basis_matrix * vec(J) - data||_2`. The Numpy matrix can be
-            obtained from `Choi.data`.
-
+            :math:`||\text{basis_matrix} \cdot
+            \text{vec}(J) - \text{data}||_2`.
+            The Numpy matrix can be obtained from `Choi.data`.
         """
         # Get fitter data
         data, basis_matrix, weights = self._fitter_data(standard_weights,
