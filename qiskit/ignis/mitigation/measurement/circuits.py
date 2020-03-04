@@ -60,7 +60,7 @@ def complete_meas_cal(qubit_list:List[int] = None,
         constructor.
 
     Raises:
-        QiskitError: if both qubit_list and qr are `None`.
+        QiskitError: if both `qubit_list` and `qr` are `None`.
     
     """
 
@@ -95,10 +95,10 @@ def tensored_meas_cal(mit_pattern:List[List[int]]=None,
     Return a list of calibration circuits
 
     Args:
-        mit_pattern: Qubits to perform the
-            measurement correction on, divided to groups according to tensors.
-            If `None` and qr is given then assumed to be performed over the entire
-            qr as one group (default `None`).
+        mit_pattern: Qubits on which to perform the
+            measurement correction, divided to groups according to tensors.
+            If `None` and `qr` is given then assumed to be performed over the entire
+            `qr` as one group (default `None`).
 
         qr: A quantum register. If `None`, one is created (default `None`).
 
@@ -109,7 +109,6 @@ def tensored_meas_cal(mit_pattern:List[List[int]]=None,
 
     Returns:
         A list of two QuantumCircuit objects containing the calibration circuits
-        
         mit_pattern
 
     Additional Information:
@@ -121,8 +120,8 @@ def tensored_meas_cal(mit_pattern:List[List[int]]=None,
         constructor.
 
     Raises:
-        QiskitError: if both mit_pattern and qr are None.
-        QiskitError: if a qubit appears more than once in mit_pattern.
+        QiskitError: if both `mit_pattern` and `qr` are None.
+        QiskitError: if a qubit appears more than once in `mit_pattern`.
         
     """
 

@@ -39,7 +39,9 @@ class MeasurementFilter():
 
     """
 
-    def __init__(self, cal_matrix, state_labels):
+    def __init__(self,
+                 cal_matrix:matrix[double],
+                 state_labels:list[str]):
         """
         Initialize a measurement error mitigation filter using the cal_matrix
         from a measurement calibration fitter.
@@ -72,7 +74,9 @@ class MeasurementFilter():
         """Set cal_matrix."""
         self._cal_matrix = new_cal_matrix
 
-    def apply(self, raw_data, method='least_squares'):
+    def apply(self,
+              raw_data,
+              method='least_squares'):
         """Apply the calibration matrix to results.
 
         Args:
@@ -85,9 +89,7 @@ class MeasurementFilter():
                  Form 3: a list of counts of `length==M*len(state_labels)` where M is an integer (e.g. for use with the tomography data)
 
                  Form 4: a qiskit Result
-                    
-                    
-                 
+                                                         
 
             method (str): fitting method. If `None`, then least_squares is used.
 
@@ -96,10 +98,10 @@ class MeasurementFilter():
                 ``least_squares``: constrained to have physical probabilities
 
         Returns:
-            The corrected data in the same form as raw_data
+            The corrected data in the same form as `raw_data`
 
         Raises:
-            QiskitError: if raw_data is not an integer multiple
+            QiskitError: if `raw_data` is not an integer multiple
                 of the number of calibrated states.
 
         .. code-block::
@@ -226,7 +228,9 @@ class TensoredFilter():
     to data.
     """
 
-    def __init__(self, cal_matrices, substate_labels_list):
+    def __init__(self,
+                 cal_matrices:matrix[double],
+                 substate_labels_list:list[str]):
         """
         Initialize a tensored measurement error mitigation filter using
         the cal_matrices from a tensored measurement calibration fitter.
@@ -283,7 +287,7 @@ class TensoredFilter():
 
     @property
     def nqubits(self):
-        """Return the number of qubits."""
+        """Return the number of qubits. See also MeasurementFilter.apply() """
         return sum(self._qubit_list_sizes)
 
     def apply(self, raw_data, method='least_squares'):
