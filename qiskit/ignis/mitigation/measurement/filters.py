@@ -40,7 +40,7 @@ class MeasurementFilter():
     """
 
     def __init__(self,
-                 cal_matrix:matrix[double],
+                 cal_matrix:numpy.matrix[double],
                  state_labels:list[str]):
         """
         Initialize a measurement error mitigation filter using the cal_matrix
