@@ -13,10 +13,13 @@
 # that they have been altered from the originals.
 
 
+"""Maximum-Likelihood estimation quantum state tomography fitter
 """
-Maximum-Likelihood estimation quantum state tomography fitter
-"""
-
+from typing import List, Union
+import numpy as np
+from qiskit.result import Result
+from qiskit import QuantumCircuit
+from ..basis import TomographyBasis
 from .base_fitter import TomographyFitter
 
 
@@ -24,23 +27,28 @@ class StateTomographyFitter(TomographyFitter):
     """Maximum-Likelihood estimation state tomography fitter."""
 
     def __init__(self,
-                 result,
-                 circuits,
-                 meas_basis='Pauli'):
+                 result: Result,
+                 circuits: List[QuantumCircuit],
+                 meas_basis: Union[TomographyBasis, str] = 'Pauli'
+                 ):
         """Initialize state tomography fitter with experimental data.
 
         Args:
-            result (Result): a Qiskit Result object obtained from executing
+            result: a Qiskit Result object obtained from executing
                 tomography circuits.
-            circuits (list): a list of circuits or circuit names to extract
+            circuits: a list of circuits or circuit names to extract
                 count information from the result object.
-            meas_basis (TomographyBasis, str): A function to return measurement
+            meas_basis: (default: 'Pauli') A function to return measurement
                 operators corresponding to measurement outcomes. See
                 Additional Information (default: 'Pauli')
         """
         super().__init__(result, circuits, meas_basis, None)
 
-    def fit(self, method='auto', standard_weights=True, beta=0.5, **kwargs):
+    def fit(self,  # pylint: disable=arguments-differ
+            method: str = 'auto',
+            standard_weights: bool = True,
+            beta: float = 0.5,
+            **kwargs) -> np.array:
         r"""Reconstruct a quantum state using CVXPY convex optimization.
 
         **Fitter method**
@@ -53,7 +61,7 @@ class StateTomographyFitter(TomographyFitter):
         **Objective function**
 
         This fitter solves the constrained least-squares minimization:
-        :math:`minimize: ||a * x - b ||_2`
+        :math:`minimize: ||a \cdot x - b ||_2`
 
         subject to:
 
@@ -65,7 +73,7 @@ class StateTomographyFitter(TomographyFitter):
          * a is the matrix of measurement operators
            :math:`a[i] = \text{vec}(M_i).H`
          * b is the vector of expectation value data for each projector
-           :math:`b[i] ~ \text{Tr}[M_i.H * x] = (a * x)[i]`
+           :math:`b[i] \sim \text{Tr}[M_i.H \cdot x] = (a \cdot x)[i]`
          * x is the vectorized density matrix to be fitted
 
         **PSD constraint**
@@ -98,18 +106,18 @@ class StateTomographyFitter(TomographyFitter):
             (2012). Open access: arXiv:1106.5458 [quant-ph].
 
         Args:
-            method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
-            standard_weights (bool, optional): Apply weights to
+            method: The fitter method 'auto', 'cvx' or 'lstsq'.
+            standard_weights: (default: True) Apply weights to
                 tomography data based on count probability
-                (default: True)
-            beta (float): hedging parameter for converting counts
+            beta: (default: 0.5) hedging parameter for converting counts
                 to probabilities
-                (default: 0.5)
-            **kwargs (optional): kwargs for fitter method.
-
+            **kwargs: kwargs for fitter method.
+        Raises:
+            QiskitError: In case the fitting method is unrecognized.
         Returns:
             The fitted matrix rho that minimizes
-            :math:`||basis_matrix * vec(rho) - data||_2`.
+            :math:`||\text{basis_matrix} \cdot
+            \text{vec}(\text{rho}) - \text{data}||_2`.
         """
         return super().fit(method, standard_weights, beta,
-                           trace=1, PSD=True, **kwargs)
+                           trace=1, psd=True, **kwargs)
