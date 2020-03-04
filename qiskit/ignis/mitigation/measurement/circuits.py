@@ -16,13 +16,18 @@
 Measurement calibration circuits. To apply the measurement mitigation
 use the fitters to produce a filter.
 """
-
+from typing import List, Union, Optional, Tuple, Any
 from qiskit import QuantumRegister, ClassicalRegister, \
     QuantumCircuit, QiskitError
 from ...verification.tomography import count_keys
 
 
-def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
+def complete_meas_cal(qubit_list:List[int] = None,
+                      qr:List[QuantumRegister] = None,
+                      cr:List[ClassicalRegister] = None,
+                      circlabel:str = ''
+                      ) -> Tuple[List[QuantumCircuit], List[str]
+                                 ]:
     """
     Return a list of measurement calibration circuits for the full
     Hilbert space.
@@ -30,16 +35,16 @@ def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
     Each of the 2**n circuits creates a basis state
 
     Args:
-        qubit_list(list[integer]): A list of qubits to perform the measurement correction on.
+        qubit_list: A list of qubits to perform the measurement correction on.
            If `None`, and qr is given then assumed to be performed over the entire
-           qr. The calibration states will be labelled according to this ordering.
+           qr. The calibration states will be labelled according to this ordering (default `None`).
 
-        qr(QuantumRegister): Quantum registers. If `None`, one is created.
+        qr: Quantum registers. If `None`, one is created (default `None`).
 
-        cr: (ClassicalRegister). Classical registers. If `None`, one is created.
+        cr: Classical registers. If `None`, one is created(default `None`).
 
-        circlabel(string): A string to add to the front of circuit names for
-            unique identification.
+        circlabel: A string to add to the front of circuit names for
+            unique identification(default ' ').
 
     Returns:
         A list of QuantumCircuit objects containing the calibration circuits.
@@ -55,7 +60,7 @@ def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
         constructor.
 
     Raises:
-        QiskitError: if both qubit_list and qr are None.
+        QiskitError: if both qubit_list and qr are `None`.
     
     """
 
@@ -80,27 +85,30 @@ def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
     return cal_circuits, state_labels
 
 
-def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
+def tensored_meas_cal(mit_pattern:List[List[int]]=None,
+                      qr:List[QuantumRegister] = None,
+                      cr:List[ClassicalRegister] = None,
+                      circlabel:str = ''
+                      ) -> Tuple[List[QuantumCircuit], List[List[int]]
+                                 ]:
     """
     Return a list of calibration circuits
 
     Args:
-        mit_pattern (list of lists of integers): Qubits to perform the
+        mit_pattern: Qubits to perform the
             measurement correction on, divided to groups according to tensors.
             If `None` and qr is given then assumed to be performed over the entire
-            qr as one group.
+            qr as one group (default `None`).
 
-        qr (QuantumRegister): A quantum register. If `None`, one is created.
+        qr: A quantum register. If `None`, one is created (default `None`).
 
-        cr (ClassicalRegister): A classical register. If `None`, one is created.
+        cr: A classical register. If `None`, one is created (default `None`).
 
-        circlabel(string): A string to add to the front of circuit names for
-            unique identification.
+        circlabel: A string to add to the front of circuit names for
+            unique identification (default ' ').
 
     Returns:
-        A list of two QuantumCircuit objects containing the calibration.
-        
-        circuits
+        A list of two QuantumCircuit objects containing the calibration circuits
         
         mit_pattern
 
