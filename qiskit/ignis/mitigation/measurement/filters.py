@@ -40,8 +40,8 @@ class MeasurementFilter():
     """
 
     def __init__(self,
-                 cal_matrix:np.matrix,
-                 state_labels:list[str]):
+                 cal_matrix: np.matrix,
+                 state_labels: list):
         """
         Initialize a measurement error mitigation filter using the cal_matrix
         from a measurement calibration fitter.
@@ -83,18 +83,18 @@ class MeasurementFilter():
             raw_data: The data to be corrected. Can be in a number of forms:
 
                  Form 1: a counts dictionary from results.get_counts
-                 
+
                  Form 2: a list of counts of `length==len(state_labels)`
 
-                 Form 3: a list of counts of `length==M*len(state_labels)` where M is an integer (e.g. for use with the tomography data)
+                 Form 3: a list of counts of `length==M*len(state_labels)` where M is an
+                 integer (e.g. for use with the tomography data)
 
                  Form 4: a qiskit Result
-                                                         
 
             method (str): fitting method. If `None`, then least_squares is used.
 
                 ``pseudo_inverse``: direct inversion of the A matrix
-                
+
                 ``least_squares``: constrained to have physical probabilities
 
         Returns:
@@ -229,8 +229,8 @@ class TensoredFilter():
     """
 
     def __init__(self,
-                 cal_matrices:matrix[double],
-                 substate_labels_list:list[str]):
+                 cal_matrices: np.matrix,
+                 substate_labels_list: list):
         """
         Initialize a tensored measurement error mitigation filter using
         the cal_matrices from a tensored measurement calibration fitter.
@@ -298,13 +298,13 @@ class TensoredFilter():
             raw_data: The data to be corrected. Can be in one of two forms:
 
                 * A counts dictionary from results.get_counts
-                
+
                 * A Qiskit Result
 
             method (str): fitting method. The following methods are supported:
 
                 * 'pseudo_inverse': direct inversion of the cal matrices.
-                
+
                 * 'least_squares': constrained to have physical probabilities.
 
                 * If `None`, 'least_squares' is used.

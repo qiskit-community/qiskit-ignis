@@ -16,16 +16,16 @@
 Measurement calibration circuits. To apply the measurement mitigation
 use the fitters to produce a filter.
 """
-from typing import List, Union, Optional, Tuple, Any
+from typing import List, Tuple
 from qiskit import QuantumRegister, ClassicalRegister, \
     QuantumCircuit, QiskitError
 from ...verification.tomography import count_keys
 
 
-def complete_meas_cal(qubit_list:List[int] = None,
-                      qr:List[QuantumRegister] = None,
-                      cr:List[ClassicalRegister] = None,
-                      circlabel:str = ''
+def complete_meas_cal(qubit_list: List[int] = None,
+                      qr: List[QuantumRegister] = None,
+                      cr: List[ClassicalRegister] = None,
+                      circlabel: str = ''
                       ) -> Tuple[List[QuantumCircuit], List[str]
                                  ]:
     """
@@ -61,7 +61,7 @@ def complete_meas_cal(qubit_list:List[int] = None,
 
     Raises:
         QiskitError: if both `qubit_list` and `qr` are `None`.
-    
+
     """
 
     if qubit_list is None and qr is None:
@@ -85,10 +85,10 @@ def complete_meas_cal(qubit_list:List[int] = None,
     return cal_circuits, state_labels
 
 
-def tensored_meas_cal(mit_pattern:List[List[int]]=None,
-                      qr:List[QuantumRegister] = None,
-                      cr:List[ClassicalRegister] = None,
-                      circlabel:str = ''
+def tensored_meas_cal(mit_pattern: List[List[int]] = None,
+                      qr: List[QuantumRegister] = None,
+                      cr: List[ClassicalRegister] = None,
+                      circlabel: str = ''
                       ) -> Tuple[List[QuantumCircuit], List[List[int]]
                                  ]:
     """
@@ -122,7 +122,7 @@ def tensored_meas_cal(mit_pattern:List[List[int]]=None,
     Raises:
         QiskitError: if both `mit_pattern` and `qr` are None.
         QiskitError: if a qubit appears more than once in `mit_pattern`.
-        
+
     """
 
     if mit_pattern is None and qr is None:
