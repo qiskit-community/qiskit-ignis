@@ -17,7 +17,7 @@ import os
 import glob
 from datetime import datetime
 import re
-from typing import List, Union
+from typing import List, Union, Optional
 
 
 class IgnisLogger(logging.getLoggerClass()):
@@ -34,13 +34,13 @@ class IgnisLogger(logging.getLoggerClass()):
 
     """
 
-    def __init__(self, name, level=logging.NOTSET):
+    def __init__(self, name: str, level: Optional[int] = logging.NOTSET):
         """
         Initialize the IgnisLogger object
 
         Args:
             name: name of the logger. Usually set to package name using __name__
-            level: Verbosity level (use logging package enums)
+            level(logging.NOTSET): Verbosity level (use logging package enums)
         """
         Logger.__init__(self, name, level)
         self._file_logging_enabled = False
@@ -310,11 +310,12 @@ class IgnisLogReader:
 
         return result
 
-    def read_values(self, log_files: List[str] = None, keys: List[str] = None,
-                    from_datetime: str = None,
-                    from_datetime_format: Union[str, datetime] = None,
-                    to_datetime: str = None,
-                    to_datetime_format: Union[str, datetime] = None)\
+    def read_values(self, log_files: Optional[List[str]] = None,
+                    keys: Optional[List[str]] = None,
+                    from_datetime: Optional[str] = None,
+                    from_datetime_format: Optional[Union[str, datetime]] = None,
+                    to_datetime: Optional[str] = None,
+                    to_datetime_format: Optional[Union[str, datetime]] = None)\
             -> List[List[str]]:
         """
         Retrieve log lines using key and date/time filtering criteria
@@ -325,17 +326,17 @@ class IgnisLogReader:
             with no matching keys will not be retrieved. If not specified,
             all keys are retrieved (optional)
 
-            from_datetime: Retrieve only rows newer than the given date and
-            time (optional)
+            from_datetime(None): Retrieve only rows newer than the given date and
+            time
 
-            from_datetime_format: datetime format string. If not specified
-            will assume "%Y/%m/%d %H:%M:%S" (optional)
+            from_datetime_format(None): datetime format string. If not specified
+            will assume "%Y/%m/%d %H:%M:%S"
 
-            to_datetime: Retrieve only rows older than the given date and
-            time (optional)
+            to_datetime(None): Retrieve only rows older than the given date and
+            time
 
-            to_datetime_format: datetime format string. If not specified
-            will assume "%Y/%m/%d %H:%M:%S" (optional)
+            to_datetime_format(None): datetime format string. If not specified
+            will assume "%Y/%m/%d %H:%M:%S"
 
         Returns:
             A list containing the retrieved rows of key pair values
