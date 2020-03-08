@@ -223,7 +223,7 @@ class TensoredMeasFitter():
     def __init__(self,
                  results: Union[Result, List[Result]],
                  mit_pattern: List[List[int]],
-                 substate_labels_list:  List[List[str]] = None,
+                 substate_labels_list: List[List[str]] = None,
                  circlabel: str = ''):
         """
         Initialize a measurement calibration matrix from the results of running
