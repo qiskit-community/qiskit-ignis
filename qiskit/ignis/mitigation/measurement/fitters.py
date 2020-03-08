@@ -18,11 +18,12 @@
 """
 Measurement correction fitters.
 """
-
+from typing import List, Union
 import copy
 import re
 import numpy as np
 from qiskit import QiskitError
+from qiskit.result import Result
 from .filters import MeasurementFilter, TensoredFilter
 from ...verification.tomography import count_keys
 
@@ -38,7 +39,11 @@ class CompleteMeasFitter():
     Measurement correction fitter for a full calibration
     """
 
-    def __init__(self, results, state_labels, qubit_list=None, circlabel=''):
+    def __init__(self,
+                 results: Union[Result, List[Result]],
+                 state_labels: List[str],
+                 qubit_list: List[int] = None,
+                 circlabel: str = ''):
         """
         Initialize a measurement calibration matrix from the results of running
         the circuits returned by `measurement_calibration_circuits`
@@ -49,13 +54,13 @@ class CompleteMeasFitter():
             results: the results of running the measurement calibration
                 circuits. If this is `None` the user will set a calibration
                 matrix later.
-            state_labels (list[string]): list of calibration state labels
+            state_labels: list of calibration state labels
                 returned from `measurement_calibration_circuits`.
                 The output matrix will obey this ordering.
-            qubit_list (list[integer]): List of the qubits (for reference and if the
+            qubit_list: List of the qubits (for reference and if the
                 subset is needed). If `None`, the qubit_list will be
                 created according to the length of state_labels[0].
-            circlabel (string): if the qubits were labeled.
+            circlabel: if the qubits were labeled.
         """
 
         if qubit_list is None:
@@ -215,8 +220,11 @@ class TensoredMeasFitter():
     Measurement correction fitter for a tensored calibration.
     """
 
-    def __init__(self, results, mit_pattern,
-                 substate_labels_list=None, circlabel=''):
+    def __init__(self,
+                 results: Union[Result, List[Result]],
+                 mit_pattern: List[List[int]],
+                 substate_labels_list:  List[List[str]] = None,
+                 circlabel: str = ''):
         """
         Initialize a measurement calibration matrix from the results of running
         the circuits returned by `measurement_calibration_circuits`.
@@ -226,13 +234,15 @@ class TensoredMeasFitter():
                 circuits. If this is `None`, the user will set calibration
                 matrices later.
 
-            mit_pattern (list[list[integers]]): qubits to perform the
+            mit_pattern: qubits to perform the
                 measurement correction on, divided to groups according to
                 tensors
 
-            substate_labels_list (list of lists of strings): for each
+            substate_labels_list: for each
                 calibration matrix, the labels of its rows and columns.
                 If `None`, the labels are ordered lexicographically
+
+            circlable: if the qubits were labeled
         """
 
         self._result_list = []

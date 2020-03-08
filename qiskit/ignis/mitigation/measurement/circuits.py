@@ -32,7 +32,8 @@ def complete_meas_cal(qubit_list: List[int] = None,
     Return a list of measurement calibration circuits for the full
     Hilbert space.
 
-    Each of the 2**n circuits creates a basis state
+    If the circuit contains :math:`n` qubits, then :math:`2^n` calibration circuits
+    are created, each of which creates a basis state.
 
     Args:
         qubit_list: A list of qubits to perform the measurement correction on.

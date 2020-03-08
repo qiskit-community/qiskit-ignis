@@ -37,6 +37,22 @@ class MeasurementFilter():
     Produced from a measurement calibration fitter and can be applied
     to data.
 
+    Example:
+
+    .. code-block::
+
+        calcircuits, state_labels =
+            complete_measurement_calibration(qiskit.QuantumRegister(5))
+        job = qiskit.execute(calcircuits)
+        meas_fitter = CompleteMeasFitter(job.results(),
+        state_labels)
+        meas_filter = MeasurementFilter(meas_fitter.cal_matrix)
+
+        job2 = qiskit.execute(my_circuits)
+        result2 = job2.results()
+
+        error_mitigated_counts =
+            meas_filter.apply(result2.get_counts('circ1'))
     """
 
     def __init__(self,
@@ -104,20 +120,6 @@ class MeasurementFilter():
             QiskitError: if `raw_data` is not an integer multiple
                 of the number of calibrated states.
 
-        .. code-block::
-
-            calcircuits, state_labels = complete_measurement_calibration(
-                qiskit.QuantumRegister(5))
-            job = qiskit.execute(calcircuits)
-            meas_fitter = CompleteMeasFitter(job.results(),
-                                            state_labels)
-            meas_filter = MeasurementFilter(meas_fitter.cal_matrix)
-
-            job2 = qiskit.execute(my_circuits)
-            result2 = job2.results()
-
-            error_mitigated_counts = meas_filter.apply(
-                result2.get_counts('circ1'))
         """
 
         # check forms of raw_data
@@ -237,7 +239,7 @@ class TensoredFilter():
 
         Args:
             cal_matrices: the calibration matrices for applying the correction.
-            substate_labels_list (list[string]): for each calibration matrix
+            substate_labels_list: for each calibration matrix
                 a list of the states (as strings, states in the subspace)
         """
 
