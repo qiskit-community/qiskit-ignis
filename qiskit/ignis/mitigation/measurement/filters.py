@@ -37,22 +37,6 @@ class MeasurementFilter():
     Produced from a measurement calibration fitter and can be applied
     to data.
 
-    Example:
-
-    .. code-block::
-
-        calcircuits, state_labels =
-            complete_measurement_calibration(qiskit.QuantumRegister(5))
-        job = qiskit.execute(calcircuits)
-        meas_fitter = CompleteMeasFitter(job.results(),
-        state_labels)
-        meas_filter = MeasurementFilter(meas_fitter.cal_matrix)
-
-        job2 = qiskit.execute(my_circuits)
-        result2 = job2.results()
-
-        error_mitigated_counts =
-            meas_filter.apply(result2.get_counts('circ1'))
     """
 
     def __init__(self,
