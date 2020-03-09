@@ -22,7 +22,7 @@ import warnings
 import networkx as nx
 import numpy as np
 
-from qiskit import QuantumCircuit, Aer, execute
+from qiskit import QuantumCircuit, BasicAer, execute
 
 
 class GraphDecoder():
@@ -112,7 +112,7 @@ class GraphDecoder():
                     error_circuit[temp_qc.name] = temp_qc
 
         job = execute(list(error_circuit.values()),
-                      Aer.get_backend('qasm_simulator'))
+                      BasicAer.get_backend('qasm_simulator'))
 
         for j in range(depth):
             qubits = qc.data[j][1]
