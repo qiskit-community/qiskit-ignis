@@ -69,8 +69,8 @@ def gates_per_clifford(transpiled_circuits_list: List[List[QuantumCircuit]],
                        basis: List[str],
                        qubits: List[int],
                        qobj_list: Optional[List[QasmQobj]] = None,
-                       clifford_length: Optional[np.ndarray] = None) \
-        -> Dict[int, Dict[str, float]]:
+                       clifford_length: Optional[np.ndarray] = None
+                       ) -> Dict[int, Dict[str, float]]:
     """Take a list of transpiled ``QuantumCircuit`` and use these to calculate
     the number of gates per Clifford. Each ``QuantumCircuit`` should be transpiled into
     given ``basis`` set. The result can be used to convert a value of error per Clifford
@@ -80,23 +80,38 @@ def gates_per_clifford(transpiled_circuits_list: List[List[QuantumCircuit]],
         This example shows how to calculate gate per Clifford of 2Q RB sequence for
         qubit 0 and qubit 1. You can refer to the function
         :mod:`~qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq`
-        for the detail of RB circuit generation.::
+        for the detail of RB circuit generation.
 
-            # create RB circuits
-            rb_circs_list, xdata = randomized_benchmarking_seq(**rb_opts)
+        .. jupyter-execute::
+
+            import pprint
+            import qiskit
+            import qiskit.ignis.verification.randomized_benchmarking as rb
+            from qiskit.test.mock.backends import FakeAlmaden
+
+            rb_circs_list, xdata = rb.randomized_benchmarking_seq(
+                nseeds=5,
+                length_vector=[1, 20, 50, 100],
+                rb_pattern=[[0, 1]])
+            basis = FakeAlmaden().configuration().basis_gates
 
             # transpile
             transpiled_circuits_list = []
             for rb_circs in rb_circs_list:
-                rb_circs_transpiled = qiskit.transpile(rb_circs, basis_gate=basis)
+                rb_circs_transpiled = qiskit.transpile(rb_circs, basis_gates=basis)
                 transpiled_circuits_list.append(rb_circs_transpiled)
 
-            # calculate gate per Clifford
-            ngates = gates_per_clifford(transpiled_circuits_list, xdata[0], basis, [0, 1])
+            # count gate per Clifford
+            ngates = rb.rb_utils.gates_per_clifford(
+                transpiled_circuits_list=transpiled_circuits_list,
+                clifford_lengths=xdata[0],
+                basis=basis, qubits=[0, 1])
+
+            pprint.pprint(ngates)
 
         The gate counts for qubit 0 (1) is obtained by ``ngates[0]`` (``ngates[1]``)
         as usual python dictionary. If all gate counts are zero,
-        you may specify wrong ``basis`` or input circuit list is not transpiled into basis gates.
+        you might specify wrong ``basis`` or input circuit list is not transpiled into basis gates.
 
     Args:
         transpiled_circuits_list: List of transpiled RB circuit for each seed.
@@ -151,8 +166,6 @@ def gates_per_clifford(transpiled_circuits_list: List[List[QuantumCircuit]],
     for qubit in qubits:
         for base in basis:
             ngates[qubit][base] /= ncliffs
-
-    warn('The function now returns nested dictionary instead of numpy array.')
 
     return ngates
 
