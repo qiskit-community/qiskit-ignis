@@ -18,7 +18,7 @@
 Fitters of characteristic times
 """
 
-from typing import Union, List, Callable, Optional, Tuple, Dict
+from typing import Union, List, Callable, Optional, Tuple, Dict, Any
 from scipy.optimize import curve_fit
 import numpy as np
 from qiskit import QiskitError
