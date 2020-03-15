@@ -24,6 +24,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Pulse calibrations for single qubits (\#292, \#302, \#303, \#304)
 - Pulse Discriminator (\#238, \#278, \#297, \#316)
 
+### Deprecated
+
+- Python 3.5 support in qiskit-ignis is deprecated. Support will be
+  removed on the upstream python community's end of life date for the version,
+  which is 09/13/2020.
+
+
 ## [0.2.0](https://github.com/Qiskit/qiskit/compare/0.1.1...0.2.0)- 2019-08-22
 
 ### Added
