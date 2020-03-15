@@ -12,21 +12,43 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""TomographyBasis class
 """
-TomographyBasis class
-"""
-
+from typing import Optional, Tuple, Union
+import numpy as np
 from qiskit import QiskitError
-from qiskit.circuit import Qubit, Clbit
+from qiskit.circuit import Qubit, Clbit, QuantumCircuit
 
 
 class TomographyBasis:
-    """
-    Tomography basis class.
+    """Tomography basis class.
     """
 
-    def __init__(self, name, measurement=None, preparation=None):
+    def __init__(self, name: str,
+                 measurement: Optional[Tuple] = None,
+                 preparation: Optional[Tuple] = None
+                 ):
+        """Initializes the tomography basis with given basis data
 
+        For both measurement and preparation bases, we excpet the same
+        input: a tuple (names, circuit_fn, matrix_fn) containing
+
+        * **names** - the names (strings) of the elements of the basis.
+        * **circuit_fn** a function taking a pair (str, QuantumRegister)
+          and returns a circuit on the given qubits that corresponds to
+          the basis element denoted by the given string.
+        * **matrix_fx** - a function taking a basis
+          element and returning the matrix describing it.
+          In the case of measurement matrix, the function should
+          accept a pair (**name**, **outcome**) of the basis element name
+          and the expected outcome (0 or 1); in the case of preparation
+          matrix only **name** is passed.
+
+        Args:
+            name: Name for the whole basis (e.g. "Pauli")
+            measurement: measurement data (as described above)
+            preparation: preparation data (as described above)
+        """
         # TODO: check that measurement and preparation are both tuples
         # (labels, circuit_fn, matrix_fn)
         # Also check functions have correct signature and are return valid
@@ -77,8 +99,24 @@ class TomographyBasis:
             return self._preparation_labels
         return None
 
-    def measurement_circuit(self, op, qubit, clbit):
-        """Return the measurement circuits."""
+    def measurement_circuit(self, op: str,
+                            qubit: Qubit,
+                            clbit: Clbit
+                            ) -> QuantumCircuit:
+        """Return the measurement circuit on the given qubit and clbit
+
+        Args:
+            op: The name of the measurement operator
+            qubit: The qubit on which to apply the measurement operator
+            clbit: The classical bit that will hold the measurement result
+        Raises:
+            QiskitError: In case no measurement data is present in the basis
+                or **qubit**/**clbit** are not Qubit/Clbit
+            ValueError: if **op** is not a n name of a measurement operator
+                in the basis
+        Returns:
+            The measurement circuit
+        """
         # Error Checking
         if self.measurement is False:
             raise QiskitError(
@@ -95,11 +133,22 @@ class TomographyBasis:
             error = "'{0}' != {1}".format(op, self._measurement_labels)
             raise ValueError("{0}: {1}".format(msg, error))
 
-        # Return QuantumCircuit function output
         return self._measurement_circuit(op, qubit, clbit)
 
-    def preparation_circuit(self, op, qubit):
-        """Return the preparation circuits."""
+    def preparation_circuit(self, op: str, qubit: Qubit) -> QuantumCircuit:
+        """Return the preparation circuit on the given qubit
+
+        Args:
+            op: The name of the preparation operator
+            qubit: The qubit on which to apply the preparation operator
+        Raises:
+            QiskitError: In case no preparation data is present in the basis
+                or **qubit** is not Qubit
+            ValueError: if **op** is not a n name of a preparation operator
+                in the basis
+        Returns:
+            The preparation circuit
+        """
         # Error Checking
         if self.preparation is False:
             raise QiskitError("{} is not a preparation basis".format(
@@ -115,8 +164,22 @@ class TomographyBasis:
 
         return self._preparation_circuit(op, qubit)
 
-    def measurement_matrix(self, label, outcome):
-        """Return the measurement matrix."""
+    def measurement_matrix(self, label: str,
+                           outcome: Union[str, int]
+                           ) -> np.array:
+        """Return the measurement matrix for a given measurement operator
+        and expected outcome.
+
+        Args:
+            label: Name of the measurement element.
+            outcome: The expected outcome: 0 or 1 or '0' or '1'.
+        Raises:
+            QiskitError: If the TomographyBasis has no measurement data
+            ValueError: if **label** does not describe an element of the
+                measurement data, or if **outcome** is not a valid outcome.
+        Returns:
+            The measurement matrix.
+        """
         if self.measurement is False:
             raise QiskitError("{} is not a measurement basis".format(
                 self._name))
@@ -135,8 +198,18 @@ class TomographyBasis:
 
         return self._measurement_matrix(label, outcome)
 
-    def preparation_matrix(self, label):
-        """Return the preparation matrix."""
+    def preparation_matrix(self, label: str) -> np.array:
+        """Return the preparation matrix for a given preparation operator.
+
+        Args:
+            label: Name of the preparation element.
+        Raises:
+            QiskitError: If the TomographyBasis has no preparation data
+            ValueError: if **label** does not describe an element of the
+                preparation data.
+        Returns:
+            The preparation matrix.
+        """
 
         if self.preparation is False:
             raise QiskitError("{} is not a preparation basis".format(
