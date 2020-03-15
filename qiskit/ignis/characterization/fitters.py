@@ -21,8 +21,6 @@ Fitters of characteristic times
 from typing import Union, List, Callable, Optional, Tuple, Dict
 from scipy.optimize import curve_fit
 import numpy as np
-from matplotlib import pyplot as plt
-from matplotlib import axes
 from qiskit import QiskitError
 from qiskit.result import Result
 from ..verification.tomography import marginal_counts
@@ -508,6 +506,8 @@ class IQFitter(BaseFitter):
             The axes object
         """
 
+        from matplotlib import pyplot as plt
+
         if ax is None:
             plt.figure()
             ax = plt.gca()
@@ -615,8 +615,8 @@ class BaseCoherenceFitter(BaseFitter):
     def plot(self,
              qind: int,
              series: str,
-             ax: Optional[axes.Axes] = None,
-             show_plot: bool = True) -> axes.Axes:
+             ax: Optional[Any] = None,
+             show_plot: bool = True) -> Any:
         """
         Plot coherence data.
 
@@ -629,6 +629,8 @@ class BaseCoherenceFitter(BaseFitter):
         Returns:
             The axes object
         """
+
+        from matplotlib import pyplot as plt
 
         if ax is None:
             plt.figure()
@@ -690,6 +692,8 @@ class BaseGateFitter(BaseFitter):
         Returns:
             The axes object
         """
+
+        from matplotlib import pyplot as plt
 
         if ax is None:
             plt.figure()
