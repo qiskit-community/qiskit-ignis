@@ -24,8 +24,8 @@ class IgnisLogger(logging.getLoggerClass()):
     """
     A logger class for Ignis
 
-    IgnisLogger is a like any other logging.Logger object except it has an
-    additional method:    log_to_file, used to log data in the form of
+    IgnisLogger is a like any other :class:`logging.Logger` object except it has an
+    additional method, :meth:`log_to_file`, used to log data in the form of
     key:value pairs to a log file. Logging configuration is performed via a
     configuration file and is handled by IgnisLogging.
 
