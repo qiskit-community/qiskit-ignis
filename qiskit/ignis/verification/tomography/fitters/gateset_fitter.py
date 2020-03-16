@@ -19,7 +19,7 @@ Quantum gate set tomography fitter
 """
 
 import itertools
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Tuple
 import numpy as np
 import scipy.optimize as opt
 from qiskit.result import Result
@@ -235,7 +235,17 @@ class GaugeOptimize():
         return self.x_to_Gs_E(result.x)
 
 
-def split_list(l, sizes):
+def split_list(l: List, sizes: List) -> List[List]:
+    """Splits a list to several lists of given size
+        Args:
+            l: A list
+            sizes: The sizes of the splitted lists
+        Returns:
+            The splitted lists
+        Example:
+            >> split_list([1,2,3,4,5,6,7], [1,4,2])
+            [[1],[2,3,4,5],[6,7]]
+    """
     if sum(sizes) != len(l):
         msg = "Length of list ({}) " \
               "differs from sum of split sizes ({})".format(len(l), sizes)
@@ -248,7 +258,14 @@ def split_list(l, sizes):
     return result
 
 
-def matrix_to_vec(A):
+def matrix_to_vec(A: np.array) -> np.array:
+    """Converts a complex matrix to vector representation
+        Args:
+            A: A nxn complex matrix
+        Returns:
+            A row-stacking vector representation of A; first the real part
+            of A and then the imaginary part
+    """
     real = []
     imag = []
     for row in A:
@@ -258,38 +275,64 @@ def matrix_to_vec(A):
     return real + imag
 
 
-def split_list(l, sizes):
-    if sum(sizes) != len(l):
-        msg = "Length of list ({}) " \
-              "differs from sum of split sizes ({})".format(len(l), sizes)
-        raise RuntimeError(msg)
-    result = []
-    i = 0
-    for s in sizes:
-        result.append(l[i:i + s])
-        i = i + s
-    return result
+def vec_to_complex_matrix(vec: np.array, n: int) -> np.array:
+    """Constructs a nxn matrix from the given vector specification
+        Args:
+            vec: A vector representation of a complex matrix
+            n: the dimension of the matrix
+        Returns:
+            The reconstructed matrix
+    """
+    vects = split_list(vec, [n ** 2, n ** 2])
+    real = np.array([vects[0][n * i:n * (i + 1)] for i in range(n)])
+    imag = np.array([vects[1][n * i:n * (i + 1)] for i in range(n)])
+    return real + 1.j * imag
 
 
-def matrix_to_vec(A):
-    real = []
-    imag = []
-    for row in A:
-        for x in row:
-            real.append(np.real(x))
-            imag.append(np.imag(x))
-    return real + imag
+def complex_matrix_to_vec(M, n):
+    return list(np.real(M).reshape(n ** 2)) + \
+           list(np.imag(M).reshape(n ** 2))
 
 
-def get_cholesky_like_decomposition(mat):
+def complex_matrix_var_nums(n: int):
+    """The number of entries in a vector representing nxn complex matrix
+    Args:
+        n: the dimension of the matrix
+    Returns:
+        The number of entries in the vector representation
+    """
+    return 2 * n ** 2
+
+
+def get_cholesky_like_decomposition(mat: np.array) -> np.array:
+    """Given a PSD matrix A, finds a matrix T such that TT^{dagger}
+    is an approximation of A
+        Args:
+            mat: A nxn matrix, assumed to be positive semidefinite.
+        Returns:
+            A matrix T such that TT^{dagger} approximates A
+    """
     (eigenvals, P) = np.linalg.eigh(mat)
+    # if a 0 eigenvalue is represented by infinitisimal negative float
     eigenvals[eigenvals < 0] = 0
     DD = np.diag(np.sqrt(eigenvals))
     return P @ DD
 
 
 class GST_Optimize():
-    def __init__(self, Gs, Fs, probs, qubits=1):
+    def __init__(self,
+                 Gs: List[str],
+                 Fs: Dict[str, Tuple[str]],
+                 probs: Dict[Tuple[str], float],
+                 qubits: int = 1
+                 ):
+        """Initializes the data for the MLE optimizer
+            Args:
+                Gs: The names of the gates in the gateset
+                Fs: The SPAM specification (SPAM name -> gate names)
+                probs: The probabilities obtained experimentally
+                qubits: the size of the gates in the gateset
+        """
         self.probs = probs
         self.Gs = Gs
         self.Fs = Fs
@@ -298,13 +341,19 @@ class GST_Optimize():
         self.obj_fn_data = self.compute_objective_function_data()
         self.initial_value = None
 
-    def compute_objective_function_data(self):
-        """The objective function is
-           sum_{ijk}(<|E*R_Fi*G_k*R_Fj*Rho|>-m_{ijk})^2
-           We expand R_Fi*G_k*R_Fj to a sequence of G-gates and store indices
-           we also obtain the m_{ijk} value from the probs list
-           all that remains when computing the function is thus performing
-           the matrix multiplications and remaining algebra
+    def compute_objective_function_data(self) -> List:
+        """Computes auxiliary data needed for efficient computation
+        of the objective function.
+
+            Returns:
+                 The objective function data list
+            Additional information:
+                The objective function is
+                sum_{ijk}(<|E*R_Fi*G_k*R_Fj*Rho|>-m_{ijk})^2
+                We expand R_Fi*G_k*R_Fj to a sequence of G-gates and store
+                indices. We also obtain the m_{ijk} value from the probs list
+                all that remains when computing the function is thus
+                performing the matrix multiplications and remaining algebra.
         """
         m = len(self.Fs)
         n = len(self.Gs)
@@ -320,30 +369,38 @@ class GST_Optimize():
                 obj_fn_data.append((matrices, m_ijk))
         return obj_fn_data
 
-    def vec_to_complex_matrix(self, vec, n):
-        """
-        Constructs a nxn matrix
-        """
-        vects = split_list(vec, [n ** 2, n ** 2])
-        real = np.array([vects[0][n * i:n * (i + 1)] for i in range(n)])
-        imag = np.array([vects[1][n * i:n * (i + 1)] for i in range(n)])
-        return real + 1.j * imag
+    def split_input_vector(self, x: np.array) -> Tuple:
+        """Reconstruct the GST data from its vector representation
+        Args:
+            x: The vector representation of the GST data
 
-    def complex_matrix_var_nums(self, n):
-        return 2 * n ** 2
+        Returns:
+            The GST data (E, rho, Gs) (see additional info)
 
-    def split_input_vector(self, x):
+        Additional information:
+            The gate set tomography data is a tuple (E, rho, Gs) consisting of
+            1) A POVM measurement operator E
+            2) An initial quantum state rho
+            3) A list Gs = (G1, G2, ..., Gk) of gates, represented as matrices
+
+            This function reconstructs (E, rho, Gs) from the vector x
+            Since the MLE optimization procedure has PSD constraints on
+            E, rho and the Choi represetnation of the PTM of the Gs,
+            we rely on the following property: M is PSD iff there exists
+            T such that M = T @ T^{dagger}.
+            Hence, x stores those T matrices for E, rho and the Gs
+        """
         n = len(self.Gs)
         d = (2 ** self.qubits)
         ds = d ** 2  # d squared - the dimension of the density operator
 
-        d_t = self.complex_matrix_var_nums(d)
-        ds_t = self.complex_matrix_var_nums(ds)
+        d_t = complex_matrix_var_nums(d)
+        ds_t = complex_matrix_var_nums(ds)
         T_vars = split_list(x, [d_t, d_t] + [ds_t] * n)
 
-        E_T = self.vec_to_complex_matrix(T_vars[0], d)
-        rho_T = self.vec_to_complex_matrix(T_vars[1], d)
-        Gs_T = [self.vec_to_complex_matrix(T_vars[2+i], ds) for i in range(n)]
+        E_T = vec_to_complex_matrix(T_vars[0], d)
+        rho_T = vec_to_complex_matrix(T_vars[1], d)
+        Gs_T = [vec_to_complex_matrix(T_vars[2+i], ds) for i in range(n)]
 
         E = np.reshape(E_T @ np.conj(E_T.T), (1, ds))
         rho = np.reshape(rho_T @ np.conj(rho_T.T), (ds, 1))
@@ -351,11 +408,24 @@ class GST_Optimize():
 
         return (E, rho, Gs)
 
-    def complex_matrix_to_vec(self, M, n):
-        return list(np.real(M).reshape(n ** 2)) + \
-               list(np.imag(M).reshape(n ** 2))
+    def join_input_vector(self,
+                          E: np.array,
+                          rho: np.array,
+                          Gs: List[np.array]
+                          ) -> np.array:
+        """Converts the GST data into a vector representation
+            Args:
+                E: The POVM measurement operator
+                rho: The initial state
+                Gs: The gates list
 
-    def join_input_vector(self, E, rho, Gs):
+            Returns:
+                The vector representation of (E, rho, Gs)
+
+            Additional information:
+                This function performs the inverse operation to
+                split_input_vector; the notations are the same.
+        """
         d = (2 ** self.qubits)
         ds = d ** 2  # d squared - the dimension of the density operator
 
@@ -363,14 +433,33 @@ class GST_Optimize():
         rho_T = get_cholesky_like_decomposition(rho.reshape((d, d)))
         Gs_Choi = [Choi(PTM(G)).data for G in Gs]
         Gs_T = [get_cholesky_like_decomposition(G) for G in Gs_Choi]
-        E_vec = self.complex_matrix_to_vec(E_T, d)
-        rho_vec = self.complex_matrix_to_vec(rho_T, d)
+        E_vec = complex_matrix_to_vec(E_T, d)
+        rho_vec = complex_matrix_to_vec(rho_T, d)
         result = E_vec + rho_vec
         for G_T in Gs_T:
-            result += self.complex_matrix_to_vec(G_T, ds)
+            result += complex_matrix_to_vec(G_T, ds)
         return result
 
-    def obj_fn(self, x):
+    def obj_fn(self, x: np.array) -> float:
+        """The MLE objective function
+            Args:
+                x: The vector representation of the GST data (E, rho, Gs)
+
+            Return value:
+                The MLE cost function (see additional information)
+
+            Additional information:
+                The MLE objective function is obtained by approximating
+                the MLE estimator using the central limit theorem.
+
+                It is computed as the sum of all terms of the form
+                (m_{ijk} - p_{ijk})^2
+                Where m_{ijk} are the experimental results, and
+                p_{ijk} are the predicted results for the given GST data:
+                p_{ijk} = E*F_i*G_k*F_j*rho.
+
+                For additional info, see section 3.5 in arXiv:1509.02921
+        """
         E, rho, G_matrices = self.split_input_vector(x)
         val = 0
         for term in self.obj_fn_data:
