@@ -12,11 +12,9 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-
 """
 Coherence module
 """
 
-# Measurement correction functions
 from .circuits import t1_circuits, t2_circuits, t2star_circuits
 from .fitters import T1Fitter, T2Fitter, T2StarFitter
