@@ -19,27 +19,30 @@ Quantum gate set tomography fitter
 """
 
 import itertools
+from typing import Union, List, Dict
 import numpy as np
 import scipy.optimize as opt
+from qiskit.result import Result
 from qiskit.quantum_info import Choi, PTM
-from ..basis.gatesetbasis import StandardGatesetBasis
+from ..basis.gatesetbasis import StandardGatesetBasis, GateSetBasis
 from .base_fitter import TomographyFitter
 
 
 class GatesetTomographyFitter:
     def __init__(self,
-                 result,
-                 circuits,
-                 gateset_basis='Standard GST'):
+                 result: Result,
+                 circuits: List,
+                 gateset_basis: Union[GateSetBasis, str] = 'Standard GST'
+                 ):
         """Initialize gateset tomography fitter with experimental data.
 
         Args:
-            result (Result): a Qiskit Result object obtained from executing
+            result: a Qiskit Result object obtained from executing
                             tomography circuits.
-            circuits (list): a list of circuits or circuit names to extract
+            circuits: a list of circuits or circuit names to extract
                             count information from the result object.
-            gateset_basis (GateSetBasis, str): Representation of the gates and
-            SPAM circuits of the gateset (default: 'Standard GST')
+            gateset_basis: (default: 'Standard GST') Representation of
+            the gates and SPAM circuits of the gateset
         """
         self.gateset_basis = gateset_basis
         if gateset_basis == 'Standard GST':
@@ -49,13 +52,13 @@ class GatesetTomographyFitter:
         for key, vals in data.items():
             self.probs[key] = vals.get('0', 0) / sum(vals.values())
 
-    def linear_inversion(self):
+    def linear_inversion(self) -> Dict[str, np.array]:
         """
         Reconstruct a gate set from measurement data using linear inversion.
 
         Returns:
-            A list of tuples (G, label) of gate representation
-            and this gate's label as given in gateset_basis
+            For each gate in the gateset: its approximation found
+            using the linear inversion process.
 
         Additional Information:
             Given a gate set (G1,...,Gm)
@@ -104,10 +107,36 @@ class GatesetTomographyFitter:
         gates = [gram_inverse @ gate_matrix for gate_matrix in gate_matrices]
         return dict(zip(self.gateset_basis.gate_labels, gates))
 
-    def fit(self):
+    def default_init_state(self, size):
+        if size == 4:
+            return np.array([[0.5], [0], [0], [0.5]])
+        raise RuntimeError("No default init state for more than 1 qubit")
+
+    def default_measurement_op(self, size):
+        if size == 4:
+            return np.array([[1, 0, 0, 1]])
+        raise RuntimeError("No default measurement op for more than 1 qubit")
+
+    def fit(self) -> Dict:
+        """
+        Reconstruct a gate set from measurement data using optimization.
+
+        Returns:
+           For each gate in the gateset: its approximation found using the
+           optimization process.
+
+        Additional Information:
+            The gateset optimization process con/.sists of three phases:
+            1) Use linear inversion to obtain an initial approximation.
+            2) Use gauge optimization to ensure the linear inversion results
+            are close enough to the expected optimization outcome to serve
+            as a suitable starting point
+            3) Use MLE optimization to obtain the final outcome
+        """
         linear_inversion_results = self.linear_inversion()
-        E = np.array([[1, 0, 0, 1]])
-        rho = np.array([[0.5], [0], [0], [0.5]])
+        n = len(self.gateset_basis.spam_labels)
+        E = self.default_measurement_op(n)
+        rho = self.default_init_state(n)
         Gs = [self.gateset_basis.gate_matrices[label]
               for label in self.gateset_basis.gate_labels]
         Fs = [self.gateset_basis.spam_matrix(label)
@@ -122,6 +151,88 @@ class GatesetTomographyFitter:
         optimizer.set_initial_value(E, rho, Gs_E)
         optimization_results = optimizer.optimize()
         return optimization_results
+
+
+class GaugeOptimize():
+    def __init__(self,
+                 Gs: List[np.array],
+                 initial_Gs_E: List[np.array],
+                 Fs: List[np.array],
+                 rho: np.array
+                 ):
+        """Initialize gauge optimizer fitter with the ideal and expected
+            outcomes.
+        Args:
+            Gs: The ideal expected gate matrices
+            initial_Gs_E: The experimentally-obtained gate approximations.
+            Fs: The SPAM circuit matrices
+            rho: The system's initial value (usually the |0> qubits)
+
+        Additional information:
+            Gauge optimization aims to find a basis in which the tomography
+            results are as close as possible to the ideal (noiseless) results
+
+            Given a gateset specification (E, rho, G1,...,Gn) and any
+            invertible matrix B, the gateset specification
+            (E*B^-1, B*rho, B*G1*B^-1,...,B*Gn*B^-1)
+            is indistinguishable from it by the tomography results.
+
+            B is called the gauge matrix and the goal of gauge optimization
+            is finding the B for which the resulting gateset description
+            is optimal in some sense; we choose to minimize the norm
+            difference between the gates found by experiment
+            and the "expected" gates in the ideal (noiseless) case.
+        """
+        self.Gs = Gs
+        self.Fs = Fs
+        self.initial_Gs_E = initial_Gs_E
+        self.d = np.shape(Gs[0])[0]
+        self.n = len(Gs)
+        self.rho = rho
+
+    def x_to_Gs_E(self, x: np.array) -> List[np.array]:
+        """Converts the gauge to the gateset defined by it
+                Args:
+                    x: An array representation of the B matrix
+
+                Returns:
+                    The gateset obtained from B
+
+                Additional information:
+                    Given a vector representation of B, this functions
+                    produces the list [B*G1*B^-1,...,B*Gn*B^-1]
+                    of gates correpsonding to the gauge B
+
+            """
+        B = np.array(x).reshape((self.d, self.d))
+        try:
+            BB = np.linalg.inv(B)
+            return [BB @ G @ B for G in self.initial_Gs_E]
+        except np.linalg.LinAlgError:
+            return np.inf
+
+    def obj_fn(self, x: np.array) -> float:
+        """The norm-based score function for the gauge optimizer
+            Args:
+                x: An array representation of the B matrix
+
+            Returns:
+                The sum of norm differences between the ideal gateset
+                and the one corresponding to B
+        """
+        Gs_E = self.x_to_Gs_E(x)
+        return sum([np.linalg.norm(G - G_E)
+                    for (G, G_E)
+                    in zip(self.Gs, Gs_E)])
+
+    def optimize(self) -> List[np.array]:
+        """The main optimization method
+            Returns:
+                The optimal gateset found by the gauge optimization
+        """
+        initial_value = np.array([(F @ self.rho).T[0] for F in self.Fs]).T
+        result = opt.minimize(self.obj_fn, initial_value)
+        return self.x_to_Gs_E(result.x)
 
 
 def split_list(l, sizes):
@@ -175,37 +286,6 @@ def get_cholesky_like_decomposition(mat):
     eigenvals[eigenvals < 0] = 0
     DD = np.diag(np.sqrt(eigenvals))
     return P @ DD
-
-
-class GaugeOptimize():
-    def __init__(self, Gs, initial_Gs_E, Fs, rho=None):
-        self.Gs = Gs
-        self.initial_Gs_E = initial_Gs_E
-        self.d = np.shape(Gs[0])[0]
-        self.n = len(Gs)
-        self.Fs = Fs
-        self.rho = rho
-        if self.rho is None:
-            self.rho = np.array([[0.5], [0], [0], [0.5]])
-
-    def x_to_Gs_E(self, x):
-        B = np.array(x).reshape((self.d, self.d))
-        try:
-            BB = np.linalg.inv(B)
-            return [BB @ G @ B for G in self.initial_Gs_E]
-        except np.linalg.LinAlgError:
-            return np.inf
-
-    def obj_fn(self, x):
-        Gs_E = self.x_to_Gs_E(x)
-        return sum([np.linalg.norm(G - G_E)
-                    for (G, G_E)
-                    in zip(self.Gs, Gs_E)])
-
-    def optimize(self):
-        initial_value = np.array([(F @ self.rho).T[0] for F in self.Fs]).T
-        result = opt.minimize(self.obj_fn, initial_value)
-        return self.x_to_Gs_E(result.x)
 
 
 class GST_Optimize():

@@ -22,7 +22,7 @@ from typing import Tuple
 import numpy as np
 
 # Import QISKit classes
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from .tomographybasis import TomographyBasis
 
 
