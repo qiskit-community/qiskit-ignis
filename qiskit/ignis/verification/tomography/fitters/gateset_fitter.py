@@ -19,7 +19,7 @@ Quantum gate set tomography fitter
 """
 
 import itertools
-from typing import Union, List, Dict, Tuple
+from typing import Union, List, Dict, Tuple, Optional
 import numpy as np
 import scipy.optimize as opt
 from qiskit.result import Result
@@ -473,48 +473,60 @@ class GST_Optimize():
             val = val + term_val
         return val
 
-    def ptm_matrix_values(self, x):
+    def ptm_matrix_values(self, x: np.array) -> List[np.array]:
+        """Returns a vectorization of the gates matrices
+            Args:
+                x: The vector representation of the GST data
+
+            Returns:
+                A vectorization of all the PTM matrices for the gates
+                in the GST data
+
+            Additional information:
+                This function is not trivial since the returned vector
+                is not a subset of x, since for each gate G, what x
+                stores in practice is a matrix T, such that the
+                Choi matrix of G is T@T^{dagger}. This needs to be
+                converted into the PTM representation of G.
+        """
         _, _, G_matrices = self.split_input_vector(x)
         result = []
         for G in G_matrices:
             result = result + matrix_to_vec(G)
         return result
 
-    def rho_trace(self, x):
+    def rho_trace(self, x: np.array) -> Tuple[float]:
+        """Returns the trace of the GST initial state
+            Args:
+                x: The vector representation of the GST data
+            Returns:
+                The trace of rho - the initial state of the GST. The real
+                and imaginary part are returned separately.
+        """
         _, rho, _ = self.split_input_vector(x)
         d = (2 ** self.qubits)  # rho is dxd and starts at variable d^2
         rho = rho.reshape((d, d))
         trace = sum([rho[i][i] for i in range(d)])
-        return [np.real(trace), np.imag(trace)]
+        return (np.real(trace), np.imag(trace))
 
-    def bounds_constraints(self):
-        """ E and rho are not subject to bounds
-            For each G, all the elements of G are in [-1,1]
-            and the first row is of the form [1,0,0,...,0]
-            since this is a PTM representation
+    def bounds_eq_constraint(self, x: np.array) -> List[float]:
+        """Equality MLE constraints on the GST data
+
+        Args:
+            x: The vector representation of the GST data
+
+        Returns:
+            The list of computed constraint values (should equal 0)
+
+        Additional information:
+            We have the following constraints on the GST data, due to
+            the PTM representation we are using:
+            1) G_{0,0} is 1 for every gate G
+            2) The rest of the first row of each G is 0.
+            3) G only has real values, so imaginary part is 0.
+
+            For additional info, see section 3.5.2 in arXiv:1509.02921
         """
-        n = len(self.Gs)
-        d = (2 ** self.qubits)  # rho is dxd and starts at variable d^2
-        ds = d ** 2
-        lb = []
-        ub = []
-
-        for _ in range(n):  # iterate over all Gs
-            lb.append(0.99)
-            ub.append(1)  # G^k_{0,0} is 1
-            for _ in range(ds - 1):
-                lb.append(0)
-                ub.append(0.001)  # G^k_{0,i} is 0
-            for _ in range((ds - 1) * ds):  # rest of G^k
-                lb.append(-1)
-                ub.append(1)
-            for _ in range(ds ** 2):  # the complex part of G^k
-                lb.append(0)
-                ub.append(0.001)
-
-        return opt.NonlinearConstraint(self.ptm_matrix_values, lb, ub)
-
-    def bounds_eq_constraint(self, x):
         ptm_matrix = self.ptm_matrix_values(x)
         bounds_eq = []
         n = len(self.Gs)
@@ -535,7 +547,24 @@ class GST_Optimize():
                 i += 1
         return bounds_eq
 
-    def bounds_ineq_constraint(self, x):
+    def bounds_ineq_constraint(self, x: np.array) -> List[float]:
+        """Inequality MLE constraints on the GST data
+
+            Args:
+                x: The vector representation of the GST data
+
+            Returns:
+                The list of computed constraint values (should be >= 0)
+
+            Additional information:
+                We have the following constraints on the GST data, due to
+                the PTM representation we are using:
+                1) Every row of G except the first has entries in [-1,1]
+
+                We implement this as two inequalities per entry.
+
+                For additional info, see section 3.5.2 in arXiv:1509.02921
+        """
         ptm_matrix = self.ptm_matrix_values(x)
         bounds_ineq = []
         n = len(self.Gs)
@@ -555,23 +584,46 @@ class GST_Optimize():
                 i += 1
         return bounds_ineq
 
-    def rho_trace_constraint(self, x):
-        """ The constraint Tr(rho) = 1"""
-        """ We demand real(Tr(rho)) == 1 and imag(Tr(rho)) == 0"""
+    def rho_trace_constraint(self, x: np.array) -> List[float]:
+        """ The constraint Tr(rho) = 1
+            Args:
+                x: The vector representation of the GST data
+
+            Return:
+                The list of computed constraint values (should be equal 0)
+
+            Additional information:
+                We demand real(Tr(rho)) == 1 and imag(Tr(rho)) == 0
+        """
         trace = self.rho_trace(x)
         return [trace[0] - 1, trace[1]]
-        # return opt.NonlinearConstraint(self.rho_trace, [0.99, 0], [1, 0.01])
 
-    def constraints(self):
+    def constraints(self) -> List[Dict]:
+        """Generates the constraints for the MLE optimization
+
+        Returns:
+            A list of constraints.
+
+        Additional information:
+            Each constraint is a dictionary containing
+            type ('eq' for equality == 0, 'ineq' for inequality >= 0)
+            and a function generating from the input x the values
+            that are being constrained.
+        """
         cons = []
-        # constraints.append(self.rho_trace_constraint())
-        # constraints.append(self.bounds_constraints())
         cons.append({'type': 'eq', 'fun': self.rho_trace_constraint})
         cons.append({'type': 'eq', 'fun': self.bounds_eq_constraint})
         cons.append({'type': 'ineq', 'fun': self.bounds_ineq_constraint})
         return cons
 
-    def process_result(self, x):
+    def process_result(self, x: np.array) -> Dict:
+        """Transforms the optimization result to a friendly format
+            Args:
+                x: the optimization result vector
+
+            Returns:
+                The final GST data, as dictionary.
+        """
         E, rho, G_matrices = self.split_input_vector(x)
         result = {}
         result['E'] = E
@@ -580,10 +632,27 @@ class GST_Optimize():
             result[self.Gs[i]] = G_matrices[i]
         return result
 
-    def set_initial_value(self, E, rho, Gs):
+    def set_initial_value(self,
+                          E: np.array,
+                          rho: np.array,
+                          Gs: List[np.array]
+                          ):
+        """Sets the initial value for the MLE optimization
+            Args:
+                E: The POVM measurement operator.
+                rho: The inital state.
+                Gs: A list of the gate matrices.
+
+        """
         self.initial_value = self.join_input_vector(E, rho, Gs)
 
-    def optimize(self, initial_value=None):
+    def optimize(self, initial_value: Optional[np.array] = None) -> Dict:
+        """Performs the MLE optimization for gate set tomography
+            Args:
+                initial_value: Vector representation of the initial value data
+            Returns:
+                The formatted results of the MLE optimization.
+        """
         if initial_value is not None:
             self.initial_value = initial_value
         result = opt.minimize(self.obj_fn, self.initial_value,
