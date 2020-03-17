@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 # State tomography circuits for measurement in Pauli basis
 ###########################################################################
 
+
 def state_tomography_circuits(
         circuit: QuantumCircuit,
         measured_qubits: QuantumRegister,
@@ -224,6 +225,7 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
 ###########################################################################
 # General state and process tomography circuit functions
 ###########################################################################
+
 
 def _tomography_circuits(
         circuit: QuantumCircuit,
