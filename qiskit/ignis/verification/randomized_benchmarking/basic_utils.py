@@ -22,7 +22,8 @@ from abc import ABC, abstractmethod
 class BasicUtils(ABC):
     """
         Abstract base class (ABS) for utils for
-        various groups and gate sets for randomized benchmarking
+        various groups and sets of gates for
+        randomized benchmarking.
     """
 
     @abstractmethod
@@ -42,7 +43,7 @@ class BasicUtils(ABC):
 
     @abstractmethod
     def elmnt_key(self):
-        """Return a key to a group element in the table."""
+        """Return a key of a group element in the table."""
         return
 
     @abstractmethod
@@ -53,7 +54,7 @@ class BasicUtils(ABC):
     @abstractmethod
     def load_tables(self):
         """Load pickled group tables,
-        or generate them if they do not exist"""
+        or generate them if they do not exist."""
         return
 
     @abstractmethod
@@ -63,15 +64,15 @@ class BasicUtils(ABC):
 
     @abstractmethod
     def random_gates(self):
-        """Pick a random group element"""
+        """Pick a random group element."""
         return
 
     @abstractmethod
     def find_inverse_gates(self):
-        """Compute the inverse group element."""
+        """Compute an inverse of a group element."""
         return
 
     @abstractmethod
     def find_key(self):
-        """Returns a key to the group element."""
+        """Return a key to the group element."""
         return

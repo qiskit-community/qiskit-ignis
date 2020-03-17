@@ -12,8 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Quantum tomography basis
+"""Quantum tomography basis
 """
 
 # Tomography Circuit Generation Functions
@@ -24,3 +23,11 @@ from .circuits import state_tomography_circuits
 from .circuits import process_tomography_circuits
 from .circuits import default_basis
 from .circuits import tomography_circuit_tuples
+
+from .paulibasis import pauli_measurement_circuit
+from .paulibasis import pauli_preparation_circuit
+from .paulibasis import pauli_measurement_matrix
+from .paulibasis import pauli_preparation_matrix
+
+from .sicbasis import sicpovm_preparation_circuit
+from .sicbasis import sicpovm_preparation_matrix

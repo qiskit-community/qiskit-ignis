@@ -12,3 +12,4 @@ ddt>=1.2.0
 jupyter
 jupyter-sphinx
 reno
+matplotlib
