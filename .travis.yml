@@ -96,6 +96,7 @@ matrix:
     - stage: all_python
       <<: *stage_osx
       name: "Python 3.8 Tests on OSX"
+      if: type = cron
       env:
         - MPLBACKEND=ps
         - PYTHON_VERSION=3.8.1
