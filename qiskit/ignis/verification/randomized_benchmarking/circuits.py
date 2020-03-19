@@ -530,7 +530,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                         rb_circ_type + '_X_length_%d_seed_%d' % \
                         (length_index, seed + seed_offset)
                     cnotdihedral_interleaved_circ.name = \
-                        rb_circ_type + 'interleaved_X_length_%d_seed_%d' % \
+                        rb_circ_type + '_interleaved_X_length_%d_seed_%d' % \
                         (length_index, seed + seed_offset)
 
                 circuits[seed].append(circ)
