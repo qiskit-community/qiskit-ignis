@@ -107,4 +107,4 @@ from .tomography import (state_tomography_circuits,
                          TomographyFitter,
                          marginal_counts, combine_counts,
                          expectation_counts, count_keys)
-from .accreditation import accreditation_circuits, accreditationFitter
+from .accreditation import accreditationCircuits, accreditationFitter,QOTP, QOTPCorrectCounts
