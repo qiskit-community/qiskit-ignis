@@ -12,15 +12,14 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Symmetric informationally complete (SIC)-POVM tomography preparation basis.
+"""Symmetric informationally complete (SIC)-POVM tomography preparation basis.
 """
 
 # Needed for functions
 import numpy as np
 
 # Import QISKit classes
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, QuantumRegister
 from .tomographybasis import TomographyBasis
 
 
@@ -28,18 +27,20 @@ from .tomographybasis import TomographyBasis
 # Built-in circuit functions
 ###########################################################################
 
-def sicpovm_preparation_circuit(op, qubit):
+def sicpovm_preparation_circuit(op: str, qubit: QuantumRegister
+                                ) -> QuantumCircuit:
     """
     Return a SIC-POVM projector preparation circuit.
 
-    This circuit assumes the qubit is initialized in the Zp eigenstate [1, 0].
+    This circuit assumes the qubit is initialized in the
+    :math:`Z_p` eigenstate :math:`[1, 0]`.
 
     Params:
-        op (str): SIC-POVM element label 'S0', 'S1', 'S2' or 'S3'.
-        qubit (QuantumRegister tuple): qubit to be prepared.
+        op: SIC-POVM element label 'S0', 'S1', 'S2' or 'S3'.
+        qubit: qubit to be prepared.
 
     Returns:
-        A QuantumCircuit object.
+        The preparation circuit
     """
     circ = QuantumCircuit(qubit.register)
     theta = -2 * np.arctan(np.sqrt(2))
@@ -56,23 +57,31 @@ def sicpovm_preparation_circuit(op, qubit):
 # Matrix functions for built-in bases
 ###########################################################################
 
-def sicpovm_preparation_matrix(label):
-    """
-    Return the matrix corresonding to a SIC-POVM preparation.
+def sicpovm_preparation_matrix(label: str) -> np.array:
+    r"""
+    Return the matrix corresponding to a SIC-POVM preparation.
 
     Args:
-        label (str): single-qubit SIC-POVM element label.
+        label: single-qubit SIC-POVM element label.
 
     Returns:
-        A Numpy array for the SIC-POVM element.
+        The matrix for the SIC-POVM element.
         Allowed inputs and corresponding returned matrices are:
 
-            'S0' : [[1, 0], [0, 0]]
-            'S1' : [[1, np.sqrt(2)], [np.sqrt(2), 2]]/ 3
-            'S2' : [[1, exp(pi * 2j / 3) * sqrt(2)],
-                     [exp(-pi * 2j / 3) * sqrt(2), 2]] / 3
-            'S3' : [[1, exp(-pi * 2j / 3) * sqrt(2)],
-                     [exp(pi * 2j / 3) * sqrt(2), 2]] / 3
+            'S0' : :math:`\left(\begin{array}
+            {cc}1 & 0\\0 & 0\end{array}\right)`
+
+            'S1' : :math:`\frac{1}{3}
+            \left(\begin{array}{cc}1 & \sqrt{2}\\
+            \sqrt{2} & 2\end{array}\right)`
+
+            'S2' : :math:`\frac{1}{3}
+            \left(\begin{array}{cc}1 & \sqrt{2}\cdot e^{\frac{2\pi i}{3}}\\
+            \sqrt{2}\cdot e^{-\frac{2\pi i}{3}} & 2\end{array}\right)`
+
+            'S3' : :math:`\frac{1}{3}
+            \left(\begin{array}{cc}1 & \sqrt{2}\cdot e^{-\frac{2\pi i}{3}}\\
+            \sqrt{2}\cdot e^{\frac{2\pi i}{3}} & 2\end{array}\right)`
     """
     res = np.array([])
     # Return matrix for allowed label
@@ -90,10 +99,11 @@ def sicpovm_preparation_matrix(label):
 
 
 ###########################################################################
-# PauliBasis Object
+# SICBasis Object
 ###########################################################################
 
-SICBasis = TomographyBasis('SIC', measurement=None,
+SICBasis = TomographyBasis('SIC',  # pylint: disable=invalid-name
+                           measurement=None,
                            preparation=(('S0', 'S1', 'S2', 'S3'),
                                         sicpovm_preparation_circuit,
                                         sicpovm_preparation_matrix))

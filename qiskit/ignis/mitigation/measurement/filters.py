@@ -32,17 +32,19 @@ from ...verification.tomography import count_keys
 
 class MeasurementFilter():
     """
-    Measurement error mitigation filter
+    Measurement error mitigation filter.
 
     Produced from a measurement calibration fitter and can be applied
-    to data
+    to data.
 
     """
 
-    def __init__(self, cal_matrix, state_labels):
+    def __init__(self,
+                 cal_matrix: np.matrix,
+                 state_labels: list):
         """
         Initialize a measurement error mitigation filter using the cal_matrix
-        from a measurement calibration fitter
+        from a measurement calibration fitter.
 
         Args:
             cal_matrix: the calibration matrix for applying the correction
@@ -72,38 +74,36 @@ class MeasurementFilter():
         """Set cal_matrix."""
         self._cal_matrix = new_cal_matrix
 
-    def apply(self, raw_data, method='least_squares'):
+    def apply(self,
+              raw_data,
+              method='least_squares'):
         """Apply the calibration matrix to results.
 
         Args:
             raw_data: The data to be corrected. Can be in a number of forms:
-                 * Form1: a counts dictionary from results.get_counts
-                 * Form2: a list of counts of length==len(state_labels)
-                 * Form3: a list of counts of length==M*len(state_labels) where
-                 M is an integer (e.g. for use with the tomography data)
-                 * Form4: a qiskit Result
 
-            method (str): fitting method. If None, then least_squares is used.
+                 Form 1: a counts dictionary from results.get_counts
+
+                 Form 2: a list of counts of `length==len(state_labels)`
+
+                 Form 3: a list of counts of `length==M*len(state_labels)` where M is an
+                 integer (e.g. for use with the tomography data)
+
+                 Form 4: a qiskit Result
+
+            method (str): fitting method. If `None`, then least_squares is used.
+
                 ``pseudo_inverse``: direct inversion of the A matrix
+
                 ``least_squares``: constrained to have physical probabilities
 
         Returns:
-            The corrected data in the same form as raw_data
+            The corrected data in the same form as `raw_data`
 
-        .. code-block::
+        Raises:
+            QiskitError: if `raw_data` is not an integer multiple
+                of the number of calibrated states.
 
-            calcircuits, state_labels = complete_measurement_calibration(
-                qiskit.QuantumRegister(5))
-            job = qiskit.execute(calcircuits)
-            meas_fitter = CompleteMeasFitter(job.results(),
-                                            state_labels)
-            meas_filter = MeasurementFilter(meas_fitter.cal_matrix)
-
-            job2 = qiskit.execute(my_circuits)
-            result2 = job2.results()
-
-            error_mitigated_counts = meas_filter.apply(
-                result2.get_counts('circ1'))
         """
 
         # check forms of raw_data
@@ -208,22 +208,22 @@ class MeasurementFilter():
 
 class TensoredFilter():
     """
-    Tensored measurement error mitigation filter
+    Tensored measurement error mitigation filter.
 
     Produced from a tensored measurement calibration fitter and can be applied
     to data.
     """
 
-    def __init__(self, cal_matrices, substate_labels_list):
+    def __init__(self,
+                 cal_matrices: np.matrix,
+                 substate_labels_list: list):
         """
         Initialize a tensored measurement error mitigation filter using
         the cal_matrices from a tensored measurement calibration fitter.
 
         Args:
-            cal_matrices: the calibration matrices for applying the correction
-            qubit_list_sizes: the lengths of the lists in mit_pattern
-                (see tensored_meas_cal in circuits.py for mit_pattern)
-            substate_labels_list (list of lists): for each calibration matrix
+            cal_matrices: the calibration matrices for applying the correction.
+            substate_labels_list: for each calibration matrix
                 a list of the states (as strings, states in the subspace)
         """
 
@@ -273,7 +273,7 @@ class TensoredFilter():
 
     @property
     def nqubits(self):
-        """Return the number of qubits."""
+        """Return the number of qubits. See also MeasurementFilter.apply() """
         return sum(self._qubit_list_sizes)
 
     def apply(self, raw_data, method='least_squares'):
@@ -281,16 +281,25 @@ class TensoredFilter():
         Apply the calibration matrices to results.
 
         Args:
-            raw_data: The data to be corrected. Can be in a number of forms.
-                a counts dictionary from results.get_countsphy data);
-                or a qiskit Result
+            raw_data: The data to be corrected. Can be in one of two forms:
 
-            method (str): fitting method. If None, then least_squares is used.
-                'pseudo_inverse': direct inversion of the cal matrices.
-                'least_squares': constrained to have physical probabilities.
+                * A counts dictionary from results.get_counts
+
+                * A Qiskit Result
+
+            method (str): fitting method. The following methods are supported:
+
+                * 'pseudo_inverse': direct inversion of the cal matrices.
+
+                * 'least_squares': constrained to have physical probabilities.
+
+                * If `None`, 'least_squares' is used.
 
         Returns:
             The corrected data in the same form as raw_data
+
+        Raises:
+            QiskitError: if raw_data is not in a one of the defined forms.
         """
 
         all_states = count_keys(self.nqubits)

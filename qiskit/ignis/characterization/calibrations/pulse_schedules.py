@@ -26,7 +26,7 @@ from qiskit.scheduler import schedule_circuit, ScheduleConfig
 
 def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
                    width_sigma_ratio=4, drives=None, cmd_def=None,
-                   meas_map=None):
+                   inst_map=None, meas_map=None):
     """
     Generates schedules for a rabi experiment using a Gaussian pulse
 
@@ -39,7 +39,8 @@ def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
         width_sigma_ratio: set sigma to a certain ratio of the width (use if
         pulse_sigma is None)
         drives: list of DriveChannel objects
-        cmd_def: CmdDef object to use
+        cmd_def: CmdDef object to use (deprecated)
+        inst_map: InstructionScheduleMap object to use
         meas_map: meas_map to use
 
     Returns:
@@ -49,8 +50,10 @@ def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
 
     xdata = amp_list
 
-    # copy the command def
-    cmd_def = copy.deepcopy(cmd_def)
+    # copy the instruction to schedule mapping
+    inst_map = copy.deepcopy(inst_map)
+    if not inst_map:
+        inst_map = copy.deepcopy(cmd_def)
 
     if pulse_sigma is None:
         pulse_sigma = pulse_width / width_sigma_ratio
@@ -81,9 +84,9 @@ def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
 
             schedule += rabi_pulse(drives[qubit])
 
-            # append this schedule to the cmd_def
-            cmd_def.add('rabi_%d' % circ_index, qubits=[qubit],
-                        schedule=schedule)
+            # append this schedule to the inst_map
+            inst_map.add('rabi_%d' % circ_index, qubits=[qubit],
+                         schedule=schedule)
 
             circ.append(rabi_gate, [qr[qubit]])
 
@@ -93,7 +96,7 @@ def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
         circuits.append(circ)
 
         # schedule
-        schedule_config = ScheduleConfig(cmd_def, meas_map)
+        schedule_config = ScheduleConfig(inst_map, meas_map)
         rabi_sched = [schedule_circuit(qcirc,
                                        schedule_config)
                       for qcirc in circuits]
@@ -104,7 +107,7 @@ def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
 def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
                    pulse_sigma=None,
                    width_sigma_ratio=4, drives=None, cmd_def=None,
-                   meas_map=None):
+                   inst_map=None, meas_map=None):
     """
     Generates schedules for a drag experiment doing a pulse then
     the - pulse
@@ -119,7 +122,8 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
         width_sigma_ratio: set sigma to a certain ratio of the width (use if
         pulse_sigma is None)
         drives: list of DriveChannel objects
-        cmd_def: CmdDef object to use
+        cmd_def: CmdDef object to use (deprecated)
+        inst_map: InstructionScheduleMap object to use
         meas_map: meas_map to use
 
     Returns:
@@ -129,8 +133,10 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
 
     xdata = beta_list
 
-    # copy the command def
-    cmd_def = copy.deepcopy(cmd_def)
+    # copy the instruction to schedule mapping
+    inst_map = copy.deepcopy(inst_map)
+    if not inst_map:
+        inst_map = copy.deepcopy(cmd_def)
 
     if pulse_sigma is None:
         pulse_sigma = pulse_width / width_sigma_ratio
@@ -165,9 +171,9 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
 
             schedule += drag_pulse(drives[qubit])
 
-            # append this schedule to the cmd_def
-            cmd_def.add('drag_%d_%d' % (circ_index, qubit), qubits=[qubit],
-                        schedule=schedule)
+            # append this schedule to the inst_map
+            inst_map.add('drag_%d_%d' % (circ_index, qubit), qubits=[qubit],
+                         schedule=schedule)
 
             # negative pulse
             drag_pulse2 = pulse_lib.drag(duration=pulse_width,
@@ -186,9 +192,9 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
 
             schedule2 += drag_pulse2(drives[qubit])
 
-            # append this schedule to the cmd_def
-            cmd_def.add('drag2_%d_%d' % (circ_index, qubit), qubits=[qubit],
-                        schedule=schedule2)
+            # append this schedule to the inst_map
+            inst_map.add('drag2_%d_%d' % (circ_index, qubit), qubits=[qubit],
+                         schedule=schedule2)
 
             circ.append(drag_gate, [qr[qubit]])
             # circ.u1(np.pi, [qr[qubit]])
@@ -200,7 +206,7 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
         circuits.append(circ)
 
         # schedule
-        schedule_config = ScheduleConfig(cmd_def, meas_map)
+        schedule_config = ScheduleConfig(inst_map, meas_map)
         drag_sched = [schedule_circuit(qcirc,
                                        schedule_config)
                       for qcirc in circuits]
