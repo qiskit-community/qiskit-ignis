@@ -52,8 +52,9 @@ class GateSetBasis:
 
         The gates data is a tuple (names, circuit_fn, matrix_list) containing
         * **names** - the names (strings) of the elements of the gateset.
-        * **circuit_fn** a function taking a triple
-            (QuantumCircuit, QuantumRegister, str) and appends to the circuit
+        * **circuit_fns** a dictionary str -> function, that for every
+            gate name returns a function taking a pair
+            (QuantumCircuit, QuantumRegister) and appends to the circuit
             the gate on the given qubits denotes by the given string.
         * **matrix_list** - a tuple containing the matrices describing
             the gateset elements.
@@ -70,7 +71,7 @@ class GateSetBasis:
         """
         self.name = name
         self.gate_labels = gates[0]
-        self.gate_func = gates[1]
+        self.gate_funcs = gates[1]
         self.gate_matrices = dict(zip(self.gate_labels, gates[2]))
         self.spam_labels = spam[0]
         self.spam_spec = spam[1]
@@ -95,7 +96,7 @@ class GateSetBasis:
             raise RuntimeError("{} is not a SPAM circuit".format(op))
         op_gates = self.spam_spec[op]
         for gate in op_gates:
-            self.gate_func(circ, qubit, gate)
+            self.gate_funcs[gate](circ, qubit)
 
     def measurement_circuit(self,
                             op: str,
@@ -199,27 +200,11 @@ class GateSetBasis:
                                             self.preparation_matrix))
 
 
-def standard_gates_func(circ: QuantumCircuit,
-                        qubit: QuantumRegister,
-                        op: str
-                        ):
-    """
-        The gate creation function for the default set of gates
-        we use for gate set tomography:
-        Id and rotations by 90 degrees around the X and Y axis
-
-        Params:
-            circ: the circuit to add the gate to
-            qubit: qubit to be operated on
-            op: the gate name
-    """
-    if op == 'Id':
-        pass
-    if op == 'X_Rot_90':
-        circ.u2(-np.pi / 2, np.pi / 2, qubit)
-    if op == 'Y_Rot_90':
-        circ.u2(np.pi, np.pi, qubit)
-
+standard_gates_funcs = {
+    'Id': lambda circ, qubit: None,
+    'X_Rot_90': lambda circ, qubit: circ.u2(-np.pi / 2, np.pi / 2, qubit),
+    'Y_Rot_90': lambda circ, qubit: circ.u2(np.pi, np.pi, qubit)
+}
 
 # PTM representation of Id
 G0 = np.array([[1, 0, 0, 0],
@@ -239,7 +224,7 @@ G2 = np.array([[1, 0, 0, 0],
 standard_gates_matrices = (G0, G1, G2)
 StandardGatesetBasis = GateSetBasis('Standard GST',
                                     (('Id', 'X_Rot_90', 'Y_Rot_90'),
-                                     standard_gates_func,
+                                     standard_gates_funcs,
                                      standard_gates_matrices),
                                     (('F0', 'F1', 'F2', 'F3'),
                                      {'F0': ('Id',),

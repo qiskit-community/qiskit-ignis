@@ -185,7 +185,7 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
     # Experiments of the form <E|F_i G_k F_j|rho>
     for gate in gateset_basis.gate_labels:
         circuit = QuantumCircuit(qubit)
-        gateset_basis.gate_func(circuit, qubit, gate)
+        gateset_basis.gate_funcs[gate](circuit, qubit)
         gst_circuits = _tomography_circuits(circuit, qubit, qubit,
                                             meas_labels=meas_labels,
                                             meas_basis=meas_basis,
