@@ -20,7 +20,7 @@ RB Helper functions
 """
 
 
-from typing import List, Optional, Union, Dict
+from typing import List, Union, Dict
 from warnings import warn
 
 import numpy as np
@@ -47,7 +47,9 @@ def count_gates(qobj, basis, qubits):
     Additional Information:
         nQ gates are counted in each qubit's set of gates.
     """
-    warn('The function `count_gates` will be deprecated.', DeprecationWarning)
+    warn('The function `count_gates` will be deprecated. '
+         'Gate count is integrated into `gates_per_clifford` function.',
+         DeprecationWarning)
 
     nexp = len(qobj.experiments)
     ngates = np.zeros([nexp, len(qubits), len(basis)], dtype=int)
@@ -64,13 +66,11 @@ def count_gates(qobj, basis, qubits):
     return ngates
 
 
-def gates_per_clifford(transpiled_circuits_list: List[List[QuantumCircuit]],
-                       clifford_lengths: Union[np.ndarray, List[int]],
-                       basis: List[str],
-                       qubits: List[int],
-                       qobj_list: Optional[List[QasmQobj]] = None,
-                       clifford_length: Optional[np.ndarray] = None
-                       ) -> Dict[int, Dict[str, float]]:
+def gates_per_clifford(
+        transpiled_circuits_list: Union[List[List[QuantumCircuit]], List[QasmQobj]],
+        clifford_lengths: Union[np.ndarray, List[int]],
+        basis: List[str],
+        qubits: List[int]) -> Dict[int, Dict[str, float]]:
     """Take a list of transpiled ``QuantumCircuit`` and use these to calculate
     the number of gates per Clifford. Each ``QuantumCircuit`` should be transpiled into
     given ``basis`` set. The result can be used to convert a value of error per Clifford
@@ -118,54 +118,45 @@ def gates_per_clifford(transpiled_circuits_list: List[List[QuantumCircuit]],
         clifford_lengths: number of Cliffords in each circuit
         basis: gates basis for the qobj
         qubits: qubits to count over
-        qobj_list: Deprecated. see ``transpiled_circuits_list``
-        clifford_length: Deprecated. see ``clifford_lengths``
 
     Returns:
         Nested dictionary of gate counts per Clifford.
     """
-    if qobj_list is not None:
-        transpiled_circuits_list = qobj_list
-        warn('The argument `qobj_list` will be deprecated. Use `transpiled_circuit_list`.',
-             DeprecationWarning)
-
-    if clifford_length is not None:
-        clifford_lengths = clifford_length
-        warn('The argument `clifford_length` will be deprecated. Use `clifford_lengths`.',
-             DeprecationWarning)
-
-    ncliffs = 0
     ngates = {qubit: {base: 0 for base in basis} for qubit in qubits}
 
+    if isinstance(transpiled_circuits_list[0], QasmQobj):
+        warn('`QasmQobj` input will be deprecated. Use transpiled `QuantumCircuit` instead. '
+             'Gate counts based on `QasmQobj` has no unittest and may return wrong counts.',
+             DeprecationWarning)
+
     for transpiled_circuits in transpiled_circuits_list:
-        if isinstance(transpiled_circuits, list):
-            for ncliff, transpiled_circuit in zip(clifford_lengths, transpiled_circuits):
-                for instr, qregs, _ in transpiled_circuit.data:
-                    for qreg in qregs:
-                        try:
-                            ngates[qreg.index][instr.name] += 1
-                        except KeyError:
-                            pass
-                # include inverse
-                ncliffs += ncliff + 1
-        else:
-            warn('`QasmQobj` input will be deprecated. Use `QuantumCircuit` instead. '
-                 'Gate counts based on `QasmQobj` has no unittest and may return wrong counts.',
-                 DeprecationWarning)
+        if isinstance(transpiled_circuits, QasmQobj):
             # TODO: remove this code block after deprecation period
-            for ncliff, experiment in zip(clifford_lengths, transpiled_circuits.experiments):
+            for experiment in transpiled_circuits.experiments:
                 for instr in experiment.instructions:
                     for q_ind in instr.qubits:
                         try:
                             ngates[q_ind][instr.name] += 1
                         except KeyError:
                             pass
-                # include inverse
-                ncliffs += ncliff + 1
+        else:
+            for transpiled_circuit in transpiled_circuits:
+                if isinstance(transpiled_circuit, QuantumCircuit):
+                    for instr, qregs, _ in transpiled_circuit.data:
+                        for qreg in qregs:
+                            try:
+                                ngates[qreg.index][instr.name] += 1
+                            except KeyError:
+                                pass
+                else:
+                    raise TypeError('Input object is not `QuantumCircuit`.')
+
+    # include inverse, ie + 1 for all clifford length
+    total_ncliffs = len(transpiled_circuits_list) * np.sum(np.array(clifford_lengths) + 1)
 
     for qubit in qubits:
         for base in basis:
-            ngates[qubit][base] /= ncliffs
+            ngates[qubit][base] /= total_ncliffs
 
     return ngates
 

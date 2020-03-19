@@ -12,7 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=undefined-loop-variable, missing-docstring
+# pylint: disable=undefined-loop-variable
 
 """
 Run through RB for different qubit numbers to check that it's working
@@ -694,6 +694,7 @@ class TestRB(unittest.TestCase):
 
 
 class TestRBUtils(unittest.TestCase):
+    """Test for RB utilities."""
 
     def test_coherence_limit(self):
         """Test coherence_limit."""
