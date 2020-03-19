@@ -67,7 +67,7 @@ class TestT2Star(unittest.TestCase):
 
         # Setting parameters
 
-        num_of_gates = num_of_gates = np.append(
+        num_of_gates = np.append(
             (np.linspace(10, 150, 10)).astype(int),
             (np.linspace(160, 450, 5)).astype(int))
         gate_time = 0.1
@@ -141,7 +141,7 @@ class TestT1(unittest.TestCase):
         parameter.
         """
 
-        # 25 numbers ranging from 1 to 200, linearly spaced
+        # 15 numbers ranging from 1 to 200, linearly spaced
         num_of_gates = (np.linspace(1, 200, 15)).astype(int)
         gate_time = 0.11
         qubits = [0]

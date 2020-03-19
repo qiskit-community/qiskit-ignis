@@ -14,13 +14,14 @@
 
 # pylint: disable=missing-docstring
 # pylint: disable=unexpected-keyword-arg
+# pylint: disable=invalid-name
 
 import unittest
 
 import numpy
 import qiskit
 from qiskit import QuantumRegister, QuantumCircuit, Aer
-from qiskit.quantum_info import state_fidelity, Statevector
+from qiskit.quantum_info import state_fidelity, partial_trace, Statevector
 import qiskit.ignis.verification.tomography as tomo
 import qiskit.ignis.verification.tomography.fitters.cvx_fit as cvx_fit
 
@@ -69,6 +70,34 @@ class TestStateTomography(unittest.TestCase):
         self.assertAlmostEqual(F_bell_cvx, 1, places=1)
         F_bell_mle = state_fidelity(psi, rho_mle, validate=False)
         self.assertAlmostEqual(F_bell_mle, 1, places=1)
+
+    def test_bell_2_qubits_no_register(self):
+        bell = QuantumCircuit(2)
+        bell.h(0)
+        bell.cx(0, 1)
+
+        rho_cvx, rho_mle, psi = run_circuit_and_tomography(bell, (0, 1))
+        F_bell_cvx = state_fidelity(psi, rho_cvx, validate=False)
+        self.assertAlmostEqual(F_bell_cvx, 1, places=1)
+        F_bell_mle = state_fidelity(psi, rho_mle, validate=False)
+        self.assertAlmostEqual(F_bell_mle, 1, places=1)
+
+    def test_different_qubit_sets(self):
+        circuit = QuantumCircuit(5)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.x(2)
+        circuit.s(3)
+        circuit.z(4)
+        circuit.cx(1, 3)
+
+        for qubit_pair in [(0, 1), (2, 3), (1, 4), (0, 3)]:
+            rho_cvx, rho_mle, psi = run_circuit_and_tomography(circuit, qubit_pair)
+            psi = partial_trace(psi, [x for x in range(5) if x not in qubit_pair])
+            F_cvx = state_fidelity(psi, rho_cvx, validate=False)
+            self.assertAlmostEqual(F_cvx, 1, places=1)
+            F_mle = state_fidelity(psi, rho_mle, validate=False)
+            self.assertAlmostEqual(F_mle, 1, places=1)
 
     def test_bell_3_qubits(self):
         q3 = QuantumRegister(3)

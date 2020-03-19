@@ -68,6 +68,8 @@ extensions = [
     'jupyter_sphinx.execute',
     'sphinx_autodoc_typehints',
     'reno.sphinxext',
+    'IPython.sphinxext.ipython_console_highlighting',
+    'IPython.sphinxext.ipython_directive',
 ]
 html_static_path = ['_static']
 templates_path = ['_templates']

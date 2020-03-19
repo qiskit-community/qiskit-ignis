@@ -30,6 +30,11 @@ Quantum Volume
 Randomized Benchmarking
 =======================
 
+Randomization benchmarking (RB) is a well-known technique to measure average gate performance
+by running sequences of random Clifford gates that should return the qubits to the initial state.
+Qiskit Ignis has tools to generate one- and two-qubit gate Clifford RB sequences simultaneously,
+as well as performing interleaved RB, purity RB and RB on the non-Clifford CNOT-Dihedral group.
+
 .. autosummary::
    :toctree: ../stubs/
 
