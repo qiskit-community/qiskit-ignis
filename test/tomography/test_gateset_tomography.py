@@ -19,7 +19,7 @@ from qiskit import Aer
 from qiskit.compiler import assemble
 from qiskit.ignis.verification.tomography import GatesetTomographyFitter
 from qiskit.ignis.verification.tomography import gateset_tomography_circuits
-from qiskit.ignis.verification.tomography.basis import StandardGatesetBasis
+from qiskit.ignis.verification.tomography.basis import default_gateset_basis
 
 from qiskit.providers.aer.noise.errors import QuantumError
 from qiskit.providers.aer.noise.errors import depolarizing_error
@@ -30,7 +30,7 @@ class TestGatesetTomography(unittest.TestCase):
     @staticmethod
     def collect_tomography_data(shots=10000,
                                 noise_model=None,
-                                gateset_basis='Standard GST'):
+                                gateset_basis='Default'):
         backend_qasm = Aer.get_backend('qasm_simulator')
         circuits = gateset_tomography_circuits(gateset_basis=gateset_basis)
         qobj = assemble(circuits, shots=shots)
@@ -60,9 +60,12 @@ class TestGatesetTomography(unittest.TestCase):
             self.assertAlmostEqual(distance, 0, delta=delta, msg=msg)
 
     def run_test_on_basis_and_noise(self,
-                                    gateset_basis=StandardGatesetBasis,
+                                    gateset_basis='Default',
                                     noise_model=None,
                                     noise_ptm=None):
+        if gateset_basis == 'Default':
+            gateset_basis = default_gateset_basis()
+
         labels = gateset_basis.gate_labels
         gates = gateset_basis.gate_matrices
 

@@ -24,7 +24,7 @@ import numpy as np
 import scipy.optimize as opt
 from qiskit.result import Result
 from qiskit.quantum_info import Choi, PTM
-from ..basis.gatesetbasis import StandardGatesetBasis, GateSetBasis
+from ..basis.gatesetbasis import default_gateset_basis, GateSetBasis
 from .base_fitter import TomographyFitter
 
 
@@ -32,7 +32,7 @@ class GatesetTomographyFitter:
     def __init__(self,
                  result: Result,
                  circuits: List,
-                 gateset_basis: Union[GateSetBasis, str] = 'Standard GST'
+                 gateset_basis: Union[GateSetBasis, str] = 'Default'
                  ):
         """Initialize gateset tomography fitter with experimental data.
 
@@ -41,12 +41,12 @@ class GatesetTomographyFitter:
                             tomography circuits.
             circuits: a list of circuits or circuit names to extract
                             count information from the result object.
-            gateset_basis: (default: 'Standard GST') Representation of
+            gateset_basis: (default: 'Default') Representation of
             the gates and SPAM circuits of the gateset
         """
         self.gateset_basis = gateset_basis
-        if gateset_basis == 'Standard GST':
-            self.gateset_basis = StandardGatesetBasis
+        if gateset_basis == 'Default':
+            self.gateset_basis = default_gateset_basis()
         data = TomographyFitter(result, circuits).data
         self.probs = {}
         for key, vals in data.items():

@@ -18,7 +18,7 @@ Gate set tomography preparation and measurement basis
 
 # Needed for functions
 import functools
-from typing import Tuple
+from typing import Tuple, Callable
 import numpy as np
 
 # Import QISKit classes
@@ -70,11 +70,23 @@ class GateSetBasis:
             spam: a tuple containing the SPAM data
         """
         self.name = name
-        self.gate_labels = gates[0]
+        self.gate_labels = list(gates[0])
         self.gate_funcs = gates[1]
         self.gate_matrices = dict(zip(self.gate_labels, gates[2]))
         self.spam_labels = spam[0]
         self.spam_spec = spam[1]
+
+    def add_gate(self, name: str, gate_func: Callable, gate_matrix: np.array):
+        """Adds a new gate to the gateset
+            Args:
+                str: the name of the new gate
+                gate_func: a function taking (QuantumCircuit, QuantumRegister)
+                and adding the gate to the circuit
+                gate_matrix: The PTM matrix of the gate
+        """
+        self.gate_labels.append(name)
+        self.gate_funcs[name] = gate_func
+        self.gate_matrices[name] = gate_matrix
 
     def add_to_circuit(self,
                        circ: QuantumCircuit,
@@ -200,35 +212,40 @@ class GateSetBasis:
                                             self.preparation_matrix))
 
 
-standard_gates_funcs = {
-    'Id': lambda circ, qubit: None,
-    'X_Rot_90': lambda circ, qubit: circ.u2(-np.pi / 2, np.pi / 2, qubit),
-    'Y_Rot_90': lambda circ, qubit: circ.u2(np.pi, np.pi, qubit)
-}
+def default_gateset_basis():
+    """Returns a default tomographically-complete gateset basis
+        Return value: The gateset given as example 3.4.1 in arXiv:1509.02921
 
-# PTM representation of Id
-G0 = np.array([[1, 0, 0, 0],
-               [0, 1, 0, 0],
-               [0, 0, 1, 0],
-               [0, 0, 0, 1]])
-# X rotation by 90 degrees
-G1 = np.array([[1, 0, 0, 0],
-               [0, 1, 0, 0],
-               [0, 0, 0, -1],
-               [0, 0, 1, 0]])
-# Y rotation by 90 degrees
-G2 = np.array([[1, 0, 0, 0],
-               [0, 0, 0, -1],
-               [0, 0, 1, 0],
-               [0, 1, 0, 0]])
-standard_gates_matrices = (G0, G1, G2)
-StandardGatesetBasis = GateSetBasis('Standard GST',
-                                    (('Id', 'X_Rot_90', 'Y_Rot_90'),
-                                     standard_gates_funcs,
-                                     standard_gates_matrices),
-                                    (('F0', 'F1', 'F2', 'F3'),
-                                     {'F0': ('Id',),
-                                      'F1': ('X_Rot_90',),
-                                      'F2': ('Y_Rot_90',),
-                                      'F3': ('X_Rot_90', 'X_Rot_90')
-                                      }))
+    """
+    standard_gates_funcs = {
+        'Id': lambda circ, qubit: None,
+        'X_Rot_90': lambda circ, qubit: circ.u2(-np.pi / 2, np.pi / 2, qubit),
+        'Y_Rot_90': lambda circ, qubit: circ.u2(np.pi, np.pi, qubit)
+    }
+
+    # PTM representation of Id
+    G0 = np.array([[1, 0, 0, 0],
+                   [0, 1, 0, 0],
+                   [0, 0, 1, 0],
+                   [0, 0, 0, 1]])
+    # X rotation by 90 degrees
+    G1 = np.array([[1, 0, 0, 0],
+                   [0, 1, 0, 0],
+                   [0, 0, 0, -1],
+                   [0, 0, 1, 0]])
+    # Y rotation by 90 degrees
+    G2 = np.array([[1, 0, 0, 0],
+                   [0, 0, 0, -1],
+                   [0, 0, 1, 0],
+                   [0, 1, 0, 0]])
+    standard_gates_matrices = (G0, G1, G2)
+    return GateSetBasis('Standard GST',
+                                        (('Id', 'X_Rot_90', 'Y_Rot_90'),
+                                         standard_gates_funcs,
+                                         standard_gates_matrices),
+                                        (('F0', 'F1', 'F2', 'F3'),
+                                         {'F0': ('Id',),
+                                          'F1': ('X_Rot_90',),
+                                          'F2': ('Y_Rot_90',),
+                                          'F3': ('X_Rot_90', 'X_Rot_90')
+                                          }))

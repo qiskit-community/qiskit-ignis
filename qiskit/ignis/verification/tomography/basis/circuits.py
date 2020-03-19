@@ -32,7 +32,7 @@ from qiskit.circuit.reset import Reset
 
 from .tomographybasis import TomographyBasis
 from .paulibasis import PauliBasis
-from .gatesetbasis import StandardGatesetBasis
+from .gatesetbasis import default_gateset_basis
 from .sicbasis import SICBasis
 
 # Create logger
@@ -135,7 +135,7 @@ def process_tomography_circuits(
 # Gate set tomography circuits for preparation and measurement
 ###########################################################################
 
-def gateset_tomography_circuits(gateset_basis='Standard GST'):
+def gateset_tomography_circuits(gateset_basis='Default'):
     """
     Return a list of quantum gate set tomography circuits.
 
@@ -175,8 +175,8 @@ def gateset_tomography_circuits(gateset_basis='Standard GST'):
     """
 
     all_circuits = []
-    if gateset_basis == 'Standard GST':
-        gateset_basis = StandardGatesetBasis
+    if gateset_basis == 'Default':
+        gateset_basis = default_gateset_basis()
     meas_basis = gateset_basis.get_tomography_basis()
     prep_basis = gateset_basis.get_tomography_basis()
     meas_labels = meas_basis.measurement_labels

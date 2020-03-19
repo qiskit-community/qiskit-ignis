@@ -18,7 +18,7 @@
 # Tomography Circuit Generation Functions
 from .tomographybasis import TomographyBasis
 from .gatesetbasis import GateSetBasis
-from .gatesetbasis import StandardGatesetBasis
+from .gatesetbasis import default_gateset_basis
 from .paulibasis import PauliBasis
 from .sicbasis import SICBasis
 from .circuits import state_tomography_circuits
