@@ -63,7 +63,7 @@ def layer_parser(circ, twoqubitgate='cx', coupling_map=None):
         for circelem, qsub, csub in circuit_layer:
             n = circelem.name
             if n == "barrier":
-                # if a barrier separates any two qubit gates 
+                # if a barrier separates any two qubit gates
                 # start a new layer
                 if current2qs != []:
                     singlequbitlayers.append(QuantumCircuit(qregs, cregs))
