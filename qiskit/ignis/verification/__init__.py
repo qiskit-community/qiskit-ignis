@@ -90,8 +90,10 @@ Accreditation
 .. autosummary::
    :toctree: ../stubs/
 
-   accreditation_circuits
+   accreditationCircuits
    accreditationFitter
+   QOTP
+   QOTPCorrectCounts
 
 """
 from .quantum_volume import qv_circuits, QVFitter
