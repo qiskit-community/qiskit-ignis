@@ -544,7 +544,7 @@ class TestRB(unittest.TestCase):
                     npurity, 3 ** len(rb_opts['rb_pattern'][0]),
                     'Error: npurity does not equal to 3^n')
 
-        except OSError:
+        except (OSError, EOFError):
             skip_msg = ('Skipping tests for %s qubits because '
                         'tables are missing' % str(nq))
             raise unittest.SkipTest(skip_msg)
@@ -692,8 +692,12 @@ class TestRB(unittest.TestCase):
         self.assertEqual(circ_index, len(rb_circs),
                          "Error: additional circuits exist")
 
-    def test_rb_utils(self):
-        """Test some of the utility calculations, e.g. coherence limit."""
+
+class TestRBUtils(unittest.TestCase):
+    """Test for RB utilities."""
+
+    def test_coherence_limit(self):
+        """Test coherence_limit."""
         t1 = 100.
         t2 = 100.
         gate2Q = 0.5
@@ -716,6 +720,58 @@ class TestRB(unittest.TestCase):
 
         self.assertAlmostEqual(twoq_epc, 0.0446283, 6,
                                "Error: 2Q EPC Calculation")
+
+    @staticmethod
+    def create_fake_circuits(num_gates):
+        """Helper function to generate list of circuits with given basis gate numbers."""
+        circs = []
+        for num_gate in num_gates:
+            circ = qiskit.QuantumCircuit(2)
+            for _ in range(num_gate[0]):
+                circ.u1(0, 0)
+            for _ in range(num_gate[1]):
+                circ.u2(0, 0, 0)
+            for _ in range(num_gate[2]):
+                circ.u3(0, 0, 0, 0)
+            for _ in range(num_gate[3]):
+                circ.cx(0, 1)
+            circs.append(circ)
+
+        return circs
+
+    def test_gates_per_clifford(self):
+        """Test gate per Clifford."""
+        num_gates = [[6, 7, 5, 8], [10, 12, 8, 14]]
+        clifford_lengths = np.array([4, 8])
+
+        circs = self.create_fake_circuits(num_gates)
+        gpc = rb.rb_utils.gates_per_clifford(transpiled_circuits_list=[circs],
+                                             clifford_lengths=clifford_lengths,
+                                             basis=['u1', 'u2', 'u3', 'cx'],
+                                             qubits=[0])
+        ncliffs = np.sum(clifford_lengths + 1)
+
+        self.assertAlmostEqual(gpc[0]['u1'],
+                               (num_gates[0][0] + num_gates[1][0]) / ncliffs)
+        self.assertAlmostEqual(gpc[0]['u2'],
+                               (num_gates[0][1] + num_gates[1][1]) / ncliffs)
+        self.assertAlmostEqual(gpc[0]['u3'],
+                               (num_gates[0][2] + num_gates[1][2]) / ncliffs)
+        self.assertAlmostEqual(gpc[0]['cx'],
+                               (num_gates[0][3] + num_gates[1][3]) / ncliffs)
+
+    def test_gates_per_clifford_with_invalid_basis(self):
+        """Test gate per Clifford when invalid gate is included in basis."""
+        num_gates = [[1, 1, 1, 1]]
+        clifford_lengths = np.array([1])
+
+        circs = self.create_fake_circuits(num_gates)
+        gpc = rb.rb_utils.gates_per_clifford(transpiled_circuits_list=[circs],
+                                             clifford_lengths=clifford_lengths,
+                                             basis=['u1', 'u2', 'u3', 'cx', 'fake_gate'],
+                                             qubits=[0])
+
+        self.assertAlmostEqual(gpc[0]['fake_gate'], 0)
 
 
 if __name__ == '__main__':
