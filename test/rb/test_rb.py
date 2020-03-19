@@ -544,7 +544,7 @@ class TestRB(unittest.TestCase):
                     npurity, 3 ** len(rb_opts['rb_pattern'][0]),
                     'Error: npurity does not equal to 3^n')
 
-        except OSError:
+        except (OSError, EOFError):
             skip_msg = ('Skipping tests for %s qubits because '
                         'tables are missing' % str(nq))
             raise unittest.SkipTest(skip_msg)
