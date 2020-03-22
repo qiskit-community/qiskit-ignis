@@ -240,12 +240,12 @@ def default_gateset_basis():
                    [0, 1, 0, 0]])
     standard_gates_matrices = (G0, G1, G2)
     return GateSetBasis('Standard GST',
-                                        (('Id', 'X_Rot_90', 'Y_Rot_90'),
-                                         standard_gates_funcs,
-                                         standard_gates_matrices),
-                                        (('F0', 'F1', 'F2', 'F3'),
-                                         {'F0': ('Id',),
-                                          'F1': ('X_Rot_90',),
-                                          'F2': ('Y_Rot_90',),
-                                          'F3': ('X_Rot_90', 'X_Rot_90')
-                                          }))
+                        (('Id', 'X_Rot_90', 'Y_Rot_90'),
+                         standard_gates_funcs,
+                         standard_gates_matrices),
+                        (('F0', 'F1', 'F2', 'F3'),
+                         {'F0': ('Id',),
+                          'F1': ('X_Rot_90',),
+                          'F2': ('Y_Rot_90',),
+                          'F3': ('X_Rot_90', 'X_Rot_90')
+                          }))
