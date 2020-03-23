@@ -254,6 +254,7 @@ def calculate_1q_epg(gate_per_cliff: Dict[int, Dict[str, float]],
                      qubit: int) -> Dict[str, float]:
     r"""
     Convert error per Clifford (EPC) into error per gates (EPGs) of single qubit basis gates.
+
     Given that a standard 1Q RB sequences consist of ``u1``, ``u2`` and ``u3`` gates,
     the EPC can be written using those EPGs:
 
@@ -347,6 +348,7 @@ def calculate_2q_epg(gate_per_cliff: Dict[int, Dict[str, float]],
                      two_qubit_name: Optional[str] = 'cx') -> float:
     r"""
     Convert error per Clifford (EPC) into error per gate (EPG) of two qubit ``cx`` gates.
+
     Given that a standard 2Q RB sequences consist of ``u1``, ``u2``, ``u3``, and ``cx`` gates,
     the EPG of ``cx`` gate can be roughly estimated by :math:`EPG_{CX} = EPC/N_{CX}`,
     where :math:`N_{CX}` is number of ``cx`` gates per Clifford which is designed to be 1.5.
@@ -394,6 +396,10 @@ def calculate_2q_epg(gate_per_cliff: Dict[int, Dict[str, float]],
             list_epgs_1q=[epgs_q0, epgs_q1])
 
         print('EPG without `list_epgs_1q`: %f, with `list_epgs_1q`: %f' % (epg_no_comp, epg_comp))
+
+    Note:
+        This function presupposes the basis gate consists
+        of ``u1``, ``u2``, ``u3`` and ``cx``.
 
     References:
         [1] D. C. McKay, S. Sheldon, J. A. Smolin, J. M. Chow,
