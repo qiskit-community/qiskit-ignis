@@ -135,7 +135,7 @@ def process_tomography_circuits(
 # Gate set tomography circuits for preparation and measurement
 ###########################################################################
 
-def gateset_tomography_circuits(gateset_basis='Default'):
+def gateset_tomography_circuits(gateset_basis='default'):
     """
     Return a list of quantum gate set tomography circuits.
 
@@ -148,6 +148,7 @@ def gateset_tomography_circuits(gateset_basis='Default'):
         A list of QuantumCircuit objects containing the original circuit
         with state preparation circuits prepended, and measurement circuits
         appended.
+
     Additional Information:
         Gate set tomography is performed on a gate set (G0, G1,...,Gm)
         with the additional information of SPAM circuits (F0,F1,...,Fn)
@@ -175,7 +176,7 @@ def gateset_tomography_circuits(gateset_basis='Default'):
     """
 
     all_circuits = []
-    if gateset_basis == 'Default':
+    if gateset_basis == 'default':
         gateset_basis = default_gateset_basis()
     meas_basis = gateset_basis.get_tomography_basis()
     prep_basis = gateset_basis.get_tomography_basis()

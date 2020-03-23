@@ -192,18 +192,18 @@ class GaugeOptimize():
 
     def x_to_Gs_E(self, x: np.array) -> List[np.array]:
         """Converts the gauge to the gateset defined by it
-                Args:
-                    x: An array representation of the B matrix
+        Args:
+            x: An array representation of the B matrix
 
-                Returns:
-                    The gateset obtained from B
+        Returns:
+            The gateset obtained from B
 
-                Additional information:
-                    Given a vector representation of B, this functions
-                    produces the list [B*G1*B^-1,...,B*Gn*B^-1]
-                    of gates correpsonding to the gauge B
+        Additional information:
+            Given a vector representation of B, this functions
+            produces the list [B*G1*B^-1,...,B*Gn*B^-1]
+            of gates correpsonding to the gauge B
 
-            """
+        """
         B = np.array(x).reshape((self.d, self.d))
         try:
             BB = np.linalg.inv(B)
@@ -213,12 +213,12 @@ class GaugeOptimize():
 
     def obj_fn(self, x: np.array) -> float:
         """The norm-based score function for the gauge optimizer
-            Args:
-                x: An array representation of the B matrix
+        Args:
+            x: An array representation of the B matrix
 
-            Returns:
-                The sum of norm differences between the ideal gateset
-                and the one corresponding to B
+        Returns:
+            The sum of norm differences between the ideal gateset
+            and the one corresponding to B
         """
         Gs_E = self.x_to_Gs_E(x)
         return sum([np.linalg.norm(G - G_E)
@@ -227,8 +227,8 @@ class GaugeOptimize():
 
     def optimize(self) -> List[np.array]:
         """The main optimization method
-            Returns:
-                The optimal gateset found by the gauge optimization
+        Returns:
+            The optimal gateset found by the gauge optimization
         """
         initial_value = np.array([(F @ self.rho).T[0] for F in self.Fs]).T
         result = opt.minimize(self.obj_fn, initial_value)
@@ -237,14 +237,14 @@ class GaugeOptimize():
 
 def split_list(l: List, sizes: List) -> List[List]:
     """Splits a list to several lists of given size
-        Args:
-            l: A list
-            sizes: The sizes of the splitted lists
-        Returns:
-            The splitted lists
-        Example:
-            >> split_list([1,2,3,4,5,6,7], [1,4,2])
-            [[1],[2,3,4,5],[6,7]]
+    Args:
+        l: A list
+        sizes: The sizes of the splitted lists
+    Returns:
+        The splitted lists
+    Example:
+        >> split_list([1,2,3,4,5,6,7], [1,4,2])
+        [[1],[2,3,4,5],[6,7]]
     """
     if sum(sizes) != len(l):
         msg = "Length of list ({}) " \
@@ -260,11 +260,11 @@ def split_list(l: List, sizes: List) -> List[List]:
 
 def matrix_to_vec(A: np.array) -> np.array:
     """Converts a complex matrix to vector representation
-        Args:
-            A: A nxn complex matrix
-        Returns:
-            A row-stacking vector representation of A; first the real part
-            of A and then the imaginary part
+    Args:
+        A: A nxn complex matrix
+    Returns:
+        A row-stacking vector representation of A; first the real part
+        of A and then the imaginary part
     """
     real = []
     imag = []
@@ -277,11 +277,11 @@ def matrix_to_vec(A: np.array) -> np.array:
 
 def vec_to_complex_matrix(vec: np.array, n: int) -> np.array:
     """Constructs a nxn matrix from the given vector specification
-        Args:
-            vec: A vector representation of a complex matrix
-            n: the dimension of the matrix
-        Returns:
-            The reconstructed matrix
+    Args:
+        vec: A vector representation of a complex matrix
+        n: the dimension of the matrix
+    Returns:
+        The reconstructed matrix
     """
     vects = split_list(vec, [n ** 2, n ** 2])
     real = np.array([vects[0][n * i:n * (i + 1)] for i in range(n)])
@@ -307,10 +307,10 @@ def complex_matrix_var_nums(n: int):
 def get_cholesky_like_decomposition(mat: np.array) -> np.array:
     """Given a PSD matrix A, finds a matrix T such that TT^{dagger}
     is an approximation of A
-        Args:
-            mat: A nxn matrix, assumed to be positive semidefinite.
-        Returns:
-            A matrix T such that TT^{dagger} approximates A
+    Args:
+        mat: A nxn matrix, assumed to be positive semidefinite.
+    Returns:
+        A matrix T such that TT^{dagger} approximates A
     """
     (eigenvals, P) = np.linalg.eigh(mat)
     # if a 0 eigenvalue is represented by infinitisimal negative float
@@ -327,11 +327,11 @@ class GST_Optimize():
                  qubits: int = 1
                  ):
         """Initializes the data for the MLE optimizer
-            Args:
-                Gs: The names of the gates in the gateset
-                Fs: The SPAM specification (SPAM name -> gate names)
-                probs: The probabilities obtained experimentally
-                qubits: the size of the gates in the gateset
+        Args:
+            Gs: The names of the gates in the gateset
+            Fs: The SPAM specification (SPAM name -> gate names)
+            probs: The probabilities obtained experimentally
+            qubits: the size of the gates in the gateset
         """
         self.probs = probs
         self.Gs = Gs
@@ -345,15 +345,15 @@ class GST_Optimize():
         """Computes auxiliary data needed for efficient computation
         of the objective function.
 
-            Returns:
-                 The objective function data list
-            Additional information:
-                The objective function is
-                sum_{ijk}(<|E*R_Fi*G_k*R_Fj*Rho|>-m_{ijk})^2
-                We expand R_Fi*G_k*R_Fj to a sequence of G-gates and store
-                indices. We also obtain the m_{ijk} value from the probs list
-                all that remains when computing the function is thus
-                performing the matrix multiplications and remaining algebra.
+        Returns:
+             The objective function data list
+        Additional information:
+            The objective function is
+            sum_{ijk}(<|E*R_Fi*G_k*R_Fj*Rho|>-m_{ijk})^2
+            We expand R_Fi*G_k*R_Fj to a sequence of G-gates and store
+            indices. We also obtain the m_{ijk} value from the probs list
+            all that remains when computing the function is thus
+            performing the matrix multiplications and remaining algebra.
         """
         m = len(self.Fs)
         n = len(self.Gs)
@@ -414,17 +414,17 @@ class GST_Optimize():
                           Gs: List[np.array]
                           ) -> np.array:
         """Converts the GST data into a vector representation
-            Args:
-                E: The POVM measurement operator
-                rho: The initial state
-                Gs: The gates list
+        Args:
+            E: The POVM measurement operator
+            rho: The initial state
+            Gs: The gates list
 
-            Returns:
-                The vector representation of (E, rho, Gs)
+        Returns:
+            The vector representation of (E, rho, Gs)
 
-            Additional information:
-                This function performs the inverse operation to
-                split_input_vector; the notations are the same.
+        Additional information:
+            This function performs the inverse operation to
+            split_input_vector; the notations are the same.
         """
         d = (2 ** self.qubits)
         ds = d ** 2  # d squared - the dimension of the density operator
@@ -442,23 +442,23 @@ class GST_Optimize():
 
     def obj_fn(self, x: np.array) -> float:
         """The MLE objective function
-            Args:
-                x: The vector representation of the GST data (E, rho, Gs)
+        Args:
+            x: The vector representation of the GST data (E, rho, Gs)
 
-            Return value:
-                The MLE cost function (see additional information)
+        Return value:
+            The MLE cost function (see additional information)
 
-            Additional information:
-                The MLE objective function is obtained by approximating
-                the MLE estimator using the central limit theorem.
+        Additional information:
+            The MLE objective function is obtained by approximating
+            the MLE estimator using the central limit theorem.
 
-                It is computed as the sum of all terms of the form
-                (m_{ijk} - p_{ijk})^2
-                Where m_{ijk} are the experimental results, and
-                p_{ijk} are the predicted results for the given GST data:
-                p_{ijk} = E*F_i*G_k*F_j*rho.
+            It is computed as the sum of all terms of the form
+            (m_{ijk} - p_{ijk})^2
+            Where m_{ijk} are the experimental results, and
+            p_{ijk} are the predicted results for the given GST data:
+            p_{ijk} = E*F_i*G_k*F_j*rho.
 
-                For additional info, see section 3.5 in arXiv:1509.02921
+            For additional info, see section 3.5 in arXiv:1509.02921
         """
         E, rho, G_matrices = self.split_input_vector(x)
         val = 0
@@ -475,19 +475,19 @@ class GST_Optimize():
 
     def ptm_matrix_values(self, x: np.array) -> List[np.array]:
         """Returns a vectorization of the gates matrices
-            Args:
-                x: The vector representation of the GST data
+        Args:
+            x: The vector representation of the GST data
 
-            Returns:
-                A vectorization of all the PTM matrices for the gates
-                in the GST data
+        Returns:
+            A vectorization of all the PTM matrices for the gates
+            in the GST data
 
-            Additional information:
-                This function is not trivial since the returned vector
-                is not a subset of x, since for each gate G, what x
-                stores in practice is a matrix T, such that the
-                Choi matrix of G is T@T^{dagger}. This needs to be
-                converted into the PTM representation of G.
+        Additional information:
+            This function is not trivial since the returned vector
+            is not a subset of x, since for each gate G, what x
+            stores in practice is a matrix T, such that the
+            Choi matrix of G is T@T^{dagger}. This needs to be
+            converted into the PTM representation of G.
         """
         _, _, G_matrices = self.split_input_vector(x)
         result = []
@@ -497,11 +497,11 @@ class GST_Optimize():
 
     def rho_trace(self, x: np.array) -> Tuple[float]:
         """Returns the trace of the GST initial state
-            Args:
-                x: The vector representation of the GST data
-            Returns:
-                The trace of rho - the initial state of the GST. The real
-                and imaginary part are returned separately.
+        Args:
+            x: The vector representation of the GST data
+        Returns:
+            The trace of rho - the initial state of the GST. The real
+            and imaginary part are returned separately.
         """
         _, rho, _ = self.split_input_vector(x)
         d = (2 ** self.qubits)  # rho is dxd and starts at variable d^2
@@ -550,20 +550,20 @@ class GST_Optimize():
     def bounds_ineq_constraint(self, x: np.array) -> List[float]:
         """Inequality MLE constraints on the GST data
 
-            Args:
-                x: The vector representation of the GST data
+        Args:
+            x: The vector representation of the GST data
 
-            Returns:
-                The list of computed constraint values (should be >= 0)
+        Returns:
+            The list of computed constraint values (should be >= 0)
 
-            Additional information:
-                We have the following constraints on the GST data, due to
-                the PTM representation we are using:
-                1) Every row of G except the first has entries in [-1,1]
+        Additional information:
+            We have the following constraints on the GST data, due to
+            the PTM representation we are using:
+            1) Every row of G except the first has entries in [-1,1]
 
-                We implement this as two inequalities per entry.
+            We implement this as two inequalities per entry.
 
-                For additional info, see section 3.5.2 in arXiv:1509.02921
+            For additional info, see section 3.5.2 in arXiv:1509.02921
         """
         ptm_matrix = self.ptm_matrix_values(x)
         bounds_ineq = []
@@ -585,15 +585,15 @@ class GST_Optimize():
         return bounds_ineq
 
     def rho_trace_constraint(self, x: np.array) -> List[float]:
-        """ The constraint Tr(rho) = 1
-            Args:
-                x: The vector representation of the GST data
+        """The constraint Tr(rho) = 1
+        Args:
+            x: The vector representation of the GST data
 
-            Return:
-                The list of computed constraint values (should be equal 0)
+        Return:
+            The list of computed constraint values (should be equal 0)
 
-            Additional information:
-                We demand real(Tr(rho)) == 1 and imag(Tr(rho)) == 0
+        Additional information:
+            We demand real(Tr(rho)) == 1 and imag(Tr(rho)) == 0
         """
         trace = self.rho_trace(x)
         return [trace[0] - 1, trace[1]]
@@ -618,11 +618,11 @@ class GST_Optimize():
 
     def process_result(self, x: np.array) -> Dict:
         """Transforms the optimization result to a friendly format
-            Args:
-                x: the optimization result vector
+        Args:
+            x: the optimization result vector
 
-            Returns:
-                The final GST data, as dictionary.
+        Returns:
+            The final GST data, as dictionary.
         """
         E, rho, G_matrices = self.split_input_vector(x)
         result = {}
@@ -638,20 +638,19 @@ class GST_Optimize():
                           Gs: List[np.array]
                           ):
         """Sets the initial value for the MLE optimization
-            Args:
-                E: The POVM measurement operator.
-                rho: The inital state.
-                Gs: A list of the gate matrices.
-
+        Args:
+            E: The POVM measurement operator.
+            rho: The inital state.
+            Gs: A list of the gate matrices.
         """
         self.initial_value = self.join_input_vector(E, rho, Gs)
 
     def optimize(self, initial_value: Optional[np.array] = None) -> Dict:
         """Performs the MLE optimization for gate set tomography
-            Args:
-                initial_value: Vector representation of the initial value data
-            Returns:
-                The formatted results of the MLE optimization.
+        Args:
+            initial_value: Vector representation of the initial value data
+        Returns:
+            The formatted results of the MLE optimization.
         """
         if initial_value is not None:
             self.initial_value = initial_value
