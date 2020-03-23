@@ -28,6 +28,7 @@ from ddt import ddt, data, unpack
 
 import qiskit
 import qiskit.ignis.verification.randomized_benchmarking as rb
+from qiskit import QiskitError
 
 
 @ddt
@@ -785,7 +786,7 @@ class TestRBUtils(unittest.TestCase):
         epgs = rb.calculate_1q_epg(gpc, epc, 0)
 
         # test raise error when invalid qubit is specified.
-        with self.assertRaises(KeyError):
+        with self.assertRaises(QiskitError):
             rb.calculate_1q_epg(gpc, epc, 1)
 
         # check values
@@ -798,7 +799,7 @@ class TestRBUtils(unittest.TestCase):
         gpc = {0: {'cx': 0, 'rx': 0.3, 'ry': 0.3, 'rz': 0.3}}
         epc = 2.6e-4
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(QiskitError):
             rb.calculate_1q_epg(gpc, epc, 0)
 
     def test_calculate_1q_epg_with_cx(self):
@@ -806,7 +807,7 @@ class TestRBUtils(unittest.TestCase):
         gpc = {0: {'cx': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5}}
         epc = 2.6e-4
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiskitError):
             rb.calculate_1q_epg(gpc, epc, 0)
 
     def test_calculate_2q_epg(self):
@@ -825,11 +826,11 @@ class TestRBUtils(unittest.TestCase):
         epg_without_1q_epgs = epc/1.5
 
         # test raise error when invalid number of qubit is given.
-        with self.assertRaises(ValueError):
+        with self.assertRaises(QiskitError):
             rb.calculate_2q_epg(gpc, epc, [0, 1, 2], [epgs_q0, epgs_q1])
 
         # test raise error when invalid qubit pair is specified.
-        with self.assertRaises(KeyError):
+        with self.assertRaises(QiskitError):
             rb.calculate_2q_epg(gpc, epc, [0, 2], [epgs_q0, epgs_q1])
 
         # when 1q EPGs are not given
@@ -851,7 +852,7 @@ class TestRBUtils(unittest.TestCase):
         epc = 1.0e-2
 
         # test raise error when default basis name is specified
-        with self.assertRaises(KeyError):
+        with self.assertRaises(QiskitError):
             rb.calculate_2q_epg(gpc, epc, [0, 1])
 
         # pass when correct name is specified

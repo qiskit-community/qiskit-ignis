@@ -23,7 +23,7 @@ from typing import List, Union, Dict, Optional
 from warnings import warn
 
 import numpy as np
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, QiskitError
 from qiskit.qobj import QasmQobj
 
 
@@ -120,6 +120,9 @@ def gates_per_clifford(
 
     Returns:
         Nested dictionary of gate counts per Clifford.
+
+    Raises:
+        QiskitError: when input object is not a list of `QuantumCircuit`.
     """
     ngates = {qubit: {base: 0 for base in basis} for qubit in qubits}
 
@@ -148,7 +151,7 @@ def gates_per_clifford(
                             except KeyError:
                                 pass
                 else:
-                    raise TypeError('Input object is not `QuantumCircuit`.')
+                    raise QiskitError('Input object is not `QuantumCircuit`.')
 
     # include inverse, ie + 1 for all clifford length
     total_ncliffs = len(transpiled_circuits_list) * np.sum(np.array(clifford_lengths) + 1)
@@ -317,22 +320,22 @@ def calculate_1q_epg(gate_per_cliff: Dict[int, Dict[str, float]],
         Dictionary of EPGs of single qubit basis gates.
 
     Raises:
-        KeyError: when ``u2`` or ``u3`` is not found,
+        QiskitError: when ``u2`` or ``u3`` is not found, ``cx`` gate count is nonzero,
             or specified qubit is not included in the gate count dictionary.
-        ValueError: when ``cx`` gate count is nonzero.
     """
-    try:
-        gpc_per_qubit = gate_per_cliff[qubit]
-    except KeyError:
-        raise KeyError('Qubit %d is not included in the `gate_per_cliff`' % qubit)
-    try:
-        n_u2 = gpc_per_qubit['u2']
-        n_u3 = gpc_per_qubit['u3']
-    except KeyError:
-        raise KeyError('Invalid basis set is given. Use `u1`, `u2`, `u3` for basis gates.')
+    if qubit not in gate_per_cliff:
+        raise QiskitError('Qubit %d is not included in the `gate_per_cliff`' % qubit)
+
+    gpc_per_qubit = gate_per_cliff[qubit]
+
+    if 'u3' not in gpc_per_qubit or 'u2' not in gpc_per_qubit:
+        raise QiskitError('Invalid basis set is given. Use `u1`, `u2`, `u3` for basis gates.')
+
+    n_u2 = gpc_per_qubit['u2']
+    n_u3 = gpc_per_qubit['u3']
 
     if gpc_per_qubit.get('cx', 0) > 0:
-        raise ValueError('Two qubit gate is included in the RB sequence.')
+        raise QiskitError('Two qubit gate is included in the RB sequence.')
 
     return {'u1': 0, 'u2': epc / (n_u2 + 2 * n_u3), 'u3': 2 * epc / (n_u2 + 2 * n_u3)}
 
@@ -408,23 +411,21 @@ def calculate_2q_epg(gate_per_cliff: Dict[int, Dict[str, float]],
         EPG of 2Q gate.
 
     Raises:
-        KeyError: when ``cx`` is not found, specified ``qubit_pair`` is not included
-            in the gate count dictionary
-        ValueError: when length of ``qubit_pair`` is not 2.
+        QiskitError: when ``cx`` is not found, specified ``qubit_pair`` is not included
+            in the gate count dictionary, or length of ``qubit_pair`` is not 2.
 
     """
     list_epgs_1q = list_epgs_1q or []
 
     if len(qubit_pair) != 2:
-        raise ValueError('Number of qubit is not 2.')
+        raise QiskitError('Number of qubit is not 2.')
 
     # estimate single qubit gate error contribution
     alpha_1q = [1.0, 1.0]
     for ind, (qubit, epg_1q) in enumerate(zip(qubit_pair, list_epgs_1q)):
-        try:
-            gpc_per_qubit = gate_per_cliff[qubit]
-        except KeyError:
-            raise KeyError('Qubit %d is not included in the `gate_per_cliff`' % qubit)
+        if qubit not in gate_per_cliff:
+            raise QiskitError('Qubit %d is not included in the `gate_per_cliff`' % qubit)
+        gpc_per_qubit = gate_per_cliff[qubit]
         for gate_name, epg in epg_1q.items():
             n_gate = gpc_per_qubit.get(gate_name, 0)
             alpha_1q[ind] *= (1 - 2 * epg) ** n_gate
@@ -436,5 +437,5 @@ def calculate_2q_epg(gate_per_cliff: Dict[int, Dict[str, float]],
     if n_gate_2q > 0:
         return 3 / 4 * (1 - alpha_c_2q) / n_gate_2q
 
-    raise KeyError('Two qubit gate %s is not included in the `gate_per_cliff`. '
-                   'Set correct `two_qubit_name` or use 2Q RB gate count.' % two_qubit_name)
+    raise QiskitError('Two qubit gate %s is not included in the `gate_per_cliff`. '
+                      'Set correct `two_qubit_name` or use 2Q RB gate count.' % two_qubit_name)
