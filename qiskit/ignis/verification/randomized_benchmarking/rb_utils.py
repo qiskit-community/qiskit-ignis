@@ -19,29 +19,36 @@
 RB Helper functions
 """
 
+from typing import List, Union, Dict, Optional
+from warnings import warn
 
 import numpy as np
+from qiskit import QuantumCircuit, QiskitError
+from qiskit.qobj import QasmQobj
 
 
 def count_gates(qobj, basis, qubits):
-
     """
-    Take a compiled qobj and output the number of gates in each circuit
+    Take a compiled qobj and output the number of gates in each circuit.
 
     Args:
-        qobj: compiled qobj
-        basis: gates basis for the qobj
-        qubits: qubits to count over
+        qobj: compiled qobj.
+        basis: gates basis for the qobj.
+        qubits: qubits to count over.
 
     Returns:
-        n x l x m list of number of gates
-            n: number of circuits
-            l: number of qubits
-            m: number of gates in basis
+        n x l x m list of number of gates.
+
+            * n: number of circuits,
+            * l: number of qubits,
+            * m: number of gates in basis.
 
     Additional Information:
-        nQ gates are counted in each qubit's set of gates
+        nQ gates are counted in each qubit's set of gates.
     """
+    warn('The function `count_gates` will be deprecated. '
+         'Gate count is integrated into `gates_per_clifford` function.',
+         DeprecationWarning)
 
     nexp = len(qobj.experiments)
     ngates = np.zeros([nexp, len(qubits), len(basis)], dtype=int)
@@ -58,50 +65,119 @@ def count_gates(qobj, basis, qubits):
     return ngates
 
 
-def gates_per_clifford(qobj_list, clifford_length, basis, qubits):
-    """Take a list of compiled qobjs (for each seed) and use these
-    to calculate the number of gates per clifford
+def gates_per_clifford(
+        transpiled_circuits_list: Union[List[List[QuantumCircuit]], List[QasmQobj]],
+        clifford_lengths: Union[np.ndarray, List[int]],
+        basis: List[str],
+        qubits: List[int]) -> Dict[int, Dict[str, float]]:
+    """Take a list of transpiled ``QuantumCircuit`` and use these to calculate
+    the number of gates per Clifford. Each ``QuantumCircuit`` should be transpiled into
+    given ``basis`` set. The result can be used to convert a value of error per Clifford
+    into error per basis gate under appropriate assumption.
+
+    Example:
+        This example shows how to calculate gate per Clifford of 2Q RB sequence for
+        qubit 0 and qubit 1. You can refer to the function
+        :mod:`~qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq`
+        for the detail of RB circuit generation.
+
+        .. jupyter-execute::
+
+            import pprint
+            import qiskit
+            import qiskit.ignis.verification.randomized_benchmarking as rb
+            from qiskit.test.mock.backends import FakeAlmaden
+
+            rb_circs_list, xdata = rb.randomized_benchmarking_seq(
+                nseeds=5,
+                length_vector=[1, 20, 50, 100],
+                rb_pattern=[[0, 1]])
+            basis = FakeAlmaden().configuration().basis_gates
+
+            # transpile
+            transpiled_circuits_list = []
+            for rb_circs in rb_circs_list:
+                rb_circs_transpiled = qiskit.transpile(rb_circs, basis_gates=basis)
+                transpiled_circuits_list.append(rb_circs_transpiled)
+
+            # count gate per Clifford
+            ngates = rb.rb_utils.gates_per_clifford(
+                transpiled_circuits_list=transpiled_circuits_list,
+                clifford_lengths=xdata[0],
+                basis=basis, qubits=[0, 1])
+
+            pprint.pprint(ngates)
+
+        The gate counts for qubit 0 (1) is obtained by ``ngates[0]`` (``ngates[1]``)
+        as usual python dictionary. If all gate counts are zero,
+        you might specify wrong ``basis`` or input circuit list is not transpiled into basis gates.
 
     Args:
-        qobj_list: compiled qobjs for each seed
-        clifford_length: number of cliffords in each circuit
+        transpiled_circuits_list: List of transpiled RB circuit for each seed.
+        clifford_lengths: number of Cliffords in each circuit
         basis: gates basis for the qobj
         qubits: qubits to count over
 
     Returns:
-        list: l x m of number of gates per clifford
-              (same order as basis).
-                l: number of qubits
-                m: length of basis
+        Nested dictionary of gate counts per Clifford.
+
+    Raises:
+        QiskitError: when input object is not a list of `QuantumCircuit`.
     """
+    ngates = {qubit: {base: 0 for base in basis} for qubit in qubits}
 
-    ncliffs = 0
-    ngates = np.zeros([len(qubits), len(basis)], dtype=int)
+    if isinstance(transpiled_circuits_list[0], QasmQobj):
+        warn('`QasmQobj` input will be deprecated. Use transpiled `QuantumCircuit` instead. '
+             'Gate counts based on `QasmQobj` has no unittest and may return wrong counts.',
+             DeprecationWarning)
 
-    for qobj_seed in qobj_list:
-        ngates_tmp = count_gates(qobj_seed, basis, qubits)
-        for cliff_idx, cliff in enumerate(clifford_length):
-            ncliffs += (cliff + 1)  # include inverse
-            ngates += np.array(ngates_tmp[cliff_idx])
+    for transpiled_circuits in transpiled_circuits_list:
+        if isinstance(transpiled_circuits, QasmQobj):
+            # TODO: remove this code block after deprecation period
+            for experiment in transpiled_circuits.experiments:
+                for instr in experiment.instructions:
+                    for q_ind in instr.qubits:
+                        try:
+                            ngates[q_ind][instr.name] += 1
+                        except KeyError:
+                            pass
+        else:
+            for transpiled_circuit in transpiled_circuits:
+                if isinstance(transpiled_circuit, QuantumCircuit):
+                    for instr, qregs, _ in transpiled_circuit.data:
+                        for qreg in qregs:
+                            try:
+                                ngates[qreg.index][instr.name] += 1
+                            except KeyError:
+                                pass
+                else:
+                    raise QiskitError('Input object is not `QuantumCircuit`.')
 
-    return ngates/ncliffs
+    # include inverse, ie + 1 for all clifford length
+    total_ncliffs = len(transpiled_circuits_list) * np.sum(np.array(clifford_lengths) + 1)
+
+    for qubit in qubits:
+        for base in basis:
+            ngates[qubit][base] /= total_ncliffs
+
+    return ngates
 
 
 def coherence_limit(nQ=2, T1_list=None, T2_list=None,
                     gatelen=0.1):
 
     """
-    The error per gate (1-average_gate_fidelity) given by the T1,T2 limit
+    The error per gate (1-average_gate_fidelity) given by the T1,T2 limit.
 
     Args:
-        nQ: number of qubits (1 and 2 supported)
-        T1_list: list of T1's (Q1,...,Qn)
+        nQ: number of qubits (1 and 2 supported).
+        T1_list: list of T1's (Q1,...,Qn).
         T2_list: list of T2's (as measured, not Tphi).
-            If not given assume T2=2*T1
-        gatelen: length of the gate
+            If not given assume T2=2*T1 .
+        gatelen: length of the gate.
 
     Returns:
-        coherence limited error per gate
+        coherence limited error per gate.
     """
 
     T1 = np.array(T1_list)
@@ -149,13 +225,13 @@ def twoQ_clifford_error(ngates, gate_qubit, gate_err):
     error in the underlying gates is depolarizing.
 
     Args:
-        ngates: list of the number of gates per 2Q Clifford
+        ngates: list of the number of gates per 2Q Clifford.
         gate_qubit: list of the qubit corresponding to the gate (0, 1 or -1).
             -1 corresponds to the 2Q gate.
-        gate_err: list of the gate errors
+        gate_err: list of the gate errors.
 
     Returns:
-        Error per 2Q Clifford
+        Error per 2Q Clifford.
     """
 
     alpha1Q = [1.0, 1.0]
@@ -171,3 +247,201 @@ def twoQ_clifford_error(ngates, gate_qubit, gate_err):
     alpha2Q_cliff = 1/5*(np.sum(alpha1Q)+3*np.prod(alpha1Q))*alpha2Q
 
     return (1-alpha2Q_cliff)*3/4
+
+
+def calculate_1q_epg(gate_per_cliff: Dict[int, Dict[str, float]],
+                     epc: float,
+                     qubit: int) -> Dict[str, float]:
+    r"""
+    Convert error per Clifford (EPC) into error per gates (EPGs) of single qubit basis gates.
+
+    Given that a standard 1Q RB sequences consist of ``u1``, ``u2`` and ``u3`` gates,
+    the EPC can be written using those EPGs:
+
+    .. math::
+
+        EPC = 1 - (1 - EPG_{U1})^{N_{U1}} (1 - EPG_{U2})^{N_{U2}} (1 - EPG_{U3})^{N_{U3}}.
+
+    where :math:`N_{x}` is the number of gate :math:`x` per Clifford.
+    Assuming ``u1`` composed of virtual-Z gate, ie FrameChange instruction,
+    the :math:`EPG_{U1}` is estimated to be zero within the range of quantization error.
+    Therefore the EPC can be written as:
+
+    .. math::
+
+        EPC = 1 - (1 - EPG_{U2})^{N_{U2}} (1 - EPG_{U3})^{N_{U3}}.
+
+    Because ``u2`` and ``u3`` gates are respectively implemented by a single and two
+    half-pi pulses with virtual-Z rotations, we assume :math:`EPG_{U3} = 2EPG_{U2}`.
+    Using this relation in the limit of :math:`EPG_{U2} \ll 1`:
+
+    .. math::
+
+        EPC & = 1 - (1 - EPG_{U2})^{N_{U2}} (1 - 2 EPG_{U2})^{N_{U3}} \\
+            & \simeq EPG_{U2}(N_{U2} + 2 N_{U3}).
+
+    Finally the EPG of each basis gate can be written using EPC and number of gates:
+
+    .. math::
+
+        EPG_{U1} &= 0 \\
+        EPG_{U2} &= EPC / (N_{U2} + 2 N_{U3}) \\
+        EPG_{U3} &= 2 EPC / (N_{U2} + 2 N_{U3})
+
+    To run this function, you first need to run a standard 1Q RB experiment with transpiled
+    ``QuantumCircuit`` and count the number of basis gates composing the RB circuits.
+
+    .. jupyter-execute::
+
+        import pprint
+        import qiskit.ignis.verification.randomized_benchmarking as rb
+
+        # assuming we ran 1Q RB experiment for qubit 0
+        gpc = {0: {'cx': 0, 'u1': 0.13, 'u2': 0.31, 'u3': 0.51}}
+        epc = 1.5e-3
+
+        # calculate 1Q EPGs
+        epgs = rb.rb_utils.calculate_1q_epg(gate_per_cliff=gpc, epc=epc, qubit=0)
+        pprint.pprint(epgs)
+
+    In the example, ``gpc`` can be generated by :func:`gates_per_clifford`.
+    The output of the function ``epgs`` can be used to calculate EPG of CNOT gate
+    in conjugation with 2Q RB results, see :func:`calculate_2q_epg`.
+
+    Note:
+        This function presupposes the basis gate consists
+        of ``u1``, ``u2`` and ``u3``.
+
+    Args:
+        gate_per_cliff: dictionary of gate per Clifford. see :func:`gates_per_clifford`.
+        epc: EPC fit from 1Q RB experiment data.
+        qubit: index of qubit to calculate EPGs.
+
+    Returns:
+        Dictionary of EPGs of single qubit basis gates.
+
+    Raises:
+        QiskitError: when ``u2`` or ``u3`` is not found, ``cx`` gate count is nonzero,
+            or specified qubit is not included in the gate count dictionary.
+    """
+    if qubit not in gate_per_cliff:
+        raise QiskitError('Qubit %d is not included in the `gate_per_cliff`' % qubit)
+
+    gpc_per_qubit = gate_per_cliff[qubit]
+
+    if 'u3' not in gpc_per_qubit or 'u2' not in gpc_per_qubit:
+        raise QiskitError('Invalid basis set is given. Use `u1`, `u2`, `u3` for basis gates.')
+
+    n_u2 = gpc_per_qubit['u2']
+    n_u3 = gpc_per_qubit['u3']
+
+    if gpc_per_qubit.get('cx', 0) > 0:
+        raise QiskitError('Two qubit gate is included in the RB sequence.')
+
+    return {'u1': 0, 'u2': epc / (n_u2 + 2 * n_u3), 'u3': 2 * epc / (n_u2 + 2 * n_u3)}
+
+
+def calculate_2q_epg(gate_per_cliff: Dict[int, Dict[str, float]],
+                     epc: float,
+                     qubit_pair: List[int],
+                     list_epgs_1q: Optional[List[Dict[str, float]]] = None,
+                     two_qubit_name: Optional[str] = 'cx') -> float:
+    r"""
+    Convert error per Clifford (EPC) into error per gate (EPG) of two qubit ``cx`` gates.
+
+    Given that a standard 2Q RB sequences consist of ``u1``, ``u2``, ``u3``, and ``cx`` gates,
+    the EPG of ``cx`` gate can be roughly estimated by :math:`EPG_{CX} = EPC/N_{CX}`,
+    where :math:`N_{CX}` is number of ``cx`` gates per Clifford which is designed to be 1.5.
+    Because an error from two qubit gates are usually dominant and the contribution of
+    single qubit gates in 2Q RB experiments is thus able to be ignored.
+    If ``list_epgs_1q`` is not provided, the function returns
+    the EPG calculated based upon this assumption.
+
+    When we know the EPG of every single qubit gates used in the 2Q RB experiment,
+    we can isolate the EPC of the two qubit gate, ie :math:`EPG_{CX} = EPC_{CX}/N_{CX}` [1].
+    This will give you more accurate estimation of EPG, especially when the ``cx``
+    gate fidelity is close to that of single qubit gate.
+    To evaluate EPGs of single qubit gates, you first need to run standard 1Q RB experiments
+    separately and feed the fit result and gate counts to :func:`calculate_1q_epg`.
+
+    .. jupyter-execute::
+
+        import qiskit.ignis.verification.randomized_benchmarking as rb
+
+        # assuming we ran 1Q RB experiment for qubit 0 and qubit 1
+        gpc = {0: {'cx': 0, 'u1': 0.13, 'u2': 0.31, 'u3': 0.51},
+               1: {'cx': 0, 'u1': 0.10, 'u2': 0.33, 'u3': 0.51}}
+        epc_q0 = 1.5e-3
+        epc_q1 = 5.8e-4
+
+        # calculate 1Q EPGs
+        epgs_q0 = rb.rb_utils.calculate_1q_epg(gate_per_cliff=gpc, epc=epc_q0, qubit=0)
+        epgs_q1 = rb.rb_utils.calculate_1q_epg(gate_per_cliff=gpc, epc=epc_q1, qubit=1)
+
+        # assuming we ran 2Q RB experiment for qubit 0 and qubit 1
+        gpc = {0: {'cx': 1.49, 'u1': 0.25, 'u2': 0.95, 'u3': 0.56},
+               1: {'cx': 1.49, 'u1': 0.24, 'u2': 0.98, 'u3': 0.49}}
+        epc = 2.4e-2
+
+        # calculate 2Q EPG
+        epg_no_comp = rb.rb_utils.calculate_2q_epg(
+            gate_per_cliff=gpc,
+            epc=epc,
+            qubit_pair=[0, 1])
+
+        epg_comp = rb.rb_utils.calculate_2q_epg(
+            gate_per_cliff=gpc,
+            epc=epc,
+            qubit_pair=[0, 1],
+            list_epgs_1q=[epgs_q0, epgs_q1])
+
+        print('EPG without `list_epgs_1q`: %f, with `list_epgs_1q`: %f' % (epg_no_comp, epg_comp))
+
+    Note:
+        This function presupposes the basis gate consists
+        of ``u1``, ``u2``, ``u3`` and ``cx``.
+
+    References:
+        [1] D. C. McKay, S. Sheldon, J. A. Smolin, J. M. Chow,
+        and J. M. Gambetta, “Three-Qubit Randomized Benchmarking,”
+        Phys. Rev. Lett., vol. 122, no. 20, 2019 (arxiv:1712.06550).
+
+    Args:
+        gate_per_cliff: dictionary of gate per Clifford. see :func:`gates_per_clifford`.
+        epc: EPC fit from 2Q RB experiment data.
+        qubit_pair: index of two qubits to calculate EPG.
+        list_epgs_1q: list of single qubit EPGs of qubit listed in ``qubit_pair``.
+        two_qubit_name: name of two qubit gate in ``basis gates``.
+
+    Returns:
+        EPG of 2Q gate.
+
+    Raises:
+        QiskitError: when ``cx`` is not found, specified ``qubit_pair`` is not included
+            in the gate count dictionary, or length of ``qubit_pair`` is not 2.
+
+    """
+    list_epgs_1q = list_epgs_1q or []
+
+    if len(qubit_pair) != 2:
+        raise QiskitError('Number of qubit is not 2.')
+
+    # estimate single qubit gate error contribution
+    alpha_1q = [1.0, 1.0]
+    for ind, (qubit, epg_1q) in enumerate(zip(qubit_pair, list_epgs_1q)):
+        if qubit not in gate_per_cliff:
+            raise QiskitError('Qubit %d is not included in the `gate_per_cliff`' % qubit)
+        gpc_per_qubit = gate_per_cliff[qubit]
+        for gate_name, epg in epg_1q.items():
+            n_gate = gpc_per_qubit.get(gate_name, 0)
+            alpha_1q[ind] *= (1 - 2 * epg) ** n_gate
+    alpha_c_1q = 1 / 5 * (alpha_1q[0] + alpha_1q[1] + 3 * alpha_1q[0] * alpha_1q[1])
+    alpha_c_2q = (1 - 4 / 3 * epc) / alpha_c_1q
+
+    n_gate_2q = gate_per_cliff[qubit_pair[0]].get(two_qubit_name, 0)
+
+    if n_gate_2q > 0:
+        return 3 / 4 * (1 - alpha_c_2q) / n_gate_2q
+
+    raise QiskitError('Two qubit gate %s is not included in the `gate_per_cliff`. '
+                      'Set correct `two_qubit_name` or use 2Q RB gate count.' % two_qubit_name)

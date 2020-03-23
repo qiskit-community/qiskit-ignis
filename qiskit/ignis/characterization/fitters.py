@@ -18,9 +18,11 @@
 Fitters of characteristic times
 """
 
+from typing import Union, List, Callable, Optional, Tuple, Dict, Any
 from scipy.optimize import curve_fit
 import numpy as np
 from qiskit import QiskitError
+from qiskit.result import Result
 from ..verification.tomography import marginal_counts
 from ..utils import build_counts_dict_from_list
 
@@ -28,27 +30,33 @@ from ..utils import build_counts_dict_from_list
 class BaseFitter:
     """
     Base class for a data fitter
+
+    Args:
+        description: description of the fitter's purpose, e.g. 'T1'.
+        backend_result: result of execution on the backend.
+        xdata: a list of the independent parameter
+               (which will be fit against).
+        qubits: the qubits to be characterized.
+        fit_fun: equivalent to parameter `f` of scipy.curve_fit.
+        fit_p0: equivalent to parameter `p0` of scipy.curve_fit.
+        fit_bounds: equivalent to parameter `bounds` of scipy.curve_fit.
+        circuit_names: names of the circuits, should be the same length
+                       as `xdata`. Full circuit name will be these plus the
+                       series name.
+        series: list of circuit name tags
+        expected_state: is the circuit supposed to end up in '0' or '1'?
     """
 
-    def __init__(self, description, backend_result, xdata,
-                 qubits, fit_fun, fit_p0,
-                 fit_bounds, circuit_names,
-                 series=None, expected_state='0'):
-        """
-        Args:
-            description: a string describing the fitter's purpose, e.g. 'T1'
-            backend_result: a qiskit.result or list of results
-            xdata: a list of the independent parameter
-                (which will be fit against).
-            qubits: the qubits for which we measured coherence
-            fit_fun, fit_p0, fit_bounds: equivalent to parameters of
-                scipy.curve_fit.
-            circuit_names: names of the circuits, should be the same length
-                as xdata. Full circuit name will be these plus the
-                series name
-            series: list of circuit name tags
-            expected_state: is the circuit supposed to end up in '0' or '1'?
-        """
+    def __init__(self, description: str,
+                 backend_result: Union[Result, List[Result]],
+                 xdata: Union[List[float], np.array],
+                 qubits: List[int],
+                 fit_fun: Callable[..., float],
+                 fit_p0: List[float],  # any way to enforce length 3?
+                 fit_bounds: Tuple[List[float], List[float]],
+                 circuit_names: List[str],
+                 series: Optional[List[str]] = None,
+                 expected_state: str = '0'):
 
         if fit_bounds is None:
             fit_bounds = ([-np.inf for e in range(len(fit_p0))],
@@ -95,42 +103,43 @@ class BaseFitter:
             self.fit_data()
 
     @property
-    def description(self):
+    def description(self) -> str:
         """
         Return the fitter's purpose, e.g. 'T1'
         """
         return self._description
 
     @property
-    def backend_result(self):
+    def backend_result(self) -> Union[Result, List[Result]]:
         """
-        Return the execution results (qiskit.Result)
+        Return the execution results
         """
         return self._backend_result
 
     @property
-    def series(self):
+    def series(self) -> Optional[List[str]]:
         """
         Return the list of series for the data
         """
         return self._series
 
     @property
-    def measured_qubits(self):
+    def measured_qubits(self) -> List[int]:
         """
-        Return the indices of the qubits whose characteristic time is measured
+        Return the indices of the qubits to be characterized
         """
         return self._qubits
 
     @property
-    def xdata(self):
+    def xdata(self) -> Union[List[float], np.array]:
         """
-        Return the data points on the x-axis (a list of floats)
+        Return the data points on the x-axis, the independenet
+        parameter which is fit against
         """
         return self._xdata
 
     @property
-    def ydata(self):
+    def ydata(self) -> List[Dict]:
         """Return the data points on the y-axis
 
         The data points are returning in the form of a list of dictionaries:
@@ -144,7 +153,7 @@ class BaseFitter:
         return self._ydata
 
     @property
-    def fit_fun(self):
+    def fit_fun(self) -> Callable:
         """
         Return the function used in the fit,
         e.g. BaseFitter._exp_fit_fun
@@ -152,29 +161,36 @@ class BaseFitter:
         return self._fit_fun
 
     @property
-    def params(self):
+    def params(self) -> List[float]:
         """
         Return the fit function parameters that were calculated by curve_fit
         """
         return self._params
 
     @property
-    def params_err(self):
+    def params_err(self) -> List[float]:
         """
         Return the error of the fit function parameters
         """
         return self._params_err
 
-    def _get_param(self, param_ind, qid=-1, series='0', err=False):
+    def _get_param(self,
+                   param_ind: int,
+                   qid: int = -1,
+                   series: str = '0',
+                   err: bool = False) -> Union[float, List[float]]:
         """
-        Helper function that gets a parameter (or parameter err)
-        if qid=-1 returns a list of the parameters for all qubits
+        Return the fitted value, or fitting error, of a given
+        parameter and a given qubit
 
         Args:
             param_ind: the parameter index to get
             qid: the qubit index (or all qubits if -1)
             series: the series to get
             err: get param or param err
+
+        Returns:
+            The fitted value or error
         """
 
         if qid != -1:
@@ -193,14 +209,17 @@ class BaseFitter:
 
         return param_list
 
-    def add_data(self, results, recalc=True, refit=True):
+    def add_data(self,
+                 results: Union[Result, List[Result]],
+                 recalc: bool = True,
+                 refit: bool = True):
         """
-        Adds more data
+        Add new execution results to previous execution results
 
         Args:
-            results: a result (qiskit.result) or list of results
-            recalc: Recalculate the data
-            refit: Refit the data
+            results: new execution results
+            recalc: whether tp recalculate the data
+            refit: whether to refit the data
         """
 
         if isinstance(results, list):
@@ -260,14 +279,20 @@ class BaseFitter:
                     if self._ydata[serieslbl][-1]['std'][-1] == 0:
                         self._ydata[serieslbl][-1]['std'][-1] = 1e-4
 
-    def fit_data(self, qid=-1, p0=None, bounds=None, series=None):
+    def fit_data(self,
+                 qid: int = -1,
+                 p0: Optional[List[float]] = None,
+                 bounds: Optional[Tuple[List[float], List[float]]] = None,
+                 series: Optional[str] = None):
         """
         Fit the curve.
-        Computes self._params and self._params_err:
+
+        Compute self._params and self._params_err
+
         Args:
-            qid: Qubit data to fit. If -1 fit all the data
-            p0: initial guess
-            bounds: bounds
+            qid: qubit for fitting. If -1 fit for all the qubits
+            p0: initial guess, equivalent to `p0` in `scipy.optimize`
+            bounds: bounds, equivalent to `bounds` in `scipy.optimize`
             series: series to fit (if None fit all)
         """
 
@@ -302,7 +327,7 @@ class BaseFitter:
     @staticmethod
     def _exp_fit_fun(x, a, tau, c):
         """
-        Function used to fit the exponential decay
+        Exponential decay
         """
 
         return a * np.exp(-x / tau) + c
@@ -310,7 +335,7 @@ class BaseFitter:
     @staticmethod
     def _osc_fit_fun(x, a, tau, f, phi, c):
         """
-        Function used to fit the decay cosine
+        Decay cosine
         """
 
         return a * np.exp(-x / tau) * np.cos(2 * np.pi * f * x + phi) + c
@@ -318,7 +343,7 @@ class BaseFitter:
     @staticmethod
     def _osc_nodecay_fit_fun(x, a, f, phi, c):
         """
-        Function used to fit the decay cosine
+        Oscilliator cosine
         """
 
         return a * np.cos(2 * np.pi * f * x + phi) + c
@@ -326,7 +351,7 @@ class BaseFitter:
     @staticmethod
     def _cal_fit_fun(x, a, thetaerr, phierr, theta0, phi0, c):
         """
-        Function used to fit gate calibrations
+        Gate calibrations fitting function
         """
 
         return a*np.cos((theta0+thetaerr) * x + phi0 + phierr) + c
@@ -334,7 +359,7 @@ class BaseFitter:
     @staticmethod
     def _quadratic(x, a, x0, c):
         """
-        Function used to fit drag
+        Drag fitting function
         """
 
         return a * (x-x0)**2 + c
@@ -513,20 +538,37 @@ class IQFitter(BaseFitter):
 class BaseCoherenceFitter(BaseFitter):
     """
     Base class for fitters of characteristic times
+
+    Args:
+        description: description of the fitter's purpose, e.g. 'T1'.
+        backend_result: result of execution on the backend.
+        xdata: delay times of the circuits.
+        qubits: the qubits to be characterized.
+        fit_fun: equivalent to parameter `f` of scipy.curve_fit.
+        fit_p0: equivalent to parameter `p0` of scipy.curve_fit.
+        fit_bounds: equivalent to parameter `bounds` of scipy.curve_fit.
+        circuit_names: names of the circuits, should be the same length
+                       as `xdata`. Full circuit name will be these plus the
+                       series name.
+        series: list of circuit name tags
+        expected_state: is the circuit supposed to end up in '0' or '1'?
+        time_index: among parameters of `fit_fun`,
+                    which one is the characteristic time.
+        time_unit: unit of delay times in `xdata`.
     """
 
-    def __init__(self, description, backend_result, xdata,
-                 qubits, fit_fun, fit_p0,
-                 fit_bounds, circuit_names,
-                 series=None, expected_state='0',
-                 time_index=0, time_unit='micro-seconds'):
-
-        """
-        See BaseFitter __init__
-
-        Args:
-           time_index: fit parameter corresponding to the characteristic time
-        """
+    def __init__(self, description: str,
+                 backend_result: Union[Result, List[Result]],
+                 xdata: Union[List[float], np.array],
+                 qubits: List[int],
+                 fit_fun: Callable[..., float],
+                 fit_p0: List[float],  # any way to enforce length 3?
+                 fit_bounds: Tuple[List[float], List[float]],
+                 circuit_names: List[str],
+                 series: Optional[List[str]] = None,
+                 expected_state: str = '0',
+                 time_index: int = 0,
+                 time_unit: str = 'micro-seconds'):
 
         BaseFitter.__init__(self, description,
                             backend_result, xdata,
@@ -537,30 +579,52 @@ class BaseCoherenceFitter(BaseFitter):
         self._time_index = time_index
         self._time_unit = time_unit
 
-    def time(self, qid=-1, series='0'):
+    def time(self,
+             qid: int = -1,
+             series: str = '0') -> Union[float, List[float]]:
         """
-        Return the characteristic time for qid and series
-        If qid==-1 return all the qubit data
+        Return the characteristic time for the given qubit and series
+
+        Args:
+           qid: the qubit index (or all qubits if -1)
+           series: the series to get
+
+        Returns:
+           The characteristic time of the qubit, or all qubits
         """
 
         return self._get_param(self._time_index, qid, series)
 
-    def time_err(self, qid=-1, series='0'):
+    def time_err(self,
+                 qid: int = -1,
+                 series: str = '0') -> Union[float, List[float]]:
         """
-        Return the error of the characteristic time
+        Return the error of characteristic time for the given qubit and series
+
+        Args:
+           qid: the qubit index (or all qubits if -1)
+           series: the series to get
+
+        Returns:
+           The error of the characteristic time of the qubit, or all qubits
         """
+
         return self._get_param(self._time_index,
                                qid, series, err=True)
 
-    def plot(self, qind, series, ax=None, show_plot=True):
+    def plot(self,
+             qind: int,
+             series: str,
+             ax: Optional[Any] = None,
+             show_plot: bool = True) -> Any:
         """
         Plot coherence data.
 
         Args:
             qind: qubit index to plot
-            series: which series to plot (if list plots multiple)
+            series: which series to plot (if list then plot multiple)
             ax: plot axes
-            show_plot: call plt.show()
+            show_plot: whether to call plt.show()
 
         Returns:
             The axes object
