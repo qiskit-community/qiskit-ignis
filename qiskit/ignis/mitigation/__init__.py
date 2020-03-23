@@ -9,3 +9,28 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
+"""
+===========================================
+Mitigation (:mod:`qiskit.ignis.mitigation`)
+===========================================
+
+.. currentmodule:: qiskit.ignis.mitigation
+
+Measurement
+===========
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   complete_meas_cal
+   tensored_meas_cal
+   MeasurementFilter
+   TensoredFilter
+   CompleteMeasFitter
+   TensoredMeasFitter
+
+"""
+from .measurement import (complete_meas_cal, tensored_meas_cal,
+                          MeasurementFilter, TensoredFilter,
+                          CompleteMeasFitter, TensoredMeasFitter)

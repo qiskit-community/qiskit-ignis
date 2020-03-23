@@ -47,8 +47,10 @@ from qiskit.ignis.characterization.calibrations import (rabi_schedules,
                                                         drag_schedules,
                                                         update_u_gates)
 
-import qiskit.pulse as pulse
 from qiskit.test.mock import FakeOpenPulse2Q
+
+# Fix seed for simulations
+SEED = 9000
 
 
 class TestT2Star(unittest.TestCase):
@@ -84,6 +86,7 @@ class TestT2Star(unittest.TestCase):
                                           qubits)
         backend_result = qiskit.execute(
             circs, backend, shots=shots,
+            seed_simulator=SEED,
             backend_options={'max_parallel_experiments': 0},
             noise_model=noise_model,
             optimization_level=0).result()
@@ -106,6 +109,7 @@ class TestT2Star(unittest.TestCase):
         backend_result = qiskit.execute(
             circs_osc, backend,
             shots=shots,
+            seed_simulator=SEED,
             backend_options={'max_parallel_experiments': 0},
             noise_model=noise_model,
             optimization_level=0).result()
@@ -155,6 +159,7 @@ class TestT1(unittest.TestCase):
         backend_result = qiskit.execute(
             circs, backend,
             shots=shots,
+            seed_simulator=SEED,
             backend_options={'max_parallel_experiments': 0},
             noise_model=noise_model,
             optimization_level=0).result()
@@ -199,6 +204,7 @@ class TestT2(unittest.TestCase):
         backend_result = qiskit.execute(
             circs, backend,
             shots=shots,
+            seed_simulator=SEED,
             backend_options={'max_parallel_experiments': 0},
             noise_model=noise_model,
             optimization_level=0).result()
@@ -247,6 +253,7 @@ class TestZZ(unittest.TestCase):
         # For demonstration purposes split the execution into two jobs
         backend_result = qiskit.execute(circs, backend,
                                         shots=shots,
+                                        seed_simulator=SEED,
                                         noise_model=noise_model,
                                         optimization_level=0).result()
 
@@ -273,13 +280,12 @@ class TestCals(unittest.TestCase):
         """
 
         unittest.TestCase.__init__(self, *args, **kwargs)
-
         self._qubits = [0, 2]
         self._controls = [1, 3]
         self._maxrep = 10
         self._circs = []
 
-    def run_sim(self, noise):
+    def run_sim(self, noise=None):
         """
         Run the simulator for these test cals
         """
@@ -289,6 +295,7 @@ class TestCals(unittest.TestCase):
         shots = 500
         # For demonstration purposes split the execution into two jobs
         backend_result = qiskit.execute(self._circs, backend,
+                                        seed_simulator=SEED,
                                         shots=shots,
                                         noise_model=noise).result()
 
@@ -337,7 +344,7 @@ class TestCals(unittest.TestCase):
         initial_theta = 0.18
         initial_c = 0.5
 
-        fit = AngleCalFitter(self.run_sim([]), xdata, self._qubits,
+        fit = AngleCalFitter(self.run_sim(), xdata, self._qubits,
                              fit_p0=[initial_theta, initial_c],
                              fit_bounds=([-np.pi, -1],
                                          [np.pi, 1]))
@@ -390,7 +397,7 @@ class TestCals(unittest.TestCase):
         initial_theta = 0.18
         initial_c = 0.5
 
-        fit = AngleCalCXFitter(self.run_sim([]), xdata, self._qubits,
+        fit = AngleCalCXFitter(self.run_sim(), xdata, self._qubits,
                                fit_p0=[initial_theta, initial_c],
                                fit_bounds=([-np.pi, -1],
                                            [np.pi, 1]))
@@ -413,24 +420,25 @@ class TestCalibs(unittest.TestCase):
 
         backend_fake = FakeOpenPulse2Q()
 
+        self.config = backend_fake.configuration()
+        self.meas_map = self.config.meas_map
+        self.n_qubits = self.config.n_qubits
         back_defaults = backend_fake.defaults()
-        self.meas_map = backend_fake.configuration().meas_map
-        self.system = pulse.PulseChannelSpec.from_backend(backend_fake)
-        self.cmd_def = pulse.CmdDef.from_defaults(back_defaults.cmd_def,
-                                                  back_defaults.pulse_library)
+        self.inst_map = back_defaults.instruction_schedule_map
 
     def test_rabi(self):
         """
         make sure the rabi function will create a schedule
         """
 
-        rabi, xdata = rabi_schedules(np.linspace(-1, 1, 10),
-                                     [0, 1],
-                                     10,
-                                     2.5,
-                                     drives=self.system.drives,
-                                     cmd_def=self.cmd_def,
-                                     meas_map=self.meas_map)
+        rabi, xdata = rabi_schedules(
+            np.linspace(-1, 1, 10),
+            [0, 1],
+            10,
+            2.5,
+            drives=[self.config.drive(i) for i in range(self.n_qubits)],
+            inst_map=self.inst_map,
+            meas_map=self.meas_map)
 
         self.assertEqual(len(rabi), 10)
         self.assertEqual(len(xdata), 10)
@@ -440,14 +448,15 @@ class TestCalibs(unittest.TestCase):
         Make sure the drag function will create a schedule
         """
 
-        drag_scheds, xdata = drag_schedules(np.linspace(-3, 3, 11),
-                                            [0, 1],
-                                            [0.5, 0.6],
-                                            10,
-                                            pulse_sigma=2.5,
-                                            drives=self.system.drives,
-                                            cmd_def=self.cmd_def,
-                                            meas_map=self.meas_map)
+        drag_scheds, xdata = drag_schedules(
+            np.linspace(-3, 3, 11),
+            [0, 1],
+            [0.5, 0.6],
+            10,
+            pulse_sigma=2.5,
+            drives=[self.config.drive(i) for i in range(self.n_qubits)],
+            inst_map=self.inst_map,
+            meas_map=self.meas_map)
 
         self.assertEqual(len(drag_scheds), 11)
         self.assertEqual(len(xdata), 11)
@@ -460,10 +469,11 @@ class TestCalibs(unittest.TestCase):
         single_q_params = [{'amp': 0.1, 'duration': 15,
                             'beta': 0.1, 'sigma': 3}]
 
-        update_u_gates(single_q_params,
-                       qubits=[0],
-                       cmd_def=self.cmd_def,
-                       drives=self.system.drives)
+        update_u_gates(
+            single_q_params,
+            qubits=[0],
+            inst_map=self.inst_map,
+            drives=[self.config.drive(i) for i in range(self.n_qubits)])
 
 
 if __name__ == '__main__':

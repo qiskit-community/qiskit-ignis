@@ -22,6 +22,7 @@ from scipy.optimize import curve_fit
 import numpy as np
 from qiskit import QiskitError
 from ..verification.tomography import marginal_counts
+from ..utils import build_counts_dict_from_list
 
 
 class BaseFitter:
@@ -655,19 +656,3 @@ class BaseGateFitter(BaseFitter):
             plt.show()
 
         return ax
-
-
-def build_counts_dict_from_list(count_list):
-    """
-    Add dictionary counts together
-
-    """
-    if len(count_list) == 1:
-        return count_list[0]
-
-    new_count_dict = {}
-    for countdict in count_list:
-        for x in countdict:
-            new_count_dict[x] = countdict[x]+new_count_dict.get(x, 0)
-
-    return new_count_dict

@@ -140,4 +140,4 @@ class ProcessTomographyFitter(TomographyFitter):
         if method == 'cvx':
             return Choi(cvx_fit(data, basis_matrix, weights=weights, trace=dim,
                                 trace_preserving=True, **kwargs))
-        raise QiskitError('Unrecognised fit method {}'.format(method))
+        raise QiskitError('Unrecognized fit method {}'.format(method))

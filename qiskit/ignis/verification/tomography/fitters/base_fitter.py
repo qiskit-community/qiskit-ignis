@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 class TomographyFitter:
-    """Basse maximum-likelihood estimate tomography fitter class"""
+    """Base maximum-likelihood estimate tomography fitter class"""
 
     def __init__(self,
                  result,
@@ -78,7 +78,7 @@ class TomographyFitter:
                 raise QiskitError("Invalid measurement basis")
 
     def set_preparation_basis(self, basis):
-        """Set the prepearation basis function
+        """Set the preparation basis function
 
         Args:
             basis (TomographyBasis or str): preparation basis
@@ -95,7 +95,7 @@ class TomographyFitter:
 
     @property
     def preparation_basis(self):
-        """Return the tomography preperation basis."""
+        """Return the tomography preparation basis."""
         return self._prep_basis
 
     def fit(self, method='auto', standard_weights=True, beta=0.5, **kwargs):
@@ -191,7 +191,7 @@ class TomographyFitter:
         if method == 'cvx':
             return cvx_fit(data, basis_matrix, weights=weights, **kwargs)
 
-        raise QiskitError('Unrecognised fit method {}'.format(method))
+        raise QiskitError('Unrecognized fit method {}'.format(method))
 
     @property
     def data(self):
@@ -401,7 +401,7 @@ class TomographyFitter:
                 The functions should have signature:
                     ``prep_matrix_fn(str) -> np.array``
         Returns:
-            A Numpy array for the multi-qubit prepration operator specified
+            A Numpy array for the multi-qubit preparation operator specified
             by label.
 
         Additional Information:

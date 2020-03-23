@@ -27,7 +27,7 @@ jobs:
            python setup.py build_ext --inplace
          displayName: 'Install dependencies'
        - bash: |
-           tox -edocs -- -j auto
+           tox -edocs
          displayName: 'Run Docs build'
        - task: PublishBuildArtifacts@1
          displayName: 'Publish docs'
@@ -49,6 +49,9 @@ jobs:
           Python37:
             python.version: '3.7'
             TOXENV: py37
+          Python38:
+            python.version: '3.8'
+            TOXENV: py38
 
       steps:
         - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
@@ -60,6 +63,11 @@ jobs:
             conda install --yes --quiet --name qiskit-ignis --channel conda-forge python=%PYTHON_VERSION% scs
           displayName: Install Anaconda packages
           condition: ne(variables['python.version'], '3.5')
+        - script: |
+            call activate qiskit-ignis
+            conda install --yes --quiet --name qiskit-ignis --channel conda-forge python=%PYTHON_VERSION% osqp
+          displayName: Install Anaconda packages
+          condition: eq(variables['python.version'], '3.8')
         - powershell: (new-object System.Net.WebClient).DownloadFile($env:OPENBLAS, 'c:\openblas.zip')
           condition: eq(variables['python.version'], '3.5')
           displayName: 'Download openblas'

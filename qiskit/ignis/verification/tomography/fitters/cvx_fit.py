@@ -100,7 +100,7 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
 
     # Check if CVXPY package is installed
     if cvxpy is None:
-        raise Exception('CVXPY is not installed. Use `mle_fit` instead.')
+        raise Exception('CVXPY is not installed. Use `lstsq` instead.')
     # Check CVXPY version
     version = cvxpy.__version__
     if not (version[0] == '1' or version[:3] == '0.4'):
@@ -143,7 +143,7 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
         rho = cvxpy.bmat([[rho_r, -rho_i], [rho_i, rho_r]])
         cons.append(rho >> 0)
 
-    # Trace preserving constraint when fiting Choi-matrices for
+    # Trace preserving constraint when fitting Choi-matrices for
     # quantum process tomography. Note that this adds an implicity
     # trace constraint of trace(rho) = sqrt(len(rho)) = dim
     # if a different trace constraint is specified above this will
