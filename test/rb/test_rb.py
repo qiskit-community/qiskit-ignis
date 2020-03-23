@@ -28,6 +28,7 @@ from ddt import ddt, data, unpack
 
 import qiskit
 import qiskit.ignis.verification.randomized_benchmarking as rb
+from qiskit import QiskitError
 
 
 @ddt
@@ -772,6 +773,92 @@ class TestRBUtils(unittest.TestCase):
                                              qubits=[0])
 
         self.assertAlmostEqual(gpc[0]['fake_gate'], 0)
+
+    def test_calculate_1q_epg(self):
+        """Test calculating EPGs of single qubit gates."""
+        gpc = {0: {'cx': 0, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5}}
+        epc = 2.6e-4
+
+        epg_u1 = 0
+        epg_u2 = epc / (0.3 + 2 * 0.5)
+        epg_u3 = 2 * epg_u2
+
+        epgs = rb.calculate_1q_epg(gpc, epc, 0)
+
+        # test raise error when invalid qubit is specified.
+        with self.assertRaises(QiskitError):
+            rb.calculate_1q_epg(gpc, epc, 1)
+
+        # check values
+        self.assertAlmostEqual(epgs['u1'], epg_u1)
+        self.assertAlmostEqual(epgs['u2'], epg_u2)
+        self.assertAlmostEqual(epgs['u3'], epg_u3)
+
+    def test_calculate_1q_epg_with_wrong_basis(self):
+        """Test calculating EPGs of single qubit gates with wrong basis."""
+        gpc = {0: {'cx': 0, 'rx': 0.3, 'ry': 0.3, 'rz': 0.3}}
+        epc = 2.6e-4
+
+        with self.assertRaises(QiskitError):
+            rb.calculate_1q_epg(gpc, epc, 0)
+
+    def test_calculate_1q_epg_with_cx(self):
+        """Test calculating EPGs of single qubit gates with nonzero two qubit gate."""
+        gpc = {0: {'cx': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5}}
+        epc = 2.6e-4
+
+        with self.assertRaises(QiskitError):
+            rb.calculate_1q_epg(gpc, epc, 0)
+
+    def test_calculate_2q_epg(self):
+        """Test calculating EPG of two qubit gate."""
+        gpc = {0: {'cx': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5},
+               1: {'cx': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5}}
+        epgs_q0 = {'u1': 0, 'u2': 1e-4, 'u3': 2e-4}
+        epgs_q1 = {'u1': 0, 'u2': 1e-4, 'u3': 2e-4}
+        epc = 1.0e-2
+
+        alpha_1q = (1 - 2 * 1e-4) ** 0.3 * (1 - 2 * 2e-4) ** 0.5
+        alpha_c_1q = 1 / 5 * (2 * alpha_1q + 3 * alpha_1q ** 2)
+        alpha_c_2q = (1 - 4 / 3 * epc) / alpha_c_1q
+
+        epg_with_1q_epgs = 3 / 4 * (1 - alpha_c_2q) / 1.5
+        epg_without_1q_epgs = epc/1.5
+
+        # test raise error when invalid number of qubit is given.
+        with self.assertRaises(QiskitError):
+            rb.calculate_2q_epg(gpc, epc, [0, 1, 2], [epgs_q0, epgs_q1])
+
+        # test raise error when invalid qubit pair is specified.
+        with self.assertRaises(QiskitError):
+            rb.calculate_2q_epg(gpc, epc, [0, 2], [epgs_q0, epgs_q1])
+
+        # when 1q EPGs are not given
+        self.assertAlmostEqual(
+            rb.calculate_2q_epg(gpc, epc, [0, 1]),
+            epg_without_1q_epgs,
+        )
+
+        # when 1q EPGs are given
+        self.assertAlmostEqual(
+            rb.calculate_2q_epg(gpc, epc, [0, 1], [epgs_q0, epgs_q1]),
+            epg_with_1q_epgs
+        )
+
+    def test_calculate_2q_epg_with_another_gate_name(self):
+        """Test calculating EPG of two qubit gate when another gate name is specified."""
+        gpc = {0: {'cz': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5},
+               1: {'cz': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5}}
+        epc = 1.0e-2
+
+        # test raise error when default basis name is specified
+        with self.assertRaises(QiskitError):
+            rb.calculate_2q_epg(gpc, epc, [0, 1])
+
+        # pass when correct name is specified
+        self.assertAlmostEqual(
+            rb.calculate_2q_epg(gpc, epc, [0, 1], two_qubit_name='cz'), epc/1.5
+        )
 
 
 if __name__ == '__main__':
