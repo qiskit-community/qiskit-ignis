@@ -25,6 +25,9 @@ from qiskit.providers.aer.noise.errors import QuantumError
 from qiskit.providers.aer.noise.errors import depolarizing_error
 from qiskit.providers.aer.noise import NoiseModel
 
+from qiskit import QuantumCircuit
+from qiskit.quantum_info import PTM
+
 
 class TestGatesetTomography(unittest.TestCase):
     @staticmethod
@@ -91,8 +94,22 @@ class TestGatesetTomography(unittest.TestCase):
         result_gates = fitter.fit()
         self.compare_gates(expected_gates, result_gates, labels)
 
+    def gate_ptm_matrix(self, gate_func):
+        c = QuantumCircuit(1)
+        gate_func(c, c.qubits[0])
+        return PTM(c).data
+
     def test_noiseless_standard_basis(self):
         self.run_test_on_basis_and_noise()
+
+    def test_noiseless_h_gate_standard_basis(self):
+        basis = default_gateset_basis()
+
+        def gate_func(circuit, qubit):
+            circuit.h(qubit)
+
+        basis.add_gate('H', gate_func, self.gate_ptm_matrix(gate_func))
+        self.run_test_on_basis_and_noise(gateset_basis=basis)
 
     def test_amplitude_damping_standard_basis(self):
         gamma = 0.05

@@ -96,11 +96,11 @@ class GatesetTomographyFitter:
             for j in range(n):  # column
                 F_i = self.gateset_basis.spam_labels[i]
                 F_j = self.gateset_basis.spam_labels[j]
-                gram_matrix[i][j] = self.probs[(F_i, F_j)]
+                gram_matrix[i][j] = self.probs[(F_j, F_i)]
 
                 for k in range(m):  # gate
                     G_k = self.gateset_basis.gate_labels[k]
-                    gate_matrices[k][i][j] = self.probs[(F_i, G_k, F_j)]
+                    gate_matrices[k][i][j] = self.probs[(F_j, G_k, F_i)]
 
         gram_inverse = np.linalg.inv(gram_matrix)
 
