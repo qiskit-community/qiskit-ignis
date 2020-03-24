@@ -218,7 +218,9 @@ def coherence_limit(nQ=2, T1_list=None, T2_list=None,
     return coherence_limit_err
 
 
-def twoQ_clifford_error(ngates, gate_qubit, gate_err):
+def twoQ_clifford_error(ngates: Dict[int, Dict[str, float]],
+                        gate_qubit: List[int],
+                        gate_err: List[float]):
     """
     The two qubit Clifford gate error given measured errors in the primitive
     gates used to construct the Clifford (see arxiv:1712.06550). Assumes the
@@ -232,12 +234,28 @@ def twoQ_clifford_error(ngates, gate_qubit, gate_err):
 
     Returns:
         Error per 2Q Clifford.
+
+    Raises:
+        QiskitError: when number of qubit contained in ``ngates`` is not 2.
     """
+    gpc_per_qubits = list(ngates.values())
+
+    if len(gpc_per_qubits) != 2:
+        raise QiskitError('Number of qubits contained in the `ngates` dictionary is not 2. ',
+                          'Rerun `gate_per_clifford` with `qubits` used for 2Q RB experiment.')
+
+    ngates_lists = np.zeros(7)
+    ngates_lists[0] = gpc_per_qubits[0].get('u1', 0)
+    ngates_lists[1] = gpc_per_qubits[0].get('u2', 0)
+    ngates_lists[2] = gpc_per_qubits[0].get('u3', 0)
+    ngates_lists[3] = gpc_per_qubits[1].get('u1', 0)
+    ngates_lists[4] = gpc_per_qubits[1].get('u2', 0)
+    ngates_lists[5] = gpc_per_qubits[1].get('u3', 0)
+    ngates_lists[6] = gpc_per_qubits[0].get('cx', 0)
 
     alpha1Q = [1.0, 1.0]
     alpha2Q = 1.0
-
-    for gate_ind, ngate in enumerate(ngates):
+    for gate_ind, ngate in enumerate(ngates_lists):
         if gate_qubit[gate_ind] == -1:
             alpha2Q *= (1-4/3*gate_err[gate_ind])**ngate
         else:
