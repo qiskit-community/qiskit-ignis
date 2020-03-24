@@ -18,11 +18,13 @@ Gate set tomography preparation and measurement basis
 
 # Needed for functions
 import functools
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Union, Optional
 import numpy as np
 
 # Import QISKit classes
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+from qiskit.circuit import Gate
+from qiskit.quantum_info import PTM
 from .tomographybasis import TomographyBasis
 
 
@@ -76,23 +78,60 @@ class GateSetBasis:
         self.spam_labels = spam[0]
         self.spam_spec = spam[1]
 
-    def add_gate(self, name: str, gate_func: Callable, gate_matrix: np.array):
+    def add_gate(self, gate: Union[Callable, Gate], name: Optional[str] = None):
         """Adds a new gate to the gateset
             Args:
-                str: the name of the new gate
-                gate_func: a function taking (QuantumCircuit, QuantumRegister)
+                gate: Either a qiskit gate object or a function taking
+                (QuantumCircuit, QuantumRegister)
                 and adding the gate to the circuit
-                gate_matrix: The PTM matrix of the gate
+                str: the name of the new gate
+            Raises:
+                RuntimeError: If the gate is given as a function but without
+                a name.
         """
+        if name is None:
+            if isinstance(gate, Gate):
+                name = gate.name
+            else:
+                raise RuntimeError("Gate name is missing")
         self.gate_labels.append(name)
-        self.gate_funcs[name] = gate_func
-        self.gate_matrices[name] = gate_matrix
+        self.gate_funcs[name] = gate
+        if isinstance(gate, Gate):
+            self.gate_matrices[name] = PTM(gate).data
+        if callable(gate):
+            c = QuantumCircuit(1)
+            gate(c, c.qubits[0])
+            self.gate_matrices[name] = PTM(c).data
 
-    def add_to_circuit(self,
-                       circ: QuantumCircuit,
-                       qubit: QuantumRegister,
-                       op: str
-                       ):
+    def add_gate_to_circuit(self,
+                            circ: QuantumCircuit,
+                            qubit: QuantumRegister,
+                            op: str
+                            ):
+        """
+        Adds the gate op to circ at qubit
+
+        Args:
+            circ: the circuit to apply op on
+            qubit: qubit to be operated on
+            op: gate name
+
+        Raises:
+            RuntimeError: if `op` does not describe a gate
+        """
+        if op not in self.gate_funcs:
+            raise RuntimeError("{} is not a SPAM circuit".format(op))
+        gate = self.gate_funcs[op]
+        if callable(gate):
+            gate(circ, qubit)
+        if isinstance(gate, Gate):
+            circ.append(gate, [qubit], [])
+
+    def add_spam_to_circuit(self,
+                            circ: QuantumCircuit,
+                            qubit: QuantumRegister,
+                            op: str
+                            ):
         """
         Adds the SPAM circuit op to circ at qubit
 
@@ -107,8 +146,8 @@ class GateSetBasis:
         if op not in self.spam_spec:
             raise RuntimeError("{} is not a SPAM circuit".format(op))
         op_gates = self.spam_spec[op]
-        for gate in op_gates:
-            self.gate_funcs[gate](circ, qubit)
+        for gate_name in op_gates:
+            self.add_gate_to_circuit(circ, qubit, gate_name)
 
     def measurement_circuit(self,
                             op: str,
@@ -127,7 +166,7 @@ class GateSetBasis:
             The measurement circuit
         """
         circ = QuantumCircuit(qubit.register, clbit.register)
-        self.add_to_circuit(circ, qubit, op)
+        self.add_spam_to_circuit(circ, qubit, op)
         circ.measure(qubit, clbit)
         return circ
 
@@ -158,7 +197,7 @@ class GateSetBasis:
             The preperation circuit
         """
         circ = QuantumCircuit(qubit.register)
-        self.add_to_circuit(circ, qubit, op)
+        self.add_spam_to_circuit(circ, qubit, op)
         return circ
 
     def preparation_matrix(self, label: str) -> np.array:
