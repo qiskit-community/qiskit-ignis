@@ -2,7 +2,7 @@
 
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2019, 2020.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -136,7 +136,7 @@ def process_tomography_circuits(
 ###########################################################################
 
 def gateset_tomography_circuits(gateset_basis='default'):
-    """
+    r"""
     Return a list of quantum gate set tomography circuits.
 
     The circuits are fully constructed from the data given in gateset_basis
@@ -161,13 +161,14 @@ def gateset_tomography_circuits(gateset_basis='default'):
 
         We perform three types of experiments:
 
-        1) <E|F_i G_k F_j|rho> for 1 <= i,j <= n and 1 <= k <= m:
+        1) :math:`\langle E  | F_i G_k F_j |\rho \rangle` for 1 <= i,j <= n
+            and 1 <= k <= m:
             This experiment enables us to obtain data on the gate G_k
-        2) <E|F_i F_j|rho> for 1 <= i,j <= n:
+        2) :math:`\langle E  | F_i F_j |\rho \rangle`  for 1 <= i,j <= n:
             This experiment enables us to obtain the Gram matrix required
             to "invert" the results of experiments of type 1 in order to
             reconstruct (a matrix similar to) the gate G_k
-        3) <E|F_j|rho> for 1 <= j <= n:
+        3) :math:`\langle E  | F_j |\rho \rangle` for 1 <= j <= n:
             This experiment enables us to reconstruct <E| and rho
 
         The result of this method is the set of all the circuits needed for
