@@ -229,8 +229,13 @@ def twoQ_clifford_error(ngates: Dict[int, Dict[str, float]],
     Args:
         ngates: list of the number of gates per 2Q Clifford.
         gate_qubit: list of the qubit corresponding to the gate (0, 1 or -1).
-            -1 corresponds to the 2Q gate.
+            `-1` corresponds to the 2Q gate. Note that `0` (`1`) corresponds to the
+            single qubit gate counts in ``ngates`` which has smaller (larger) qubit index.
         gate_err: list of the gate errors.
+
+    Note:
+        This function presupposes the basis gate consists
+        of ``u1``, ``u2``, ``u3`` and ``cx``.
 
     Returns:
         Error per 2Q Clifford.
@@ -238,20 +243,22 @@ def twoQ_clifford_error(ngates: Dict[int, Dict[str, float]],
     Raises:
         QiskitError: when number of qubit contained in ``ngates`` is not 2.
     """
-    gpc_per_qubits = list(ngates.values())
+    gpc_per_qubits = sorted(ngates.items())
+
+    # TODO: add the comparable interface with `calculate_2q_epg`.
 
     if len(gpc_per_qubits) != 2:
         raise QiskitError('Number of qubits contained in the `ngates` dictionary is not 2. ',
                           'Rerun `gate_per_clifford` with `qubits` used for 2Q RB experiment.')
 
     ngates_lists = np.zeros(7)
-    ngates_lists[0] = gpc_per_qubits[0].get('u1', 0)
-    ngates_lists[1] = gpc_per_qubits[0].get('u2', 0)
-    ngates_lists[2] = gpc_per_qubits[0].get('u3', 0)
-    ngates_lists[3] = gpc_per_qubits[1].get('u1', 0)
-    ngates_lists[4] = gpc_per_qubits[1].get('u2', 0)
-    ngates_lists[5] = gpc_per_qubits[1].get('u3', 0)
-    ngates_lists[6] = gpc_per_qubits[0].get('cx', 0)
+    ngates_lists[0] = gpc_per_qubits[0][1].get('u1', 0)
+    ngates_lists[1] = gpc_per_qubits[0][1].get('u2', 0)
+    ngates_lists[2] = gpc_per_qubits[0][1].get('u3', 0)
+    ngates_lists[3] = gpc_per_qubits[1][1].get('u1', 0)
+    ngates_lists[4] = gpc_per_qubits[1][1].get('u2', 0)
+    ngates_lists[5] = gpc_per_qubits[1][1].get('u3', 0)
+    ngates_lists[6] = gpc_per_qubits[0][1].get('cx', 0)
 
     alpha1Q = [1.0, 1.0]
     alpha2Q = 1.0

@@ -715,13 +715,6 @@ class TestRBUtils(unittest.TestCase):
         self.assertAlmostEqual(twoq_coherence_err, 0.00597, 5,
                                "Error: 2Q Coherence Limit")
 
-        twoq_epc = rb.rb_utils.twoQ_clifford_error([5.2, 5.2, 1.5],
-                                                   [0, 1, -1],
-                                                   [0.001, 0.0015, 0.02])
-
-        self.assertAlmostEqual(twoq_epc, 0.0446283, 6,
-                               "Error: 2Q EPC Calculation")
-
     @staticmethod
     def create_fake_circuits(num_gates):
         """Helper function to generate list of circuits with given basis gate numbers."""
@@ -859,6 +852,25 @@ class TestRBUtils(unittest.TestCase):
         self.assertAlmostEqual(
             rb.calculate_2q_epg(gpc, epc, [0, 1], two_qubit_name='cz'), epc/1.5
         )
+
+    def test_twoQ_clifford(self):
+        """Test calculating EPC from EPC."""
+        error_1q = 0.001
+        error_2q = 0.01
+
+        gpc = {0: {'cx': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5},
+               1: {'cx': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5}}
+        gate_qubit = [0, 0, 0, 1, 1, 1, -1]
+        gate_err = [0, error_1q, 2*error_1q, 0, error_1q, 2*error_1q, error_2q]
+
+        alpha_2q = (1 - 4 / 3 * error_2q) ** 1.5
+        alpha_1q = (1 - 2 * error_1q) ** 0.3 * (1 - 4 * error_1q) ** 0.5
+
+        alpha_c_2q = 1 / 5 * (2 * alpha_1q + 3 * alpha_1q * alpha_1q) * alpha_2q
+
+        epc = rb.twoQ_clifford_error(gpc, gate_qubit, gate_err)
+
+        self.assertAlmostEqual(epc, 3 / 4 * (1 - alpha_c_2q))
 
 
 if __name__ == '__main__':
