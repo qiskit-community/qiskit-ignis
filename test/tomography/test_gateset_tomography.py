@@ -21,11 +21,8 @@ from qiskit.ignis.verification.tomography import GatesetTomographyFitter
 from qiskit.ignis.verification.tomography import gateset_tomography_circuits
 from qiskit.ignis.verification.tomography.basis import default_gateset_basis
 
-from qiskit.providers.aer.noise.errors import QuantumError
-from qiskit.providers.aer.noise.errors import depolarizing_error
 from qiskit.providers.aer.noise import NoiseModel
 
-from qiskit import QuantumCircuit
 from qiskit.extensions import HGate
 from qiskit.quantum_info import PTM
 
@@ -106,31 +103,25 @@ class TestGatesetTomography(unittest.TestCase):
 
     def test_amplitude_damping_standard_basis(self):
         gamma = 0.05
-        A0 = [[1, 0], [0, np.sqrt(1 - gamma)]]
-        A1 = [[0, np.sqrt(gamma)], [0, 0]]
-        noise_ptm = np.array([[1, 0, 0, 0],
-                              [0, np.sqrt(1-gamma), 0, 0],
-                              [0, 0, np.sqrt(1-gamma), 0],
-                              [gamma, 0, 0, 1-gamma]])
-        noise = QuantumError([([{'name': 'kraus',
-                                 'qubits': [0],
-                                 'params': [A0, A1]}], 1)])
+        noise_ptm = PTM(np.array([[1, 0, 0, 0],
+                                  [0, np.sqrt(1-gamma), 0, 0],
+                                  [0, 0, np.sqrt(1-gamma), 0],
+                                  [gamma, 0, 0, 1-gamma]]))
         noise_model = NoiseModel()
-        noise_model.add_all_qubit_quantum_error(noise, ['u1', 'u2', 'u3'])
+        noise_model.add_all_qubit_quantum_error(noise_ptm, ['u1', 'u2', 'u3'])
         self.run_test_on_basis_and_noise(noise_model=noise_model,
-                                         noise_ptm=noise_ptm)
+                                         noise_ptm=np.real(noise_ptm.data))
 
     def test_depolarization_standard_basis(self):
         p = 0.05
-        noise_ptm = np.array([[1, 0, 0, 0],
-                              [0, 1-p, 0, 0],
-                              [0, 0, 1-p, 0],
-                              [0, 0, 0, 1-p]])
-        noise = depolarizing_error(p, 1)  # 1-qubit error
+        noise_ptm = PTM(np.array([[1, 0, 0, 0],
+                                  [0, 1-p, 0, 0],
+                                  [0, 0, 1-p, 0],
+                                  [0, 0, 0, 1-p]]))
         noise_model = NoiseModel()
-        noise_model.add_all_qubit_quantum_error(noise, ['u1', 'u2', 'u3'])
+        noise_model.add_all_qubit_quantum_error(noise_ptm, ['u1', 'u2', 'u3'])
         self.run_test_on_basis_and_noise(noise_model=noise_model,
-                                         noise_ptm=noise_ptm)
+                                         noise_ptm=np.real(noise_ptm.data))
 
 
 if __name__ == '__main__':
