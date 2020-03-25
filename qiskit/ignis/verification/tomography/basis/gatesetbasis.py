@@ -18,7 +18,7 @@ Gate set tomography preparation and measurement basis
 
 # Needed for functions
 import functools
-from typing import Tuple, Callable, Union, Optional
+from typing import Tuple, Callable, Union, Optional, Dict
 import numpy as np
 
 # Import QISKit classes
@@ -46,37 +46,36 @@ class GateSetBasis:
     3) The labels of the SPAM circuits for the gate set tomography
     4) For SPAM label, tuple of gate labels for the gates in this SPAM circuit
     """
-    def __init__(self, name: str,
-                 gates: Tuple,
-                 spam: Tuple):
+    def __init__(self,
+                 name: str,
+                 gates: Dict[str, Union[Callable, Gate]],
+                 spam: Dict[str, Tuple[str]]
+                 ):
         """
         Initialize the gate set basis data
 
-        The gates data is a tuple (names, circuit_fn, matrix_list) containing
-        * **names** - the names (strings) of the elements of the gateset.
-        * **circuit_fns** a dictionary str -> function, that for every
-            gate name returns a function taking a pair
-            (QuantumCircuit, QuantumRegister) and appends to the circuit
-            the gate on the given qubits denotes by the given string.
-        * **matrix_list** - a tuple containing the matrices describing
-            the gateset elements.
-
-        The SPAM data is a tuple (names, specs) containing
-        * **names** - the names (strings) of the elements of the SPAM circuits.
-        * **specs** a dictionary that for every SPAM circuit holds a
-            tuple of the gate names for the gates comprising the circuit
-            in the order they appear.
         Args:
             name: Name of the basis.
-            gates: a tuple containing the gate data.
-            spam: a tuple containing the SPAM data
+            gates: The gate data (name -> gate/gate function)
+            spam: The spam data (name -> sequence of gate names)
         """
         self.name = name
-        self.gate_labels = list(gates[0])
-        self.gate_funcs = gates[1]
-        self.gate_matrices = dict(zip(self.gate_labels, gates[2]))
-        self.spam_labels = spam[0]
-        self.spam_spec = spam[1]
+        self.gate_labels = list(gates.keys())
+        self.gates = gates
+        self.gate_matrices = {name: np.real(self._gate_matrix(gate))
+                              for (name, gate) in gates.items()}
+        self.spam_labels = tuple(spam.keys())
+        self.spam_spec = spam
+
+    def _gate_matrix(self, gate):
+        """Gets a PTM representation of the gate"""
+        if isinstance(gate, Gate):
+            return PTM(gate).data
+        if callable(gate):
+            c = QuantumCircuit(1)
+            gate(c, c.qubits[0])
+            return PTM(c).data
+        return None
 
     def add_gate(self, gate: Union[Callable, Gate], name: Optional[str] = None):
         """Adds a new gate to the gateset
@@ -95,13 +94,8 @@ class GateSetBasis:
             else:
                 raise RuntimeError("Gate name is missing")
         self.gate_labels.append(name)
-        self.gate_funcs[name] = gate
-        if isinstance(gate, Gate):
-            self.gate_matrices[name] = PTM(gate).data
-        if callable(gate):
-            c = QuantumCircuit(1)
-            gate(c, c.qubits[0])
-            self.gate_matrices[name] = PTM(c).data
+        self.gates[name] = gate
+        self.gate_matrices[name] = self._gate_matrix(gate)
 
     def add_gate_to_circuit(self,
                             circ: QuantumCircuit,
@@ -119,9 +113,9 @@ class GateSetBasis:
         Raises:
             RuntimeError: if `op` does not describe a gate
         """
-        if op not in self.gate_funcs:
+        if op not in self.gates:
             raise RuntimeError("{} is not a SPAM circuit".format(op))
-        gate = self.gate_funcs[op]
+        gate = self.gates[op]
         if callable(gate):
             gate(circ, qubit)
         if isinstance(gate, Gate):
@@ -256,35 +250,15 @@ def default_gateset_basis():
         Return value: The gateset given as example 3.4.1 in arXiv:1509.02921
 
     """
-    standard_gates_funcs = {
+    default_gates = {
         'Id': lambda circ, qubit: None,
         'X_Rot_90': lambda circ, qubit: circ.u2(-np.pi / 2, np.pi / 2, qubit),
         'Y_Rot_90': lambda circ, qubit: circ.u2(np.pi, np.pi, qubit)
     }
-
-    # PTM representation of Id
-    G0 = np.array([[1, 0, 0, 0],
-                   [0, 1, 0, 0],
-                   [0, 0, 1, 0],
-                   [0, 0, 0, 1]])
-    # X rotation by 90 degrees
-    G1 = np.array([[1, 0, 0, 0],
-                   [0, 1, 0, 0],
-                   [0, 0, 0, -1],
-                   [0, 0, 1, 0]])
-    # Y rotation by 90 degrees
-    G2 = np.array([[1, 0, 0, 0],
-                   [0, 0, 0, -1],
-                   [0, 0, 1, 0],
-                   [0, 1, 0, 0]])
-    standard_gates_matrices = (G0, G1, G2)
-    return GateSetBasis('Standard GST',
-                        (('Id', 'X_Rot_90', 'Y_Rot_90'),
-                         standard_gates_funcs,
-                         standard_gates_matrices),
-                        (('F0', 'F1', 'F2', 'F3'),
-                         {'F0': ('Id',),
-                          'F1': ('X_Rot_90',),
-                          'F2': ('Y_Rot_90',),
-                          'F3': ('X_Rot_90', 'X_Rot_90')
-                          }))
+    default_spam = {
+        'F0': ('Id',),
+        'F1': ('X_Rot_90',),
+        'F2': ('Y_Rot_90',),
+        'F3': ('X_Rot_90', 'X_Rot_90')
+    }
+    return GateSetBasis('Default GST', default_gates, default_spam)
