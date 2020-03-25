@@ -293,7 +293,7 @@ class GST_Optimize():
         self.probs = probs
         self.Gs = Gs
         self.Fs = Fs
-        self.Fs_names = list(Fs.keys())
+        self.Fs_names = sorted(list(Fs.keys()))
         self.qubits = qubits
         self.obj_fn_data = self._compute_objective_function_data()
         self.initial_value = None
@@ -357,10 +357,10 @@ class GST_Optimize():
             for k in range(n):
                 Fi = self.Fs_names[i]
                 Fj = self.Fs_names[j]
-                m_ijk = (self.probs[(Fi, self.Gs[k], Fj)])
+                m_ijk = (self.probs[(Fj, self.Gs[k], Fi)])
                 Fi_matrices = [self.Gs.index(gate) for gate in self.Fs[Fi]]
                 Fj_matrices = [self.Gs.index(gate) for gate in self.Fs[Fj]]
-                matrices = Fi_matrices + [k] + Fj_matrices
+                matrices = Fj_matrices + [k] + Fi_matrices
                 obj_fn_data.append((matrices, m_ijk))
         return obj_fn_data
 
