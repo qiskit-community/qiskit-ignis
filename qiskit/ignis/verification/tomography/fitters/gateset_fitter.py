@@ -23,7 +23,7 @@ from typing import Union, List, Dict, Tuple, Optional
 import numpy as np
 import scipy.optimize as opt
 from qiskit.result import Result
-from qiskit.quantum_info import Choi, PTM
+from qiskit.quantum_info import Choi, PTM, Operator, DensityMatrix
 from ..basis.gatesetbasis import default_gateset_basis, GateSetBasis
 from .base_fitter import TomographyFitter
 
@@ -32,7 +32,7 @@ class GatesetTomographyFitter:
     def __init__(self,
                  result: Result,
                  circuits: List,
-                 gateset_basis: Union[GateSetBasis, str] = 'Default'
+                 gateset_basis: Union[GateSetBasis, str] = 'default'
                  ):
         """Initialize gateset tomography fitter with experimental data.
 
@@ -41,18 +41,18 @@ class GatesetTomographyFitter:
                             tomography circuits.
             circuits: a list of circuits or circuit names to extract
                             count information from the result object.
-            gateset_basis: (default: 'Default') Representation of
+            gateset_basis: (default: 'default') Representation of
             the gates and SPAM circuits of the gateset
         """
         self.gateset_basis = gateset_basis
-        if gateset_basis == 'Default':
+        if gateset_basis == 'default':
             self.gateset_basis = default_gateset_basis()
         data = TomographyFitter(result, circuits).data
         self.probs = {}
         for key, vals in data.items():
             self.probs[key] = vals.get('0', 0) / sum(vals.values())
 
-    def linear_inversion(self) -> Dict[str, np.array]:
+    def linear_inversion(self) -> Dict[str, PTM]:
         """
         Reconstruct a gate set from measurement data using linear inversion.
 
@@ -104,17 +104,19 @@ class GatesetTomographyFitter:
 
         gram_inverse = np.linalg.inv(gram_matrix)
 
-        gates = [gram_inverse @ gate_matrix for gate_matrix in gate_matrices]
+        gates = [PTM(gram_inverse @ gate_matrix) for gate_matrix in gate_matrices]
         return dict(zip(self.gateset_basis.gate_labels, gates))
 
-    def default_init_state(self, size):
+    def _default_init_state(self, size):
+        """Returns the PTM representation of the usual ground state"""
         if size == 4:
-            return np.array([[0.5], [0], [0], [0.5]])
+            return np.array([[np.sqrt(0.5)], [0], [0], [np.sqrt(0.5)]])
         raise RuntimeError("No default init state for more than 1 qubit")
 
-    def default_measurement_op(self, size):
+    def _default_measurement_op(self, size):
+        """The PTM representation of the usual Z-basis measurement"""
         if size == 4:
-            return np.array([[1, 0, 0, 1]])
+            return np.array([[np.sqrt(0.5), 0, 0, np.sqrt(0.5)]])
         raise RuntimeError("No default measurement op for more than 1 qubit")
 
     def fit(self) -> Dict:
@@ -135,13 +137,13 @@ class GatesetTomographyFitter:
         """
         linear_inversion_results = self.linear_inversion()
         n = len(self.gateset_basis.spam_labels)
-        E = self.default_measurement_op(n)
-        rho = self.default_init_state(n)
+        E = self._default_measurement_op(n)
+        rho = self._default_init_state(n)
         Gs = [self.gateset_basis.gate_matrices[label]
               for label in self.gateset_basis.gate_labels]
         Fs = [self.gateset_basis.spam_matrix(label)
               for label in self.gateset_basis.spam_labels]
-        Gs_E = [linear_inversion_results[label]
+        Gs_E = [linear_inversion_results[label].data
                 for label in self.gateset_basis.gate_labels]
         gauge_opt = GaugeOptimize(Gs, Gs_E, Fs, rho)
         Gs_E = gauge_opt.optimize()
@@ -616,6 +618,15 @@ class GST_Optimize():
         cons.append({'type': 'ineq', 'fun': self.bounds_ineq_constraint})
         return cons
 
+    def _convert_from_ptm(self, vector):
+        """Converts a vector back from PTM representation"""
+        Id = np.sqrt(0.5) * np.array([[1, 0], [0, 1]])
+        X = np.sqrt(0.5) * np.array([[0, 1], [1, 0]])
+        Y = np.sqrt(0.5) * np.array([[0, -1j], [1j, 0]])
+        Z = np.sqrt(0.5) * np.array([[1, 0], [0, -1]])
+        v = vector.reshape(4)
+        return v[0] * Id + v[1] * X + v[2] * Y + v[3] * Z
+
     def process_result(self, x: np.array) -> Dict:
         """Transforms the optimization result to a friendly format
         Args:
@@ -626,10 +637,10 @@ class GST_Optimize():
         """
         E, rho, G_matrices = self.split_input_vector(x)
         result = {}
-        result['E'] = E
-        result['rho'] = rho
+        result['E'] = Operator(self._convert_from_ptm(E))
+        result['rho'] = DensityMatrix(self._convert_from_ptm(rho))
         for i in range(len(self.Gs)):
-            result[self.Gs[i]] = G_matrices[i]
+            result[self.Gs[i]] = PTM(G_matrices[i])
         return result
 
     def set_initial_value(self,

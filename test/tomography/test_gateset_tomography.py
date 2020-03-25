@@ -52,7 +52,7 @@ class TestGatesetTomography(unittest.TestCase):
     def compare_gates(self, expected_gates, result_gates, labels, delta=0.2):
         for label in labels:
             expected_gate = expected_gates[label]
-            result_gate = result_gates[label]
+            result_gate = result_gates[label].data
             msg = "Failure on gate {}: Expected gate = \n{}\n" \
                   "vs Actual gate = \n{}".format(label,
                                                  expected_gate,
