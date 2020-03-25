@@ -44,6 +44,28 @@ class GatesetTomographyFitter:
                             count information from the result object.
             gateset_basis: (default: 'default') Representation of
             the gates and SPAM circuits of the gateset
+
+        Additional information:
+            The fitter attempts to output a GST result from the collected
+            experimental data. The output will be a dictionary of the computed
+            operators for the gates, as well as the measurment operator and
+            initial state of the system.
+
+            The input for the fitter consists of the experimental data
+            collected by the backend, the circuits on which it operated
+            and the gateset basis used when collecting the data.
+
+        Example:
+            >> gate = HGate()
+            >> basis = default_gateset_basis()
+            >> basis.add_gate(gate)
+            >> backend = ...
+            >> circuits = gateset_tomography_circuits(gateset_basis=basis)
+            >> qobj = assemble(circuits, shots=10000)
+            >> result = backend.run(qobj).result()
+            >> fitter = GatesetTomographyFitter(result, circuits, basis)
+            >> result_gates = fitter.fit()
+            >> result_gate = result_gates[gate.name]
         """
         self.gateset_basis = gateset_basis
         if gateset_basis == 'default':
@@ -276,7 +298,7 @@ class GST_Optimize():
         self.obj_fn_data = self._compute_objective_function_data()
         self.initial_value = None
 
-    #auxiliary functions
+    # auxiliary functions
     @staticmethod
     def _split_list(l: List, sizes: List) -> List[List]:
         """Splits a list to several lists of given size
