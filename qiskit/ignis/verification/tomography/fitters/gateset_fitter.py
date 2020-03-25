@@ -237,75 +237,6 @@ class GaugeOptimize():
         return self._x_to_Gs_E(result.x)
 
 
-def split_list(l: List, sizes: List) -> List[List]:
-    """Splits a list to several lists of given size
-    Args:
-        l: A list
-        sizes: The sizes of the splitted lists
-    Returns:
-        The splitted lists
-    Example:
-        >> split_list([1,2,3,4,5,6,7], [1,4,2])
-        [[1],[2,3,4,5],[6,7]]
-    """
-    if sum(sizes) != len(l):
-        msg = "Length of list ({}) " \
-              "differs from sum of split sizes ({})".format(len(l), sizes)
-        raise RuntimeError(msg)
-    result = []
-    i = 0
-    for s in sizes:
-        result.append(l[i:i + s])
-        i = i + s
-    return result
-
-
-def matrix_to_vec(A: np.array) -> np.array:
-    """Converts a complex matrix to vector representation
-    Args:
-        A: A nxn complex matrix
-    Returns:
-        A row-stacking vector representation of A; first the real part
-        of A and then the imaginary part
-    """
-    real = []
-    imag = []
-    for row in A:
-        for x in row:
-            real.append(np.real(x))
-            imag.append(np.imag(x))
-    return real + imag
-
-
-def vec_to_complex_matrix(vec: np.array, n: int) -> np.array:
-    """Constructs a nxn matrix from the given vector specification
-    Args:
-        vec: A vector representation of a complex matrix
-        n: the dimension of the matrix
-    Returns:
-        The reconstructed matrix
-    """
-    vects = split_list(vec, [n ** 2, n ** 2])
-    real = np.array([vects[0][n * i:n * (i + 1)] for i in range(n)])
-    imag = np.array([vects[1][n * i:n * (i + 1)] for i in range(n)])
-    return real + 1.j * imag
-
-
-def complex_matrix_to_vec(M, n):
-    return list(np.real(M).reshape(n ** 2)) + \
-           list(np.imag(M).reshape(n ** 2))
-
-
-def complex_matrix_var_nums(n: int):
-    """The number of entries in a vector representing nxn complex matrix
-    Args:
-        n: the dimension of the matrix
-    Returns:
-        The number of entries in the vector representation
-    """
-    return 2 * n ** 2
-
-
 def get_cholesky_like_decomposition(mat: np.array) -> np.array:
     """Given a PSD matrix A, finds a matrix T such that TT^{dagger}
     is an approximation of A
@@ -342,6 +273,44 @@ class GST_Optimize():
         self.qubits = qubits
         self.obj_fn_data = self._compute_objective_function_data()
         self.initial_value = None
+
+    #auxiliary functions
+    @staticmethod
+    def _split_list(l: List, sizes: List) -> List[List]:
+        """Splits a list to several lists of given size
+        Args:
+            l: A list
+            sizes: The sizes of the splitted lists
+        Returns:
+            The splitted lists
+        Example:
+            >> split_list([1,2,3,4,5,6,7], [1,4,2])
+            [[1],[2,3,4,5],[6,7]]
+        """
+        if sum(sizes) != len(l):
+            msg = "Length of list ({}) " \
+                  "differs from sum of split sizes ({})".format(len(l), sizes)
+            raise RuntimeError(msg)
+        result = []
+        i = 0
+        for s in sizes:
+            result.append(l[i:i + s])
+            i = i + s
+        return result
+
+    @staticmethod
+    def _vec_to_complex_matrix(vec: np.array) -> np.array:
+        n = int(np.sqrt(vec.size / 2))
+        if 2*n*n != vec.size:
+            raise RuntimeError("Vector of length {} cannot be reshaped"
+                               " to square matrix".format(vec.size))
+        size = n * n
+        return np.reshape(vec[0:size] + 1j * vec[size: 2 * size], (n, n))
+
+    @staticmethod
+    def _complex_matrix_to_vec(M):
+        mvec = M.reshape(M.size)
+        return list(np.concatenate([mvec.real, mvec.imag]))
 
     def _compute_objective_function_data(self) -> List:
         """Computes auxiliary data needed for efficient computation
@@ -396,13 +365,13 @@ class GST_Optimize():
         d = (2 ** self.qubits)
         ds = d ** 2  # d squared - the dimension of the density operator
 
-        d_t = complex_matrix_var_nums(d)
-        ds_t = complex_matrix_var_nums(ds)
-        T_vars = split_list(x, [d_t, d_t] + [ds_t] * n)
+        d_t = 2 * d ** 2
+        ds_t = 2 * ds ** 2
+        T_vars = self._split_list(x, [d_t, d_t] + [ds_t] * n)
 
-        E_T = vec_to_complex_matrix(T_vars[0], d)
-        rho_T = vec_to_complex_matrix(T_vars[1], d)
-        Gs_T = [vec_to_complex_matrix(T_vars[2+i], ds) for i in range(n)]
+        E_T = self._vec_to_complex_matrix(T_vars[0])
+        rho_T = self._vec_to_complex_matrix(T_vars[1])
+        Gs_T = [self._vec_to_complex_matrix(T_vars[2+i]) for i in range(n)]
 
         E = np.reshape(E_T @ np.conj(E_T.T), (1, ds))
         rho = np.reshape(rho_T @ np.conj(rho_T.T), (ds, 1))
@@ -429,17 +398,16 @@ class GST_Optimize():
             split_input_vector; the notations are the same.
         """
         d = (2 ** self.qubits)
-        ds = d ** 2  # d squared - the dimension of the density operator
 
         E_T = get_cholesky_like_decomposition(E.reshape((d, d)))
         rho_T = get_cholesky_like_decomposition(rho.reshape((d, d)))
         Gs_Choi = [Choi(PTM(G)).data for G in Gs]
         Gs_T = [get_cholesky_like_decomposition(G) for G in Gs_Choi]
-        E_vec = complex_matrix_to_vec(E_T, d)
-        rho_vec = complex_matrix_to_vec(rho_T, d)
+        E_vec = self._complex_matrix_to_vec(E_T)
+        rho_vec = self._complex_matrix_to_vec(rho_T)
         result = E_vec + rho_vec
         for G_T in Gs_T:
-            result += complex_matrix_to_vec(G_T, ds)
+            result += self._complex_matrix_to_vec(G_T)
         return result
 
     def _obj_fn(self, x: np.array) -> float:
@@ -494,7 +462,7 @@ class GST_Optimize():
         _, _, G_matrices = self._split_input_vector(x)
         result = []
         for G in G_matrices:
-            result = result + matrix_to_vec(G)
+            result = result + self._complex_matrix_to_vec(G)
         return result
 
     def _rho_trace(self, x: np.array) -> Tuple[float]:
