@@ -21,6 +21,7 @@ Quantum gate set tomography fitter
 import itertools
 from typing import Union, List, Dict, Tuple, Optional
 import numpy as np
+from scipy.linalg import schur
 import scipy.optimize as opt
 from qiskit.result import Result
 from qiskit.quantum_info import Choi, PTM, Operator, DensityMatrix
@@ -245,11 +246,12 @@ def get_cholesky_like_decomposition(mat: np.array) -> np.array:
     Returns:
         A matrix T such that TT^{dagger} approximates A
     """
-    (eigenvals, P) = np.linalg.eigh(mat)
+    decomposition, unitary = schur(mat, output='complex')
+    eigenvals = np.array(decomposition.diagonal())
     # if a 0 eigenvalue is represented by infinitisimal negative float
     eigenvals[eigenvals < 0] = 0
     DD = np.diag(np.sqrt(eigenvals))
-    return P @ DD
+    return unitary @ DD
 
 
 class GST_Optimize():
