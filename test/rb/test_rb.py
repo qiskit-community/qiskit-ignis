@@ -914,7 +914,7 @@ class TestRBUtils(unittest.TestCase):
         alpha_c = 1 / 5 * (2 * alpha_1q + 3 * alpha_1q ** 2) * alpha_2q
 
         with self.assertRaises(QiskitError):
-            rb.calculate_2q_epc(gpc, epg_q01, [0, 1], [epgs_q0, epgs_q1]),
+            rb.calculate_2q_epc(gpc, epg_q01, [0, 1], [epgs_q0, epgs_q1])
 
         self.assertAlmostEqual(
             rb.calculate_2q_epc(gpc, epg_q01, [0, 1], [epgs_q0, epgs_q1], two_qubit_name='cz'),
