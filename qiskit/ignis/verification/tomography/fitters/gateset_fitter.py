@@ -192,7 +192,7 @@ class GaugeOptimize():
         self.n = len(Gs)
         self.rho = rho
 
-    def x_to_Gs_E(self, x: np.array) -> List[np.array]:
+    def _x_to_Gs_E(self, x: np.array) -> List[np.array]:
         """Converts the gauge to the gateset defined by it
         Args:
             x: An array representation of the B matrix
@@ -213,7 +213,7 @@ class GaugeOptimize():
         except np.linalg.LinAlgError:
             return np.inf
 
-    def obj_fn(self, x: np.array) -> float:
+    def _obj_fn(self, x: np.array) -> float:
         """The norm-based score function for the gauge optimizer
         Args:
             x: An array representation of the B matrix
@@ -222,7 +222,7 @@ class GaugeOptimize():
             The sum of norm differences between the ideal gateset
             and the one corresponding to B
         """
-        Gs_E = self.x_to_Gs_E(x)
+        Gs_E = self._x_to_Gs_E(x)
         return sum([np.linalg.norm(G - G_E)
                     for (G, G_E)
                     in zip(self.Gs, Gs_E)])
@@ -233,8 +233,8 @@ class GaugeOptimize():
             The optimal gateset found by the gauge optimization
         """
         initial_value = np.array([(F @ self.rho).T[0] for F in self.Fs]).T
-        result = opt.minimize(self.obj_fn, initial_value)
-        return self.x_to_Gs_E(result.x)
+        result = opt.minimize(self._obj_fn, initial_value)
+        return self._x_to_Gs_E(result.x)
 
 
 def split_list(l: List, sizes: List) -> List[List]:
@@ -340,10 +340,10 @@ class GST_Optimize():
         self.Fs = Fs
         self.Fs_names = list(Fs.keys())
         self.qubits = qubits
-        self.obj_fn_data = self.compute_objective_function_data()
+        self.obj_fn_data = self._compute_objective_function_data()
         self.initial_value = None
 
-    def compute_objective_function_data(self) -> List:
+    def _compute_objective_function_data(self) -> List:
         """Computes auxiliary data needed for efficient computation
         of the objective function.
 
@@ -371,7 +371,7 @@ class GST_Optimize():
                 obj_fn_data.append((matrices, m_ijk))
         return obj_fn_data
 
-    def split_input_vector(self, x: np.array) -> Tuple:
+    def _split_input_vector(self, x: np.array) -> Tuple:
         """Reconstruct the GST data from its vector representation
         Args:
             x: The vector representation of the GST data
@@ -410,11 +410,11 @@ class GST_Optimize():
 
         return (E, rho, Gs)
 
-    def join_input_vector(self,
-                          E: np.array,
-                          rho: np.array,
-                          Gs: List[np.array]
-                          ) -> np.array:
+    def _join_input_vector(self,
+                           E: np.array,
+                           rho: np.array,
+                           Gs: List[np.array]
+                           ) -> np.array:
         """Converts the GST data into a vector representation
         Args:
             E: The POVM measurement operator
@@ -442,7 +442,7 @@ class GST_Optimize():
             result += complex_matrix_to_vec(G_T, ds)
         return result
 
-    def obj_fn(self, x: np.array) -> float:
+    def _obj_fn(self, x: np.array) -> float:
         """The MLE objective function
         Args:
             x: The vector representation of the GST data (E, rho, Gs)
@@ -462,7 +462,7 @@ class GST_Optimize():
 
             For additional info, see section 3.5 in arXiv:1509.02921
         """
-        E, rho, G_matrices = self.split_input_vector(x)
+        E, rho, G_matrices = self._split_input_vector(x)
         val = 0
         for term in self.obj_fn_data:
             term_val = E
@@ -475,7 +475,7 @@ class GST_Optimize():
             val = val + term_val
         return val
 
-    def ptm_matrix_values(self, x: np.array) -> List[np.array]:
+    def _ptm_matrix_values(self, x: np.array) -> List[np.array]:
         """Returns a vectorization of the gates matrices
         Args:
             x: The vector representation of the GST data
@@ -491,13 +491,13 @@ class GST_Optimize():
             Choi matrix of G is T@T^{dagger}. This needs to be
             converted into the PTM representation of G.
         """
-        _, _, G_matrices = self.split_input_vector(x)
+        _, _, G_matrices = self._split_input_vector(x)
         result = []
         for G in G_matrices:
             result = result + matrix_to_vec(G)
         return result
 
-    def rho_trace(self, x: np.array) -> Tuple[float]:
+    def _rho_trace(self, x: np.array) -> Tuple[float]:
         """Returns the trace of the GST initial state
         Args:
             x: The vector representation of the GST data
@@ -505,13 +505,13 @@ class GST_Optimize():
             The trace of rho - the initial state of the GST. The real
             and imaginary part are returned separately.
         """
-        _, rho, _ = self.split_input_vector(x)
+        _, rho, _ = self._split_input_vector(x)
         d = (2 ** self.qubits)  # rho is dxd and starts at variable d^2
         rho = rho.reshape((d, d))
         trace = sum([rho[i][i] for i in range(d)])
         return (np.real(trace), np.imag(trace))
 
-    def bounds_eq_constraint(self, x: np.array) -> List[float]:
+    def _bounds_eq_constraint(self, x: np.array) -> List[float]:
         """Equality MLE constraints on the GST data
 
         Args:
@@ -529,7 +529,7 @@ class GST_Optimize():
 
             For additional info, see section 3.5.2 in arXiv:1509.02921
         """
-        ptm_matrix = self.ptm_matrix_values(x)
+        ptm_matrix = self._ptm_matrix_values(x)
         bounds_eq = []
         n = len(self.Gs)
         d = (2 ** self.qubits)  # rho is dxd and starts at variable d^2
@@ -549,7 +549,7 @@ class GST_Optimize():
                 i += 1
         return bounds_eq
 
-    def bounds_ineq_constraint(self, x: np.array) -> List[float]:
+    def _bounds_ineq_constraint(self, x: np.array) -> List[float]:
         """Inequality MLE constraints on the GST data
 
         Args:
@@ -567,7 +567,7 @@ class GST_Optimize():
 
             For additional info, see section 3.5.2 in arXiv:1509.02921
         """
-        ptm_matrix = self.ptm_matrix_values(x)
+        ptm_matrix = self._ptm_matrix_values(x)
         bounds_ineq = []
         n = len(self.Gs)
         d = (2 ** self.qubits)  # rho is dxd and starts at variable d^2
@@ -586,7 +586,7 @@ class GST_Optimize():
                 i += 1
         return bounds_ineq
 
-    def rho_trace_constraint(self, x: np.array) -> List[float]:
+    def _rho_trace_constraint(self, x: np.array) -> List[float]:
         """The constraint Tr(rho) = 1
         Args:
             x: The vector representation of the GST data
@@ -597,10 +597,10 @@ class GST_Optimize():
         Additional information:
             We demand real(Tr(rho)) == 1 and imag(Tr(rho)) == 0
         """
-        trace = self.rho_trace(x)
+        trace = self._rho_trace(x)
         return [trace[0] - 1, trace[1]]
 
-    def constraints(self) -> List[Dict]:
+    def _constraints(self) -> List[Dict]:
         """Generates the constraints for the MLE optimization
 
         Returns:
@@ -613,9 +613,9 @@ class GST_Optimize():
             that are being constrained.
         """
         cons = []
-        cons.append({'type': 'eq', 'fun': self.rho_trace_constraint})
-        cons.append({'type': 'eq', 'fun': self.bounds_eq_constraint})
-        cons.append({'type': 'ineq', 'fun': self.bounds_ineq_constraint})
+        cons.append({'type': 'eq', 'fun': self._rho_trace_constraint})
+        cons.append({'type': 'eq', 'fun': self._bounds_eq_constraint})
+        cons.append({'type': 'ineq', 'fun': self._bounds_ineq_constraint})
         return cons
 
     def _convert_from_ptm(self, vector):
@@ -627,7 +627,7 @@ class GST_Optimize():
         v = vector.reshape(4)
         return v[0] * Id + v[1] * X + v[2] * Y + v[3] * Z
 
-    def process_result(self, x: np.array) -> Dict:
+    def _process_result(self, x: np.array) -> Dict:
         """Transforms the optimization result to a friendly format
         Args:
             x: the optimization result vector
@@ -635,7 +635,7 @@ class GST_Optimize():
         Returns:
             The final GST data, as dictionary.
         """
-        E, rho, G_matrices = self.split_input_vector(x)
+        E, rho, G_matrices = self._split_input_vector(x)
         result = {}
         result['E'] = Operator(self._convert_from_ptm(E))
         result['rho'] = DensityMatrix(self._convert_from_ptm(rho))
@@ -654,7 +654,7 @@ class GST_Optimize():
             rho: The inital state.
             Gs: A list of the gate matrices.
         """
-        self.initial_value = self.join_input_vector(E, rho, Gs)
+        self.initial_value = self._join_input_vector(E, rho, Gs)
 
     def optimize(self, initial_value: Optional[np.array] = None) -> Dict:
         """Performs the MLE optimization for gate set tomography
@@ -665,8 +665,8 @@ class GST_Optimize():
         """
         if initial_value is not None:
             self.initial_value = initial_value
-        result = opt.minimize(self.obj_fn, self.initial_value,
+        result = opt.minimize(self._obj_fn, self.initial_value,
                               method='SLSQP',
-                              constraints=self.constraints())
-        formatted_result = self.process_result(result.x)
+                              constraints=self._constraints())
+        formatted_result = self._process_result(result.x)
         return formatted_result
