@@ -587,7 +587,7 @@ def calculate_2q_epc(gate_per_cliff: Dict[int, Dict[str, float]],
 
         print('Total sequence EPC: %f, 2Q gate contribution: %f' % (epc, epc_2q))
 
-    As you can see two qubit gate contribution is dominant.
+    As you can see two qubit gate contribution is dominant in this RB sequence.
 
     References:
         [1] D. C. McKay, S. Sheldon, J. A. Smolin, J. M. Chow,
@@ -609,8 +609,6 @@ def calculate_2q_epc(gate_per_cliff: Dict[int, Dict[str, float]],
             in the gate count dictionary, or length of ``qubit_pair`` is not 2.
 
     """
-    list_epgs_1q = list_epgs_1q or []
-
     if len(qubit_pair) != 2:
         raise QiskitError('Number of qubit is not 2.')
 
