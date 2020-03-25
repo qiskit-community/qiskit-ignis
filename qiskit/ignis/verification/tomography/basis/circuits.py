@@ -194,6 +194,7 @@ def gateset_tomography_circuits(gateset_basis='default'):
                                             prep_labels=prep_labels,
                                             prep_basis=prep_basis)
         for tomography_circuit in gst_circuits:
+            # Getting the names of Fi and Fj using regex
             res = re.search("'(.*)'.*'(.*)'", tomography_circuit.name)
             tomography_circuit.name = str((res.group(1), gate, res.group(2)))
         all_circuits = all_circuits + gst_circuits
@@ -207,6 +208,7 @@ def gateset_tomography_circuits(gateset_basis='default'):
                                         prep_labels=prep_labels,
                                         prep_basis=prep_basis)
     for tomography_circuit in gst_circuits:
+        # Getting the names of Fi and Fj using regex
         res = re.search("'(.*)'.*'(.*)'", tomography_circuit.name)
         tomography_circuit.name = str((res.group(1), res.group(2)))
     all_circuits = all_circuits + gst_circuits
@@ -218,6 +220,7 @@ def gateset_tomography_circuits(gateset_basis='default'):
                                         prep_labels=None,
                                         prep_basis=None)
     for tomography_circuit in gst_circuits:
+        # Getting the name of Fj using regex
         res = re.search("'(.*)'", tomography_circuit.name)
         tomography_circuit.name = str((res.group(1),))
     all_circuits = all_circuits + gst_circuits
