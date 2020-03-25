@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2019, 2020.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -13,6 +13,10 @@
 
 """
 Generates accreditation circuits
+Implementation follows the methods from
+Samuele Ferracin, Theodoros Kapourniotis and Animesh Datta
+New Journal of Physics, Volume 21, November 2019
+https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
 """
 import copy
 from numpy import random
@@ -20,37 +24,61 @@ from qiskit import QuantumCircuit
 from .qotp import layer_parser, QOTP_fromlayers
 
 
-class accreditationCircuits:
-    """This class generates accreditation circuits from a target."""
-    def __init__(self, targetcirc, twoqubitgate='cz', coupling_map=None):
-        self.targetCircuit(targetcirc,
-                           twoqubitgate=twoqubitgate,
-                           coupling_map=coupling_map)
+class AccreditationCircuits:
+    """
+    This class generates accreditation circuits from a target.
 
-    def targetCircuit(self, targetcirc, twoqubitgate='cz', coupling_map=None):
+    Implementation follows the methods from
+    Samuele Ferracin, Theodoros Kapourniotis and Animesh Datta
+    New Journal of Physics, Volume 21, November 2019
+    https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
+    """
+    def __init__(self, target_circ, two_qubit_gate='cx', coupling_map=None):
+        self.targetCircuit(target_circ,
+                           two_qubit_gate=two_qubit_gate,
+                           coupling_map=coupling_map)
         """
-        Load target circuit in to class,
+        Initialize the circuit generation class
         parse into layers
-            Args:
-                targetcirc (circuit): a qiskit circuit to accredit
-                coupling_map (list): some particular device topology
+
+        Args:
+            target_circ (QuantumCircuit): a qiskit circuit to accredit
+            two_qubit_gate (string): a flag as to which 2 qubit
+                gate to compile with, can be cx or cz
+            coupling_map: some particular device topology as list
+            coupling_map (list): some particular device topology
                 as list of list (e.g. [[0,1],[1,2],[2,0]])
         """
-        self.target = copy.deepcopy(targetcirc)
+
+    def targetCircuit(self, target_circ, two_qubit_gate='cx', coupling_map=None):
+        """
+        Load target circuit in to class, and parse into layers
+
+        Args:
+            target_circ (QuantumCircuit): a qiskit circuit to accredit
+            two_qubit_gate (string): a flag as to which 2 qubit
+                gate to compile with, can be cx or cz
+            coupling_map: some particular device topology as list
+            coupling_map (list): some particular device topology
+                as list of list (e.g. [[0,1],[1,2],[2,0]])
+        """
+        self.target = copy.deepcopy(target_circ)
         # parse circuit into layers
         self.layers = layer_parser(self.target,
-                                   twoqubitgate=twoqubitgate,
+                                   two_qubit_gate=two_qubit_gate,
                                    coupling_map=coupling_map)
 
     def generateCircuits(self, num_trap):
         """
         Generate quantum circuits for accreditation
-            Args:
-                num_trap (int): number of trap circuits
-            Returns:
-                circuit_list (list): accreditation circuits
-                postp_list (list): strings used for classical post-processing
-                v_zero (int): position of target circuit
+
+        Args:
+            num_trap (int): number of trap circuits
+
+        Returns:
+            circuit_list (list): accreditation circuits
+            postp_list (list): strings used for classical post-processing
+            v_zero (int): position of target circuit
         """
         # Position of the target
         v_zero = random.randint(0, num_trap+1)
@@ -74,11 +102,12 @@ class accreditationCircuits:
         """
         Routine 2.
         It returns random 1-qubit gate for trap circuits
-            Args:
-                czs (list): a list of circuits encoding the cz gate layers
 
-            Returns:
-                gate_trap (list): list of all 1-qubit gates in trap circuit
+        Args:
+            czs (list): a list of circuits encoding the cz gate layers
+
+        Returns:
+            gate_trap (list): list of all 1-qubit gates in trap circuit
         """
         # generate a temporary set of single qubit gate initialized to I
         qregs = self.layers['qregs']
@@ -124,9 +153,9 @@ class accreditationCircuits:
                         gate_trap[layer].h(qsub[1])
                         gate_trap[layer+1].h(qsub[1])
                 else:
-                    raise Exception("Two qubit gate {0}".format(g2q)
-                                    + "is not implemented"
-                                    + " in accreditation circuits")
+                    raise Exception("Two qubit gate {0}"
+                                    "is not implemented"
+                                    "in accreditation circuits".format(g2q))
             for q in self.layers['qregs']:
                 # if we didn't do anything to this index yet
                 # apply a h or an s

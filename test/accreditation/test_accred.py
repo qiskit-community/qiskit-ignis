@@ -51,7 +51,7 @@ class TestAccred(unittest.TestCase):
         target_circuit.h(3)
         target_circuit.measure(q_reg, c_reg)
         # make trap circuits
-        accredsys = accred.accreditationCircuits(target_circuit)
+        accredsys = accred.AccreditationCircuits(target_circuit)
         circ_list, postp_list, v_zero = accredsys.generateCircuits(v)
         self.assertEqual(len(circ_list), v+1,
                          "Error: Not correct number of trap circuits")
@@ -63,34 +63,40 @@ class TestAccred(unittest.TestCase):
     def test_accred_fitter(self):
 
         """ Test the fitter with some pickled result data"""
-
+        # ideal results
         f0 = open(os.path.join(os.path.dirname(__file__),
                                'accred_ideal_results.pkl'), 'rb')
         ideal_results = pickle.load(f0)
         f0.close()
-        all_outs = ideal_results['all_outputs']
+        all_results = ideal_results['all_results']
         all_postp_list = ideal_results['all_postp_list']
         all_v_zero = ideal_results['all_v_zero']
-        test_1 = accred.accreditationFitter()
-        for a, b, c in zip(all_outs, all_postp_list, all_v_zero):
+        test_1 = accred.AccreditationFitter()
+        for a, b, c in zip(all_results, all_postp_list, all_v_zero):
             test_1.single_protocol_run(a, b, c)
             self.assertEqual(test_1.flag,
                              'accepted',
                              "Error: Ideal outcomes not passing accred")
+        # noisy results
         f0 = open(os.path.join(os.path.dirname(__file__),
                                'accred_noisy_results.pkl'), 'rb')
         noisy_results = pickle.load(f0)
         f0.close()
-        all_outs = noisy_results['all_outputs']
+        all_results = noisy_results['all_results']
         all_postp_list = noisy_results['all_postp_list']
         all_v_zero = noisy_results['all_v_zero']
         all_acc = noisy_results['all_acc']
-        test_1 = accred.accreditationFitter()
-        for a, b, c, d in zip(all_outs, all_postp_list, all_v_zero, all_acc):
+        test_1 = accred.AccreditationFitter()
+        for a, b, c, d in zip(all_results, all_postp_list, all_v_zero, all_acc):
             test_1.single_protocol_run(a, b, c)
             self.assertEqual(test_1.flag,
                              d,
                              "Error: Noisy outcomes not correct accred")
+        test_1.bound_variation_distance(noisy_results['theta'])
+        bound = test_1.bound
+        self.assertEqual(bound,
+                         noisy_results['bound'],
+                         "Error: Incorrect bound for noisy outcomes")
 
 
 if __name__ == '__main__':

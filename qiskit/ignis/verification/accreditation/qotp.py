@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020.
+# (C) Copyright IBM 2019, 2020.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,14 +10,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 # pylint: disable= no-member
-"""
-Applies a Quantum One Time Pad (QOTP)
 
-This is essentially the same protocol as used in
-randomized compiling, but follows the methods in
 
-https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
 """
+Quantum one-time pad
+"""
+
+
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.converters.circuit_to_dag import circuit_to_dag
@@ -25,21 +24,23 @@ from qiskit.converters.dag_to_circuit import dag_to_circuit
 from qiskit.compiler import transpile
 
 
-def layer_parser(circ, twoqubitgate='cx', coupling_map=None):
+def layer_parser(circ, two_qubit_gate='cx', coupling_map=None):
     """
     Tranforms general circuits into a nice form for a qotp.
-        Args:
-            circ (QuantumCircuit): A generic quantum circuit
-            twoqubitgate (string): a flag as to which 2 qubit
-                gate to compile with
-            coupling_map: some particular device topology as list
-                of list (e.g. [[0,1],[1,2],[2,0]])
-        Returns:
-            singlequbit_layers :  a list of circuits describing
-                the single qubit gates
-            cz_layers: a list of circuits describing the cz layers
-            meas_layer: a circuit describing the final measurement
+
+    Args:
+        circ (QuantumCircuit): A generic quantum circuit
+        two_qubit_gate (string): a flag as to which 2 qubit
+            gate to compile with, can be cx or cz
+        coupling_map: some particular device topology as list
+            of list (e.g. [[0,1],[1,2],[2,0]])
+    Returns:
+        singlequbit_layers (lsit):  a list of circuits describing
+            the single qubit gates
+        cz_layers (list): a list of circuits describing the cz layers
+        meas_layer (QuantumCircuit): a circuit describing the final measurement
     """
+
     # transpile to single qubits and cx
     # TODO: replace cx with cz when that is available
     circ_internal = transpile(circ,
@@ -86,16 +87,16 @@ def layer_parser(circ, twoqubitgate='cx', coupling_map=None):
                     singlequbitlayers.append(QuantumCircuit(qregs, cregs))
                     twoqubitlayers.append(QuantumCircuit(qregs, cregs))
                     current2qs = []
-                if twoqubitgate == 'cx':
+                if two_qubit_gate == 'cx':
                     # append cx
                     twoqubitlayers[-1].cx(q0, q1)
-                elif twoqubitgate == 'cz':
+                elif two_qubit_gate == 'cz':
                     # append and correct to cz with h gates
                     twoqubitlayers[-1].cz(q0, q1)
                     singlequbitlayers[-1].h(qsub[1])
                     singlequbitlayers[-2].h(qsub[1])
                 else:
-                    raise Exception("Two qubit gate {0}".format(twoqubitgate)
+                    raise Exception("Two qubit gate {0}".format(two_qubit_gate)
                                     + " is not implemented in qotp")
                 # add to current
                 current2qs.append(q0)
@@ -114,7 +115,7 @@ def layer_parser(circ, twoqubitgate='cx', coupling_map=None):
     parsedlayers = {'singlequbitlayers': singlequbitlayers,
                     'twoqubitlayers': twoqubitlayers,
                     'measlayer': measlayer,
-                    'twoqubitgate': twoqubitgate,
+                    'twoqubitgate': two_qubit_gate,
                     'qregs': qregs,
                     'cregs': cregs}
     return parsedlayers
@@ -124,12 +125,14 @@ def QOTP_fromlayers(layers):
     """
     An intermediate step of a qotp in which we've converted the circuit
     to layers and only return a single pad or compilation
-        Args:
-            layers (dict): parsed layers from the layer parser
-        Returns:
-            qotp_circ (circuit): output onetime pad circ
-            qotp_postp(list): correction as liist of bits
+
+    Args:
+        layers (dict): parsed layers from the layer parser
+    Returns:
+        qotp_circ (QuantumCircuit): output onetime pad circ
+        qotp_postp (list): correction as liist of bits
     """
+
     # make some circuits
     qregs = layers['qregs']
     cregs = layers['cregs']
@@ -205,21 +208,31 @@ def QOTP_fromlayers(layers):
     return qotp_circ, qotp_postp
 
 
-def QOTP(circ, num, twoqubitgate='cx', coupling_map=None):
+def QOTP(circ, num, two_qubit_gate='cx', coupling_map=None):
     """
     Performs a QOTP (or random compilation) on a generic circuit.
-        Args:
-            circ (QuantumCircuit): A generic quantum circuit
-            num (int): the number of one-time pads to return
-            coupling_map: so particular device topology as list of list
-                            (e.g. [[0,1],[1,2],[2,0]])
-        Returns:
-            qotp_circs: a list of circuits with qotp applied
-            qotp_postps: a list of arrays specifying the one time pads
+
+    This is essentially the same protocol as used in
+    randomized compiling, but follows the methods in
+    Samuele Ferracin, Theodoros Kapourniotis and Animesh Datta
+    New Journal of Physics, Volume 21, November 2019
+    https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
+
+    Args:
+        circ (QuantumCircuit): A generic quantum circuit
+        num (int): the number of one-time pads to return
+        two_qubit_gate (string): a flag as to which 2 qubit
+            gate to compile with, can be cx or cz
+        coupling_map (list): so particular device topology as list of list
+                        (e.g. [[0,1],[1,2],[2,0]])
+    Returns:
+        qotp_circs (list): a list of circuits with qotp applied
+        qotp_postps (list): a list of arrays specifying the one time pads
     """
+
     # break into layers
     layers = layer_parser(circ,
-                          twoqubitgate=twoqubitgate,
+                          two_qubit_gate=two_qubit_gate,
                           coupling_map=coupling_map)
     # output lists
     qotp_circs = []
@@ -234,13 +247,15 @@ def QOTP(circ, num, twoqubitgate='cx', coupling_map=None):
 
 def QOTPCorrectCounts(qotp_counts, qotp_postp):
     """
-    Corrects a dictionary of results, shifting the otp
-        Args:
-            qotp_counts: a dict of exp counts
-            qotp_postp: a binary list denoting the one time pad
-        Returns:
-            counts_out: the corrected counts dict
+    Corrects a dictionary of results, shifting the qotp
+
+    Args:
+        qotp_counts (dict): a dict of exp counts
+        qotp_postp (list): a binary list denoting the one time pad
+    Returns:
+        counts_out (dict): the corrected counts dict
     """
+
     counts_out = {}
     for key, val in qotp_counts.items():
         keyshift = [1 if k == "1" else 0 for k in key]

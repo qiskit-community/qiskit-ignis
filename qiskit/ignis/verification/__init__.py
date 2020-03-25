@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2019, 2020.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -90,8 +90,8 @@ Accreditation
 .. autosummary::
    :toctree: ../stubs/
 
-   accreditationCircuits
-   accreditationFitter
+   AccreditationCircuits
+   AccreditationFitter
    QOTP
    QOTPCorrectCounts
 
@@ -114,4 +114,4 @@ from .tomography import (state_tomography_circuits,
                          TomographyFitter,
                          marginal_counts, combine_counts,
                          expectation_counts, count_keys)
-from .accreditation import accreditationCircuits, accreditationFitter, QOTP, QOTPCorrectCounts
+from .accreditation import AccreditationCircuits, AccreditationFitter, QOTP, QOTPCorrectCounts
