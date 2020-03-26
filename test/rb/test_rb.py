@@ -715,13 +715,6 @@ class TestRBUtils(unittest.TestCase):
         self.assertAlmostEqual(twoq_coherence_err, 0.00597, 5,
                                "Error: 2Q Coherence Limit")
 
-        twoq_epc = rb.rb_utils.twoQ_clifford_error([5.2, 5.2, 1.5],
-                                                   [0, 1, -1],
-                                                   [0.001, 0.0015, 0.02])
-
-        self.assertAlmostEqual(twoq_epc, 0.0446283, 6,
-                               "Error: 2Q EPC Calculation")
-
     @staticmethod
     def create_fake_circuits(num_gates):
         """Helper function to generate list of circuits with given basis gate numbers."""
@@ -858,6 +851,74 @@ class TestRBUtils(unittest.TestCase):
         # pass when correct name is specified
         self.assertAlmostEqual(
             rb.calculate_2q_epg(gpc, epc, [0, 1], two_qubit_name='cz'), epc/1.5
+        )
+
+    def test_twoQ_clifford(self):
+        """Test calculating EPC from EPC."""
+        error_1q = 0.001
+        error_2q = 0.01
+
+        gpc = {0: {'cx': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5},
+               1: {'cx': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5}}
+        gate_qubit = [0, 0, 0, 1, 1, 1, -1]
+        gate_err = [0, error_1q, 2*error_1q, 0, error_1q, 2*error_1q, error_2q]
+
+        alpha_2q = (1 - 4 / 3 * error_2q) ** 1.5
+        alpha_1q = (1 - 2 * error_1q) ** 0.3 * (1 - 4 * error_1q) ** 0.5
+
+        alpha_c_2q = 1 / 5 * (2 * alpha_1q + 3 * alpha_1q * alpha_1q) * alpha_2q
+
+        epc = rb.twoQ_clifford_error(gpc, gate_qubit, gate_err)
+
+        self.assertAlmostEqual(epc, 3 / 4 * (1 - alpha_c_2q))
+
+    def test_calculate_1q_epc(self):
+        """Test calculating EPC from EPG of single qubit gates."""
+        gpc = {0: {'cx': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5}}
+        epgs = {'u1': 0, 'u2': 0.001, 'u3': 0.002}
+
+        epc_ref = 1 - (1 - 0.001)**0.3 * (1 - 0.002)**0.5
+        epc = rb.calculate_1q_epc(gpc, epgs, 0)
+
+        self.assertAlmostEqual(epc, epc_ref)
+
+    def test_calculate_2q_epc(self):
+        """Test calculating two qubit EPC from EPGs."""
+        gpc = {0: {'cx': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5},
+               1: {'cx': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5}}
+        epgs_q0 = {'u1': 0, 'u2': 1e-4, 'u3': 2e-4}
+        epgs_q1 = {'u1': 0, 'u2': 1e-4, 'u3': 2e-4}
+        epg_q01 = 1e-3
+
+        alpha_1q = (1 - 2 * 1e-4)**0.3 * (1 - 2 * 2e-4)**0.5
+        alpha_2q = (1 - 4 / 3 * 1e-3)**1.5
+
+        alpha_c = 1 / 5 * (2 * alpha_1q + 3 * alpha_1q ** 2) * alpha_2q
+
+        self.assertAlmostEqual(
+            rb.calculate_2q_epc(gpc, epg_q01, [0, 1], [epgs_q0, epgs_q1]),
+            3 / 4 * (1 - alpha_c)
+        )
+
+    def test_calculate_2q_epc_with_another_gate_name(self):
+        """Test calculating two qubit EPC from EPGs when another gate name is specified."""
+        gpc = {0: {'cz': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5},
+               1: {'cz': 1.5, 'u1': 0.1, 'u2': 0.3, 'u3': 0.5}}
+        epgs_q0 = {'u1': 0, 'u2': 1e-4, 'u3': 2e-4}
+        epgs_q1 = {'u1': 0, 'u2': 1e-4, 'u3': 2e-4}
+        epg_q01 = 1e-3
+
+        alpha_1q = (1 - 2 * 1e-4) ** 0.3 * (1 - 2 * 2e-4) ** 0.5
+        alpha_2q = (1 - 4 / 3 * 1e-3) ** 1.5
+
+        alpha_c = 1 / 5 * (2 * alpha_1q + 3 * alpha_1q ** 2) * alpha_2q
+
+        with self.assertRaises(QiskitError):
+            rb.calculate_2q_epc(gpc, epg_q01, [0, 1], [epgs_q0, epgs_q1])
+
+        self.assertAlmostEqual(
+            rb.calculate_2q_epc(gpc, epg_q01, [0, 1], [epgs_q0, epgs_q1], two_qubit_name='cz'),
+            3 / 4 * (1 - alpha_c)
         )
 
 
