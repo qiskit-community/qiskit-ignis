@@ -33,6 +33,7 @@ class TestGatesetTomography(unittest.TestCase):
                                 noise_model=None,
                                 gateset_basis='Default'):
         backend_qasm = Aer.get_backend('qasm_simulator')
+        #circuits = gateset_tomography_circuits(gateset_basis=gateset_basis, measured_qubits=[1])
         circuits = gateset_tomography_circuits(gateset_basis=gateset_basis)
         qobj = assemble(circuits, shots=shots)
         result = backend_qasm.run(qobj, noise_model=noise_model).result()

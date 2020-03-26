@@ -90,6 +90,9 @@ class GatesetTomographyFitter:
             p_ijk = E*F_i*G_k*F_j*rho
             p_ij = E*F_i*F_j*rho
 
+            We have p_ijk = self.probs[(Fj, Gk, Fi)] since in self.probs
+            (Fj, Gk, Fi) indicates first applying Fj, then Gk, then Fi.
+
             One constructs the Gram matrix g = (p_ij)_ij
             which can be described as a product g=AB
             where A = sum (i> <E F_i) and B=sum (F_j rho><j)
@@ -171,6 +174,7 @@ class GatesetTomographyFitter:
         gauge_opt = GaugeOptimize(Gs, Gs_E, Fs, rho)
         Gs_E = gauge_opt.optimize()
         optimizer = GST_Optimize(self.gateset_basis.gate_labels,
+                                 self.gateset_basis.spam_labels,
                                  self.gateset_basis.spam_spec,
                                  self.probs)
         optimizer.set_initial_value(E, rho, Gs_E)
@@ -279,6 +283,7 @@ def get_cholesky_like_decomposition(mat: np.array) -> np.array:
 class GST_Optimize():
     def __init__(self,
                  Gs: List[str],
+                 Fs_names: Tuple[str],
                  Fs: Dict[str, Tuple[str]],
                  probs: Dict[Tuple[str], float],
                  qubits: int = 1
@@ -286,14 +291,15 @@ class GST_Optimize():
         """Initializes the data for the MLE optimizer
         Args:
             Gs: The names of the gates in the gateset
+            Fs_names: The names of the SPAM circuits
             Fs: The SPAM specification (SPAM name -> gate names)
             probs: The probabilities obtained experimentally
             qubits: the size of the gates in the gateset
         """
         self.probs = probs
         self.Gs = Gs
+        self.Fs_names = Fs_names
         self.Fs = Fs
-        self.Fs_names = sorted(list(Fs.keys()))
         self.qubits = qubits
         self.obj_fn_data = self._compute_objective_function_data()
         self.initial_value = None
@@ -457,10 +463,10 @@ class GST_Optimize():
         E, rho, G_matrices = self._split_input_vector(x)
         val = 0
         for term in self.obj_fn_data:
-            term_val = E
+            term_val = rho
             for G_index in term[0]:
-                term_val = term_val @ G_matrices[G_index]
-            term_val = term_val @ rho
+                term_val = G_matrices[G_index] @ term_val
+            term_val = E @ term_val
             term_val = np.real(term_val[0][0])
             term_val = term_val - term[1]  # m_{ijk}
             term_val = term_val ** 2

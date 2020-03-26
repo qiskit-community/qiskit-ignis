@@ -64,7 +64,7 @@ class GateSetBasis:
         self.gates = gates
         self.gate_matrices = {name: np.real(self._gate_matrix(gate))
                               for (name, gate) in gates.items()}
-        self.spam_labels = tuple(spam.keys())
+        self.spam_labels = tuple(sorted(spam.keys()))
         self.spam_spec = spam
 
     def _gate_matrix(self, gate):
