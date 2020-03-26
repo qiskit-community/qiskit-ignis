@@ -32,7 +32,7 @@ from qiskit.circuit.reset import Reset
 
 from .tomographybasis import TomographyBasis
 from .paulibasis import PauliBasis
-from .gatesetbasis import default_gateset_basis
+from .gatesetbasis import default_gateset_basis, GateSetBasis
 from .sicbasis import SICBasis
 
 # Create logger
@@ -135,14 +135,18 @@ def process_tomography_circuits(
 # Gate set tomography circuits for preparation and measurement
 ###########################################################################
 
-def gateset_tomography_circuits(gateset_basis='default', measured_qubits = None):
+def gateset_tomography_circuits(gateset_basis: Union[str,
+                                                     GateSetBasis] = 'default',
+                                measured_qubits: Optional[List[int]] = None
+                                ) -> List[QuantumCircuit]:
     r"""
     Return a list of quantum gate set tomography circuits.
 
     The circuits are fully constructed from the data given in gateset_basis
 
     Args:
-        gateset_basis (GateSetBasis): The gateset and SPAM data
+        gateset_basis: The gateset and SPAM data
+        measured_qubits: A list of the numbers of the qubits to be acted upon
 
     Returns:
         A list of QuantumCircuit objects containing the original circuit
