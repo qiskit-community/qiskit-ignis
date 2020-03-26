@@ -135,23 +135,27 @@ def process_tomography_circuits(
 # Gate set tomography circuits for preparation and measurement
 ###########################################################################
 
-def gateset_tomography_circuits(gateset_basis: Union[str,
-                                                     GateSetBasis] = 'default',
-                                measured_qubits: Optional[List[int]] = None
+def gateset_tomography_circuits(measured_qubits: Optional[List[int]] = None,
+                                gateset_basis: Union[str,
+                                                     GateSetBasis] = 'default'
                                 ) -> List[QuantumCircuit]:
-    r"""
-    Return a list of quantum gate set tomography circuits.
+    r"""Return a list of quantum gate set tomography (GST) circuits.
 
-    The circuits are fully constructed from the data given in gateset_basis
+    The circuits are fully constructed from the data given in gateset_basis.
+    Note that currently this is only implemented for the single-qubits.
 
     Args:
-        gateset_basis: The gateset and SPAM data
-        measured_qubits: A list of the numbers of the qubits to be acted upon
+        measured_qubits: The qubits to perform GST. If None GST will be
+                         performed on qubit-0.
+        gateset_basis: The gateset and SPAM data.
 
     Returns:
         A list of QuantumCircuit objects containing the original circuit
         with state preparation circuits prepended, and measurement circuits
         appended.
+
+    Raises:
+        QiskitError: If called for more than 1 measured qubit.
 
     Additional Information:
         Gate set tomography is performed on a gate set (G0, G1,...,Gm)
@@ -183,8 +187,8 @@ def gateset_tomography_circuits(gateset_basis: Union[str,
         measured_qubits = [0]
 
     if len(measured_qubits) > 1:
-        raise RuntimeError("Only 1-qubit gate set tomography "
-                           "is currently supported")
+        raise QiskitError("Only 1-qubit gate set tomography "
+                          "is currently supported")
     num_qubits = 1 + max(measured_qubits)
 
     all_circuits = []
