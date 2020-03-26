@@ -135,7 +135,7 @@ def process_tomography_circuits(
 # Gate set tomography circuits for preparation and measurement
 ###########################################################################
 
-def gateset_tomography_circuits(gateset_basis='default'):
+def gateset_tomography_circuits(gateset_basis='default', measured_qubits = None):
     r"""
     Return a list of quantum gate set tomography circuits.
 
@@ -175,6 +175,13 @@ def gateset_tomography_circuits(gateset_basis='default'):
         these experiments, suitably labeled with a tuple of the corresponding
         gate/SPAM labels
     """
+    if measured_qubits is None:
+        measured_qubits = [0]
+
+    if len(measured_qubits) > 1:
+        raise RuntimeError("Only 1-qubit gate set tomography "
+                           "is currently supported")
+    num_qubits = 1 + max(measured_qubits)
 
     all_circuits = []
     if gateset_basis == 'default':
@@ -183,10 +190,12 @@ def gateset_tomography_circuits(gateset_basis='default'):
     prep_basis = gateset_basis.get_tomography_basis()
     meas_labels = meas_basis.measurement_labels
     prep_labels = prep_basis.preparation_labels
-    qubit = QuantumRegister(1)
+#    qubit = QuantumRegister(num_qubits)
     # Experiments of the form <E|F_i G_k F_j|rho>
     for gate in gateset_basis.gate_labels:
-        circuit = QuantumCircuit(qubit)
+        circuit = QuantumCircuit(num_qubits)
+        # we assume only 1 qubit for now
+        qubit = circuit.qubits[measured_qubits[0]]
         gateset_basis.add_gate_to_circuit(circuit, qubit, gate)
         gst_circuits = _tomography_circuits(circuit, qubit, qubit,
                                             meas_labels=meas_labels,
@@ -201,7 +210,8 @@ def gateset_tomography_circuits(gateset_basis='default'):
 
     # Experiments of the form <E|F_i F_j|rho>
     # Can be skipped if one of the gates is ideal identity
-    circuit = QuantumCircuit(qubit)
+    circuit = QuantumCircuit(num_qubits)
+    qubit = circuit.qubits[measured_qubits[0]]
     gst_circuits = _tomography_circuits(circuit, qubit, qubit,
                                         meas_labels=meas_labels,
                                         meas_basis=meas_basis,
@@ -214,6 +224,8 @@ def gateset_tomography_circuits(gateset_basis='default'):
     all_circuits = all_circuits + gst_circuits
 
     # Experiments of the form <E|F_j|rho>
+    circuit = QuantumCircuit(num_qubits)
+    qubit = circuit.qubits[measured_qubits[0]]
     gst_circuits = _tomography_circuits(circuit, qubit, qubit,
                                         meas_labels=meas_labels,
                                         meas_basis=meas_basis,
