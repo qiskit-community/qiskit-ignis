@@ -50,6 +50,8 @@ as well as performing interleaved RB, purity RB and RB on the non-Clifford CNOT-
    DihedralUtils
    count_gates
    gates_per_clifford
+   calculate_1q_epg
+   calculate_2q_epg
    coherence_limit
    twoQ_clifford_error
 
@@ -103,7 +105,8 @@ from .randomized_benchmarking import (Clifford, BasicUtils, CliffordUtils,
                                       RBFitter, InterleavedRBFitter,
                                       PurityRBFitter, CNOTDihedralRBFitter,
                                       count_gates, gates_per_clifford,
-                                      coherence_limit, twoQ_clifford_error)
+                                      coherence_limit, twoQ_clifford_error,
+                                      calculate_1q_epg, calculate_2q_epg)
 from .topological_codes import (RepetitionCode, GraphDecoder,
                                 lookuptable_decoding,
                                 postselection_decoding)
