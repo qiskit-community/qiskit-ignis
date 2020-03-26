@@ -19,7 +19,7 @@ New Journal of Physics, Volume 21, November 2019
 https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
 """
 import copy
-from numpy import random
+import numpy as np
 from qiskit import QuantumCircuit
 from .qotp import layer_parser, QOTP_fromlayers
 
@@ -33,10 +33,11 @@ class AccreditationCircuits:
     New Journal of Physics, Volume 21, November 2019
     https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
     """
-    def __init__(self, target_circ, two_qubit_gate='cx', coupling_map=None):
-        self.targetCircuit(target_circ,
-                           two_qubit_gate=two_qubit_gate,
-                           coupling_map=coupling_map)
+    def __init__(self, target_circ, two_qubit_gate='cx', coupling_map=None, seed=None):
+        self._rng = np.random.RandomState(seed)
+        self.target_circuit(target_circ,
+                            two_qubit_gate=two_qubit_gate,
+                            coupling_map=coupling_map)
         """
         Initialize the circuit generation class
         parse into layers
@@ -45,12 +46,12 @@ class AccreditationCircuits:
             target_circ (QuantumCircuit): a qiskit circuit to accredit
             two_qubit_gate (string): a flag as to which 2 qubit
                 gate to compile with, can be cx or cz
-            coupling_map: some particular device topology as list
             coupling_map (list): some particular device topology
                 as list of list (e.g. [[0,1],[1,2],[2,0]])
+            seed (int): seed to the random number generator
         """
 
-    def targetCircuit(self, target_circ, two_qubit_gate='cx', coupling_map=None):
+    def target_circuit(self, target_circ, two_qubit_gate='cx', coupling_map=None):
         """
         Load target circuit in to class, and parse into layers
 
@@ -58,7 +59,6 @@ class AccreditationCircuits:
             target_circ (QuantumCircuit): a qiskit circuit to accredit
             two_qubit_gate (string): a flag as to which 2 qubit
                 gate to compile with, can be cx or cz
-            coupling_map: some particular device topology as list
             coupling_map (list): some particular device topology
                 as list of list (e.g. [[0,1],[1,2],[2,0]])
         """
@@ -68,7 +68,7 @@ class AccreditationCircuits:
                                    two_qubit_gate=two_qubit_gate,
                                    coupling_map=coupling_map)
 
-    def generateCircuits(self, num_trap):
+    def generate_circuits(self, num_trap):
         """
         Generate quantum circuits for accreditation
 
@@ -81,7 +81,7 @@ class AccreditationCircuits:
             v_zero (int): position of target circuit
         """
         # Position of the target
-        v_zero = random.randint(0, num_trap+1)
+        v_zero = self._rng.randint(0, num_trap+1)
         # output lists
         circuit_list = []
         postp_list = []
@@ -93,7 +93,7 @@ class AccreditationCircuits:
             else:  # Generating a trap circuit
                 testlayers['singlequbitlayers'] = self._routine_two()
             # apply onte time pad and add to outputlist
-            circ, postp = QOTP_fromlayers(testlayers)
+            circ, postp = QOTP_fromlayers(testlayers, self._rng)
             circuit_list.append(circ)
             postp_list.append(postp)
         return circuit_list, postp_list, v_zero
@@ -117,7 +117,7 @@ class AccreditationCircuits:
                                     cregs) for j in range(nlayers)]
 
         # decide if we are in x or z basis and apply first row of H's
-        basis = random.randint(2)
+        basis = self._rng.randint(2)
         if basis:
             for q in self.layers['qregs']:
                 gate_trap[0].h(q)
@@ -130,7 +130,7 @@ class AccreditationCircuits:
                 g2q = self.layers['twoqubitgate']
                 if g2q == 'cx':
                     # apply either H x SH or S x I (and inverses)
-                    if random.randint(2):
+                    if self._rng.randint(2):
                         gate_trap[layer].h(qsub[0])
                         gate_trap[layer+1].h(qsub[0])
                         gate_trap[layer].s(qsub[1])
@@ -142,7 +142,7 @@ class AccreditationCircuits:
                         gate_trap[layer+1].sdg(qsub[0])
                 elif g2q == 'cz':
                     # apply either H x S or S x H (and inverses)
-                    if random.randint(2):
+                    if self._rng.randint(2):
                         gate_trap[layer].h(qsub[0])
                         gate_trap[layer+1].h(qsub[0])
                         gate_trap[layer].s(qsub[1])
@@ -160,7 +160,7 @@ class AccreditationCircuits:
                 # if we didn't do anything to this index yet
                 # apply a h or an s
                 if q not in regs2q:
-                    if random.randint(2):
+                    if self._rng.randint(2):
                         gate_trap[layer].h(q)
                         gate_trap[layer+1].h(q)
                     else:

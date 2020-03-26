@@ -2,7 +2,7 @@
 
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2019, 2020.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -30,7 +30,7 @@ from qiskit.providers.aer.noise.errors.standard_errors import depolarizing_error
 from qiskit.ignis.verification.accreditation import AccreditationFitter, AccreditationCircuits
 
 
-def make_accred_system():
+def make_accred_system(seed=None):
     """generate accred circuits"""
     # Create a Quantum Register with n_qb qubits.
     q_reg = QuantumRegister(4, 'q')
@@ -53,12 +53,14 @@ def make_accred_system():
     target_circuit.h(3)
     target_circuit.measure(q_reg, c_reg)
 
-    return AccreditationCircuits(target_circuit)
+    return AccreditationCircuits(target_circuit, seed=seed)
 
 
 def generate_data_ideal():
     """generaete a ideal data pickle"""
-    accsys = make_accred_system()
+    seed_accreditation = 134780132
+
+    accsys = make_accred_system(seed=seed_accreditation)
     simulator = qiskit.Aer.get_backend('qasm_simulator')
 
     # Number of runs
@@ -71,7 +73,7 @@ def generate_data_ideal():
     for run in range(d):
         print([run, d])
         # Create target and trap circuits with random Pauli gates
-        circuit_list, postp_list, v_zero = accsys.generateCircuits(v)
+        circuit_list, postp_list, v_zero = accsys.generate_circuits(v)
 
         job = execute(circuit_list,
                       simulator,
@@ -89,7 +91,10 @@ def generate_data_ideal():
 
 def generate_data_noisy():
     """generaete a noisy data pickle"""
-    accsys = make_accred_system()
+    seed_accreditation = 1435754
+    seed_simulator = 877924554
+
+    accsys = make_accred_system(seed=seed_accreditation)
     simulator = qiskit.Aer.get_backend('qasm_simulator')
     noise_model = NoiseModel()
     p1q = 0.002
@@ -112,11 +117,11 @@ def generate_data_noisy():
     for run in range(d):
         print([run, d])
         # Create target and trap circuits with random Pauli gates
-        circuit_list, postp_list, v_zero = accsys.generateCircuits(v)
+        circuit_list, postp_list, v_zero = accsys.generate_circuits(v)
         # Implement all these circuits with noise
         job = execute(circuit_list, simulator,
                       noise_model=noise_model, basis_gates=basis_gates,
-                      shots=1)
+                      shots=1, seed_simulator=seed_simulator + run)
         all_results.append(job.result())
         all_postp_list.append(postp_list)
         all_v_zero.append(v_zero)

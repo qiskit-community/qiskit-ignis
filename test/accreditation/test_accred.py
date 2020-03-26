@@ -29,6 +29,7 @@ class TestAccred(unittest.TestCase):
 
     def test_accred_circuits(self):
         """ Test circuit generation """
+        seed_accreditation = 208723512
         n_qb = 4
         v = 10
         # Create a Quantum Register with n_qb qubits.
@@ -51,8 +52,8 @@ class TestAccred(unittest.TestCase):
         target_circuit.h(3)
         target_circuit.measure(q_reg, c_reg)
         # make trap circuits
-        accredsys = accred.AccreditationCircuits(target_circuit)
-        circ_list, postp_list, v_zero = accredsys.generateCircuits(v)
+        accredsys = accred.AccreditationCircuits(target_circuit, seed=seed_accreditation)
+        circ_list, postp_list, v_zero = accredsys.generate_circuits(v)
         self.assertEqual(len(circ_list), v+1,
                          "Error: Not correct number of trap circuits")
         self.assertEqual(len(postp_list)*len(postp_list[0]), (v+1)*n_qb,

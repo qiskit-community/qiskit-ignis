@@ -121,13 +121,14 @@ def layer_parser(circ, two_qubit_gate='cx', coupling_map=None):
     return parsedlayers
 
 
-def QOTP_fromlayers(layers):
+def QOTP_fromlayers(layers, rng):
     """
     An intermediate step of a qotp in which we've converted the circuit
     to layers and only return a single pad or compilation
 
     Args:
         layers (dict): parsed layers from the layer parser
+        rng (RNG): a random number generator
     Returns:
         qotp_circ (QuantumCircuit): output onetime pad circ
         qotp_postp (list): correction as liist of bits
@@ -141,7 +142,7 @@ def QOTP_fromlayers(layers):
     tempCirc = QuantumCircuit(qregs, cregs)
 
     # initial z gates after prep
-    paulizs = np.random.randint(2, size=len(qregs))
+    paulizs = rng.randint(2, size=len(qregs))
     for qind, q in enumerate(qregs):
         if paulizs[qind]:
             tempCirc.z(q)
@@ -150,8 +151,8 @@ def QOTP_fromlayers(layers):
         # add single qubit gates to temp circuit
         tempCirc = tempCirc+layers['singlequbitlayers'][lnum]
         # generate and add single qubit paulis
-        paulizs = np.random.randint(2, size=len(qregs))
-        paulixs = np.random.randint(2, size=len(qregs))
+        paulizs = rng.randint(2, size=len(qregs))
+        paulixs = rng.randint(2, size=len(qregs))
         for qind, q in enumerate(qregs):
             if paulizs[qind]:
                 tempCirc.z(q)
@@ -190,8 +191,8 @@ def QOTP_fromlayers(layers):
     # add final single qubit layer
     tempCirc = tempCirc+layers['singlequbitlayers'][-1]
     # add final Paulis to create the one time pad
-    paulizs = np.random.randint(2, size=len(qregs))
-    paulixs = np.random.randint(2, size=len(qregs))
+    paulizs = rng.randint(2, size=len(qregs))
+    paulixs = rng.randint(2, size=len(qregs))
     for qind, q in enumerate(qregs):
         if paulizs[qind]:
             tempCirc.z(q)
@@ -208,7 +209,7 @@ def QOTP_fromlayers(layers):
     return qotp_circ, qotp_postp
 
 
-def QOTP(circ, num, two_qubit_gate='cx', coupling_map=None):
+def QOTP(circ, num, two_qubit_gate='cx', coupling_map=None, seed=None):
     """
     Performs a QOTP (or random compilation) on a generic circuit.
 
@@ -223,13 +224,14 @@ def QOTP(circ, num, two_qubit_gate='cx', coupling_map=None):
         num (int): the number of one-time pads to return
         two_qubit_gate (string): a flag as to which 2 qubit
             gate to compile with, can be cx or cz
-        coupling_map (list): so particular device topology as list of list
-                        (e.g. [[0,1],[1,2],[2,0]])
+        coupling_map (list): a particular device topology as a
+            list of list (e.g. [[0,1],[1,2],[2,0]])
+        seed (int): seed to the random number generator
     Returns:
         qotp_circs (list): a list of circuits with qotp applied
         qotp_postps (list): a list of arrays specifying the one time pads
     """
-
+    rng = np.random.RandomState(seed)
     # break into layers
     layers = layer_parser(circ,
                           two_qubit_gate=two_qubit_gate,
@@ -239,7 +241,7 @@ def QOTP(circ, num, two_qubit_gate='cx', coupling_map=None):
     qotp_postps = []
     # generate circuits and postops
     for _ in range(num):
-        circ, postp = QOTP_fromlayers(layers)
+        circ, postp = QOTP_fromlayers(layers, rng)
         qotp_circs.append(circ)
         qotp_postps.append(postp)
     return qotp_circs, qotp_postps
