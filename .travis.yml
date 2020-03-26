@@ -96,6 +96,7 @@ matrix:
     - stage: all_python
       <<: *stage_osx
       name: "Python 3.8 Tests on OSX"
+      if: type = cron
       env:
         - MPLBACKEND=ps
         - PYTHON_VERSION=3.8.1
@@ -113,7 +114,7 @@ language: python
 install: pip install -U tox pip virtualenv setuptools six
 script:
   - tox --notest
-  - .tox/$TOXENV/bin/pip install --no-cache-dir --ignore-installed scs
+  - .tox/$TOXENV/bin/pip install --no-cache-dir --ignore-installed 'scs<2.1.2'
   - tox
 
 notifications:

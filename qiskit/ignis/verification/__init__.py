@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2019, 2020.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -50,6 +50,10 @@ as well as performing interleaved RB, purity RB and RB on the non-Clifford CNOT-
    DihedralUtils
    count_gates
    gates_per_clifford
+   calculate_1q_epg
+   calculate_2q_epg
+   calculate_1q_epc
+   calculate_2q_epc
    coherence_limit
    twoQ_clifford_error
 
@@ -90,8 +94,10 @@ Accreditation
 .. autosummary::
    :toctree: ../stubs/
 
-   accreditation_circuits
-   accreditationFitter
+   AccreditationCircuits
+   AccreditationFitter
+   QOTP
+   QOTPCorrectCounts
 
 """
 from .quantum_volume import qv_circuits, QVFitter
@@ -101,7 +107,9 @@ from .randomized_benchmarking import (Clifford, BasicUtils, CliffordUtils,
                                       RBFitter, InterleavedRBFitter,
                                       PurityRBFitter, CNOTDihedralRBFitter,
                                       count_gates, gates_per_clifford,
-                                      coherence_limit, twoQ_clifford_error)
+                                      coherence_limit, twoQ_clifford_error,
+                                      calculate_1q_epg, calculate_2q_epg,
+                                      calculate_1q_epc, calculate_2q_epc)
 from .topological_codes import (RepetitionCode, GraphDecoder,
                                 lookuptable_decoding,
                                 postselection_decoding)
@@ -112,4 +120,4 @@ from .tomography import (state_tomography_circuits,
                          TomographyFitter,
                          marginal_counts, combine_counts,
                          expectation_counts, count_keys)
-from .accreditation import accreditation_circuits, accreditationFitter
+from .accreditation import AccreditationCircuits, AccreditationFitter, QOTP, QOTPCorrectCounts
