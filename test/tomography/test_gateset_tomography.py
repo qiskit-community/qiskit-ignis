@@ -23,7 +23,7 @@ from qiskit.ignis.verification.tomography.basis import default_gateset_basis
 
 from qiskit.providers.aer.noise import NoiseModel
 
-from qiskit.extensions import HGate
+from qiskit.extensions import HGate, SGate
 from qiskit.quantum_info import PTM
 
 
@@ -97,8 +97,12 @@ class TestGatesetTomography(unittest.TestCase):
 
     def test_noiseless_h_gate_standard_basis(self):
         basis = default_gateset_basis()
-
         basis.add_gate(HGate())
+        self.run_test_on_basis_and_noise(gateset_basis=basis)
+
+    def test_noiseless_s_gate_standard_basis(self):
+        basis = default_gateset_basis()
+        basis.add_gate(SGate())
         self.run_test_on_basis_and_noise(gateset_basis=basis)
 
     def test_amplitude_damping_standard_basis(self):
