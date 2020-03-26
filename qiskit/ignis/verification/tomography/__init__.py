@@ -80,11 +80,13 @@ Circuits
 # Tomography circuit generation
 from .basis import state_tomography_circuits
 from .basis import process_tomography_circuits
+from .basis import gateset_tomography_circuits
 from . import basis
 
 # Tomography data formatting
 from .fitters import StateTomographyFitter
 from .fitters import ProcessTomographyFitter
+from .fitters import GatesetTomographyFitter
 from .fitters import TomographyFitter
 
 # Utility functions TODO: move to qiskit.quantum_info
