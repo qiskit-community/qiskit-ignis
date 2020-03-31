@@ -62,7 +62,6 @@ class CompleteMeasFitter():
                 created according to the length of state_labels[0].
             circlabel: if the qubits were labeled.
         """
-
         if qubit_list is None:
             qubit_list = range(len(state_labels[0]))
         self._qubit_list = qubit_list

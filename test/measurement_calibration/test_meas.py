@@ -181,11 +181,9 @@ class TestMeasCal(unittest.TestCase):
         q3 = 3
 
         # Generate the quantum register according to the pattern
-        qr = qiskit.QuantumRegister(5)
         # Generate the calibration circuits
         meas_calibs, state_labels = \
-            complete_meas_cal(qubit_list=[1, 2, 3],
-                              qr=qr)
+            complete_meas_cal(qubit_list=[1, 2, 3], qr=5)
 
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
@@ -199,14 +197,13 @@ class TestMeasCal(unittest.TestCase):
         fidelity = meas_cal.readout_fidelity()
 
         # Make a 3Q GHZ state
-        cr = ClassicalRegister(3)
-        ghz = QuantumCircuit(qr, cr)
-        ghz.h(qr[q1])
-        ghz.cx(qr[q1], qr[q2])
-        ghz.cx(qr[q2], qr[q3])
-        ghz.measure(qr[q1], cr[0])
-        ghz.measure(qr[q2], cr[1])
-        ghz.measure(qr[q3], cr[2])
+        ghz = QuantumCircuit(5,3)
+        ghz.h(q1)
+        ghz.cx(q1, q2)
+        ghz.cx(q2, q3)
+        ghz.measure(q1, 0)
+        ghz.measure(q2, 1)
+        ghz.measure(q3, 2)
 
         job = qiskit.execute([ghz], backend=backend,
                              shots=self.shots)
