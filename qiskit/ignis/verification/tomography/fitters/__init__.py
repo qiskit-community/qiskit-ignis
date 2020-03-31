@@ -20,4 +20,5 @@ Quantum tomography fitter functions
 # Import tomography fitters
 from .state_fitter import StateTomographyFitter
 from .process_fitter import ProcessTomographyFitter
+from .gateset_fitter import GatesetTomographyFitter
 from .base_fitter import TomographyFitter

@@ -16,7 +16,7 @@ addons:
 
 install_osx: &stage_osx
   os: osx
-  osx_image: xcode9.2
+  osx_image: xcode9.4
   language: generic
   cache:
     pip: true
@@ -35,14 +35,9 @@ install_osx: &stage_osx
         cd ../../..
         python-build $PYTHON_VERSION ~/python-interpreters/$PYTHON_VERSION
       fi
+      sudo pip2 install -U virtualenv pip setuptools
       virtualenv --python ~/python-interpreters/$PYTHON_VERSION/bin/python venv
       source venv/bin/activate
-    fi
-
-before_script:
-   - |
-    if [ ! "$(ls -A .stestr)" ]; then
-        rm -r .stestr
     fi
 
 stages:
@@ -101,6 +96,7 @@ matrix:
     - stage: all_python
       <<: *stage_osx
       name: "Python 3.8 Tests on OSX"
+      if: type = cron
       env:
         - MPLBACKEND=ps
         - PYTHON_VERSION=3.8.1
@@ -118,7 +114,7 @@ language: python
 install: pip install -U tox pip virtualenv setuptools six
 script:
   - tox --notest
-  - .tox/$TOXENV/bin/pip install --no-cache-dir --ignore-installed scs
+  - .tox/$TOXENV/bin/pip install --no-cache-dir --ignore-installed 'scs<2.1.2'
   - tox
 
 notifications:
