@@ -197,7 +197,7 @@ class TestMeasCal(unittest.TestCase):
         fidelity = meas_cal.readout_fidelity()
 
         # Make a 3Q GHZ state
-        ghz = QuantumCircuit(5,3)
+        ghz = QuantumCircuit(5, 3)
         ghz.h(q1)
         ghz.cx(q1, q2)
         ghz.cx(q2, q3)
