@@ -17,13 +17,11 @@ Pulse Schedule Generation for calibration experiments
 """
 
 import copy
-import qiskit
+
 import qiskit.pulse as pulse
 import qiskit.pulse.pulse_lib as pulse_lib
-from qiskit.scheduler import measure
-from qiskit.circuit import Gate
-from qiskit.scheduler import schedule_circuit, ScheduleConfig
 from qiskit.exceptions import QiskitError
+from qiskit.scheduler import measure
 
 
 def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
