@@ -2,7 +2,7 @@
 
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2019, 2020.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -20,6 +20,7 @@ Quantum tomography circuit generation.
 import logging
 from typing import List, Union, Tuple, Optional
 import itertools as it
+import re
 
 from qiskit import QuantumRegister
 from qiskit.circuit import Qubit
@@ -31,6 +32,7 @@ from qiskit.circuit.reset import Reset
 
 from .tomographybasis import TomographyBasis
 from .paulibasis import PauliBasis
+from .gatesetbasis import default_gateset_basis, GateSetBasis
 from .sicbasis import SICBasis
 
 # Create logger
@@ -130,8 +132,125 @@ def process_tomography_circuits(
 
 
 ###########################################################################
+# Gate set tomography circuits for preparation and measurement
+###########################################################################
+
+def gateset_tomography_circuits(measured_qubits: Optional[List[int]] = None,
+                                gateset_basis: Union[str,
+                                                     GateSetBasis] = 'default'
+                                ) -> List[QuantumCircuit]:
+    r"""Return a list of quantum gate set tomography (GST) circuits.
+
+    The circuits are fully constructed from the data given in gateset_basis.
+    Note that currently this is only implemented for the single-qubits.
+
+    Args:
+        measured_qubits: The qubits to perform GST. If None GST will be
+                         performed on qubit-0.
+        gateset_basis: The gateset and SPAM data.
+
+    Returns:
+        A list of QuantumCircuit objects containing the original circuit
+        with state preparation circuits prepended, and measurement circuits
+        appended.
+
+    Raises:
+        QiskitError: If called for more than 1 measured qubit.
+
+    Additional Information:
+        Gate set tomography is performed on a gate set (G0, G1,...,Gm)
+        with the additional information of SPAM circuits (F0,F1,...,Fn)
+        that are constructed from the gates in the gate set.
+
+        In gate set tomography, we assume a single initial state rho
+        and a single POVM measurement operator E. The SPAM circuits
+        now provide us with a complete set of initial state F_j|rho>
+        and measurements <E|F_i.
+
+        We perform three types of experiments:
+
+        1) :math:`\langle E  | F_i G_k F_j |\rho \rangle` for 1 <= i,j <= n
+            and 1 <= k <= m:
+            This experiment enables us to obtain data on the gate G_k
+        2) :math:`\langle E  | F_i F_j |\rho \rangle`  for 1 <= i,j <= n:
+            This experiment enables us to obtain the Gram matrix required
+            to "invert" the results of experiments of type 1 in order to
+            reconstruct (a matrix similar to) the gate G_k
+        3) :math:`\langle E  | F_j |\rho \rangle` for 1 <= j <= n:
+            This experiment enables us to reconstruct <E| and rho
+
+        The result of this method is the set of all the circuits needed for
+        these experiments, suitably labeled with a tuple of the corresponding
+        gate/SPAM labels
+    """
+    if measured_qubits is None:
+        measured_qubits = [0]
+
+    if len(measured_qubits) > 1:
+        raise QiskitError("Only 1-qubit gate set tomography "
+                          "is currently supported")
+    num_qubits = 1 + max(measured_qubits)
+
+    all_circuits = []
+    if gateset_basis == 'default':
+        gateset_basis = default_gateset_basis()
+    meas_basis = gateset_basis.get_tomography_basis()
+    prep_basis = gateset_basis.get_tomography_basis()
+    meas_labels = meas_basis.measurement_labels
+    prep_labels = prep_basis.preparation_labels
+#    qubit = QuantumRegister(num_qubits)
+    # Experiments of the form <E|F_i G_k F_j|rho>
+    for gate in gateset_basis.gate_labels:
+        circuit = QuantumCircuit(num_qubits)
+        # we assume only 1 qubit for now
+        qubit = circuit.qubits[measured_qubits[0]]
+        gateset_basis.add_gate_to_circuit(circuit, qubit, gate)
+        gst_circuits = _tomography_circuits(circuit, qubit, qubit,
+                                            meas_labels=meas_labels,
+                                            meas_basis=meas_basis,
+                                            prep_labels=prep_labels,
+                                            prep_basis=prep_basis)
+        for tomography_circuit in gst_circuits:
+            # Getting the names of Fi and Fj using regex
+            res = re.search("'(.*)'.*'(.*)'", tomography_circuit.name)
+            tomography_circuit.name = str((res.group(1), gate, res.group(2)))
+        all_circuits = all_circuits + gst_circuits
+
+    # Experiments of the form <E|F_i F_j|rho>
+    # Can be skipped if one of the gates is ideal identity
+    circuit = QuantumCircuit(num_qubits)
+    qubit = circuit.qubits[measured_qubits[0]]
+    gst_circuits = _tomography_circuits(circuit, qubit, qubit,
+                                        meas_labels=meas_labels,
+                                        meas_basis=meas_basis,
+                                        prep_labels=prep_labels,
+                                        prep_basis=prep_basis)
+    for tomography_circuit in gst_circuits:
+        # Getting the names of Fi and Fj using regex
+        res = re.search("'(.*)'.*'(.*)'", tomography_circuit.name)
+        tomography_circuit.name = str((res.group(1), res.group(2)))
+    all_circuits = all_circuits + gst_circuits
+
+    # Experiments of the form <E|F_j|rho>
+    circuit = QuantumCircuit(num_qubits)
+    qubit = circuit.qubits[measured_qubits[0]]
+    gst_circuits = _tomography_circuits(circuit, qubit, qubit,
+                                        meas_labels=meas_labels,
+                                        meas_basis=meas_basis,
+                                        prep_labels=None,
+                                        prep_basis=None)
+    for tomography_circuit in gst_circuits:
+        # Getting the name of Fj using regex
+        res = re.search("'(.*)'", tomography_circuit.name)
+        tomography_circuit.name = str((res.group(1),))
+    all_circuits = all_circuits + gst_circuits
+
+    return all_circuits
+
+###########################################################################
 # General state and process tomography circuit functions
 ###########################################################################
+
 
 def _tomography_circuits(
         circuit: QuantumCircuit,
@@ -143,7 +262,6 @@ def _tomography_circuits(
         prep_basis: Union[str, TomographyBasis] = 'Pauli'
 ) -> List[QuantumCircuit]:
     """Return a list of quantum tomography circuits.
-
     This is the general circuit preparation function called by
     `state_tomography_circuits` and `process_tomography_circuits` and
     allows partial tomography circuits to be generated, or tomography
