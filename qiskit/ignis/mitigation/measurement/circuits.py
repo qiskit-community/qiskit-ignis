@@ -16,15 +16,15 @@
 Measurement calibration circuits. To apply the measurement mitigation
 use the fitters to produce a filter.
 """
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from qiskit import QuantumRegister, ClassicalRegister, \
     QuantumCircuit, QiskitError
 from ...verification.tomography import count_keys
 
 
 def complete_meas_cal(qubit_list: List[int] = None,
-                      qr: List[QuantumRegister] = None,
-                      cr: List[ClassicalRegister] = None,
+                      qr: Union[int, List[QuantumRegister]] = None,
+                      cr: Union[int, List[ClassicalRegister]] = None,
                       circlabel: str = ''
                       ) -> Tuple[List[QuantumCircuit], List[str]
                                  ]:
@@ -40,9 +40,11 @@ def complete_meas_cal(qubit_list: List[int] = None,
            If `None`, and qr is given then assumed to be performed over the entire
            qr. The calibration states will be labelled according to this ordering (default `None`).
 
-        qr: Quantum registers. If `None`, one is created (default `None`).
+        qr: Quantum registers (or their size).
+        If `None`, one is created (default `None`).
 
-        cr: Classical registers. If `None`, one is created(default `None`).
+        cr: Classical registers (or their size).
+        If `None`, one is created(default `None`).
 
         circlabel: A string to add to the front of circuit names for
             unique identification(default ' ').
@@ -72,8 +74,14 @@ def complete_meas_cal(qubit_list: List[int] = None,
     if qr is None:
         qr = QuantumRegister(max(qubit_list)+1)
 
+    if isinstance(qr, int):
+        qr = QuantumRegister(qr)
+
     if qubit_list is None:
         qubit_list = range(len(qr))
+
+    if isinstance(cr, int):
+        cr = ClassicalRegister(cr)
 
     nqubits = len(qubit_list)
 
@@ -87,8 +95,8 @@ def complete_meas_cal(qubit_list: List[int] = None,
 
 
 def tensored_meas_cal(mit_pattern: List[List[int]] = None,
-                      qr: List[QuantumRegister] = None,
-                      cr: List[ClassicalRegister] = None,
+                      qr: Union[int, List[QuantumRegister]] = None,
+                      cr: Union[int, List[ClassicalRegister]] = None,
                       circlabel: str = ''
                       ) -> Tuple[List[QuantumCircuit], List[List[int]]
                                  ]:
@@ -101,9 +109,11 @@ def tensored_meas_cal(mit_pattern: List[List[int]] = None,
             If `None` and `qr` is given then assumed to be performed over the entire
             `qr` as one group (default `None`).
 
-        qr: A quantum register. If `None`, one is created (default `None`).
+        qr: A quantum register (or its size).
+        If `None`, one is created (default `None`).
 
-        cr: A classical register. If `None`, one is created (default `None`).
+        cr: A classical register (or its size).
+        If `None`, one is created (default `None`).
 
         circlabel: A string to add to the front of circuit names for
             unique identification (default ' ').
@@ -129,6 +139,9 @@ def tensored_meas_cal(mit_pattern: List[List[int]] = None,
     if mit_pattern is None and qr is None:
         raise QiskitError("Must give one of mit_pattern or qr")
 
+    if isinstance(qr, int):
+        qr = QuantumRegister(qr)
+
     qubits_in_pattern = []
     if mit_pattern is not None:
         for qubit_list in mit_pattern:
@@ -150,6 +163,9 @@ def tensored_meas_cal(mit_pattern: List[List[int]] = None,
     # create classical bit registers
     if cr is None:
         cr = ClassicalRegister(nqubits)
+
+    if isinstance(cr, int):
+        cr = ClassicalRegister(cr)
 
     qubits_list_sizes = [len(qubit_list) for qubit_list in mit_pattern]
     nqubits = sum(qubits_list_sizes)
