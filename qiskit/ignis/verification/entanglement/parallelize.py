@@ -140,12 +140,7 @@ class BConfig:
         Sorts children nodes based on error/length
         '''
 
-        newchildren = {}
-        for i in children:
-            newchildren[(i, parent)] = self.get_cx_error()[(i, parent)]
-        ss = sorted(newchildren.items(), key=lambda x: x[1])
-        newchildrenlist = [a[0][0] for a in ss]
-        return newchildrenlist
+        return sorted(children, lambda child: self.get_cx_error()[(child, parent)])
 
     def get_tier_dict(self):
         '''
