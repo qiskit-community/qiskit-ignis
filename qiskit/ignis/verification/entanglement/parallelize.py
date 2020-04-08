@@ -257,7 +257,7 @@ class BConfig:
 
         return circ, initial_layout
 
-    def get_measurement_circ(self, n, extent):
+    def get_measurement_circ(self, n, full_measurement=True):
         '''
         Creates a measurement circuit that can toggle
         between measuring the control qubit
@@ -266,23 +266,20 @@ class BConfig:
         '''
 
         q = QuantumRegister(n, 'q')
-        if extent == 'one':
-            cla = ClassicalRegister(1, 'c')
-            meas = QuantumCircuit(q, cla)
-            meas.barrier()
-            meas.measure(q[0], cla)
-            return meas
-        if extent == 'full':
+        if (full_measurement):
             cla = ClassicalRegister(n, 'c')
             meas = QuantumCircuit(q, cla)
             meas.barrier()
             meas.measure(q, cla)
             return meas
-        if extent != 'one' or extent != 'full':
-            raise Exception("Extent arguments must be 'full' or 'one'")
-        return None
+        else:
+            cla = ClassicalRegister(1, 'c')
+            meas = QuantumCircuit(q, cla)
+            meas.barrier()
+            meas.measure(q[0], cla)
+            return meas
 
-    def get_ghz_mqc(self, n, delta, extent='full'):
+    def get_ghz_mqc(self, n, delta, full_measurement=True):
         '''
         Get MQC circuit
         '''
@@ -305,7 +302,7 @@ class BConfig:
 #         meas.barrier()
 #         meas.measure(q,cla)
 
-        meas = self.get_measurement_circ(n, extent)
+        meas = self.get_measurement_circ(n, full_measurement)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -314,14 +311,14 @@ class BConfig:
 
         return new_circ, initial_layout
 
-    def get_ghz_mqc_para(self, n, extent='full'):
+    def get_ghz_mqc_para(self, n, full_measurement=True):
         '''
         Get a parametrized MQC circuit.
         Remember that get_counts() method accepts
         an index now, not a circuit
         Args:
            n: number of qubits
-           extent ('full', 'one'):
+           full_measurement:
             Whether to append full measurement, or only on the first qubit
         Returns:
            A GHZ Circuit
@@ -348,7 +345,7 @@ class BConfig:
 #         meas.barrier()
 #         meas.measure(q,cla)
 
-        meas = self.get_measurement_circ(n, extent)
+        meas = self.get_measurement_circ(n, full_measurement)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -357,13 +354,13 @@ class BConfig:
 
         return new_circ, delta, initial_layout
 
-    def get_ghz_po(self, n, delta, extent='full'):
+    def get_ghz_po(self, n, delta, full_measurement=True):
         '''
         Get Parity Oscillation circuit
         '''
 
-        if extent != 'full':
-            raise Exception("Only 'full' argument can be accepted",
+        if not(full_measurement):
+            raise Exception("Only True full_measurement argument can be accepted",
                             " for measure in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
@@ -381,7 +378,7 @@ class BConfig:
 #         meas.barrier()
 #         meas.measure(q,cla)
 
-        meas = self.get_measurement_circ(n, extent)
+        meas = self.get_measurement_circ(n, full_measurement)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -390,21 +387,21 @@ class BConfig:
 
         return new_circ, initial_layout
 
-    def get_ghz_po_para(self, n, measure='full'):
+    def get_ghz_po_para(self, n, full_measurement):
         '''
         Get a parametrized PO circuit. Remember that get_counts()
         method accepts an index now, not a circuit.
         The two phase parameters are a quirk of the Parameter module
          Args:
            n: number of qubits
-           measure: Must be 'full' - so as to append full measurement.
+           full_measurement: Must be True - so as to append full measurement.
         Returns:
            A parity oscillation circuit, its Delta/minus-delta parameters,
             and the initial ghz layout
         '''
 
-        if measure != 'full':
-            raise Exception("Only 'full' argument can be accepted",
+        if not(full_measurement):
+            raise Exception("Only True full_measurement argument can be accepted",
                             " for measure in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
@@ -419,19 +416,19 @@ class BConfig:
         rotate = qiskit.compiler.transpile(rotate,
                                            backend=self.backend,
                                            initial_layout=initial_layout)
-        meas = self.get_measurement_circ(n, measure)
+        meas = self.get_measurement_circ(n, full_measurement)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
         new_circ = circ + rotate + meas
         return new_circ, [delta, deltaneg], initial_layout
 
-    def get_ghz_simple(self, n, extent='full'):
+    def get_ghz_simple(self, n, full_measurement):
         '''
         Get simple GHZ circuit with measurement
         Args:
            n: number of qubits
-           extent ('full', 'one'):
+           full_measurement:
             Whether to append full measurement, or only on the first qubit
         Returns:
            A GHZ Circuit
@@ -440,7 +437,7 @@ class BConfig:
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
 
-        meas = self.get_measurement_circ(n, extent)
+        meas = self.get_measurement_circ(n, full_measurement)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)

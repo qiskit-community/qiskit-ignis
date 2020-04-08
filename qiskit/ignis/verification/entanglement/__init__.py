@@ -27,4 +27,3 @@ from .linear import get_ghz_mqc_para
 from .linear import get_ghz_po
 from .linear import get_ghz_po_para
 from .parallelize import BConfig
-from .fitters import QVFitter

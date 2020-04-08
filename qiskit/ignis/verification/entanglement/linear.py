@@ -7,44 +7,41 @@ from qiskit import *
 from qiskit.circuit import Parameter
 
 
-def get_measurement_circ(n, extent='full'):
+def get_measurement_circ(n, full_measurement=True):
     '''
     Creates a measurement circuit that can toggle between
     measuring the first control qubit or measuring all qubits.
     The default is measurement of all qubits.
     Args:
        n: number of qubits
-       extent ('full', 'one'):
+       full_measurement:
         Whether to append full measurement, or only on the first qubit.
     Returns:
        The measurement suffix for a circuit
     '''
     q = QuantumRegister(n, 'q')
-    if extent == 'one':
-        cla = ClassicalRegister(1, 'c')
-        meas = QuantumCircuit(q, cla)
-        meas.barrier()
-        meas.measure(q[0], cla)
-        return meas
-    if extent == 'full':
+    if (full_measurement):
         cla = ClassicalRegister(n, 'c')
         meas = QuantumCircuit(q, cla)
         meas.barrier()
         meas.measure(q, cla)
         return meas
-    if extent != 'one' or extent != 'full':
-        raise Exception("Extent arguments must be 'full' or 'one'")
-    return None
+    else:
+        cla = ClassicalRegister(1, 'c')
+        meas = QuantumCircuit(q, cla)
+        meas.barrier()
+        meas.measure(q[0], cla)
+        return meas
 
 
-def get_ghz_simple(n, measure=True, extent='full'):
+def get_ghz_simple(n, measure=True, full_measurement=True):
     '''
     Creates a linear GHZ state
     with the option of measurement
     Args:
        n: number of qubits
        measure (Boolean): Whether to add measurement gates
-       extent ('full', 'one'):
+       full_measurement:
         Whether to append full measurement, or only on the first qubit.
         Relevant only for measure=True
     Returns:
@@ -56,14 +53,14 @@ def get_ghz_simple(n, measure=True, extent='full'):
     for i in range(1, n):
         circ.cx(q[i - 1], q[i])
     if measure:
-        meas = get_measurement_circ(n, extent)
+        meas = get_measurement_circ(n, full_measurement)
         circ = circ + meas
     else:
         pass
     return circ
 
 
-def get_ghz_mqc(n, delta, measure='full'):
+def get_ghz_mqc(n, delta, full_measurement):
     '''
     This function creates an MQC circuit with n qubits,
     where the middle phase rotation around the z axis is by delta
@@ -76,19 +73,19 @@ def get_ghz_mqc(n, delta, measure='full'):
     circ.x(q)
     circ.barrier()
     circ += circinv
-    meas = get_measurement_circ(n, measure)
+    meas = get_measurement_circ(n, full_measurement)
     circ = circ + meas
     circ.draw()
     return circ
 
 
-def get_ghz_mqc_para(n, measure='full'):
+def get_ghz_mqc_para(n, full_measurement=True):
     '''
     This function creates an MQC circuit with n qubits,
     where the middle phase rotation around the z axis is by delta
     Args:
        n: number of qubits
-       measure ('full', 'one'):
+       full_measurement:
         Whether to append full measurement, or only on the first qubit.
     Returns:
        An mqc circuit and its Delta parameter
@@ -102,20 +99,20 @@ def get_ghz_mqc_para(n, measure='full'):
     circ.x(q)
     circ.barrier()
     circ += circinv
-    meas = get_measurement_circ(n, measure)
+    meas = get_measurement_circ(n, full_measurement)
     circ = circ + meas
     circ.draw()
     return circ, delta
 
 
-def get_ghz_po(n, delta, measure='full'):
+def get_ghz_po(n, delta, full_measurement=True):
     '''
     This function creates an Parity Oscillation circuit
     with n qubits, where the middle superposition rotation around
     the x and y axes is by delta
     '''
-    if measure != 'full':
-        raise Exception("Only 'full' argument can be accepted",
+    if not(full_measurement):
+        raise Exception("Only True full_measurement can be accepted",
                         " for measure in Parity Oscillation circuit")
     q = QuantumRegister(n, 'q')
     circ = get_ghz_simple(n, measure=False)
@@ -123,25 +120,25 @@ def get_ghz_po(n, delta, measure='full'):
     circ.barrier()
     circ.u2(delta, -delta, q)
     circ.barrier()
-    meas = get_measurement_circ(n, measure)
+    meas = get_measurement_circ(n, full_measurement)
     circ = circ + meas
     circ.draw()
     return circ
 
 
-def get_ghz_po_para(n, measure='full'):
+def get_ghz_po_para(n, full_measurement=True):
     '''
     This function creates a Parity Oscillation circuit with n qubits,
     where the middle superposition rotation around
      the x and y axes is by delta
      Args:
        n: number of qubits
-       measure: Must be 'full' - so as to append full measurement.
+       full_measurement: Must be True - so as to append full measurement.
     Returns:
        A parity oscillation circuit and its Delta/minus-delta parameters
    '''
-    if measure != 'full':
-        raise Exception("Only 'full' argument can be accepted",
+    if not(full_measurement):
+        raise Exception("Only True full_measurement can be accepted",
                         " for measure in Parity Oscillation circuit")
     q = QuantumRegister(n, 'q')
     delta = Parameter('t')
@@ -150,6 +147,6 @@ def get_ghz_po_para(n, measure='full'):
 
     circ.barrier()
     circ.u2(delta, deltaneg, q)
-    meas = get_measurement_circ(n, measure)
+    meas = get_measurement_circ(n, full_measurement)
     circ = circ + meas
     return circ, [delta, deltaneg]
