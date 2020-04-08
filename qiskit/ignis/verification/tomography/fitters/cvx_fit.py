@@ -17,6 +17,7 @@
 CVXPY convex optimization quantum tomography fitter
 """
 
+from typing import Optional
 import numpy as np
 from scipy import sparse as sps
 
@@ -27,8 +28,14 @@ except ImportError:
     cvxpy = None
 
 
-def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
-            trace_preserving=False, **kwargs):
+def cvx_fit(data: np.array,
+            basis_matrix: np.array,
+            weights: Optional[np.array] = None,
+            psd: bool = True,
+            trace: Optional[int] = None,
+            trace_preserving: bool = False,
+            **kwargs
+            ) -> np.array:
     r"""
     Reconstruct a quantum state using CVXPY convex optimization.
 
@@ -80,19 +87,21 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
     for more information on solvers.
 
     Args:
-        data (vector like): vector of expectation values
-        basis_matrix (matrix like): matrix of measurement operators
-        weights (vector like, optional): vector of weights to apply to the
+        data: (vector like) vector of expectation values
+        basis_matrix: (matrix like) measurement operators
+        weights: (vector like) weights to apply to the
             objective function (default: None)
-        PSD (bool, optional): Enforced the fitted matrix to be positive
+        psd: (default: True) enforces the fitted matrix to be positive
             semidefinite (default: True)
-        trace (int, optional): trace constraint for the fitted matrix
+        trace: trace constraint for the fitted matrix
             (default: None).
-        trace_preserving (bool, optional): Enforce the fitted matrix to be
+        trace_preserving: (default: False) Enforce the fitted matrix to be
             trace preserving when fitting a Choi-matrix in quantum process
             tomography (default: False).
-        **kwargs (optional): kwargs for cvxpy solver.
-
+        **kwargs: kwargs for cvxpy solver.
+    Raises:
+        ImportError: if cvxpy is not present
+        RuntimeError: In case cvx fitting failes
     Returns:
         The fitted matrix rho that minimizes
             :math:`||basis_matrix * vec(rho) - data||_2`.
@@ -100,11 +109,11 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
 
     # Check if CVXPY package is installed
     if cvxpy is None:
-        raise Exception('CVXPY is not installed. Use `lstsq` instead.')
+        raise ImportError('CVXPY is not installed. Use `lstsq` instead.')
     # Check CVXPY version
     version = cvxpy.__version__
     if not (version[0] == '1' or version[:3] == '0.4'):
-        raise Exception('Incompatible CVXPY version. Install 1.0 or 0.4')
+        raise ImportError('Incompatible CVXPY version. Install 1.0 or 0.4')
 
     # SDP VARIABLES
 
@@ -139,7 +148,7 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
     # a complex PSD constraint as
     #   rho >> 0 iff [[rho_r, -rho_i], [rho_i, rho_r]] >> 0
 
-    if PSD is True:
+    if psd is True:
         rho = cvxpy.bmat([[rho_r, -rho_i], [rho_i, rho_r]])
         cons.append(rho >> 0)
 
@@ -220,7 +229,7 @@ def cvx_fit(data, basis_matrix, weights=None, PSD=True, trace=None,
 ###########################################################################
 
 
-def partial_trace_super(d1, d2):
+def partial_trace_super(dim1: int, dim2: int) -> np.array:
     """
     Return the partial trace superoperator in the column-major basis.
 
@@ -229,19 +238,19 @@ def partial_trace_super(d1, d2):
     for rho_AB = kron(rho_A, rho_B)
 
     Args:
-        d1 (int): the dimension of the system not being traced
-        d2 (int): the dimension of the system being traced over
+        dim1: the dimension of the system not being traced
+        dim2: the dimension of the system being traced over
 
     Returns:
         A Numpy array of the partial trace superoperator S_TrB.
     """
 
-    iden = sps.identity(d1)
-    ptr = sps.csr_matrix((d1 * d1, d1 * d2 * d1 * d2))
+    iden = sps.identity(dim1)
+    ptr = sps.csr_matrix((dim1 * dim1, dim1 * dim2 * dim1 * dim2))
 
-    for j in range(d2):
-        vj = sps.coo_matrix(([1], ([0], [j])), shape=(1, d2))
-        tmp = sps.kron(iden, vj.tocsr())
+    for j in range(dim2):
+        v_j = sps.coo_matrix(([1], ([0], [j])), shape=(1, dim2))
+        tmp = sps.kron(iden, v_j.tocsr())
         ptr += sps.kron(tmp, tmp)
 
     return ptr

@@ -7,8 +7,9 @@ Qiskit Ignis API Reference
 ==========================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    characterization
    mitigation
    verification
+   logging

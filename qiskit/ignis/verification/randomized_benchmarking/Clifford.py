@@ -26,10 +26,10 @@ from qiskit.quantum_info import Pauli
 
 class Clifford:
 
-    """Clifford class"""
+    """Clifford Operator Class."""
 
     def __init__(self, num_qubits=None, table=None, phases=None):
-        """Initialize an n-qubit Clifford table."""
+        # Initialize an n-qubit Clifford table.
         # Use index for initializing 1 and 2 qubit Cliffords
         # If index is none initialize to identity.
 
@@ -107,11 +107,11 @@ class Clifford:
         return self._phases
 
     def __getitem__(self, index):
-        """Get element from internal symplectic table"""
+        """Get element from internal symplectic table."""
         return self._table[index]
 
     def __setitem__(self, index, value):
-        """Set element of internal symplectic table"""
+        """Set element of internal symplectic table."""
         if isinstance(value, Pauli):
             # Update from Pauli object
             self._table[index] = np.block([value.z, value.x])
@@ -124,25 +124,25 @@ class Clifford:
     # ---------------------------------------------------------------------
 
     def stabilizer(self, qubit):
-        """Return the qubit stabilizer as a Pauli object"""
+        """Return the qubit stabilizer as a Pauli object."""
         nq = self._num_qubits
         z = self._table[nq + qubit, 0:nq]
         x = self._table[nq + qubit, nq:2 * nq]
         return Pauli(z=z, x=x)
 
     def update_stabilizer(self, qubit, pauli):
-        """Update the qubit stabilizer row from a Pauli object"""
+        """Update the qubit stabilizer row from a Pauli object."""
         self[self._num_qubits + qubit] = pauli
 
     def destabilizer(self, row):
-        """Return the destabilizer as a Pauli object"""
+        """Return the destabilizer as a Pauli object."""
         nq = self._num_qubits
         z = self._table[row, 0:nq]
         x = self._table[row, nq:2 * nq]
         return Pauli(z=z, x=x)
 
     def update_destabilizer(self, qubit, pauli):
-        """Update the qubit destabilizer row from a Pauli object"""
+        """Update the qubit destabilizer row from a Pauli object."""
         self[qubit] = pauli
 
     # ---------------------------------------------------------------------
@@ -167,7 +167,7 @@ class Clifford:
 
     @classmethod
     def from_dict(cls, clifford_dict):
-        """Load a Clifford from a dictionary"""
+        """Load a Clifford from a dictionary."""
 
         # Validation
         if not isinstance(clifford_dict, dict) or \
@@ -185,7 +185,7 @@ class Clifford:
 
         # Helper function
         def get_row(label):
-            """Return the Pauli object and phase for stabilizer"""
+            """Return the Pauli object and phase for stabilizer."""
             if label[0] in ['I', 'X', 'Y', 'Z']:
                 pauli = Pauli.from_label(label)
                 phase = 0
@@ -219,7 +219,7 @@ class Clifford:
         Returns a unique index for the Clifford.
 
         Returns:
-            A unique index (integer).
+            A unique index (integer) for the Clifford object.
         """
         mat = self.table
         mat = mat.reshape(mat.size)
@@ -239,23 +239,23 @@ class Clifford:
     # NOTE: These might change based on changes to QuantumCircuit API.
     # They should mimic the circuit API as much as possible.
     def x(self, qubit):
-        """Apply a Pauli "x" gate to a qubit"""
+        """Apply a Pauli "x" gate to a qubit."""
         iz = qubit
         self._phases = np.logical_xor(self._phases, self._table[:, iz])
 
     def y(self, qubit):
-        """Apply an Pauli "y" gate to a qubit"""
+        """Apply an Pauli "y" gate to a qubit."""
         iz, ix = qubit, self._num_qubits + qubit
         zx_xor = np.logical_xor(self._table[:, iz], self._table[:, ix])
         self._phases = np.logical_xor(self._phases, zx_xor)
 
     def z(self, qubit):
-        """Apply an Pauli "z" gate to qubit"""
+        """Apply an Pauli "z" gate to qubit."""
         ix = self._num_qubits + qubit
         self._phases = np.logical_xor(self._phases, self._table[:, ix])
 
     def h(self, qubit):
-        """Apply an Hadamard "h" gate to qubit"""
+        """Apply an Hadamard "h" gate to qubit."""
         iz, ix = qubit, self._num_qubits + qubit
         zx_and = np.logical_and(self._table[:, ix], self._table[:, iz])
         self._phases = np.logical_xor(self._phases, zx_and)
@@ -266,7 +266,7 @@ class Clifford:
         self._table[:, iz] = x_cache
 
     def s(self, qubit):
-        """Apply a phase "s" gate to qubit"""
+        """Apply a phase "s" gate to qubit."""
         iz, ix = qubit, self._num_qubits + qubit
         zx_and = np.logical_and(self._table[:, ix], self._table[:, iz])
         self._phases = np.logical_xor(self._phases, zx_and)
@@ -274,25 +274,25 @@ class Clifford:
                                             self._table[:, iz])
 
     def sdg(self, qubit):
-        """Apply an adjoint phase "sdg" gate to qubit"""
+        """Apply an adjoint phase "sdg" gate to qubit."""
         # TODO: change direct table update if more efficient
         self.z(qubit)
         self.s(qubit)
 
     def v(self, qubit):
-        """Apply v gate sd.h"""
+        """Apply v gate v = sdg.h ."""
         # TODO: change direct table update if more efficient
         self.sdg(qubit)
         self.h(qubit)
 
     def w(self, qubit):
-        """Apply w gate v.v"""
+        """Apply w gate w = v.v ."""
         # TODO: change direct table update if more efficient
         self.h(qubit)
         self.s(qubit)
 
     def cx(self, qubit_ctrl, qubit_trgt):
-        """Apply a Controlled-NOT "cx" gate"""
+        """Apply a Controlled-NOT "cx" gate."""
         # Helper indices for stabilizer columns
         iz_c, ix_c = qubit_ctrl, self.num_qubits + qubit_ctrl
         iz_t, ix_t = qubit_trgt, self.num_qubits + qubit_trgt
@@ -309,14 +309,14 @@ class Clifford:
                                               self._table[:, iz_c])
 
     def cz(self, qubit_ctrl, qubit_trgt):
-        """Apply a Controlled-z "cx" gate"""
+        """Apply a Controlled-z "cz" gate."""
         # TODO: change direct table update if more efficient
         self.h(qubit_trgt)
         self.cx(qubit_ctrl, qubit_trgt)
         self.h(qubit_trgt)
 
     def swap(self, qubit0, qubit1):
-        """Apply SWAP gate between two qubits"""
+        """Apply SWAP gate between two qubits."""
         # TODO: change direct swap of required rows and cols in table
         self.cx(qubit0, qubit1)
         self.cx(qubit1, qubit0)
