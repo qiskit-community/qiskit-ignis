@@ -20,6 +20,12 @@ Mitigation (:mod:`qiskit.ignis.mitigation`)
 Measurement
 ===========
 
+The measurement calibration is used to mitigate measurement errors.
+The main idea is to prepare all :math:`2^n` basis input states and compute
+the probability of measuring counts in the other basis states.
+From these calibrations, it is possible to correct the average results
+of another experiment of interest.
+
 .. autosummary::
    :toctree: ../stubs/
 

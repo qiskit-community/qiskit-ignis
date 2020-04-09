@@ -34,7 +34,12 @@ def pad_id_gates(circuit, qr, qubit, num_of_id_gates):
 
     for _ in range(num_of_id_gates):
         circuit.barrier(qr[qubit])
-        circuit.iden(qr[qubit])
+        # Maintain compatibility with 0.12 stable terra
+        # the case of .iden should be removed once terra 0.13 is stable
+        if hasattr(circuit, 'i'):
+            circuit.i(qr[qubit])
+        else:
+            circuit.iden(qr[qubit])
 
     circuit.barrier(qr[qubit])
     return circuit
