@@ -11,6 +11,11 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
+"""
+IQ Discriminator module to discriminate date in the IQ Plane.
+"""
+from abc import abstractmethod
 from typing import Union, List
 
 import numpy as np
@@ -360,6 +365,25 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
         for idx in range(n_qubits):
             axs[idx].scatter(data[:, idx], data[:, n_qubits + idx], alpha=0.5,
                              color=color)
+
+    @abstractmethod
+    def fit(self):
+        """ Fits the discriminator using self._xdata and self._ydata. """
+        pass
+
+    @abstractmethod
+    def discriminate(self, x_data: List[List[float]]) -> List[str]:
+        """
+        Applies the discriminator to x_data
+
+        Args:
+            x_data (List[List[float]]): list of features. Each feature is
+                itself a list.
+
+        Returns (List[str]):
+            the discriminated x_data as a list of labels.
+        """
+        pass
 
 
 class LinearIQDiscriminator(IQDiscriminationFitter):

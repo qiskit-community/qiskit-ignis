@@ -11,6 +11,10 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
+"""
+Base discriminator class. All discriminators should inherite from this base class.
+"""
 from abc import ABC, abstractmethod
 import re
 from typing import Union, List

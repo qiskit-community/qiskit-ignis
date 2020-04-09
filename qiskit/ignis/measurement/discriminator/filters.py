@@ -22,7 +22,6 @@ from copy import deepcopy
 from typing import List
 
 from qiskit.exceptions import QiskitError
-from qiskit.ignis.characterization.fitters import BaseFitter
 from qiskit.ignis.measurement.discriminator.discriminators import \
     BaseDiscriminationFitter
 from qiskit.result.result import Result
@@ -44,8 +43,8 @@ class DiscriminationFilter:
                  base: int = None):
         """
         Args:
-            discriminator (BaseFitter): a discriminator that maps level 1 data
-                to level 2 data.
+            discriminator (BaseDiscriminationFitter): a discriminator that maps level 1
+                data to level 2 data.
                 - Level 1 data may correspond to, e. g., IQ data.
                 - Level 2 data is the state counts.
             base: the base of the expected states. If it is not given the base
