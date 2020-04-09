@@ -130,7 +130,7 @@ class BConfig:
         Sorts children nodes based on error/length
         '''
 
-        return sorted(children, key = lambda child: self.get_cx_error()[(child, parent)])
+        return sorted(children, key=lambda child: self.get_cx_error()[(child, parent)])
 
     def get_tier_dict(self):
         '''
@@ -306,9 +306,7 @@ class BConfig:
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
         rotate = QuantumCircuit(q)
-
         delta = Parameter('t')
-
         rotate.barrier()
         rotate.u1(delta, q)
         rotate.barrier()
@@ -317,15 +315,11 @@ class BConfig:
         rotate = qiskit.compiler.transpile(rotate,
                                            backend=self.backend,
                                            initial_layout=initial_layout)
-
-
         meas = self.get_measurement_circ(n, 'q', 'c', full_measurement)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
-
         new_circ = circ + rotate + circ.inverse() + meas
-
         return new_circ, delta, initial_layout
 
     def get_ghz_po(self, n, delta):

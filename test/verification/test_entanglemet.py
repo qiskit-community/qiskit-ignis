@@ -39,7 +39,7 @@ class TestEntanglement(unittest.TestCase):
         # test simple GHZc
         circ = get_ghz_simple(qn, measure=True)
         counts = execute(circ, sim, shots=1024).result().get_counts(circ)
-        self.assertTrue(counts.get('00000',0) + counts.get('11111', 0) == 1024)
+        self.assertTrue(counts.get('00000', 0) + counts.get('11111', 0) == 1024)
 
         # test MQC
         circ, delta = get_ghz_mqc_para(qn, measure='full')
@@ -48,8 +48,8 @@ class TestEntanglement(unittest.TestCase):
                     for theta_val in theta_range]
         for circ in circuits:
             counts = execute(circ, sim, shots=1024).result().get_counts(circ)
-            self.assertTrue((counts.get('00000',0) == 1024) or
-                            (counts.get('00000',0) + counts.get('00001',0)) == 1024)
+            self.assertTrue((counts.get('00000', 0) == 1024) or
+                            (counts.get('00000', 0) + counts.get('00001', 0)) == 1024)
 
         # test parity oscillations
         circ, params = get_ghz_po_para(qn, measure='full')
@@ -63,8 +63,8 @@ class TestEntanglement(unittest.TestCase):
             even_counts = sum(key.count('1') % 2 == 0 for key in counts.keys())
             odd_counts = sum(key.count('1') % 2 == 1 for key in counts.keys())
 
-          self.assertTrue((even_counts > gap_factor*1024) or
-                            odd_counts > gap_factor*1024)
+        self.assertTrue((even_counts > gap_factor*1024) or
+                        odd_counts > gap_factor*1024)
 
 
 if __name__ == '__main__':
