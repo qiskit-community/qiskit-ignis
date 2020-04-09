@@ -349,14 +349,11 @@ class BConfig:
 
         return new_circ, delta, initial_layout
 
-    def get_ghz_po(self, n, delta, full_measurement=True):
+    def get_ghz_po(self, n, delta):
         '''
         Get Parity Oscillation circuit
         '''
 
-        if not full_measurement:
-            raise Exception("Only True full_measurement argument can be accepted",
-                            " for measure in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
         rotate = QuantumCircuit(q)
@@ -377,22 +374,18 @@ class BConfig:
 
         return new_circ, initial_layout
 
-    def get_ghz_po_para(self, n, full_measurement):
+    def get_ghz_po_para(self, n):
         '''
         Get a parametrized PO circuit. Remember that get_counts()
         method accepts an index now, not a circuit.
         The two phase parameters are a quirk of the Parameter module
          Args:
            n: number of qubits
-           full_measurement: Must be True - so as to append full measurement.
         Returns:
            A parity oscillation circuit, its Delta/minus-delta parameters,
             and the initial ghz layout
         '''
 
-        if not full_measurement:
-            raise Exception("Only True full_measurement argument can be accepted",
-                            " for measure in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
         rotate = QuantumCircuit(q)
