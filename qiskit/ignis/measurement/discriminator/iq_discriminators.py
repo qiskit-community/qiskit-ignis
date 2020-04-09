@@ -432,6 +432,7 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
 
 
 class QuadraticIQDiscriminator(IQDiscriminationFitter):
+    """Quadratic discriminant analysis discriminator for IQ data."""
 
     def __init__(self, cal_results: Union[Result, List[Result]],
                  qubit_mask: List[int], expected_states: List[str] = None,

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2020.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,14 +11,14 @@
 # that they have been altered from the originals.
 
 """
-===========================================
+=============================================
 Measurement (:mod:`qiskit.ignis.measurement`)
-===========================================
+=============================================
 
 .. currentmodule:: qiskit.ignis.measurement
 
 Discriminator
-===========
+=============
 
 The discriminators are used to to discriminate level one data into level two counts.
 
@@ -30,5 +30,9 @@ The discriminators are used to to discriminate level one data into level two cou
    LinearIQDiscriminator
    QuadraticIQDiscriminator
    SklearnIQDiscriminator
-
 """
+from .discriminator import (DiscriminationFilter,
+                            IQDiscriminationFitter,
+                            LinearIQDiscriminator,
+                            QuadraticIQDiscriminator,
+                            SklearnIQDiscriminator)

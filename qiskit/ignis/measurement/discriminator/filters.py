@@ -17,7 +17,6 @@
 
 """
 Discrimination filters.
-
 """
 from copy import deepcopy
 from typing import List

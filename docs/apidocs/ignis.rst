@@ -12,4 +12,5 @@ Qiskit Ignis API Reference
    characterization
    mitigation
    verification
+   measurement
    logging
