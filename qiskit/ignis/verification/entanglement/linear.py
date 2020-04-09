@@ -7,7 +7,7 @@ from qiskit import *
 from qiskit.circuit import Parameter
 
 
-def get_measurement_circ(n, full_measurement=True):
+def get_measurement_circ(n, qregname, cregname, full_measurement=True):
     '''
     Creates a measurement circuit that can toggle between
     measuring the first control qubit or measuring all qubits.
@@ -19,15 +19,15 @@ def get_measurement_circ(n, full_measurement=True):
     Returns:
        The measurement suffix for a circuit
     '''
-    q = QuantumRegister(n, 'q')
+    q = QuantumRegister(n, qregname)
     if (full_measurement):
-        cla = ClassicalRegister(n, 'c')
+        cla = ClassicalRegister(n, cregname)
         meas = QuantumCircuit(q, cla)
         meas.barrier()
         meas.measure(q, cla)
         return meas
     else:
-        cla = ClassicalRegister(1, 'c')
+        cla = ClassicalRegister(1, cregname)
         meas = QuantumCircuit(q, cla)
         meas.barrier()
         meas.measure(q[0], cla)
@@ -53,7 +53,7 @@ def get_ghz_simple(n, measure=True, full_measurement=True):
     for i in range(1, n):
         circ.cx(q[i - 1], q[i])
     if measure:
-        meas = get_measurement_circ(n, full_measurement)
+        meas = get_measurement_circ(n, 'q', 'c', full_measurement)
         circ = circ + meas
     else:
         pass
@@ -73,7 +73,7 @@ def get_ghz_mqc(n, delta, full_measurement):
     circ.x(q)
     circ.barrier()
     circ += circinv
-    meas = get_measurement_circ(n, full_measurement)
+    meas = get_measurement_circ(n, 'q', 'c', full_measurement)
     circ = circ + meas
     circ.draw()
     return circ
@@ -99,7 +99,7 @@ def get_ghz_mqc_para(n, full_measurement=True):
     circ.x(q)
     circ.barrier()
     circ += circinv
-    meas = get_measurement_circ(n, full_measurement)
+    meas = get_measurement_circ(n, 'q', 'c', full_measurement)
     circ = circ + meas
     circ.draw()
     return circ, delta
@@ -120,7 +120,7 @@ def get_ghz_po(n, delta, full_measurement=True):
     circ.barrier()
     circ.u2(delta, -delta, q)
     circ.barrier()
-    meas = get_measurement_circ(n, full_measurement)
+    meas = get_measurement_circ(n, 'q', 'c', full_measurement)
     circ = circ + meas
     circ.draw()
     return circ
@@ -147,6 +147,6 @@ def get_ghz_po_para(n, full_measurement=True):
 
     circ.barrier()
     circ.u2(delta, deltaneg, q)
-    meas = get_measurement_circ(n, full_measurement)
+    meas = get_measurement_circ(n, 'q', 'c', full_measurement)
     circ = circ + meas
     return circ, [delta, deltaneg]

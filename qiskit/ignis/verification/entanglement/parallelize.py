@@ -252,7 +252,7 @@ class BConfig:
 
         return circ, initial_layout
 
-    def get_measurement_circ(self, n, full_measurement=True):
+    def get_measurement_circ(self, n, qregname, cregname, full_measurement=True):
         '''
         Creates a measurement circuit that can toggle
         between measuring the control qubit
@@ -260,15 +260,15 @@ class BConfig:
         measurement of all qubits.
         '''
 
-        q = QuantumRegister(n, 'q')
+        q = QuantumRegister(n, qregname)
         if (full_measurement):
-            cla = ClassicalRegister(n, 'c')
+            cla = ClassicalRegister(n, cregname)
             meas = QuantumCircuit(q, cla)
             meas.barrier()
             meas.measure(q, cla)
             return meas
         else:
-            cla = ClassicalRegister(1, 'c')
+            cla = ClassicalRegister(1, cregname)
             meas = QuantumCircuit(q, cla)
             meas.barrier()
             meas.measure(q[0], cla)
@@ -297,7 +297,7 @@ class BConfig:
 #         meas.barrier()
 #         meas.measure(q,cla)
 
-        meas = self.get_measurement_circ(n, full_measurement)
+        meas = self.get_measurement_circ(n, 'q', 'c', full_measurement)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -340,7 +340,7 @@ class BConfig:
 #         meas.barrier()
 #         meas.measure(q,cla)
 
-        meas = self.get_measurement_circ(n, full_measurement)
+        meas = self.get_measurement_circ(n, 'q', 'c', full_measurement)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -368,12 +368,7 @@ class BConfig:
                                            backend=self.backend,
                                            initial_layout=initial_layout)
 
-#         cla = ClassicalRegister(n,'c')
-#         meas = QuantumCircuit(q,cla)
-#         meas.barrier()
-#         meas.measure(q,cla)
-
-        meas = self.get_measurement_circ(n, full_measurement)
+        meas = self.get_measurement_circ(n, 'q', 'c', full_measurement)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -411,7 +406,7 @@ class BConfig:
         rotate = qiskit.compiler.transpile(rotate,
                                            backend=self.backend,
                                            initial_layout=initial_layout)
-        meas = self.get_measurement_circ(n, full_measurement)
+        meas = self.get_measurement_circ(n, 'q', 'c', full_measurement)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
@@ -432,7 +427,7 @@ class BConfig:
         circ, initial_layout = self.get_ghz_layout(n)
         q = QuantumRegister(n, 'q')
 
-        meas = self.get_measurement_circ(n, full_measurement)
+        meas = self.get_measurement_circ(n, 'q', 'c', full_measurement)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
