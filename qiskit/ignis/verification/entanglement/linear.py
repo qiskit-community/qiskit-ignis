@@ -114,7 +114,7 @@ def get_ghz_po(n, delta):
     circ.barrier()
     circ.u2(delta, -delta, q)
     circ.barrier()
-    meas = get_measurement_circ(n, 'q', 'c', full_measurement)
+    meas = get_measurement_circ(n, 'q', 'c', True)
     circ = circ + meas
     return circ
 

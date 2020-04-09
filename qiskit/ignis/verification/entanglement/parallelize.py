@@ -338,7 +338,7 @@ class BConfig:
                                            backend=self.backend,
                                            initial_layout=initial_layout)
 
-        meas = self.get_measurement_circ(n, 'q', 'c', full_measurement)
+        meas = self.get_measurement_circ(n, 'q', 'c', True)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
                                          initial_layout=initial_layout)
