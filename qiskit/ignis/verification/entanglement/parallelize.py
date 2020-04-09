@@ -76,7 +76,7 @@ class BConfig:
 
     def indicator_on(self):
         '''
-        We turn off gate-based sorting of the tier_dict
+        We turn on gate-based sorting of the tier_dict
         '''
 
         self.indicator = True
@@ -101,12 +101,7 @@ class BConfig:
                 else:
                     pass
 
-        newcxerrordict = cxerrordict
-
-#         for a in list(cxerrordict.keys()):
-#             if (a[1],a[0]) not in cxerrordict.keys():
-#                 newcxerrordict[(a[1],a[0])] = cxerrordict[a]
-        return newcxerrordict
+        return cxerrordict
 
     def get_cx_length(self):
         '''
@@ -128,12 +123,7 @@ class BConfig:
                 else:
                     pass
 
-        newcxlengthdict = cxlengthdict
-#         for a in list(cxlengthdict.keys()):
-#             if (a[1],a[0]) not in cxlengthdict.keys():
-#                 newcxlengthdict[(a[1],a[0])] = cxlengthdict[a]
-
-        return newcxlengthdict
+        return cxlengthdict
 
     def child_sorter(self, children, parent):
         '''
@@ -165,8 +155,7 @@ class BConfig:
         trashlist.append(self.get_best_node())
         parent = self.get_best_node()
 
-        for x in range(length):
-            tier[x] = [[]]
+        tier = {x: [[]] for x in range(length)}
 
         parentlist = []
         parentlist.append(parent)
@@ -292,11 +281,6 @@ class BConfig:
                                            backend=self.backend,
                                            initial_layout=initial_layout)
 
-#         cla = ClassicalRegister(n,'c')
-#         meas = QuantumCircuit(q,cla)
-#         meas.barrier()
-#         meas.measure(q,cla)
-
         meas = self.get_measurement_circ(n, 'q', 'c', full_measurement)
         meas = qiskit.compiler.transpile(meas,
                                          backend=self.backend,
@@ -334,11 +318,6 @@ class BConfig:
                                            backend=self.backend,
                                            initial_layout=initial_layout)
 
-
-#         cla = ClassicalRegister(n,'c')
-#         meas = QuantumCircuit(q,cla)
-#         meas.barrier()
-#         meas.measure(q,cla)
 
         meas = self.get_measurement_circ(n, 'q', 'c', full_measurement)
         meas = qiskit.compiler.transpile(meas,

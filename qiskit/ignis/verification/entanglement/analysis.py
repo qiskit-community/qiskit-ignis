@@ -18,13 +18,11 @@ def ordered_list_generator(counts_dictionary, qn):
     '''
     orderedlist = []
     limit = 2**qn
+
     keycode = str(qn + 2)
     for a in range(limit):
         keyq = str(format(a, '#0' + keycode + 'b'))[2:]
-        if keyq in counts_dictionary.keys():
-            orderedlist.append(counts_dictionary[keyq])
-        else:
-            orderedlist.append(0.0)
+        orderedlist.append(counts_dictionary.get(keyq, 0.0))
     return np.asarray(orderedlist)
 
 
