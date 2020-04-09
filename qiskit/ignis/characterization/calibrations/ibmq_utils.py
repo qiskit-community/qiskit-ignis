@@ -17,11 +17,11 @@ Utility functions for calibrating IBMQ Devices
 """
 
 from collections import defaultdict
-
+from scipy.optimize import least_squares
 import numpy as np
+
 from qiskit.pulse import pulse_lib, Schedule, Play, ShiftPhase
 from qiskit.pulse.schedule import ParameterizedSchedule
-from scipy.optimize import least_squares
 
 
 def _fit_drag_func(duration, amp, sigma, beta, exp_samples):
