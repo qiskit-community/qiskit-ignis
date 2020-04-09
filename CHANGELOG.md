@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Accreditation (\#252, \#325)
 - Pulse calibrations for single qubits (\#292, \#302, \#303, \#304)
 - Pulse Discriminator (\#238, \#278, \#297, \#316)
+- Add entanglement verification circuits (\#328)
 
 ### Deprecated
 
@@ -70,10 +71,3 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 [UNRELEASED]: TBD
 [0.1.0]: March 4, 2019
-
-
-## [x.x.x] - 2020-04-09
-
-### Added
-- Add entanglement verification circuits (\#328)
-
