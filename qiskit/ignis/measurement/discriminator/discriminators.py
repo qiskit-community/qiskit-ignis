@@ -309,7 +309,6 @@ class BaseDiscriminationFitter(ABC):
         Returns (List[List[float]]):
             data as a list of features. Each feature is a list.
         """
-        pass
 
     @abstractmethod
     def get_ydata(self, results: Union[Result, List[Result]],
@@ -332,12 +331,10 @@ class BaseDiscriminationFitter(ABC):
             the y data, i.e. expected states. get_ydata is
             designed to produce y data with the same length as the x data.
         """
-        pass
 
     @abstractmethod
     def fit(self):
         """ Fits the discriminator using self._xdata and self._ydata. """
-        pass
 
     @abstractmethod
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
@@ -351,7 +348,6 @@ class BaseDiscriminationFitter(ABC):
         Returns (List[str]):
             the discriminated x_data as a list of labels.
         """
-        pass
 
     @abstractmethod
     def plot(self, axs=None,
@@ -388,7 +384,6 @@ class BaseDiscriminationFitter(ABC):
             The figure handle returned is not ``None`` only when the figure
             handle is created by the discriminator's plot method.
         """
-        pass
 
     @abstractmethod
     def plot_xdata(self, axs,
@@ -407,4 +402,3 @@ class BaseDiscriminationFitter(ABC):
                 or list of Results.
             color (str): color of the IQ points in the scatter plot.
         """
-        pass

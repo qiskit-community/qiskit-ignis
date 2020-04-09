@@ -369,7 +369,6 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
     @abstractmethod
     def fit(self):
         """ Fits the discriminator using self._xdata and self._ydata. """
-        pass
 
     @abstractmethod
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
@@ -383,7 +382,6 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
         Returns (List[str]):
             the discriminated x_data as a list of labels.
         """
-        pass
 
 
 class LinearIQDiscriminator(IQDiscriminationFitter):
