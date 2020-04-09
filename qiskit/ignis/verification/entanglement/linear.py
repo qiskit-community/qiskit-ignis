@@ -74,7 +74,6 @@ def get_ghz_mqc(n, delta, full_measurement):
     circ += circinv
     meas = get_measurement_circ(n, 'q', 'c', full_measurement)
     circ = circ + meas
-    circ.draw()
     return circ
 
 
@@ -100,7 +99,6 @@ def get_ghz_mqc_para(n, full_measurement=True):
     circ += circinv
     meas = get_measurement_circ(n, 'q', 'c', full_measurement)
     circ = circ + meas
-    circ.draw()
     return circ, delta
 
 
@@ -121,7 +119,6 @@ def get_ghz_po(n, delta, full_measurement=True):
     circ.barrier()
     meas = get_measurement_circ(n, 'q', 'c', full_measurement)
     circ = circ + meas
-    circ.draw()
     return circ
 
 
