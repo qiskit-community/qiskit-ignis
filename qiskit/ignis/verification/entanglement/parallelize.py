@@ -1,17 +1,17 @@
 
 
 '''
-In this package, there are three modules, linear.py,
-parallellize.py, and analysis.py. It may be more suitable
-to put these in Terra rather than Ignis. The most
-important module, parallellize.py provides methods to
-parallellize CNOT gates in the preparation of the GHZ State,
-which results in the GHZ State having a much higher fidelity
+This module provides methods to parallellize CNOT gates
+in the preparation of the GHZ State, which results in
+the GHZ State having a much higher fidelity
 then a normal "linear" CNOT gate preparation of the
 GHZ State. Additionally, there are methods within parallelize.py
 that configure different characterization tests for the
 GHZ State, including Multiple Quantum Coherence (MQC),
 Parity Oscillations (PO), and Quantum Tomography.
+
+It may be more suitable to put this module in Terra rather
+than Ignis.
 '''
 
 from qiskit import *
@@ -28,12 +28,12 @@ class BConfig:
         self.nodes = {}
         self.backend = backend
         self.cmap = backend.configuration().coupling_map
-        self.add_nodes()
+        self.initialize_nodes()
         self.indicator = indicator
 
-    def add_nodes(self):
+    def initialize_nodes(self):
         '''
-        Adds nodes to the dictionary based on coupling map
+        Initializes the nodes to the dictionary based on coupling map
         '''
         self.nodes = {}
         for i in range(len(self.cmap_calib())):
