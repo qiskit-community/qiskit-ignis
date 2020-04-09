@@ -37,7 +37,7 @@ class RabiFitter(IQFitter):
 
         schedule_names = []
         for cind, _ in enumerate(xdata):
-            schedule_names.append('rabicircuit_%d_' % cind)
+            schedule_names.append('rabisched_%d_' % cind)
 
         IQFitter.__init__(self, '$Rabi$',
                           backend_result, xdata,
@@ -148,7 +148,7 @@ class DragFitter(IQFitter):
 
         schedule_names = []
         for cind, _ in enumerate(xdata):
-            schedule_names.append('dragcircuit_%d_' % cind)
+            schedule_names.append('dragsched_%d_' % cind)
 
         if fit_bounds is None:
             fit_bounds = ([-np.inf for e in range(len(fit_p0))],
