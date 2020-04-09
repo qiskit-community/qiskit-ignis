@@ -129,7 +129,7 @@ def get_ghz_po_para(n):
      Returns:
        A parity oscillation circuit and its Delta/minus-delta parameters
    '''
-   q = QuantumRegister(n, 'q')
+    q = QuantumRegister(n, 'q')
     delta = Parameter('t')
     deltaneg = Parameter('-t')
     circ = get_ghz_simple(n, measure=False)
