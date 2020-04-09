@@ -9,3 +9,26 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
+"""
+===========================================
+Measurement (:mod:`qiskit.ignis.measurement`)
+===========================================
+
+.. currentmodule:: qiskit.ignis.measurement
+
+Discriminator
+===========
+
+The discriminators are used to to discriminate level one data into level two counts.
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   DiscriminationFilter
+   IQDiscriminationFitter
+   LinearIQDiscriminator
+   QuadraticIQDiscriminator
+   SklearnIQDiscriminator
+
+"""
