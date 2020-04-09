@@ -81,14 +81,14 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 of schedule (through get_memory(schedule)) is used.
             schedule_type_to_get (int): use to specify if we should return data
                 corresponding to:
-                0: calibration data only
-                1: non-calibration data
-                2: both calibration and non-calibration data
+                    0: calibration data only
+                    1: non-calibration data
+                    2: both calibration and non-calibration data
             schedules (Union[List[str], List[Schedule]]): Either the names of
                 the schedules or the schedules themselves.
 
-        Returns (List[List[float]]):
-            data as a list of features. Each feature is a list.
+        Returns:
+            (List[List[float]]): data as a list of features. Each feature is a list.
         """
         xdata = []
         if schedules is None:
