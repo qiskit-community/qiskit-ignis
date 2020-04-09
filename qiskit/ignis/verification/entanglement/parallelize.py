@@ -261,18 +261,18 @@ class BConfig:
         '''
 
         q = QuantumRegister(n, qregname)
-        if (full_measurement):
+        if full_measurement:
             cla = ClassicalRegister(n, cregname)
             meas = QuantumCircuit(q, cla)
             meas.barrier()
             meas.measure(q, cla)
             return meas
-        else:
-            cla = ClassicalRegister(1, cregname)
-            meas = QuantumCircuit(q, cla)
-            meas.barrier()
-            meas.measure(q[0], cla)
-            return meas
+
+        cla = ClassicalRegister(1, cregname)
+        meas = QuantumCircuit(q, cla)
+        meas.barrier()
+        meas.measure(q[0], cla)
+        return meas
 
     def get_ghz_mqc(self, n, delta, full_measurement=True):
         '''
@@ -354,7 +354,7 @@ class BConfig:
         Get Parity Oscillation circuit
         '''
 
-        if not(full_measurement):
+        if not full_measurement:
             raise Exception("Only True full_measurement argument can be accepted",
                             " for measure in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)
@@ -390,7 +390,7 @@ class BConfig:
             and the initial ghz layout
         '''
 
-        if not(full_measurement):
+        if not full_measurement:
             raise Exception("Only True full_measurement argument can be accepted",
                             " for measure in Parity Oscillation circuit")
         circ, initial_layout = self.get_ghz_layout(n)

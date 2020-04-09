@@ -20,18 +20,18 @@ def get_measurement_circ(n, qregname, cregname, full_measurement=True):
        The measurement suffix for a circuit
     '''
     q = QuantumRegister(n, qregname)
-    if (full_measurement):
+    if full_measurement:
         cla = ClassicalRegister(n, cregname)
         meas = QuantumCircuit(q, cla)
         meas.barrier()
         meas.measure(q, cla)
         return meas
-    else:
-        cla = ClassicalRegister(1, cregname)
-        meas = QuantumCircuit(q, cla)
-        meas.barrier()
-        meas.measure(q[0], cla)
-        return meas
+
+    cla = ClassicalRegister(1, cregname)
+    meas = QuantumCircuit(q, cla)
+    meas.barrier()
+    meas.measure(q[0], cla)
+    return meas
 
 
 def get_ghz_simple(n, measure=True, full_measurement=True):
@@ -55,8 +55,7 @@ def get_ghz_simple(n, measure=True, full_measurement=True):
     if measure:
         meas = get_measurement_circ(n, 'q', 'c', full_measurement)
         circ = circ + meas
-    else:
-        pass
+
     return circ
 
 
@@ -111,7 +110,7 @@ def get_ghz_po(n, delta, full_measurement=True):
     with n qubits, where the middle superposition rotation around
     the x and y axes is by delta
     '''
-    if not(full_measurement):
+    if not full_measurement:
         raise Exception("Only True full_measurement can be accepted",
                         " for measure in Parity Oscillation circuit")
     q = QuantumRegister(n, 'q')
@@ -137,7 +136,7 @@ def get_ghz_po_para(n, full_measurement=True):
     Returns:
        A parity oscillation circuit and its Delta/minus-delta parameters
    '''
-    if not(full_measurement):
+    if not full_measurement:
         raise Exception("Only True full_measurement can be accepted",
                         " for measure in Parity Oscillation circuit")
     q = QuantumRegister(n, 'q')
