@@ -46,8 +46,8 @@ def count_gates(qobj, basis, qubits):
     Additional Information:
         nQ gates are counted in each qubit's set of gates.
     """
-    warn('The function `count_gates` will be deprecated. \
-         Gate count is integrated into `gates_per_clifford` function.',
+    warn('The function `count_gates` will be deprecated. '
+         'Gate count is integrated into `gates_per_clifford` function.',
          category=DeprecationWarning)
 
     nexp = len(qobj.experiments)
@@ -127,8 +127,8 @@ def gates_per_clifford(
     ngates = {qubit: {base: 0 for base in basis} for qubit in qubits}
 
     if isinstance(transpiled_circuits_list[0], QasmQobj):
-        warn('`QasmQobj` input will be deprecated. Use transpiled `QuantumCircuit` instead. \
-             Gate counts based on `QasmQobj` has no unittest and may return wrong counts.',
+        warn('`QasmQobj` input will be deprecated. Use transpiled `QuantumCircuit` instead. '
+             'Gate counts based on `QasmQobj` has no unittest and may return wrong counts.',
              category=DeprecationWarning)
 
     for transpiled_circuits in transpiled_circuits_list:
@@ -243,8 +243,8 @@ def twoQ_clifford_error(ngates: Dict[int, Dict[str, float]],
     Raises:
         QiskitError: when number of qubit contained in ``ngates`` is not 2.
     """
-    warn('The function `twoQ_clifford_error` will be deprecated. \
-         Use `calculate_2q_epc` instead.', category=DeprecationWarning)
+    warn('The function `twoQ_clifford_error` will be deprecated. '
+         'Use `calculate_2q_epc` instead.', category=DeprecationWarning)
 
     gpc_per_qubits = sorted(ngates.items())
 
