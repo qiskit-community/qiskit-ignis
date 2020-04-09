@@ -18,8 +18,6 @@ Test discrimination filters.
 
 import unittest
 from operator import getitem
-import os
-import pickle
 
 from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
 from qiskit.result import Result
@@ -74,11 +72,51 @@ class TestDiscriminationFilter(unittest.TestCase):
         Set-up a discriminator based on simulated data, train it and then
         discriminate the calibration data.
         """
-        result_pkl = os.path.join(os.path.dirname(__file__), 'test_result.pkl')
-        with open(result_pkl, 'rb') as handle:
-            result = Result.from_dict(pickle.load(handle))
+        cal_00_data = [[[1., 1.]], [[1.1, 0.9]], [[0.9, 1.1]], [[1., 1.1]], [[0.9, 1.2]]]
+        cal_11_data = [[[-1., -1.]], [[-1.1, -0.9]], [[-0.9, -1.1]], [[-0.9, -1.2]],
+                       [[-1., -1.1]]]
+        x90p_data = [[[-1.1, -1.]], [[1.1, 0.9]], [[-0.8, -1.0]], [[0.9, 1.1]],
+                     [[1., 1.]]]
 
-        discriminator = LinearIQDiscriminator(result, [0, 1])
+        result = Result.from_dict({'job_id': '',
+                                   'backend_version': '1.3.0',
+                                   'backend_name': 'test',
+                                   'qobj_id': '',
+                                   'success': True,
+                                   'results': [{
+                                       "header": {"name": "cal_0"},
+                                       "shots": 5,
+                                       "status": "DONE",
+                                       'meas_level': 1,
+                                       "success": True,
+                                       "meas_return": "single",
+                                       "data": {
+                                           "memory": cal_00_data
+                                       }
+                                   }, {
+                                       "header": {"name": "cal_1"},
+                                       "shots": 5,
+                                       "status": "DONE",
+                                       'meas_level': 1,
+                                       "success": True,
+                                       "meas_return": "single",
+                                       "data": {
+                                           "memory": cal_11_data
+                                       }
+                                   }, {
+                                       "header": {"name": "x90p"},
+                                       "shots": 5,
+                                       "status": "DONE",
+                                       'meas_level': 1,
+                                       "success": True,
+                                       "meas_return": "single",
+                                       "data": {
+                                           "memory": x90p_data
+                                       }
+                                   }]
+                                   })
+
+        discriminator = LinearIQDiscriminator(result, [0])
 
         d_filter = DiscriminationFilter(discriminator)
 
@@ -87,8 +125,13 @@ class TestDiscriminationFilter(unittest.TestCase):
 
         self.assertEqual(new_results.results[0].meas_level, 2)
 
-        for idx in range(3):
-            counts_00 = new_results.results[idx].data.counts.to_dict()['0x0']
-            counts_11 = new_results.results[idx].data.counts.to_dict()['0x3']
+        for name in ['cal_0', 'cal_1', 'x90p']:
+            counts = new_results.get_counts(name)
+            counts_0 = counts.get('0', 0)
+            counts_1 = counts.get('1', 0)
 
-            self.assertEqual(counts_00 + counts_11, 512)
+            self.assertEqual(counts_0 + counts_1, 5)
+
+            if name == 'x90p':
+                self.assertEqual(counts_0, 3)
+                self.assertEqual(counts_1, 2)
