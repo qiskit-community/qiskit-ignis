@@ -868,7 +868,8 @@ class TestRBUtils(unittest.TestCase):
 
         alpha_c_2q = 1 / 5 * (2 * alpha_1q + 3 * alpha_1q * alpha_1q) * alpha_2q
 
-        epc = rb.twoQ_clifford_error(gpc, gate_qubit, gate_err)
+        with self.assertWarns(DeprecationWarning):
+            epc = rb.twoQ_clifford_error(gpc, gate_qubit, gate_err)
 
         self.assertAlmostEqual(epc, 3 / 4 * (1 - alpha_c_2q))
 

@@ -214,7 +214,7 @@ class IgnisLogging:
         logger = logging.getLogger(__name__)
         assert(isinstance(logger, IgnisLogger)), \
             "IgnisLogger class was not registered"
-        self.configure_logger(logger)
+        self._configure_logger(logger)
 
         return logger
 
