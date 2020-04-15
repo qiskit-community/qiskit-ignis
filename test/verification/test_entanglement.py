@@ -57,7 +57,6 @@ class TestEntanglement(unittest.TestCase):
         circuits = [circ.bind_parameters({params[0]: theta_val,
                                           params[1]: -theta_val})
                     for theta_val in theta_range]
-        gap_factor = 2.0/3
         for circ in circuits:
             counts = execute(circ, sim, shots=1024).result().get_counts(circ)
             even_counts = sum(key.count('1') % 2 == 0 for key in counts.keys())
