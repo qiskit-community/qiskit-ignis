@@ -62,8 +62,8 @@ class TestEntanglement(unittest.TestCase):
             even_counts = sum(key.count('1') % 2 == 0 for key in counts.keys())
             odd_counts = sum(key.count('1') % 2 == 1 for key in counts.keys())
 
-        self.assertTrue((even_counts == 0) or (even_counts == 16))
-        self.assertTrue((odd_counts == 0) or (odd_counts == 16))
+        self.assertTrue(even_counts in (0, 16))
+        self.assertTrue(odd_counts in (0, 16))
 
 
 if __name__ == '__main__':
