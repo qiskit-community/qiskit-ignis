@@ -65,5 +65,6 @@ class TestEntanglement(unittest.TestCase):
         self.assertTrue((even_counts == 0) or (even_counts == 16))
         self.assertTrue((odd_counts == 0) or (odd_counts == 16))
 
+
 if __name__ == '__main__':
     unittest.main()
