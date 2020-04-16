@@ -24,6 +24,7 @@ from qiskit.ignis.characterization.coherence.fitters import T1Fitter, \
 
 from qiskit.ignis.characterization.hamiltonian.fitters import ZZFitter
 
+
 def generate_data(filename_prefix):
     """
     Generate pickle files
