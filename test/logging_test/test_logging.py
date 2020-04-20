@@ -99,7 +99,7 @@ class TestLoggingBase(unittest.TestCase):
 
 def _safe_rename_file(src, dst):
     try:
-        os.rename(src, dst)
+        os.replace(src, dst)
     except FileNotFoundError:
         pass
 
