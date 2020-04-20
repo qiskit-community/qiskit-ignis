@@ -12,6 +12,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+# NOTE: this is because BasicUtils doesn't define any arguments on it's methods
+# so the implementations here don't match the abstract class. This needs to
+# be fixed or reworked without an abstract class
+# pylint: disable=arguments-differ
+
+
 """
 Advanced CNOT-dihedral operations needed for randomized benchmarking.
 """
@@ -89,17 +96,17 @@ class DihedralUtils(BasicUtils):
                 on num_qubits.
         """
 
-        G0 = make_dict_0(num_qubits)
-        G_dict = [G0]
-        G_size = len(G0)
-        G = {**G0}
-        while G_size > 0:
-            Gi = make_dict_next(num_qubits, G_dict)
-            G_size = len(Gi)
-            G_dict.append(Gi)
-            G.update({**Gi})
+        g_0 = make_dict_0(num_qubits)
+        g_dict = [g_0]
+        g_size = len(g_0)
+        g_out = {**g_0}
+        while g_size > 0:
+            g_i = make_dict_next(num_qubits, g_dict)
+            g_size = len(g_i)
+            g_dict.append(g_i)
+            g_out.update({**g_i})
 
-        return G
+        return g_out
 
     def pickle_dihedral_table(self, num_qubits=2):
         """
@@ -230,7 +237,7 @@ class DihedralUtils(BasicUtils):
         Args:
             idx (int): a unique index of a single CNOT-dihedral element.
             G_table (dict): the CNOT-dihedral group table on num_qubits.
-            G_keys (list: list of keys to the CNOT-dihedral group table.
+            G_keys (list): list of keys to the CNOT-dihedral group table.
 
         Returns:
             CNOTDihedral: A single CNOT-dihedral element on num_qubits.

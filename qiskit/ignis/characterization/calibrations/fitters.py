@@ -12,6 +12,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
 """
 Fitters for calibration routines
 """
@@ -58,8 +60,8 @@ class RabiFitter(IQFitter):
                 [amp, freq, phase, offset]
         """
 
-        a = np.max(self.ydata['0'][qind]['mean'])
-        c = np.mean(self.ydata['0'][qind]['mean'])
+        a_out = np.max(self.ydata['0'][qind]['mean'])
+        c_out = np.mean(self.ydata['0'][qind]['mean'])
 
         fft_data = np.fft.fft(self.ydata['0'][qind]['mean'])
 
@@ -71,7 +73,7 @@ class RabiFitter(IQFitter):
         main_freq = np.argmax(np.abs(fft_data))
         f_guess = fft_freqs[main_freq]
 
-        return [a, f_guess, np.angle(fft_data[main_freq]), c]
+        return [a_out, f_guess, np.angle(fft_data[main_freq]), c_out]
 
     def pi2_amplitude(self, qind=-1):
         r"""
@@ -117,7 +119,7 @@ class RabiFitter(IQFitter):
             show_plot (bool): do plot.show
 
         Returns:
-            Plot axes
+            Axes: Plot axes
         """
 
         ax = IQFitter.plot(self, qind, series, ax,

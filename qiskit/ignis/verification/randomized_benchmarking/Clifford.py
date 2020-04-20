@@ -12,9 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# NOTE(mtreinish): Needed to avoid error on logical_xor where pylint thinks it
-# doesn't have a return.
-# pylint: disable=assignment-from-no-return
+# pylint: disable=assignment-from-no-return,invvalid-name
 
 """
 Clifford Operator class
