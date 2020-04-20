@@ -33,11 +33,14 @@ Example:
  T^3 on qubit 1 AFTER CNOT_{0,1} is the same as
  T^3 on qubit 0, T^3 on qubit 1, and CS_{0,1} BEFORE CNOT_{0,1}.
 """
+
+import numpy as np
 import itertools
 import copy
 from functools import reduce
 from operator import mul
 
+from qiskit.circuit import QuantumCircuit
 
 class SpecialPolynomial():
     """Multivariate polynomial with special form.
@@ -517,6 +520,8 @@ def make_dict_0(n_qubits):
                 circ.append(("x", j))
             num = int((num - num % 16) / 16)
         obj[elem.key] = (elem, circ)
+        #print (circ)
+        #decompose_CNOTDihedral(elem)
     return obj
 
 
@@ -548,4 +553,239 @@ def make_dict_next(n_qubits, dicts_prior):
                                         for d in dicts_prior] \
                                 and new_elem.key not in obj:
                             obj[new_elem.key] = (new_elem, new_circ)
+                            #print (new_circ)
+                            #decompose_CNOTDihedral(new_elem)
     return obj
+
+
+def decompose_CNOTDihedral(elem):
+    """Decompose a CNOTDihedral element into a QuantumCircuit."""
+
+    circuit = QuantumCircuit(elem.n_qubits)
+
+    assert elem.n_qubits < 3, \
+        "cannot decompose a CNOT-Dihedral element with more than 2 qubits"
+
+    if (elem.n_qubits == 1):
+        assert elem.poly.weight_0 == 0
+        assert elem.linear == [[1]]
+        l = elem.poly.weight_1[0]
+        k = elem.shift[0]
+        if (l>0):
+            circuit.u1(l*np.pi/4, 0)
+        if k==1:
+            circuit.x(0)
+        # print (circuit)
+        return(circuit)
+
+    # case elem.n_qubits == 2:
+    assert elem.poly.weight_0 == 0
+    weight_1 = elem.poly.weight_1
+    weight_2 = elem.poly.weight_2
+    linear = elem.linear
+    shift = elem.shift
+    #print (weight_1, weight_2, linear, shift)
+
+    # CS subgroup
+    if linear == [[1,0],[0,1]]:
+        [k0, k1] = shift
+
+        # Dihedral class
+        if weight_2 == [0]:
+            [l0, l1] = weight_1
+            if (l0 > 0):
+                circuit.u1(l0 * np.pi / 4, 0)
+            if k0 == 1:
+                circuit.x(0)
+            if (l1 > 0):
+                circuit.u1(l1 * np.pi / 4, 1)
+            if k1 == 1:
+                circuit.x(1)
+
+        # CS-like class
+        if ((weight_2 == [2] and k0 == k1) or
+                (weight_2 == [6] and k0 != k1)):
+            l0 = (weight_1[0] - 2 * k1 - 4 * k0 * k1) % 8
+            l1 = (weight_1[0] - 2 * k0 - 4 * k0 * k1) % 8
+            if (l0 > 0):
+                circuit.u1(l0 * np.pi / 4, 0)
+            if k0 == 1:
+                circuit.x(0)
+            if (l1 > 0):
+                circuit.u1(l1 * np.pi / 4, 1)
+            if k1 == 1:
+                circuit.x(1)
+            # CS gate is implemented using 2 CX gates
+            circuit.u1(np.pi / 4, 0)
+            circuit.u1(np.pi / 4, 1)
+            circuit.cx(0, 1)
+            circuit.u1(7 * np.pi / 4, 1)
+            circuit.cx(0, 1)
+
+        # CSdg-like class
+        if ((weight_2 == [6] and k0 == k1) or
+                (weight_2 == [2] and k0 != k1)):
+            l0 = (weight_1[0] - 6 * k1 - 4 * k0 * k1) % 8
+            l1 = (weight_1[0] - 6 * k0 - 4 * k0 * k1) % 8
+            if (l0 > 0):
+                circuit.u1(l0 * np.pi / 4, 0)
+            if k0 == 1:
+                circuit.x(0)
+            if (l1 > 0):
+                circuit.u1(l1 * np.pi / 4, 1)
+            if k1 == 1:
+                circuit.x(1)
+            # CSdg gate is implemented using 2 CX gates
+            circuit.u1(np.pi / 4, 0)
+            circuit.u1(np.pi / 4, 1)
+            circuit.cx(0, 1)
+            circuit.u1(np.pi / 4, 1)
+            circuit.cx(0, 1)
+
+        # CZ-like class
+        if weight_2 == [4]:
+            l0 = (weight_1[0] - 4 * k0) % 8
+            l1 = (weight_1[1] - 4 * k1) % 8
+            if (l0 > 0):
+                circuit.u1(l0 * np.pi / 4, 0)
+            if k0 == 1:
+                circuit.x(0)
+            if (l1 > 0):
+                circuit.u1(l1 * np.pi / 4, 1)
+            if k1 == 1:
+                circuit.x(1)
+            # CZ gate is implemented using 2 CX gates
+            circuit.u1(7 * np.pi / 4, 1)
+            circuit.u1(7 * np.pi / 4, 0)
+            circuit.cx(1, 0)
+            circuit.u1(2 * np.pi / 4, 0)
+            circuit.cx(1, 0)
+            circuit.u1(7 * np.pi / 4, 1)
+            circuit.u1(7 * np.pi / 4, 0)
+
+    # CX01-like class
+    if linear == [[1, 0], [1, 1]]:
+        k0 = shift[0]
+        k1 = (shift[1] + k0) % 2
+        if (k0 == k1):
+            m = (8 - weight_2[0]) / 2
+            l0 = (weight_1[0] - m) % 8
+            l1 = (weight_1[1] - m) % 8
+        else:
+            m = weight_2[0] / 2
+            l0 = (weight_1[0] + m) % 8
+            l1 = (weight_1[1] + m) % 8
+        if (l0 > 0):
+            circuit.u1(l0 * np.pi / 4, 0)
+        if k0 == 1:
+            circuit.x(0)
+        if (l1 > 0):
+            circuit.u1(l1 * np.pi / 4, 1)
+        if k1 == 1:
+            circuit.x(1)
+        circuit.cx(0, 1)
+        if m in (1, 2, 3):
+            circuit.u1(m * np.pi / 4, 1)
+
+    # CX10-like class
+    if linear == [[1, 1], [0, 1]]:
+        k1 = shift[1]
+        k0 = (shift[0] + k1) % 2
+        if (k0 == k1):
+            m = (8 - weight_2[0]) / 2
+            l0 = (weight_1[0] - m) % 8
+            l1 = (weight_1[1] - m) % 8
+        else:
+            m = weight_2[0] / 2
+            l0 = (weight_1[0] + m) % 8
+            l1 = (weight_1[1] + m) % 8
+        if (l0 > 0):
+            circuit.u1(l0 * np.pi / 4, 0)
+        if k0 == 1:
+            circuit.x(0)
+        if (l1 > 0):
+            circuit.u1(l1 * np.pi / 4, 1)
+        if k1 == 1:
+            circuit.x(1)
+        circuit.cx(1, 0)
+        if m in (1, 2, 3):
+            circuit.u1(m * np.pi / 4, 1)
+
+    # CX01*CX10-like class
+    if linear == [[0, 1], [1, 1]]:
+        k1 = shift[0]
+        k0 = (shift[1] + k1) % 2
+        if (k0 == k1):
+            m = (8 - weight_2[0]) / 2
+            l0 = (weight_1[0] - m) % 8
+            l1 = (weight_1[1] - m) % 8
+        else:
+            m = weight_2[0] / 2
+            l0 = (weight_1[0] + m) % 8
+            l1 = (weight_1[1] + m) % 8
+        if (l0 > 0):
+            circuit.u1(l0 * np.pi / 4, 0)
+        if k0 == 1:
+            circuit.x(0)
+        if (l1 > 0):
+            circuit.u1(l1 * np.pi / 4, 1)
+        if k1 == 1:
+            circuit.x(1)
+        circuit.cx(0, 1)
+        circuit.cx(1, 0)
+        if m in (1, 2, 3):
+            circuit.u1(m * np.pi / 4, 1)
+
+    # CX10*CX01-like class
+    if linear == [[1, 1], [1, 0]]:
+        k0 = shift[1]
+        k1 = (shift[0] + k0) % 2
+        if (k0 == k1):
+            m = (8 - weight_2[0]) / 2
+            l0 = (weight_1[0] - m) % 8
+            l1 = (weight_1[1] - m) % 8
+        else:
+            m = weight_2[0] / 2
+            l0 = (weight_1[0] + m) % 8
+            l1 = (weight_1[1] + m) % 8
+        if (l0 > 0):
+            circuit.u1(l0 * np.pi / 4, 0)
+        if k0 == 1:
+            circuit.x(0)
+        if (l1 > 0):
+            circuit.u1(l1 * np.pi / 4, 1)
+        if k1 == 1:
+            circuit.x(1)
+        circuit.cx(1, 0)
+        circuit.cx(0, 1)
+        if m in (1, 2, 3):
+            circuit.u1(m * np.pi / 4, 1)
+
+    # CX01*CX10*CX01-like class
+    if linear == [[0, 1], [1, 0]]:
+        k0 = shift[1]
+        k1 = shift[0]
+        if (k0 == k1):
+            m = (8 - weight_2[0]) / 2
+            l0 = (weight_1[0] - m) % 8
+            l1 = (weight_1[1] - m) % 8
+        else:
+            m = weight_2[0] / 2
+            l0 = (weight_1[0] + m) % 8
+            l1 = (weight_1[1] + m) % 8
+        if (l0 > 0):
+            circuit.u1(l0 * np.pi / 4, 0)
+        if k0 == 1:
+            circuit.x(0)
+        if (l1 > 0):
+            circuit.u1(l1 * np.pi / 4, 1)
+        if k1 == 1:
+            circuit.x(1)
+        circuit.cx(0, 1)
+        circuit.cx(1, 0)
+        circuit.cx(0, 1)
+        if m in (1, 2, 3):
+            circuit.u1(m * np.pi / 4, 1)
+
+    #print (circuit)
+    return(circuit)
