@@ -17,15 +17,15 @@ Pulse Schedule Generation for calibration experiments
 """
 
 import copy
-import qiskit
+
 import qiskit.pulse as pulse
 import qiskit.pulse.pulse_lib as pulse_lib
-from qiskit.circuit import Gate
-from qiskit.scheduler import schedule_circuit, ScheduleConfig
+from qiskit.exceptions import QiskitError
+from qiskit.scheduler import measure
 
 
 def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
-                   width_sigma_ratio=4, drives=None, cmd_def=None,
+                   width_sigma_ratio=4, drives=None,
                    inst_map=None, meas_map=None):
     """
     Generates schedules for a rabi experiment using a Gaussian pulse
@@ -40,7 +40,6 @@ def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
         width_sigma_ratio (int): set sigma to a certain ratio of the width
             (use if pulse_sigma is None)
         drives (list): list of :class:`~qiskit.pulse.DriveChannel` objects
-        cmd_def (qiskit.pulse.CmdDef): CmdDef object to use (deprecated)
         inst_map (qiskit.pulse.InstructionScheduleMap): InstructionScheduleMap
             object to use
         meas_map (list): meas_map to use
@@ -48,67 +47,47 @@ def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
     Returns:
        A list of QuantumSchedules
        xdata: a list of amps
-    """
 
+    Raises:
+        QiskitError: when necessary variables are not supplied.
+    """
     xdata = amp_list
 
     # copy the instruction to schedule mapping
     inst_map = copy.deepcopy(inst_map)
-    if not inst_map:
-        inst_map = copy.deepcopy(cmd_def)
+
+    # Following variables should not be optional.
+    # To keep function interface constant, errors are inserted here.
+    # TODO: redesign this function in next release
+    if inst_map is None:
+        QiskitError('Instruction schedule map is not provided. ',
+                    'Run `backend.defaults().instruction_schedule_map` to get inst_map.')
+    if meas_map is None:
+        QiskitError('Measurement map is not provided. ',
+                    'Run `backend.configuration().meas_map` to get meas_map.')
 
     if pulse_sigma is None:
         pulse_sigma = pulse_width / width_sigma_ratio
 
-    # Construct the circuits
-    qr = qiskit.QuantumRegister(max(qubits) + 1)
-    cr = qiskit.ClassicalRegister(len(qubits))
-
-    circuits = []
-
-    for circ_index, g_amp in enumerate(amp_list):
-
-        circ = qiskit.QuantumCircuit(qr, cr)
-        circ.name = 'rabicircuit_%d_0' % circ_index
-
+    # Construct the schedules
+    rabi_scheds = []
+    for index, g_amp in enumerate(amp_list):
         rabi_pulse = pulse_lib.gaussian(duration=pulse_width,
                                         amp=g_amp,
                                         sigma=pulse_sigma,
-                                        name='rabi_pulse_%d' % circ_index)
+                                        name='rabi_pulse_%d' % index)
+        sched = pulse.Schedule(name='rabisched_%d_0' % index)
+        for qubit in qubits:
+            sched += pulse.Play(rabi_pulse, drives[qubit])
+        sched += measure(qubits, inst_map=inst_map, meas_map=meas_map).shift(pulse_width)
+        rabi_scheds.append(sched)
 
-        rabi_gate = Gate(name='rabi_%d' % circ_index, num_qubits=1, params=[])
-
-        for _, qubit in enumerate(qubits):
-
-            # add commands to schedule
-            schedule = pulse.Schedule(name='rabi_pulse_%f_%d' % (g_amp,
-                                                                 qubit))
-
-            schedule += rabi_pulse(drives[qubit])
-
-            # append this schedule to the inst_map
-            inst_map.add('rabi_%d' % circ_index, qubits=[qubit],
-                         schedule=schedule)
-
-            circ.append(rabi_gate, [qr[qubit]])
-
-        for qind, qubit in enumerate(qubits):
-            circ.measure(qr[qubit], cr[qind])
-
-        circuits.append(circ)
-
-        # schedule
-        schedule_config = ScheduleConfig(inst_map, meas_map)
-        rabi_sched = [schedule_circuit(qcirc,
-                                       schedule_config)
-                      for qcirc in circuits]
-
-    return rabi_sched, xdata
+    return rabi_scheds, xdata
 
 
 def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
                    pulse_sigma=None,
-                   width_sigma_ratio=4, drives=None, cmd_def=None,
+                   width_sigma_ratio=4, drives=None,
                    inst_map=None, meas_map=None):
     """
     Generates schedules for a drag experiment doing a pulse then
@@ -124,93 +103,52 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
         width_sigma_ratio (int): set sigma to a certain ratio of the width (use
             if pulse_sigma is None)
         drives (list): list of :class:`~qiskit.pulse.DriveChannel` objects
-        cmd_def (CmdDef): CmdDef object to use (deprecated)
         inst_map (InstructionScheduleMap): InstructionScheduleMap object to use
         meas_map (list): meas_map to use
 
     Returns:
        A list of QuantumSchedules
        xdata: a list of amps
-    """
 
+    Raises:
+        QiskitError: when necessary variables are not supplied.
+    """
     xdata = beta_list
 
     # copy the instruction to schedule mapping
     inst_map = copy.deepcopy(inst_map)
-    if not inst_map:
-        inst_map = copy.deepcopy(cmd_def)
+
+    # Following variables should not be optional.
+    # To keep function interface constant, errors are inserted here.
+    # TODO: redesign this function in next release
+    if inst_map is None:
+        QiskitError('Instruction schedule map is not provided. ',
+                    'Run `backend.defaults().instruction_schedule_map` to get inst_map.')
+    if meas_map is None:
+        QiskitError('Measurement map is not provided. ',
+                    'Run `backend.configuration().meas_map` to get meas_map.')
 
     if pulse_sigma is None:
         pulse_sigma = pulse_width / width_sigma_ratio
 
-    # Construct the circuits
-    qr = qiskit.QuantumRegister(max(qubits) + 1)
-    cr = qiskit.ClassicalRegister(len(qubits))
-
-    circuits = []
-
-    for circ_index, b_amp in enumerate(beta_list):
-
-        circ = qiskit.QuantumCircuit(qr, cr)
-        circ.name = 'dragcircuit_%d_0' % circ_index
-
+    # Construct the schedules
+    drag_scheds = []
+    for index, b_amp in enumerate(beta_list):
+        sched = pulse.Schedule(name='dragsched_%d_0' % index)
         for qind, qubit in enumerate(qubits):
+            drag_pulse_p = pulse_lib.drag(duration=pulse_width,
+                                          amp=pulse_amp[qind],
+                                          beta=b_amp,
+                                          sigma=pulse_sigma,
+                                          name='drag_pulse_%d_%d' % (index, qubit))
+            drag_pulse_m = pulse_lib.drag(duration=pulse_width,
+                                          amp=-pulse_amp[qind],
+                                          beta=b_amp,
+                                          sigma=pulse_sigma,
+                                          name='drag_pulse_%d_%d' % (index, qubit))
+            sched += pulse.Play(drag_pulse_p, drives[qubit])
+            sched += pulse.Play(drag_pulse_m, drives[qubit])
+        sched += measure(qubits, inst_map=inst_map, meas_map=meas_map).shift(pulse_width)
+        drag_scheds.append(sched)
 
-            # positive drag pulse
-            drag_pulse = pulse_lib.drag(duration=pulse_width,
-                                        amp=pulse_amp[qind],
-                                        beta=b_amp,
-                                        sigma=pulse_sigma,
-                                        name='drag_pulse_%d_%d' % (circ_index,
-                                                                   qubit))
-
-            drag_gate = Gate(name='drag_%d_%d' % (circ_index, qubit),
-                             num_qubits=1, params=[])
-
-            # add commands to schedule
-            schedule = pulse.Schedule(name='drag_pulse_%f_%d' % (b_amp,
-                                                                 qubit))
-
-            schedule += drag_pulse(drives[qubit])
-
-            # append this schedule to the inst_map
-            inst_map.add('drag_%d_%d' % (circ_index, qubit), qubits=[qubit],
-                         schedule=schedule)
-
-            # negative pulse
-            drag_pulse2 = pulse_lib.drag(duration=pulse_width,
-                                         amp=-1*pulse_amp[qind],
-                                         beta=b_amp,
-                                         sigma=pulse_sigma,
-                                         name='drag_pulse_%d_%d' % (circ_index,
-                                                                    qubit))
-
-            drag_gate2 = Gate(name='drag2_%d_%d' % (circ_index, qubit),
-                              num_qubits=1, params=[])
-
-            # add commands to schedule
-            schedule2 = pulse.Schedule(name='drag_pulse2_%f_%d' % (b_amp,
-                                                                   qubit))
-
-            schedule2 += drag_pulse2(drives[qubit])
-
-            # append this schedule to the inst_map
-            inst_map.add('drag2_%d_%d' % (circ_index, qubit), qubits=[qubit],
-                         schedule=schedule2)
-
-            circ.append(drag_gate, [qr[qubit]])
-            # circ.u1(np.pi, [qr[qubit]])
-            circ.append(drag_gate2, [qr[qubit]])
-
-        for qind, qubit in enumerate(qubits):
-            circ.measure(qr[qubit], cr[qind])
-
-        circuits.append(circ)
-
-        # schedule
-        schedule_config = ScheduleConfig(inst_map, meas_map)
-        drag_sched = [schedule_circuit(qcirc,
-                                       schedule_config)
-                      for qcirc in circuits]
-
-    return drag_sched, xdata
+    return drag_scheds, xdata

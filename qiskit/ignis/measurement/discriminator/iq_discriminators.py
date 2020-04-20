@@ -11,6 +11,11 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
+"""
+IQ Discriminator module to discriminate date in the IQ Plane.
+"""
+from abc import abstractmethod
 from typing import Union, List
 
 import numpy as np
@@ -69,18 +74,17 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
             -> List[List[float]]:
         """
         Retrieves feature data (xdata) for the discriminator.
+
         Args:
-            results (Union[Result, List[Result]]): the get_memory() method is
-                used to retrieve the level 1 data. If result is a list of
-                Result, then the first Result in the list that returns the data
-                of schedule (through get_memory(schedule)) is used.
-            schedule_type_to_get (int): use to specify if we should return data
-                corresponding to:
-                0: calibration data only
-                1: non-calibration data
-                2: both calibration and non-calibration data
-            schedules (Union[List[str], List[Schedule]]): Either the names of
-                the schedules or the schedules themselves.
+            results: the get_memory() method is used to retrieve the level 1 data.
+                     If result is a list of Result, then the first Result in the
+                     list that returns the data of schedule
+                     (through get_memory(schedule)) is used.
+            schedule_type_to_get: use to specify if we should return data corresponding to
+                                  (``0``) calibration data only
+                                  (``1``) non-calibration data
+                                  (``2``) both calibration and non-calibration data
+            schedules: Either the names of the schedules or the schedules themselves.
 
         Returns (List[List[float]]):
             data as a list of features. Each feature is a list.
@@ -111,20 +115,19 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                   schedule_type_to_get: int,
                   schedules: Union[List[str], List[Schedule]] = None):
         """
-        Args:
-            results (Union[Result, List[Result]]): results for which to
-                retrieve the y data (i.e. expected states).
-            schedule_type_to_get (int): use to specify if we should return data
-                corresponding to:
-                0: calibration data only
-                1: non-calibration data
-                2: both calibration and non-calibration data
-            schedules (Union[List[str], List[Schedule]]): the schedules for
-                which to get the y data.
+        Retrieves the expected states (ydata) for the discriminator.
 
-        Returns (List[str]):
-            the y data, i.e. expected states. get_ydata is
-            designed to produce y data with the same length as the x data.
+        Args:
+            results: results for which to retrieve the y data (i.e. expected states).
+            schedule_type_to_get: use to specify if we should return data corresponding to
+                                  * 0 calibration data only
+                                  * 1 non-calibration data
+                                  * 2 both calibration and non-calibration data
+            schedules: Either the names of the schedules or the schedules themselves.
+
+        Returns:
+            The y data, i.e. expected states. get_ydata is designed to produce
+            y data with the same length as the x data.
         """
         ydata = []
 
@@ -361,6 +364,22 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
             axs[idx].scatter(data[:, idx], data[:, n_qubits + idx], alpha=0.5,
                              color=color)
 
+    @abstractmethod
+    def fit(self):
+        """Fits the discriminator using self._xdata and self._ydata."""
+
+    @abstractmethod
+    def discriminate(self, x_data: List[List[float]]) -> List[str]:
+        """Applies the discriminator to x_data.
+
+        Args:
+            x_data (List[List[float]]): list of features. Each feature is
+                                        itself a list.
+
+        Returns (List[str]):
+            The discriminated x_data as a list of labels.
+        """
+
 
 class LinearIQDiscriminator(IQDiscriminationFitter):
     """Linear discriminant analysis discriminator for IQ data."""
@@ -411,7 +430,7 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
         self.fit()
 
     def fit(self):
-        """ Fits the discriminator using self._xdata and self._ydata. """
+        """Fits the discriminator using self._xdata and self._ydata."""
         if len(self._xdata) == 0:
             return
 
@@ -419,19 +438,20 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
         self._fitted = True
 
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
-        """
-        Applies the discriminator to x_data
+        """Applies the discriminator to x_data.
+
         Args:
             x_data (List[List[float]]): list of features. Each feature is
-                itself a list.
+                                        itself a list.
 
         Returns (List[str]):
-            the discriminated x_data as a list of labels.
+            The discriminated x_data as a list of labels.
         """
         return self._lda.predict(x_data)
 
 
 class QuadraticIQDiscriminator(IQDiscriminationFitter):
+    """Quadratic discriminant analysis discriminator for IQ data."""
 
     def __init__(self, cal_results: Union[Result, List[Result]],
                  qubit_mask: List[int], expected_states: List[str] = None,
@@ -477,7 +497,7 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
         self.fit()
 
     def fit(self):
-        """ Fits the discriminator using self._xdata and self._ydata. """
+        """Fits the discriminator using self._xdata and self._ydata."""
         if len(self._xdata) == 0:
             return
 
@@ -485,15 +505,14 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
         self._fitted = True
 
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
-        """
-        Applies the discriminator to x_data.
+        """Applies the discriminator to x_data.
 
         Args:
             x_data (List[List[float]]): list of features. Each feature is
-                itself a list.
+                                        itself a list.
 
         Returns (List[str]):
-            the discriminated x_data as a list of labels.
+            The discriminated x_data as a list of labels.
         """
         return self._qda.predict(x_data)
 
@@ -561,13 +580,13 @@ class SklearnIQDiscriminator(IQDiscriminationFitter):
         self._fitted = True
 
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
-        """ Applies the discriminator to x_data.
+        """Applies the discriminator to x_data.
 
-            Args:
-                x_data (List[List[float]]): list of features. Each feature is
-                    itself a list.
+        Args:
+            x_data (List[List[float]]): list of features. Each feature is
+                                        itself a list.
 
-            Returns (List[str]):
-                the discriminated x_data as a list of labels.
+        Returns (List[str]):
+            the discriminated x_data as a list of labels.
         """
         return self._classifier.predict(x_data)
