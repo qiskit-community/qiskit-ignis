@@ -38,9 +38,9 @@ class QVFitter:
                  qubit_lists=None):
         """
         Args:
-            backend_result: list of results (qiskit.Result).
-            statevector_result: the ideal statevectors of each circuit
-            qubit_lists: list of qubit lists (what was passed to the
+            backend_result (list): list of results (qiskit.Result).
+            statevector_result (list): the ideal statevectors of each circuit
+            qubit_lists (list): list of qubit lists (what was passed to the
                 circuit generation)
         """
 
@@ -99,7 +99,10 @@ class QVFitter:
         Assume the result is from 'statevector_simulator'
 
         Args:
-            new_statevector_result: ideal results
+            new_statevector_result (list): ideal results
+
+        Raises:
+            QiskitError: If the result has already been added for the circuit
         """
 
         if new_statevector_result is None:
@@ -249,7 +252,6 @@ class QVFitter:
 
         Args:
             ax (Axes or None): plot axis (if passed in).
-            add_label (bool): Add an EPC label
             show_plt (bool): display the plot.
 
         Raises:
@@ -301,7 +303,7 @@ class QVFitter:
         greater than 97.5) and the confidence
 
         Returns:
-            List of lenth depth with eact element a 3 list with
+            list: List of lenth depth with eact element a 3 list with
             - success True/False
             - confidence
         """
@@ -327,7 +329,7 @@ class QVFitter:
         """Return the volume for each depth.
 
         Returns:
-            List of quantum volumes
+            list: List of quantum volumes
         """
 
         qv_list = 2**np.array(self._depths)
@@ -344,8 +346,8 @@ class QVFitter:
             ideal_median = median probability across all outputs
 
         Returns:
-            the set of heavy output strings, i.e. those strings
-            whose ideal probability of occurrence exceeds the median.
+            list the set of heavy output strings, i.e. those strings
+                whose ideal probability of occurrence exceeds the median.
         """
         return list(filter(lambda x: ideal_distribution[x] > ideal_median,
                            list(ideal_distribution.keys())))
@@ -358,7 +360,7 @@ class QVFitter:
                 (as strings) to probabilities.
 
         Returns:
-            a list of median probabilities.
+            list: a list of median probabilities.
         """
         medians = []
         for dist in distributions:
@@ -376,8 +378,8 @@ class QVFitter:
                 and values are probabilities of observing those strings
 
         Returns:
-            the probability of the subset of strings, i.e. the sum
-            of the probabilities of each string as given by the
-            distribution.
+            float: the probability of the subset of strings, i.e. the sum
+                of the probabilities of each string as given by the
+                distribution.
         """
         return sum([distribution.get(value, 0) for value in strings])

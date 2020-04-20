@@ -12,7 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=import-outside-toplevel
+# pylint: disable=invalid-name
 
 
 """
@@ -20,6 +20,11 @@ Fitters for hamiltonian parameters
 """
 
 import numpy as np
+try:
+    from matplotlib import pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
 from ..fitters import BaseCoherenceFitter
 
 
@@ -76,8 +81,10 @@ class ZZFitter(BaseCoherenceFitter):
         Returns:
             the axes object
         """
-
-        from matplotlib import pyplot as plt
+        if not HAS_MATPLOTLIB:
+            raise ImportError("To plot the ZZ data matplotlib must be "
+                              "and correctly configured. To install run "
+                              "'pip install matplotlib'")
 
         if ax is None:
             plt.figure()

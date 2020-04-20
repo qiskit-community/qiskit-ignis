@@ -8,7 +8,6 @@ analysis of the GHZ State (most notably, Fourier Analysis)
 
 
 import numpy as np
-from qiskit import *
 
 
 def ordered_list_generator(counts_dictionary, qn):
