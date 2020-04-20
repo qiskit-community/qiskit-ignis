@@ -12,7 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=assignment-from-no-return,invvalid-name
+# pylint: disable=assignment-from-no-return,invalid-name
 
 """
 Clifford Operator class
@@ -217,7 +217,7 @@ class Clifford:
         Returns a unique index for the Clifford.
 
         Returns:
-            A unique index (integer) for the Clifford object.
+            int: A unique index (integer) for the Clifford object.
         """
         mat = self.table
         mat = mat.reshape(mat.size)

@@ -137,8 +137,9 @@ def QOTP_fromlayers(layers, rng):
         rng (RNG): a random number generator
 
     Returns:
-        qotp_circ (QuantumCircuit): output onetime pad circ
-        qotp_postp (list): correction as liist of bits
+        tuple: a tuple of type (``qotp_circ``, ``qotp_postp``) where:
+            ``qotp_circ`` (QuantumCircuit): output onetime pad circ
+            ``qotp_postp`` (list): correction as liist of bits
 
     Raises:
         QiskitError: If a circuit element is not implemented in qotp
@@ -238,8 +239,9 @@ def QOTP(circ, num, two_qubit_gate='cx', coupling_map=None, seed=None):
             list of list (e.g. [[0,1],[1,2],[2,0]])
         seed (int): seed to the random number generator
     Returns:
-        qotp_circs (list): a list of circuits with qotp applied
-        qotp_postps (list): a list of arrays specifying the one time pads
+        tuple: a tuple of type (``qotp_circ``, ``qotp_postp``) where:
+            qotp_circs (list): a list of circuits with qotp applied
+            qotp_postps (list): a list of arrays specifying the one time pads
     """
     rng = np.random.RandomState(seed)
     # break into layers
@@ -265,7 +267,7 @@ def QOTPCorrectCounts(qotp_counts, qotp_postp):
         qotp_counts (dict): a dict of exp counts
         qotp_postp (list): a binary list denoting the one time pad
     Returns:
-        counts_out (dict): the corrected counts dict
+        dict: the corrected counts dict
     """
 
     counts_out = {}
