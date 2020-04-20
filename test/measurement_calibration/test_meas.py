@@ -43,33 +43,31 @@ from qiskit.ignis.verification.tomography import count_keys
 class TestMeasCal(unittest.TestCase):
     # TODO: after terra 0.8, derive test case like this
     # class TestMeasCal(QiskitTestCase):
-    """ The test class """
+    """The test class."""
 
     def setUp(self):
-        """
-            setUp and global parameters
-        """
+        """setUp and global parameters"""
         self.nq_list = [1, 2, 3, 4, 5]  # Test up to 5 qubits
         self.shots = 1024  # Number of shots (should be a power of 2)
 
     @staticmethod
     def choose_calibration(nq, pattern_type):
         """
-            Generate a calibration circuit
+        Generate a calibration circuit
 
-            Args:
-                nq: number of qubits
-                pattern_type: a pattern in range(1, 2**nq)
+        Args:
+            nq: number of qubits
+            pattern_type: a pattern in range(1, 2**nq)
 
-            Returns:
-                qubits: a list of qubits according to the given pattern
-                weight: the weight of the pattern_type,
-                        equals to the number of qubits
+        Returns:
+            qubits: a list of qubits according to the given pattern
+            weight: the weight of the pattern_type,
+                    equals to the number of qubits
 
-            Additional Information:
-                qr[i] exists if and only if the i-th bit in the binary
-                expression of
-                pattern_type equals 1
+        Additional Information:
+            qr[i] exists if and only if the i-th bit in the binary
+            expression of
+            pattern_type equals 1
         """
         qubits = []
         weight = 0
@@ -83,19 +81,19 @@ class TestMeasCal(unittest.TestCase):
 
     def generate_ideal_results(self, state_labels, weight):
         """
-            Generate ideal equally distributed results
+        Generate ideal equally distributed results
 
-            Args:
-                state_labels: a list of calibration state labels
-                weight: the number of qubits
+        Args:
+            state_labels: a list of calibration state labels
+            weight: the number of qubits
 
-            Returns:
-                results_dict: a dictionary of equally distributed results
-                results_list: a list of equally distributed results
+        Returns:
+            results_dict: a dictionary of equally distributed results
+            results_list: a list of equally distributed results
 
-            Additional Information:
-                for each state in state_labels:
-                result_dict[state] = #shots/len(state_labels)
+        Additional Information:
+            for each state in state_labels:
+            result_dict[state] = #shots/len(state_labels)
         """
         results_dict = {}
         results_list = [0]*(2 ** weight)
@@ -109,9 +107,7 @@ class TestMeasCal(unittest.TestCase):
         return results_dict, results_list
 
     def test_ideal_meas_cal(self):
-        """
-            Test ideal execution, without noise
-        """
+        """Test ideal execution, without noise."""
         for nq in self.nq_list:
             print("Testing %d qubit measurement calibration" % nq)
 
@@ -176,9 +172,7 @@ class TestMeasCal(unittest.TestCase):
                 self.assertDictEqual(results_dict, round_results)
 
     def test_meas_cal_on_circuit(self):
-        """
-            Test an execution on a circuit
-        """
+        """Test an execution on a circuit."""
         print("Testing measurement calibration on a circuit")
 
         # Choose 3 qubits
@@ -187,11 +181,9 @@ class TestMeasCal(unittest.TestCase):
         q3 = 3
 
         # Generate the quantum register according to the pattern
-        qr = qiskit.QuantumRegister(5)
         # Generate the calibration circuits
         meas_calibs, state_labels = \
-            complete_meas_cal(qubit_list=[1, 2, 3],
-                              qr=qr)
+            complete_meas_cal(qubit_list=[1, 2, 3], qr=5)
 
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
@@ -205,14 +197,13 @@ class TestMeasCal(unittest.TestCase):
         fidelity = meas_cal.readout_fidelity()
 
         # Make a 3Q GHZ state
-        cr = ClassicalRegister(3)
-        ghz = QuantumCircuit(qr, cr)
-        ghz.h(qr[q1])
-        ghz.cx(qr[q1], qr[q2])
-        ghz.cx(qr[q2], qr[q3])
-        ghz.measure(qr[q1], cr[0])
-        ghz.measure(qr[q2], cr[1])
-        ghz.measure(qr[q3], cr[2])
+        ghz = QuantumCircuit(5, 3)
+        ghz.h(q1)
+        ghz.cx(q1, q2)
+        ghz.cx(q2, q3)
+        ghz.measure(q1, 0)
+        ghz.measure(q2, 1)
+        ghz.measure(q3, 2)
 
         job = qiskit.execute([ghz], backend=backend,
                              shots=self.shots)
@@ -253,9 +244,7 @@ class TestMeasCal(unittest.TestCase):
             places=1)
 
     def test_meas_fitter_with_noise(self):
-        """
-            Test the MeasurementFitter with noise
-        """
+        """Test the MeasurementFitter with noise."""
         print("Testing MeasurementFitter with noise")
 
         # pre-generated results with noise
@@ -307,9 +296,7 @@ class TestMeasCal(unittest.TestCase):
                 tests[tst_index]['results_least_square']['111'], places=0)
 
     def test_ideal_tensored_meas_cal(self):
-        """
-        Test ideal execution, without noise
-        """
+        """Test ideal execution, without noise."""
 
         mit_pattern = [[1, 2], [3, 4, 5], [6]]
 
@@ -362,9 +349,7 @@ class TestMeasCal(unittest.TestCase):
         self.assertDictEqual(results_dict, round_results)
 
     def test_tensored_meas_cal_on_circuit(self):
-        """
-            Test an execution on a circuit
-        """
+        """Test an execution on a circuit."""
 
         mit_pattern = [[2], [4, 1]]
 
@@ -431,9 +416,7 @@ class TestMeasCal(unittest.TestCase):
             places=1)
 
     def test_tensored_meas_fitter_with_noise(self):
-        """
-            Test the TensoredFitter with noise
-        """
+        """Test the TensoredFitter with noise."""
 
         # pre-generated results with noise
         # load from pickled file

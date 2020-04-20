@@ -12,15 +12,14 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Pauli tomography preparation and measurement basis
+"""Pauli tomography preparation and measurement basis
 """
 
 # Needed for functions
 import numpy as np
 
 # Import QISKit classes
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from .tomographybasis import TomographyBasis
 
 
@@ -28,17 +27,20 @@ from .tomographybasis import TomographyBasis
 # Built-in circuit functions
 ###########################################################################
 
-def pauli_measurement_circuit(op, qubit, clbit):
-    """
-    Return a qubit Pauli operator measurement circuit.
+def pauli_measurement_circuit(
+        op: str,
+        qubit: QuantumRegister,
+        clbit: ClassicalRegister
+) -> QuantumCircuit:
+    """Return a qubit Pauli operator measurement circuit.
 
     Params:
-        op (str): Pauli operator 'X', 'Y', 'Z'.
-        qubit (QuantumRegister tuple): qubit to be measured.
-        clbit (ClassicalRegister tuple): clbit for measurement outcome.
+        op: Pauli operator 'X', 'Y', 'Z'.
+        qubit: qubit to be measured.
+        clbit: clbit for measurement outcome.
 
     Returns:
-        A QuantumCircuit object.
+        The measurement circuit for the given Pauli.
     """
 
     circ = QuantumCircuit(qubit.register, clbit.register)
@@ -54,18 +56,21 @@ def pauli_measurement_circuit(op, qubit, clbit):
     return circ
 
 
-def pauli_preparation_circuit(op, qubit):
-    """
-    Return a qubit Pauli eigenstate preparation circuit.
+def pauli_preparation_circuit(
+        op: str,
+        qubit: QuantumRegister
+) -> QuantumCircuit:
+    """Return a qubit Pauli eigenstate preparation circuit.
 
-    This circuit assumes the qubit is initialized in the Zp eigenstate [1, 0].
+    This circuit assumes the qubit is initialized
+    in the :math:`Zp` eigenstate :math:`[1, 0]`.
 
     Params:
-        op (str): Pauli eigenstate 'Zp', 'Zm', 'Xp', 'Xm', 'Yp', or 'Ym'.
-        qubit (QuantumRegister tuple): qubit to be prepared.
+        op: Pauli eigenstate 'Zp', 'Zm', 'Xp', 'Xm', 'Yp', or 'Ym'.
+        qubit: qubit to be prepared.
 
     Returns:
-        A QuantumCircuit object.
+        The preparation circuit for the given Pauli eigenstate.
     """
 
     circ = QuantumCircuit(qubit.register)
@@ -90,22 +95,33 @@ def pauli_preparation_circuit(op, qubit):
 # Matrix functions for built-in bases
 ###########################################################################
 
-def pauli_preparation_matrix(label):
-    """
-    Return the matrix corresonding to a Pauli eigenstate preparation.
+def pauli_preparation_matrix(label: str) -> np.array:
+    r"""Return the matrix corresponding to a Pauli eigenstate preparation.
 
     Args:
-        label (str): single-qubit Pauli eigenstate operator label.
+        label: single-qubit Pauli eigenstate operator label.
 
     Returns:
-        numpy.array: A Numpy array for the Pauli eigenstate. Allowed inputs
+        A Numpy array for the Pauli eigenstate. Allowed inputs
             and corresponding returned matrices are:
-            'Xp' : [[1, 1], [1, 1]] / sqrt(2)
-            'Xm' : [[1, -1], [1, -1]] / sqrt(2)
-            'Yp' : [[1, -1j], [1j, 1]] / sqrt(2)
-            'Ym' : [[1, 1j], [-1j, 1]] / sqrt(2)
-            'Zp' : [[1, 0], [0, 0]]
-            'Zm' : [[0, 0], [0, 1]]
+
+            'Xp' : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & 1\\1 & 1\end{array}\right)`
+
+            'Xm' : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & -1\\1 & -1\end{array}\right)`
+
+            'Yp' : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & -i\\i & 1\end{array}\right)`
+
+            'Ym' : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & i\\-i & 1\end{array}\right)`
+
+            'Zp' : :math:`\left(\begin{array}
+            {cc}1 & 0\\0 & 0\end{array}\right)`
+
+            'Zm' : :math:`\left(\begin{array}
+            {cc}01 & 0\\0 & 1\end{array}\right)`
     """
     res = np.array([])
     # Return matrix for allowed label
@@ -124,24 +140,34 @@ def pauli_preparation_matrix(label):
     return res
 
 
-def pauli_measurement_matrix(label, outcome):
-    """
-    Return the matrix corresonding to a Pauli measurement outcome.
+def pauli_measurement_matrix(label: str, outcome: int) -> np.array:
+    r"""Return the matrix corresponding to a Pauli measurement outcome.
 
     Args:
-        label (str): single-qubit Pauli measurement operator label.
-        outcome (int): measurement outcome.
+        label: single-qubit Pauli measurement operator label.
+        outcome: measurement outcome.
 
     Returns:
-        numpy.array: A Numpy array for measurement outcome operator.
+        A Numpy array for measurement outcome operator.
             Allowed inputs and corresponding returned matrices are:
 
-            'X', 0 : [[1, 1], [1, 1]] / sqrt(2)
-            'X', 1 : [[1, -1], [1, -1]] / sqrt(2)
-            'Y', 0 : [[1, -1j], [1j, 1]] / sqrt(2)
-            'Y', 1 : [[1, 1j], [-1j, 1]] / sqrt(2)
-            'Z', 0 : [[1, 0], [0, 0]]
-            'Z', 1 : [[0, 0], [0, 1]]
+            'X', 0 : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & 1\\1 & 1\end{array}\right)`
+
+            'X', 1 : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & -1\\1 & -1\end{array}\right)`
+
+            'Y', 0 : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & -i\\i & 1\end{array}\right)`
+
+            'Y', 1 : :math:`\frac{1}{2}
+            \left(\begin{array}{cc}1 & i\\-i & 1\end{array}\right)`
+
+            'Z', 0 : :math:`\left(\begin{array}
+            {cc}1 & 0\\0 & 0\end{array}\right)`
+
+            'Z', 1 : :math:`\left(\begin{array}
+            {cc}01 & 0\\0 & 1\end{array}\right)`
     """
     res = np.array([])
     # Return matrix
@@ -167,7 +193,7 @@ def pauli_measurement_matrix(label, outcome):
 # PauliBasis Object
 ###########################################################################
 
-PauliBasis = TomographyBasis('Pauli',
+PauliBasis = TomographyBasis('Pauli',  # pylint: disable=invalid-name
                              measurement=(('X', 'Y', 'Z'),
                                           pauli_measurement_circuit,
                                           pauli_measurement_matrix),

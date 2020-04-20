@@ -16,43 +16,55 @@
 Measurement calibration circuits. To apply the measurement mitigation
 use the fitters to produce a filter.
 """
-
+from typing import List, Tuple, Union
 from qiskit import QuantumRegister, ClassicalRegister, \
     QuantumCircuit, QiskitError
 from ...verification.tomography import count_keys
 
 
-def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
+def complete_meas_cal(qubit_list: List[int] = None,
+                      qr: Union[int, List[QuantumRegister]] = None,
+                      cr: Union[int, List[ClassicalRegister]] = None,
+                      circlabel: str = ''
+                      ) -> Tuple[List[QuantumCircuit], List[str]
+                                 ]:
     """
     Return a list of measurement calibration circuits for the full
     Hilbert space.
 
-    Each of the 2**n circuits creates a basis state
+    If the circuit contains :math:`n` qubits, then :math:`2^n` calibration circuits
+    are created, each of which creates a basis state.
 
     Args:
-        qubit_list: A list of qubits to perform the measurement correction on,
-        if None and qr is given then assumed to be performed over the entire
-        qr. The calibration states will be labelled according to this ordering
+        qubit_list: A list of qubits to perform the measurement correction on.
+           If `None`, and qr is given then assumed to be performed over the entire
+           qr. The calibration states will be labelled according to this ordering (default `None`).
 
-        qr (QuantumRegister): A quantum register. If none one is created
+        qr: Quantum registers (or their size).
+        If `None`, one is created (default `None`).
 
-        cr (ClassicalRegister): A classical register. If none one is created
+        cr: Classical registers (or their size).
+        If `None`, one is created(default `None`).
 
         circlabel: A string to add to the front of circuit names for
-        unique identification
+            unique identification(default ' ').
 
     Returns:
-        A list of QuantumCircuit objects containing the calibration circuits
+        A list of QuantumCircuit objects containing the calibration circuits.
 
-        A list of calibration state labels
+        A list of calibration state labels.
 
     Additional Information:
         The returned circuits are named circlabel+cal_XXX
         where XXX is the basis state,
-        e.g., cal_1001
+        e.g., cal_1001.
 
         Pass the results of these circuits to the CompleteMeasurementFitter
-        constructor
+        constructor.
+
+    Raises:
+        QiskitError: if both `qubit_list` and `qr` are `None`.
+
     """
 
     if qubit_list is None and qr is None:
@@ -62,8 +74,14 @@ def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
     if qr is None:
         qr = QuantumRegister(max(qubit_list)+1)
 
+    if isinstance(qr, int):
+        qr = QuantumRegister(qr)
+
     if qubit_list is None:
         qubit_list = range(len(qr))
+
+    if isinstance(cr, int):
+        cr = ClassicalRegister(cr)
 
     nqubits = len(qubit_list)
 
@@ -76,39 +94,53 @@ def complete_meas_cal(qubit_list=None, qr=None, cr=None, circlabel=''):
     return cal_circuits, state_labels
 
 
-def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
+def tensored_meas_cal(mit_pattern: List[List[int]] = None,
+                      qr: Union[int, List[QuantumRegister]] = None,
+                      cr: Union[int, List[ClassicalRegister]] = None,
+                      circlabel: str = ''
+                      ) -> Tuple[List[QuantumCircuit], List[List[int]]
+                                 ]:
     """
     Return a list of calibration circuits
 
     Args:
-        mit_pattern (list of lists of integers): Qubits to perform the
-        measurement correction on, divided to groups according to tensors.
-        if None and qr is given then assumed to be performed over the entire
-        qr as one group
+        mit_pattern: Qubits on which to perform the
+            measurement correction, divided to groups according to tensors.
+            If `None` and `qr` is given then assumed to be performed over the entire
+            `qr` as one group (default `None`).
 
-        qr (QuantumRegister): A quantum register. If none one is created
+        qr: A quantum register (or its size).
+        If `None`, one is created (default `None`).
 
-        cr (ClassicalRegister): A classical register. If none one is created
+        cr: A classical register (or its size).
+        If `None`, one is created (default `None`).
 
         circlabel: A string to add to the front of circuit names for
-        unique identification
+            unique identification (default ' ').
 
     Returns:
-        A list of two QuantumCircuit objects containing the calibration
-        circuits
+        A list of two QuantumCircuit objects containing the calibration circuits
         mit_pattern
 
     Additional Information:
         The returned circuits are named circlabel+cal_XXX
         where XXX is the basis state,
-        e.g., cal_000 and cal_111
+        e.g., cal_000 and cal_111.
 
         Pass the results of these circuits to the TensoredMeasurementFitter
-        constructor
+        constructor.
+
+    Raises:
+        QiskitError: if both `mit_pattern` and `qr` are None.
+        QiskitError: if a qubit appears more than once in `mit_pattern`.
+
     """
 
     if mit_pattern is None and qr is None:
         raise QiskitError("Must give one of mit_pattern or qr")
+
+    if isinstance(qr, int):
+        qr = QuantumRegister(qr)
 
     qubits_in_pattern = []
     if mit_pattern is not None:
@@ -132,9 +164,12 @@ def tensored_meas_cal(mit_pattern=None, qr=None, cr=None, circlabel=''):
     if cr is None:
         cr = ClassicalRegister(nqubits)
 
+    if isinstance(cr, int):
+        cr = ClassicalRegister(cr)
+
     qubits_list_sizes = [len(qubit_list) for qubit_list in mit_pattern]
     nqubits = sum(qubits_list_sizes)
-    size_of_largest_group = max([list_size for list_size in qubits_list_sizes])
+    size_of_largest_group = max(qubits_list_sizes)
     largest_labels = count_keys(size_of_largest_group)
 
     state_labels = []

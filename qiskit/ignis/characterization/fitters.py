@@ -12,40 +12,55 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=import-outside-toplevel
+
 """
 Fitters of characteristic times
 """
 
+from typing import Union, List, Callable, Optional, Tuple, Dict, Any
 from scipy.optimize import curve_fit
 import numpy as np
 from qiskit import QiskitError
+from qiskit.result import Result
 from ..verification.tomography import marginal_counts
+from ..utils import build_counts_dict_from_list
 
 
 class BaseFitter:
     """
     Base class for a data fitter
+
+    Args:
+        description: description of the fitter's purpose, e.g. 'T1'.
+        backend_result: result of execution on the backend.
+        xdata: a list of the independent parameter
+               (which will be fit against).
+        qubits: the qubits to be characterized.
+        fit_fun: equivalent to parameter `f` of scipy.curve_fit.
+        fit_p0: equivalent to parameter `p0` of scipy.curve_fit.
+        fit_bounds: equivalent to parameter `bounds` of scipy.curve_fit.
+        circuit_names: names of the circuits, should be the same length
+                       as `xdata`. Full circuit name will be these plus the
+                       series name.
+        series: list of circuit name tags
+        expected_state: is the circuit supposed to end up in '0' or '1'?
     """
 
-    def __init__(self, description, backend_result, xdata,
-                 qubits, fit_fun, fit_p0,
-                 fit_bounds, circuit_names,
-                 series=None, expected_state='0'):
-        """
-        Args:
-           description: a string describing the fitter's purpose, e.g. 'T1'
-           backend_result: a qiskit.result or list of results
-           xdata: a list of the independent parameter
-               (which will be fit against).
-           qubits: the qubits for which we measured coherence
-           fit_fun, fit_p0, fit_bounds: equivalent to parameters of
-           scipy.curve_fit.
-           circuit_names: names of the circuits, should be the same length
-           as xdata. Full circuit name will be these plus the
-           series name
-           series: list of circuit name tags
-           expected_state: is the circuit supposed to end up in '0' or '1'?
-        """
+    def __init__(self, description: str,
+                 backend_result: Union[Result, List[Result]],
+                 xdata: Union[List[float], np.array],
+                 qubits: List[int],
+                 fit_fun: Callable[..., float],
+                 fit_p0: List[float],  # any way to enforce length 3?
+                 fit_bounds: Tuple[List[float], List[float]],
+                 circuit_names: List[str],
+                 series: Optional[List[str]] = None,
+                 expected_state: str = '0'):
+
+        if fit_bounds is None:
+            fit_bounds = ([-np.inf for e in range(len(fit_p0))],
+                          [np.inf for e in range(len(fit_p0))])
 
         if series is None:
             self._series = ['0']
@@ -88,55 +103,57 @@ class BaseFitter:
             self.fit_data()
 
     @property
-    def description(self):
+    def description(self) -> str:
         """
         Return the fitter's purpose, e.g. 'T1'
         """
         return self._description
 
     @property
-    def backend_result(self):
+    def backend_result(self) -> Union[Result, List[Result]]:
         """
-        Return the execution results (qiskit.Result)
+        Return the execution results
         """
         return self._backend_result
 
     @property
-    def series(self):
+    def series(self) -> Optional[List[str]]:
         """
         Return the list of series for the data
         """
         return self._series
 
     @property
-    def measured_qubits(self):
+    def measured_qubits(self) -> List[int]:
         """
-        Return the indices of the qubits whose characteristic time is measured
+        Return the indices of the qubits to be characterized
         """
         return self._qubits
 
     @property
-    def xdata(self):
+    def xdata(self) -> Union[List[float], np.array]:
         """
-        Return the data points on the x-axis (a list of floats)
+        Return the data points on the x-axis, the independenet
+        parameter which is fit against
         """
         return self._xdata
 
     @property
-    def ydata(self):
-        """
-        Return the data points on the y-axis
-        In the form of a list of dictionaries:
-        - ydata[i]['mean'] is a list, where item
-            no. j is the probability of success
-            of qubit i for a circuit that lasts xdata[j].
-        - ydata[i]['std'] is a list, where ydata['std'][j] is the
-            standard deviation of the success of qubit i.
+    def ydata(self) -> List[Dict]:
+        """Return the data points on the y-axis
+
+        The data points are returning in the form of a list of dictionaries:
+
+         * ydata[i]['mean'] is a list, where item
+             no. j is the probability of success
+             of qubit i for a circuit that lasts xdata[j].
+         * ydata[i]['std'] is a list, where ydata['std'][j] is the
+             standard deviation of the success of qubit i.
         """
         return self._ydata
 
     @property
-    def fit_fun(self):
+    def fit_fun(self) -> Callable:
         """
         Return the function used in the fit,
         e.g. BaseFitter._exp_fit_fun
@@ -144,29 +161,36 @@ class BaseFitter:
         return self._fit_fun
 
     @property
-    def params(self):
+    def params(self) -> List[float]:
         """
         Return the fit function parameters that were calculated by curve_fit
         """
         return self._params
 
     @property
-    def params_err(self):
+    def params_err(self) -> List[float]:
         """
         Return the error of the fit function parameters
         """
         return self._params_err
 
-    def _get_param(self, param_ind, qid=-1, series='0', err=False):
+    def _get_param(self,
+                   param_ind: int,
+                   qid: int = -1,
+                   series: str = '0',
+                   err: bool = False) -> Union[float, List[float]]:
         """
-        Helper function that gets a parameter (or parameter err)
-        if qid=-1 returns a list of the parameters for all qubits
+        Return the fitted value, or fitting error, of a given
+        parameter and a given qubit
 
         Args:
             param_ind: the parameter index to get
             qid: the qubit index (or all qubits if -1)
             series: the series to get
             err: get param or param err
+
+        Returns:
+            The fitted value or error
         """
 
         if qid != -1:
@@ -185,14 +209,17 @@ class BaseFitter:
 
         return param_list
 
-    def add_data(self, results, recalc=True, refit=True):
+    def add_data(self,
+                 results: Union[Result, List[Result]],
+                 recalc: bool = True,
+                 refit: bool = True):
         """
-        Adds more data
+        Add new execution results to previous execution results
 
         Args:
-            results: a result (qiskit.result) or list of results
-            recalc: Recalculate the data
-            refit: Refit the data
+            results: new execution results
+            recalc: whether tp recalculate the data
+            refit: whether to refit the data
         """
 
         if isinstance(results, list):
@@ -252,14 +279,20 @@ class BaseFitter:
                     if self._ydata[serieslbl][-1]['std'][-1] == 0:
                         self._ydata[serieslbl][-1]['std'][-1] = 1e-4
 
-    def fit_data(self, qid=-1, p0=None, bounds=None, series=None):
+    def fit_data(self,
+                 qid: int = -1,
+                 p0: Optional[List[float]] = None,
+                 bounds: Optional[Tuple[List[float], List[float]]] = None,
+                 series: Optional[str] = None):
         """
         Fit the curve.
-        Computes self._params and self._params_err:
+
+        Compute self._params and self._params_err
+
         Args:
-            qid: Qubit data to fit. If -1 fit all the data
-            p0: initial guess
-            bounds: bounds
+            qid: qubit for fitting. If -1 fit for all the qubits
+            p0: initial guess, equivalent to `p0` in `scipy.optimize`
+            bounds: bounds, equivalent to `bounds` in `scipy.optimize`
             series: series to fit (if None fit all)
         """
 
@@ -294,7 +327,7 @@ class BaseFitter:
     @staticmethod
     def _exp_fit_fun(x, a, tau, c):
         """
-        Function used to fit the exponential decay
+        Exponential decay
         """
 
         return a * np.exp(-x / tau) + c
@@ -302,7 +335,7 @@ class BaseFitter:
     @staticmethod
     def _osc_fit_fun(x, a, tau, f, phi, c):
         """
-        Function used to fit the decay cosine
+        Decay cosine
         """
 
         return a * np.exp(-x / tau) * np.cos(2 * np.pi * f * x + phi) + c
@@ -310,7 +343,7 @@ class BaseFitter:
     @staticmethod
     def _osc_nodecay_fit_fun(x, a, f, phi, c):
         """
-        Function used to fit the decay cosine
+        Oscilliator cosine
         """
 
         return a * np.cos(2 * np.pi * f * x + phi) + c
@@ -318,29 +351,224 @@ class BaseFitter:
     @staticmethod
     def _cal_fit_fun(x, a, thetaerr, phierr, theta0, phi0, c):
         """
-        Function used to fit gate calibrations
+        Gate calibrations fitting function
         """
 
         return a*np.cos((theta0+thetaerr) * x + phi0 + phierr) + c
 
+    @staticmethod
+    def _quadratic(x, a, x0, c):
+        """
+        Drag fitting function
+        """
 
-class BaseCoherenceFitter(BaseFitter):
+        return a * (x-x0)**2 + c
+
+
+class IQFitter(BaseFitter):
     """
-    Base class for fitters of characteristic times
+    Base Fitter Class for experiments with Level 1 results
     """
 
     def __init__(self, description, backend_result, xdata,
                  qubits, fit_fun, fit_p0,
                  fit_bounds, circuit_names,
-                 series=None, expected_state='0',
-                 time_index=0, time_unit='micro-seconds'):
+                 series=None):
 
         """
         See BaseFitter __init__
+        """
+
+        BaseFitter.__init__(self, description,
+                            backend_result, xdata,
+                            qubits, fit_fun,
+                            fit_p0, fit_bounds, circuit_names,
+                            series)
+
+    def _build_iq_list(self):
+        """
+        From a list of results, calculate the mean for each
+        experiment and circuit/program
+
+        Returns:
+            mean of the iq data, variance of the iq data (if
+            single shot IQ)
+        """
+
+        iq_list = {}
+        iq_list_mean = {}
+        iq_list_var = {}
+        shots_list = {}
+        meas_ret = ''
+
+        for single_result in self._backend_result_list:
+            # go through each of the schedules in this run
+            for result in single_result.results:
+                sname = result.header.name
+                mem_slots = result.header.memory_slots
+
+                if meas_ret == '':
+                    # update
+                    if result.meas_return == 'avg':
+                        meas_ret = 'avg'
+                    else:
+                        meas_ret = 'single'
+
+                if result.meas_level != 1:
+                    raise QiskitError('This fitter works with IQ data')
+
+                if meas_ret != result.meas_return:
+                    raise QiskitError('All data must be single shot or '
+                                      'averaged')
+
+                shots_list[sname] = (result.shots +
+                                     shots_list.get(sname, 0))
+
+                if meas_ret == 'avg':
+
+                    # data is averaged already, but if we need to
+                    # further average over different runs
+                    # we need to take into account the full number of shots
+
+                    iq_list[sname] = (result.shots *
+                                      single_result.get_memory(sname) +
+                                      iq_list.get(sname, np.zeros(mem_slots)))
+
+                else:
+
+                    # data is in single shot IQ mode
+                    iq_list[sname] = (result.shots *
+                                      single_result.get_memory(sname) +
+                                      iq_list.get(sname,
+                                                  np.zeros([result.shots,
+                                                            mem_slots])))
+
+        for sname in iq_list:
+
+            if meas_ret == 'avg':
+                iq_list_mean[sname] = iq_list[sname]/shots_list[sname]
+                iq_list_var[sname] = np.ones(len(iq_list_mean[sname]))*1e-4
+            else:
+                iq_list_mean[sname] = np.sum(iq_list[sname])/shots_list[sname]
+                iq_list_var[sname] = np.std(iq_list[sname])
+
+        return iq_list_mean, iq_list_var
+
+    def _calc_data(self):
+        """
+        Take the IQ values from the list of results, get the mean
+        values and then project onto a line in IQ space to give
+        the maximum signal. Load into the _ydata which is the mean
+        and variance as a single float.
+
+        Overloaded from BaseFitter._calc_data which assumed shots
+        """
+
+        iq_list_mean, iq_list_var = self._build_iq_list()
+
+        self._ydata = {}
+        for _, serieslbl in enumerate(self._series):
+            self._ydata[serieslbl] = []
+            for qind, _ in enumerate(self._qubits):
+                self._ydata[serieslbl].append({'mean': [], 'std': []})
+                mean_list = self._ydata[serieslbl][-1]['mean']
+                var_list = self._ydata[serieslbl][-1]['std']
+                for circ, _ in enumerate(self._xdata):
+                    circname = self._circuit_names[circ] + serieslbl
+                    mean_list.append(iq_list_mean[circname][qind])
+                    var_list.append(iq_list_var[circname][qind])
+                    # problem for the fitter if one of the std points is
+                    # exactly zero
+                    if var_list[-1] == 0:
+                        var_list[-1] = 1e-4
+
+                # project the data onto a line
+                # mean over all the experiment
+                q_exp_mean = np.mean(mean_list)
+                mean_list -= q_exp_mean
+                real_ext = np.mean(np.abs(np.real(mean_list)))
+                imag_ext = np.mean(np.abs(np.imag(mean_list)))
+                crot = real_ext/(real_ext**2+imag_ext**2)**0.5
+                srot = imag_ext/(real_ext**2+imag_ext**2)**0.5
+                mean_list = crot*np.real(mean_list)+srot*np.imag(mean_list)
+                self._ydata[serieslbl][-1]['mean'] = mean_list
+
+    def plot(self, qind, series='0', ax=None, show_plot=True):
+        """
+        Plot calibration data.
 
         Args:
-           time_index: fit parameter corresponding to the characteristic time
+            qind: qubit index to plot
+            ax: plot axes
+            show_plot: call plt.show()
+
+        Returns:
+            The axes object
         """
+
+        from matplotlib import pyplot as plt
+
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+
+        ax.errorbar(self._xdata, self._ydata[series][qind]['mean'],
+                    self._ydata[series][qind]['std'],
+                    marker='.', markersize=9,
+                    c='b', linestyle='')
+        ax.plot(self._xdata, self._fit_fun(self._xdata,
+                                           *self._params[series][qind]),
+                c='r', linestyle='--',
+                label='Q%d' % (self._qubits[qind]))
+
+        ax.tick_params(axis='x', labelsize=14, labelrotation=70)
+        ax.tick_params(axis='y', labelsize=14)
+        ax.set_xlabel('X', fontsize=16)
+        ax.set_ylabel('IQ Signal', fontsize=16)
+        ax.set_title(self._description + ' for qubit ' +
+                     str(self._qubits[qind]), fontsize=18)
+        ax.legend(fontsize=12)
+        ax.grid(True)
+        if show_plot:
+            plt.show()
+
+        return ax
+
+
+class BaseCoherenceFitter(BaseFitter):
+    """
+    Base class for fitters of characteristic times
+
+    Args:
+        description: description of the fitter's purpose, e.g. 'T1'.
+        backend_result: result of execution on the backend.
+        xdata: delay times of the circuits.
+        qubits: the qubits to be characterized.
+        fit_fun: equivalent to parameter `f` of scipy.curve_fit.
+        fit_p0: equivalent to parameter `p0` of scipy.curve_fit.
+        fit_bounds: equivalent to parameter `bounds` of scipy.curve_fit.
+        circuit_names: names of the circuits, should be the same length
+                       as `xdata`. Full circuit name will be these plus the
+                       series name.
+        series: list of circuit name tags
+        expected_state: is the circuit supposed to end up in '0' or '1'?
+        time_index: among parameters of `fit_fun`,
+                    which one is the characteristic time.
+        time_unit: unit of delay times in `xdata`.
+    """
+
+    def __init__(self, description: str,
+                 backend_result: Union[Result, List[Result]],
+                 xdata: Union[List[float], np.array],
+                 qubits: List[int],
+                 fit_fun: Callable[..., float],
+                 fit_p0: List[float],  # any way to enforce length 3?
+                 fit_bounds: Tuple[List[float], List[float]],
+                 circuit_names: List[str],
+                 series: Optional[List[str]] = None,
+                 expected_state: str = '0',
+                 time_index: int = 0,
+                 time_unit: str = 'micro-seconds'):
 
         BaseFitter.__init__(self, description,
                             backend_result, xdata,
@@ -351,32 +579,55 @@ class BaseCoherenceFitter(BaseFitter):
         self._time_index = time_index
         self._time_unit = time_unit
 
-    def time(self, qid=-1, series='0'):
+    def time(self,
+             qid: int = -1,
+             series: str = '0') -> Union[float, List[float]]:
         """
-        Return the characteristic time for qid and series
-        If qid==-1 return all the qubit data
+        Return the characteristic time for the given qubit and series
+
+        Args:
+           qid: the qubit index (or all qubits if -1)
+           series: the series to get
+
+        Returns:
+           The characteristic time of the qubit, or all qubits
         """
 
         return self._get_param(self._time_index, qid, series)
 
-    def time_err(self, qid=-1, series='0'):
+    def time_err(self,
+                 qid: int = -1,
+                 series: str = '0') -> Union[float, List[float]]:
         """
-        Return the error of the characteristic time
+        Return the error of characteristic time for the given qubit and series
+
+        Args:
+           qid: the qubit index (or all qubits if -1)
+           series: the series to get
+
+        Returns:
+           The error of the characteristic time of the qubit, or all qubits
         """
+
         return self._get_param(self._time_index,
                                qid, series, err=True)
 
-    def plot(self, qind, series, ax=None, show_plot=True):
+    def plot(self,
+             qind: int,
+             series: str,
+             ax: Optional[Any] = None,
+             show_plot: bool = True) -> Any:
         """
         Plot coherence data.
 
         Args:
             qind: qubit index to plot
-            series: which series to plot (if list plots multiple)
+            series: which series to plot (if list then plot multiple)
             ax: plot axes
-            show_plot: call plt.show()
+            show_plot: whether to call plt.show()
 
-        return the axes object
+        Returns:
+            The axes object
         """
 
         from matplotlib import pyplot as plt
@@ -438,7 +689,8 @@ class BaseGateFitter(BaseFitter):
             ax: plot axes
             show_plot: call plt.show()
 
-        return the axes object
+        Returns:
+            The axes object
         """
 
         from matplotlib import pyplot as plt
@@ -468,21 +720,3 @@ class BaseGateFitter(BaseFitter):
             plt.show()
 
         return ax
-
-
-def build_counts_dict_from_list(count_list):
-
-    """
-    Add dictionary counts together
-
-    """
-
-    if len(count_list) == 1:
-        return count_list[0]
-
-    new_count_dict = {}
-    for countdict in count_list:
-        for x in countdict:
-            new_count_dict[x] = countdict[x]+new_count_dict.get(x, 0)
-
-    return new_count_dict

@@ -22,19 +22,24 @@ def pad_id_gates(circuit, qr, qubit, num_of_id_gates):
     A function for padding a circuit with single-qubit identity gates.
 
     Args:
-       circuit: the quantum circuit that the gates should be appended to
-       qr: the qubit register where the gates should be added
-       qubit: index of qubit where the gates should be added
-       num_of_id_gates: the number of identity gates to add
+        circuit: the quantum circuit that the gates should be appended to
+        qr: the qubit register where the gates should be added
+        qubit: index of qubit where the gates should be added
+        num_of_id_gates: the number of identity gates to add
 
     Returns:
-       circuit: The original circuit object, but with identity
-                gates added to the qubit register qr at qubit 'qubit'
+        circuit: The original circuit object, but with identity
+            gates added to the qubit register qr at qubit 'qubit'
     """
 
     for _ in range(num_of_id_gates):
         circuit.barrier(qr[qubit])
-        circuit.iden(qr[qubit])
+        # Maintain compatibility with 0.12 stable terra
+        # the case of .iden should be removed once terra 0.13 is stable
+        if hasattr(circuit, 'i'):
+            circuit.i(qr[qubit])
+        else:
+            circuit.iden(qr[qubit])
 
     circuit.barrier(qr[qubit])
     return circuit

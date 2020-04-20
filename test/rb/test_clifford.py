@@ -17,8 +17,8 @@ Test Clifford functions:
 - Generating Clifford tables on 1 and 2 qubits: clifford_utils.clifford1_table
   and clifford_utils.clifford2_table
 - Generating a pseudo-random Clifford (using the tables):
-  clifford_utils.random_clifford
-- Inverting a Clifford: clifford_utils.find_inverse_clifford_circuit
+  clifford_utils.random_gates
+- Inverting a Clifford: clifford_utils.find_inverse_gates
 """
 
 import unittest

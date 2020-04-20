@@ -13,6 +13,7 @@
 # that they have been altered from the originals.
 
 # pylint: disable=missing-docstring
+# pylint: disable=invalid-name
 
 import unittest
 

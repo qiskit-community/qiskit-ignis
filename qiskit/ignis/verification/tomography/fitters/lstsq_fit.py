@@ -16,29 +16,36 @@
 """
 Maximum-Likelihood estimation quantum tomography fitter
 """
-
+from typing import Optional
 import numpy as np
 from scipy import linalg as la
 from scipy.linalg import lstsq
 
 
-def lstsq_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
-    """
+def lstsq_fit(data: np.array,
+              basis_matrix: np.array,
+              weights: Optional[np.array] = None,
+              psd: bool = True,
+              trace: Optional[int] = None
+              ) -> np.array:
+    r"""
     Reconstruct a density matrix using MLE least-squares fitting.
 
     Args:
-        data (vector like): vector of expectation values
-        basis_matrix (matrix like): matrix of measurement operators
-        weights (vector like, optional): vector of weights to apply to the
-                                         objective function (default: None)
-        PSD (bool, optional): Enforced the fitted matrix to be positive
-                              semidefinite (default: True)
-        trace (int, optional): trace constraint for the fitted matrix
-                               (default: None).
-
+        data: (vector like) expectation values
+        basis_matrix: (matrix like) measurement operators
+        weights: (vector like) of weights to apply to the
+            objective function (default: None)
+        psd: (default: true) Enforced the fitted matrix to be positive
+            semidefinite (default: True)
+        trace: trace constraint for the fitted matrix
+            (default: None).
+    Raises:
+        ValueError: If the fitted vector is not a square matrix
     Returns:
         The fitted matrix rho that minimizes
-        ||basis_matrix * vec(rho) - data||_2.
+        :math:`||\text{basis_matrix} \cdot
+         \text{vec}(\text{rho}) - \text{data}||_2`.
 
     Additional Information:
 
@@ -46,7 +53,7 @@ def lstsq_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
         ------------------
         This fitter solves the least-squares minimization:
 
-            minimize ||a * x - b ||_2
+            minimize :math:`||a \cdot x - b ||_2`
 
         where:
             a is the matrix of measurement operators a[i] = vec(M_i).H
@@ -66,7 +73,8 @@ def lstsq_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
         In general the trace of the fitted matrix will be determined by the
         input data. If a trace constraint is specified the fitted matrix
         will be rescaled to have this trace by:
-            rho = trace * rho / trace(rho)
+            :math:`\text{rho} = \frac{\text{trace}\cdot\text{rho}}
+            {\text{trace}(\text{rho})}`
 
     References:
         [1] J Smolin, JM Gambetta, G Smith, Phys. Rev. Lett. 108, 070502
@@ -75,20 +83,21 @@ def lstsq_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
 
     # We are solving the least squares fit: minimize ||a * x - b ||_2
     # where:
-    #   a is the matrix of measurement operators
-    #   b is the vector of expectation value data for each projector
+    #   a (meas_matrix) is the matrix of measurement operators
+    #   b (exp_values) is the vector of expectation value data
+    #   for each projector
     #   x is the vectorized density matrix (or Choi-matrix) to be fitted
-    a = basis_matrix
-    b = np.array(data)
+    meas_matrix = basis_matrix
+    exp_values = np.array(data)
 
     # Optionally apply a weights vector to the data and projectors
     if weights is not None:
-        w = np.array(weights)
-        a = w[:, None] * a
-        b = w * b
+        weights_array = np.array(weights)
+        meas_matrix = weights_array[:, None] * meas_matrix
+        exp_values = weights_array * exp_values
 
     # Perform least squares fit using Scipy.linalg lstsq function
-    rho_fit, _, _, _ = lstsq(a, b)
+    rho_fit, _, _, _ = lstsq(meas_matrix, exp_values)
 
     # Reshape fit to a density matrix
     size = len(rho_fit)
@@ -99,7 +108,7 @@ def lstsq_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
     rho_fit = rho_fit.reshape(dim, dim, order='F')
 
     # Rescale fitted density matrix be positive-semidefinite
-    if PSD is True:
+    if psd is True:
         rho_fit = make_positive_semidefinite(rho_fit)
 
     # Rescale fitted density matrix to satisfy trace constraint
@@ -112,15 +121,19 @@ def lstsq_fit(data, basis_matrix, weights=None, PSD=True, trace=None):
 # Wizard Method rescaling
 ###########################################################################
 
-def make_positive_semidefinite(mat, epsilon=0):
+def make_positive_semidefinite(mat: np.array,
+                               epsilon: Optional[float] = 0
+                               ) -> np.array:
     """
     Rescale a Hermitian matrix to nearest postive semidefinite matrix.
 
     Args:
-        mat (array like): a hermitian matrix.
-        epsilon (float >=0, optional): the threshold for setting
+        mat: a hermitian matrix.
+        epsilon: (default: 0) the threshold for setting
             eigenvalues to zero. If epsilon > 0 positive eigenvalues
-            below epislon will also be set to zero (Default 0).
+            below epsilon will also be set to zero.
+    Raises:
+        ValueError: If epsilon is negative
     Returns:
         The input matrix rescaled to have non-negative eigenvalues.
 

@@ -23,7 +23,7 @@ import unittest
 import numpy as np
 
 from qiskit.ignis.verification.randomized_benchmarking import \
-    RBFitter, InterleavedRBFitter, PurityRBFitter
+    RBFitter, InterleavedRBFitter, PurityRBFitter, CNOTDihedralRBFitter
 
 
 class TestFitters(unittest.TestCase):
@@ -532,6 +532,169 @@ class TestFitters(unittest.TestCase):
                                tst['expected']['fit'][i]['pepc_err'],
                                atol=0.01),
                     'Incorrect PEPC error in purity data test no. '
+                    + str(tst_index))
+
+    def test_cnotdihedral_fitters(self):
+        """ Test the non-clifford cnot-dihedral CNOT-Dihedral
+        fitters """
+
+        # Use pickled results files
+
+        tests_cnotdihedral = \
+            [{
+                'rb_opts': {
+                    'xdata': np.array([[1, 21, 41, 61,
+                                        81, 101, 121, 141,
+                                        161, 181],
+                                       [3, 63, 123, 183,
+                                        243, 303, 363, 423,
+                                        483, 543]]),
+                    'rb_pattern': [[0, 2], [1]],
+                    'shots': 200},
+                'cnotdihedral_X_results_file':
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        'test_fitter_cnotdihedral_X_results.pkl'),
+                'cnotdihedral_Z_results_file':
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        'test_fitter_cnotdihedral_Z_results.pkl'),
+                'expected': {
+                    'cnotdihedral_X_ydata':
+                        [{'mean': np.array([0.961, 0.72, 0.565,
+                                            0.462, 0.353, 0.34,
+                                            0.303, 0.301, 0.28,
+                                            0.233]),
+                          'std': np.array([0.00969536, 0.01048809,
+                                           0.03271085, 0.03385262,
+                                           0.02839014, 0.02167948,
+                                           0.03919184, 0.03152777,
+                                           0.02280351, 0.0150333])},
+                         {'mean': np.array([0.995, 0.936, 0.894,
+                                            0.859, 0.82, 0.78,
+                                            0.763, 0.709, 0.695,
+                                            0.66]),
+                          'std': np.array([0.00547723, 0.02154066,
+                                           0.01593738, 0.0174356,
+                                           0.03937004, 0.03114482,
+                                           0.026, 0.01529706,
+                                           0.02387467, 0.02302173])}],
+                    'cnotdihedral_Z_ydata':
+                        [{'mean': np.array([0.97, 0.725, 0.578,
+                                            0.462, 0.373, 0.348,
+                                            0.32, 0.311, 0.263, 0.268]),
+                          'std': np.array([0.01643168, 0.04301163,
+                                           0.0256125, 0.03059412,
+                                           0.03722902, 0.02063977,
+                                           0.01760682, 0.00860233,
+                                           0.03026549, 0.02976575])},
+                         {'mean': np.array([0.997, 0.953, 0.913, 0.855,
+                                            0.806, 0.772, 0.742, 0.7,
+                                            0.682, 0.654]),
+                          'std': np.array([0.006, 0.01630951, 0.01077033,
+                                           0.0083666, 0.02517936,
+                                           .02014944, 0.00509902,
+                                           0.03193744, 0.00812404,
+                                           0.02782086])}],
+                    'joint_fit': [
+                        {'alpha': 0.980236195543166,
+                         'alpha_err': 0.0008249166207232896,
+                         'epg_est': 0.014822853342625508,
+                         'epg_est_err': 0.0006311616203884836},
+                        {'alpha': 0.99867758415237,
+                         'alpha_err': 0.00018607263163029097,
+                         'epg_est': 0.0006612079238150215,
+                         'epg_est_err': 9.315951142941721e-05}]
+                }}]
+
+        for tst_index, tst in enumerate(tests_cnotdihedral):
+            fo = open(tst['cnotdihedral_X_results_file'], 'rb')
+            cnotdihedral_X_result_list = pickle.load(fo)
+            fo.close()
+
+            fo = open(tst['cnotdihedral_Z_results_file'], 'rb')
+            cnotdihedral_Z_result_list = pickle.load(fo)
+            fo.close()
+
+            # CNOTDihedralRBFitter class
+            joint_rb_fit = CNOTDihedralRBFitter(
+                cnotdihedral_Z_result_list, cnotdihedral_X_result_list,
+                tst['rb_opts']['xdata'], tst['rb_opts']['rb_pattern'])
+
+            joint_fit = joint_rb_fit.fit_cnotdihedral
+            ydata_Z = joint_rb_fit.ydata[0]
+            ydata_X = joint_rb_fit.ydata[1]
+
+            for i, _ in enumerate(ydata_Z):
+                self.assertTrue(all(np.isclose(a, b) for a, b in
+                                    zip(ydata_Z[i]['mean'],
+                                        tst['expected']
+                                        ['cnotdihedral_Z_ydata']
+                                        [i]['mean'])),
+                                'Incorrect mean in cnot-dihedral Z data \
+                                test no. '
+                                + str(tst_index))
+                if tst['expected']['cnotdihedral_Z_ydata'][i]['std'] is None:
+                    self.assertIsNone(
+                        ydata_Z[i]['std'],
+                        'Incorrect std in cnot-dihedral Z data test no. ' +
+                        str(tst_index))
+                else:
+                    self.assertTrue(
+                        all(np.isclose(a, b) for a, b in zip(
+                            ydata_Z[i]['std'],
+                            tst['expected']['cnotdihedral_Z_ydata']
+                            [i]['std'])),
+                        'Incorrect std in cnot-dihedral Z data test no. ' +
+                        str(tst_index))
+
+            for i, _ in enumerate(ydata_X):
+                self.assertTrue(all(np.isclose(a, b) for a, b in
+                                    zip(ydata_X[i]['mean'],
+                                        tst['expected']
+                                        ['cnotdihedral_X_ydata']
+                                        [i]['mean'])),
+                                'Incorrect mean in cnot-dihedral X data \
+                                test no. '
+                                + str(tst_index))
+                if tst['expected']['cnotdihedral_X_ydata'][i]['std'] is None:
+                    self.assertIsNone(
+                        ydata_X[i]['std'],
+                        'Incorrect std in cnot-dihedral X data test no. '
+                        + str(tst_index))
+                else:
+                    self.assertTrue(
+                        all(np.isclose(a, b) for a, b in zip(
+                            ydata_X[i]['std'],
+                            tst['expected']['cnotdihedral_X_ydata']
+                            [i]['std'])),
+                        'Incorrect std in cnotdihedral X test no. '
+                        + str(tst_index))
+
+            for i, _ in enumerate(joint_fit):
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['alpha'],
+                               tst['expected']['joint_fit']
+                               [i]['alpha']),
+                    'Incorrect fit parameter alpha in test no. '
+                    + str(tst_index))
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['alpha_err'],
+                               tst['expected']['joint_fit']
+                               [i]['alpha_err']),
+                    'Incorrect fit parameter alpha_err in test no. '
+                    + str(tst_index))
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['epg_est'],
+                               tst['expected']['joint_fit']
+                               [i]['epg_est']),
+                    'Incorrect fit parameter epg_est in test no. '
+                    + str(tst_index))
+                self.assertTrue(
+                    np.isclose(joint_fit[i]['epg_est_err'],
+                               tst['expected']['joint_fit']
+                               [i]['epg_est_err']),
+                    'Incorrect fit parameter epg_est_err in test no. '
                     + str(tst_index))
 
 

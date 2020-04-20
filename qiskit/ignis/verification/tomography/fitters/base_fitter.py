@@ -19,11 +19,14 @@ Maximum-Likelihood estimation quantum tomography fitter
 
 import logging
 import itertools as it
+from typing import List, Union, Optional, Dict, Tuple, Callable
 from ast import literal_eval
 import numpy as np
 
+
 from qiskit import QiskitError
 from qiskit import QuantumCircuit
+from qiskit.result import Result
 from ..basis import TomographyBasis, default_basis
 from ..data import marginal_counts, combine_counts, count_keys
 from .cvx_fit import cvxpy, cvx_fit
@@ -34,27 +37,26 @@ logger = logging.getLogger(__name__)
 
 
 class TomographyFitter:
-    """Basse maximum-likelihood estimate tomography fitter class"""
+    """Base maximum-likelihood estimate tomography fitter class"""
 
     def __init__(self,
-                 result,
-                 circuits,
-                 meas_basis='Pauli',
-                 prep_basis='Pauli'):
+                 result: Result,
+                 circuits: Union[List[QuantumCircuit], List[str]],
+                 meas_basis: Union[TomographyBasis, str] = 'Pauli',
+                 prep_basis: Union[TomographyBasis, str] = 'Pauli'):
         """Initialize tomography fitter with experimental data.
 
         Args:
-            result (Result): a Qiskit Result object obtained from executing
-                            tomography circuits.
-            circuits (list): a list of circuits or circuit names to extract
-                            count information from the result object.
-            meas_basis (TomographyBasis, str): A function to return
-                        measurement operators corresponding to measurement
-                        outcomes. See Additional Information
-                        (default: 'Pauli')
-            prep_basis (TomographyBasis, str): A function to return
-                        preparation operators. See Additional
-                        Information (default: 'Pauli')
+            result: a Qiskit Result object obtained from executing
+                tomography circuits.
+            circuits: a list of circuits or circuit names to extract
+                count information from the result object.
+            meas_basis: (default: 'Pauli') A function to return
+                measurement operators corresponding to measurement
+                outcomes. See Additional Information.
+            prep_basis: (default: 'Pauli') A function to return
+                preparation operators. See Additional
+                Information
         """
 
         # Set the measure and prep basis
@@ -67,22 +69,27 @@ class TomographyFitter:
         self._data = {}
         self.add_data(result, circuits)
 
-    def set_measure_basis(self, basis):
+    def set_measure_basis(self, basis: Union[TomographyBasis, str]):
         """Set the measurement basis
 
         Args:
-            basis (TomographyBasis or str): measurement basis
+            basis: measurement basis
+
+        Raises:
+            QiskitError: In case of invalid measurement or preparation basis.
         """
         self._meas_basis = default_basis(basis)
         if isinstance(self._meas_basis, TomographyBasis):
             if self._meas_basis.measurement is not True:
                 raise QiskitError("Invalid measurement basis")
 
-    def set_preparation_basis(self, basis):
-        """Set the prepearation basis function
+    def set_preparation_basis(self, basis: Union[TomographyBasis, str]):
+        """Set the preparation basis function
 
         Args:
-            basis (TomographyBasis or str): preparation basis
+            basis: preparation basis
+        Raises:
+            QiskitError: in case the basis has no preperation data
         """
         self._prep_basis = default_basis(basis)
         if isinstance(self._prep_basis, TomographyBasis):
@@ -96,106 +103,92 @@ class TomographyFitter:
 
     @property
     def preparation_basis(self):
-        """Return the tomography preperation basis."""
+        """Return the tomography preparation basis."""
         return self._prep_basis
 
-    def fit(self, method='auto', standard_weights=True, beta=0.5, **kwargs):
-        """
-        Reconstruct a quantum state using CVXPY convex optimization.
+    def fit(self,
+            method: str = 'auto',
+            standard_weights: bool = True,
+            beta: float = 0.5,
+            psd: bool = True,
+            trace: Optional[int] = None,
+            trace_preserving: bool = False,
+            **kwargs) -> np.array:
+        r"""Reconstruct a quantum state using CVXPY convex optimization.
+
+                **Fitter method**
+
+        The ``cvx`` fitter method used CVXPY convex optimization package.
+        The ``lstsq`` method uses least-squares fitting (linear inversion).
+        The ``auto`` method will use 'cvx' if the CVXPY package is found on
+        the system, otherwise it will default to 'lstsq'.
+
+        **Objective function**
+
+        This fitter solves the constrained least-squares minimization:
+        minimize: :math:`||a \cdot x - b ||_2`
+
+        subject to:
+
+         * :math:`x \succeq 0`
+         * :math:`\text{trace}(x) = 1`
+
+        where:
+
+         * a is the matrix of measurement operators
+           :math:`a[i] = \text{vec}(M_i).H`
+         * b is the vector of expectation value data for each projector
+           :math:`b[i] \sim \text{Tr}[M_i.H \cdot x] = (a \cdot x)[i]`
+         * x is the vectorized density matrix to be fitted
+
+        **PSD constraint**
+
+        The PSD keyword constrains the fitted matrix to be
+        postive-semidefinite. For the ``lstsq`` fitter method the fitted matrix
+        is rescaled using the method proposed in Reference [1]. For the ``cvx``
+        fitter method the convex constraint makes the optimization problem a
+        SDP. If PSD=False the fitted matrix will still be constrained to be
+        Hermitian, but not PSD. In this case the optimization problem becomes
+        a SOCP.
+
+        **Trace constraint**
+
+        The trace keyword constrains the trace of the fitted matrix. If
+        trace=None there will be no trace constraint on the fitted matrix.
+        This constraint should not be used for process tomography and the
+        trace preserving constraint should be used instead.
+
+        **CVXPY Solvers:**
+
+        Various solvers can be called in CVXPY using the `solver` keyword
+        argument. See the `CVXPY documentation
+        <https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options>`_
+        for more information on solvers.
+
+        References:
+
+        [1] J Smolin, JM Gambetta, G Smith, Phys. Rev. Lett. 108, 070502
+            (2012). Open access:
+            `arXiv:1106.5458 <https://arxiv.org/abs/1106.5458>`_ [quant-ph].
 
         Args:
-            method (str): The fitter method 'auto', 'cvx' or 'lstsq'.
-            standard_weights (bool, optional): Apply weights to
-                                            tomography data
-                                            based on count probability
-                                            (default: True)
-            beta (float): hedging parameter for converting counts
-                        to probabilities
-                        (default: 0.5)
-            PSD (bool, optional): Enforced the fitted matrix to be positive
-                                semidefinite (default: True)
-            trace (int, optional): trace constraint for the fitted matrix
-                                (default: None).
-            trace_preserving (bool, optional): Enforce the fitted matrix to be
+            method: The fitter method 'auto', 'cvx' or 'lstsq'.
+            standard_weights: (default: True) Apply weights to
+                tomography data based on count probability
+            beta: hedging parameter for converting counts
+                to probabilities
+            psd: Enforced the fitted matrix to be positive semidefinite.
+            trace: trace constraint for the fitted matrix.
+            trace_preserving: Enforce the fitted matrix to be
                 trace preserving when fitting a Choi-matrix in quantum process
                 tomography. Note this method does not apply for 'lstsq' fitter
-                method (default: False).
-            **kwargs (optional): kwargs for fitter method.
-
+                method.
+            **kwargs: kwargs for fitter method.
+        Raises:
+            QiskitError: In case the fitting method is unrecognized.
         Returns:
             The fitted matrix rho that minimizes
-            ||basis_matrix * vec(rho) - data||_2.
-
-        Additional Information:
-
-            Fitter method
-            -------------
-            The 'cvx' fitter method used CVXPY convex optimization package.
-            The 'lstsq' method uses least-squares fitting (linear inversion).
-            The 'auto' method will use 'cvx' if the CVXPY package is found on
-            the system, otherwise it will default to 'lstsq'.
-
-            Objective function
-            ------------------
-            This fitter solves the constrained least-squares minimization:
-
-                minimize: ||a * x - b ||_2
-                subject to: x >> 0 (PSD, optional)
-                            trace(x) = t (trace, optional)
-                            partial_trace(x) = identity (trace_preserving,
-                                                        optional)
-
-            where:
-                a is the matrix of measurement operators a[i] = vec(M_i).H
-                b is the vector of expectation value data for each projector
-                b[i] ~ Tr[M_i.H * x] = (a * x)[i]
-                x is the vectorized density matrix (or Choi-matrix)
-                to be fitted
-
-            PSD constraint
-            --------------
-            The PSD keyword constrains the fitted matrix to be
-            postive-semidefinite.
-            For the 'lstsq' fitter method the fitted matrix is rescaled
-            using the method proposed in Reference [1].
-            For the 'cvx' fitter method the convex constraint makes the
-            optimization problem a SDP. If PSD=False the fitted matrix
-            will still
-            be constrained to be Hermitian, but not PSD. In this case the
-            optimization problem becomes a SOCP.
-
-            Trace constraint
-            ----------------
-            The trace keyword constrains the trace of the fitted matrix. If
-            trace=None there will be no trace constraint on the fitted matrix.
-            This constraint should not be used for process tomography and the
-            trace preserving constraint should be used instead.
-
-            Trace preserving (TP) constraint
-            --------------------------------
-            The trace_preserving keyword constrains the fitted matrix
-            to be TP. This should only be used for process tomography,
-            not state tomography.
-            Note that the TP constraint implicitly enforces
-            the trace of the fitted
-            matrix to be equal to the square-root of the matrix dimension.
-            If a trace constraint is also specified that
-            differs from this value the fit
-            will likely fail. Note that this can only be used
-            for the CVX method.
-
-            CVXPY Solvers:
-            -------
-            Various solvers can be called in CVXPY using the `solver` keyword
-            argument. Solvers included in CVXPY are:
-                'CVXOPT': SDP and SOCP (default solver)
-                'SCS'   : SDP and SOCP
-                'ECOS'  : SOCP only
-            See the documentation on CVXPY for more information on solvers.
-
-            References:
-            [1] J Smolin, JM Gambetta, G Smith, Phys. Rev. Lett. 108, 070502
-                (2012). Open access: arXiv:1106.5458 [quant-ph].
+            :math:`||\text{basis_matrix} * \text{vec(rho)} - \text{data}||_2`.
         """
         # Get fitter data
         data, basis_matrix, weights = self._fitter_data(standard_weights,
@@ -207,12 +200,21 @@ class TomographyFitter:
             else:
                 method = 'cvx'
         if method == 'lstsq':
-            return lstsq_fit(data, basis_matrix, weights=weights, **kwargs)
+            return lstsq_fit(data, basis_matrix,
+                             weights=weights,
+                             psd=psd,
+                             trace=trace,
+                             **kwargs)
 
         if method == 'cvx':
-            return cvx_fit(data, basis_matrix, weights=weights, **kwargs)
+            return cvx_fit(data, basis_matrix,
+                           weights=weights,
+                           psd=psd,
+                           trace=trace,
+                           trace_preserving=trace_preserving,
+                           **kwargs)
 
-        raise QiskitError('Unrecognised fit method {}'.format(method))
+        raise QiskitError('Unrecognized fit method {}'.format(method))
 
     @property
     def data(self):
@@ -226,9 +228,9 @@ class TomographyFitter:
 
         Args:
             result (Result): a Qiskit Result object obtained from executing
-                            tomography circuits.
+                tomography circuits.
             circuits (list): a list of circuits or circuit names to extract
-                            count information from the result object.
+                count information from the result object.
         """
         if len(circuits[0].cregs) == 1:
             marginalize = False
@@ -256,8 +258,7 @@ class TomographyFitter:
 
         Args:
             standard_weights (bool, optional): Apply weights to basis matrix
-                            and data based on count probability
-                            (default: True)
+                and data based on count probability (default: True)
             beta (float): hedging parameter for 0, 1
             probabilities (default: 0.5)
 
@@ -334,21 +335,22 @@ class TomographyFitter:
 
         return data, np.vstack(basis_blocks), weights
 
-    def _binomial_weights(self, counts, beta=0.5):
+    def _binomial_weights(self, counts: Dict[str, int],
+                          beta: float = 0.5
+                          ) -> np.array:
         """
         Compute binomial weights for list or dictionary of counts.
 
         Args:
-            counts (dict, vector): A set of measurement counts for
-                                all outcomes of a given measurement
-                                configuration.
-            beta (float >= 0): A hedging parameter used to bias probabilities
-                            computed from input counts away from 0 or 1.
+            counts: A set of measurement counts for
+                all outcomes of a given measurement configuration.
+            beta: (default: 0.5) A nonnegative hedging parameter used to bias
+            probabilities computed from input counts away from 0 or 1.
 
         Returns:
-            A numpy array of binomial weights for the input counts and beta
-            parameter.
-
+            The binomial weights for the input counts and beta parameter.
+        Raises:
+            ValueError: In case beta is negative.
         Additional Information:
 
             The weights are determined by
@@ -384,19 +386,18 @@ class TomographyFitter:
                    "dividing by zero.".format(beta))
             logger.warning(msg)
 
-        K = len(counts)  # Number of possible outcomes.
+        outcomes_num = len(counts)
         # Compute hedged frequencies which are shifted to never be 0 or 1.
-        freqs_hedged = (counts + beta) / (shots + K * beta)
+        freqs_hedged = (counts + beta) / (shots + outcomes_num * beta)
 
         # Return gaussian weights for 2-outcome measurements.
         return np.sqrt(shots / (freqs_hedged * (1 - freqs_hedged)))
 
-    def _basis_operator_matrix(self, basis):
-        """
-        Return a basis measurement matrix of the input basis.
+    def _basis_operator_matrix(self, basis: List[np.array]) -> np.array:
+        """Return a basis measurement matrix of the input basis.
 
         Args:
-            basis (list (array like)): a list of basis matrices.
+            basis: a list of basis matrices.
 
         Returns:
             A numpy array of shape (n, col * row) where n is the number
@@ -412,19 +413,22 @@ class TomographyFitter:
             ret[j] = np.array(b).reshape((1, size), order='F').conj()
         return ret
 
-    def _preparation_op(self, label, prep_matrix_fn):
+    def _preparation_op(self,
+                        label: Tuple[str],
+                        prep_matrix_fn: Callable[[str], np.array]
+                        ) -> np.array:
         """
         Return the multi-qubit matrix for a state preparation label.
 
         Args:
-            label (tuple(str)): a preparation configuration label for a
-                                tomography circuit.
-            prep_matrix_fn (function): a function that returns the matrix
-                            corresponding to a single qubit preparation label.
-                            The functions should have signature
-                                prep_matrix_fn(str) -> np.array
+            label: a preparation configuration label for a
+                tomography circuit.
+            prep_matrix_fn: a function that returns the matrix
+                corresponding to a single qubit preparation label.
+                The functions should have signature:
+                    ``prep_matrix_fn(str) -> np.array``
         Returns:
-            A Numpy array for the multi-qubit prepration operator specified
+            A Numpy array for the multi-qubit preparation operator specified
             by label.
 
         Additional Information:
@@ -439,21 +443,24 @@ class TomographyFitter:
 
         # Construct preparation matrix
         op = np.eye(1, dtype=complex)
-        for l in label:
-            op = np.kron(prep_matrix_fn(l), op)
+        for label_inst in label:
+            op = np.kron(prep_matrix_fn(label_inst), op)
         return op
 
-    def _measurement_ops(self, label, meas_matrix_fn):
+    def _measurement_ops(self,
+                         label: Tuple[str],
+                         meas_matrix_fn: Callable[[str, int], np.array]
+                         ) -> List[np.array]:
         """
         Return a list multi-qubit matrices for a measurement label.
 
         Args:
-            label (tuple(str)): a measurement configuration label for a
-                                tomography circuit.
-            meas_matrix_fn (function): a function that returns the matrix
-                            corresponding to a single qubit measurement label
-                            for a given outcome. The functions should have
-                            signature meas_matrix_fn(str, int) -> np.array
+            label: a measurement configuration label for a
+                tomography circuit.
+            meas_matrix_fn: a function that returns the matrix
+                corresponding to a single qubit measurement label
+                for a given outcome. The functions should have
+                signature meas_matrix_fn(str, int) -> np.array
 
         Returns:
             A list of Numpy array for the multi-qubit measurement operators
@@ -472,10 +479,10 @@ class TomographyFitter:
         # Construct measurement POVM for all measurement outcomes for a given
         # measurement label. This will be a list of 2 ** n operators.
 
-        for l in sorted(it.product((0, 1), repeat=num_qubits)):
+        for outcomes in sorted(it.product((0, 1), repeat=num_qubits)):
             op = np.eye(1, dtype=complex)
             # Reverse label to correspond to QISKit bit ordering
-            for m, outcome in zip(reversed(label), l):
+            for m, outcome in zip(reversed(label), outcomes):
                 op = np.kron(op, meas_matrix_fn(m, outcome))
             meas_ops.append(op)
         return meas_ops
