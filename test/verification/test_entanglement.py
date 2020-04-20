@@ -22,6 +22,8 @@ import unittest
 
 import numpy as np
 
+from qiskit.execute import execute
+from qiskit.providers.basicaer import BasicAer
 from qiskit.ignis.verification.entanglement.linear import *
 
 
