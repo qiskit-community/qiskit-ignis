@@ -312,10 +312,13 @@ class GST_Optimize():
             l: A list
             sizes: The sizes of the splitted lists
         Returns:
-            The splitted lists
+            list: The splitted lists
         Example:
             >> split_list([1,2,3,4,5,6,7], [1,4,2])
             [[1],[2,3,4,5],[6,7]]
+
+        Raises:
+            RuntimeError: if length of l does not equal sum of sizes
         """
         if sum(sizes) != len(l):
             msg = "Length of list ({}) " \
@@ -445,7 +448,7 @@ class GST_Optimize():
         Args:
             x: The vector representation of the GST data (E, rho, Gs)
 
-        Return value:
+        Returns:
             The MLE cost function (see additional information)
 
         Additional information:

@@ -12,7 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring,invalid-name
 import unittest
 import numpy as np
 from qiskit import Aer

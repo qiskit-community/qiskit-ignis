@@ -21,6 +21,9 @@ Test IQ discrimination fitters.
 import unittest
 
 import test.utils as utils
+
+from sklearn.svm import SVC
+
 import qiskit
 from qiskit import Aer
 from qiskit.exceptions import QiskitError
@@ -29,7 +32,6 @@ from qiskit.ignis.measurement.discriminator.iq_discriminators import \
     LinearIQDiscriminator, SklearnIQDiscriminator
 from qiskit.ignis.mitigation.measurement import circuits
 from qiskit.result.models import ExperimentResultData
-from sklearn.svm import SVC
 
 
 class BaseTestIQDiscriminator(unittest.TestCase):

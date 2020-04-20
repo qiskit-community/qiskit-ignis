@@ -12,7 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=cell-var-from-loop
+# pylint: disable=cell-var-from-loop,invalid-name
 
 
 """
@@ -80,7 +80,7 @@ class MeasurementFilter():
         """Apply the calibration matrix to results.
 
         Args:
-            raw_data: The data to be corrected. Can be in a number of forms:
+            raw_data (dict or list): The data to be corrected. Can be in a number of forms:
 
                  Form 1: a counts dictionary from results.get_counts
 
@@ -98,7 +98,7 @@ class MeasurementFilter():
                 ``least_squares``: constrained to have physical probabilities
 
         Returns:
-            The corrected data in the same form as `raw_data`
+            dict or list: The corrected data in the same form as `raw_data`
 
         Raises:
             QiskitError: if `raw_data` is not an integer multiple
@@ -281,7 +281,7 @@ class TensoredFilter():
         Apply the calibration matrices to results.
 
         Args:
-            raw_data: The data to be corrected. Can be in one of two forms:
+            raw_data (dict or Result): The data to be corrected. Can be in one of two forms:
 
                 * A counts dictionary from results.get_counts
 
@@ -296,7 +296,7 @@ class TensoredFilter():
                 * If `None`, 'least_squares' is used.
 
         Returns:
-            The corrected data in the same form as raw_data
+            dict or Result: The corrected data in the same form as raw_data
 
         Raises:
             QiskitError: if raw_data is not in a one of the defined forms.
