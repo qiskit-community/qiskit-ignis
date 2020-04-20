@@ -12,6 +12,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
 """
 Decoders for quantum error correction codes, with a focus on those that can be
 expressed as solving a graph-theoretic problem.
@@ -113,7 +115,7 @@ class GraphDecoder():
                     temp_qc = copy.deepcopy(blank_qc)
                     temp_qc.name = str((j, qubit, error))
                     temp_qc.data = qc.data[0:j]
-                    eval('temp_qc.' + error + '(qubit)')
+                    getattr(temp_qc, error)(qubit)
                     temp_qc.data += qc.data[j:depth + 1]
                     circuit_name[(j, qubit, error)] = temp_qc.name
                     error_circuit[temp_qc.name] = temp_qc

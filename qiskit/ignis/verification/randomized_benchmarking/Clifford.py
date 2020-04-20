@@ -17,7 +17,7 @@
 # pylint: disable=assignment-from-no-return
 
 """
-    Clifford Operator class
+Clifford Operator class
 """
 
 import numpy as np
@@ -125,9 +125,9 @@ class Clifford:
 
     def stabilizer(self, qubit):
         """Return the qubit stabilizer as a Pauli object."""
-        nq = self._num_qubits
-        z = self._table[nq + qubit, 0:nq]
-        x = self._table[nq + qubit, nq:2 * nq]
+        num_qubits = self._num_qubits
+        z = self._table[num_qubits + qubit, 0:num_qubits]
+        x = self._table[num_qubits + qubit, num_qubits:2 * num_qubits]
         return Pauli(z=z, x=x)
 
     def update_stabilizer(self, qubit, pauli):
@@ -136,9 +136,9 @@ class Clifford:
 
     def destabilizer(self, row):
         """Return the destabilizer as a Pauli object."""
-        nq = self._num_qubits
-        z = self._table[row, 0:nq]
-        x = self._table[row, nq:2 * nq]
+        num_qubits = self._num_qubits
+        z = self._table[row, 0:num_qubits]
+        x = self._table[row, num_qubits:2 * num_qubits]
         return Pauli(z=z, x=x)
 
     def update_destabilizer(self, qubit, pauli):
@@ -240,8 +240,7 @@ class Clifford:
     # They should mimic the circuit API as much as possible.
     def x(self, qubit):
         """Apply a Pauli "x" gate to a qubit."""
-        iz = qubit
-        self._phases = np.logical_xor(self._phases, self._table[:, iz])
+        self._phases = np.logical_xor(self._phases, self._table[:, qubit])
 
     def y(self, qubit):
         """Apply an Pauli "y" gate to a qubit."""

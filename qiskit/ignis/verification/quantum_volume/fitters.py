@@ -146,8 +146,11 @@ class QVFitter:
         Add a new result. Re calculate fit
 
         Args:
-            new_backend_result: list of qv results
-            rerun_fit: re calculate the means and fit the result
+            new_backend_result (list): list of qv results
+            rerun_fit (bool): re calculate the means and fit the result
+
+        Raises:
+            QiskitError: If the ideal distribution isn't loaded yet
 
         Additional information:
             Assumes that 'result' was executed is
@@ -340,13 +343,13 @@ class QVFitter:
         """Return the set of heavy output strings.
 
         Args:
-            ideal_distribution: dict of ideal output distribution
+            ideal_distribution (dict): dict of ideal output distribution
                 where keys are bit strings (as strings) and values are
                 probabilities of observing those strings
-            ideal_median = median probability across all outputs
+            ideal_median (float): median probability across all outputs
 
         Returns:
-            list the set of heavy output strings, i.e. those strings
+            list: list the set of heavy output strings, i.e. those strings
                 whose ideal probability of occurrence exceeds the median.
         """
         return list(filter(lambda x: ideal_distribution[x] > ideal_median,
@@ -356,7 +359,7 @@ class QVFitter:
         """Return a list of median probabilities.
 
         Args:
-            distributions: list of dicts mapping binary strings
+            distributions (list): list of dicts mapping binary strings
                 (as strings) to probabilities.
 
         Returns:
@@ -373,8 +376,8 @@ class QVFitter:
         """Return the probability of a subset of outcomes.
 
         Args:
-            strings: list of bit strings (as strings)
-            distribution: dict where keys are bit strings (as strings)
+            strings (list): list of bit strings (as strings)
+            distribution (dict): dict where keys are bit strings (as strings)
                 and values are probabilities of observing those strings
 
         Returns:

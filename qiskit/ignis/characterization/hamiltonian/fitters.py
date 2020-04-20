@@ -58,9 +58,10 @@ class ZZFitter(BaseCoherenceFitter):
         Return the ZZ rate from the fit of the two curves
 
         Args:
-            qind: qubit index to return (-1 return all)
+            qind (int): qubit index to return (-1 return all)
 
-        return a list of zz_rates
+        Returns:
+            list: a list of zz_rates
         """
 
         freq0 = self._get_param(1, qind, series='0', err=False)
@@ -74,12 +75,15 @@ class ZZFitter(BaseCoherenceFitter):
         Plot ZZ data. Will plot both traces on the plot.
 
         Args:
-            qind: qubit index to plot
-            ax: plot axes
-            show_plot: call plt.show()
+            qind (int): qubit index to plot
+            ax (Axes): plot axes
+            show_plot (bool): call plt.show()
 
         Returns:
-            the axes object
+            Axes: the axes object
+
+        Raises:
+            ImportError: If matplotlib is not installed
         """
         if not HAS_MATPLOTLIB:
             raise ImportError("To plot the ZZ data matplotlib must be "

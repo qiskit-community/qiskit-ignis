@@ -107,7 +107,7 @@ class AccreditationCircuits:
         It returns random 1-qubit gate for trap circuits
 
         Returns:
-            gate_trap (list): list of all 1-qubit gates in trap circuit
+            list: gate_trap list of all 1-qubit gates in trap circuit
 
         Raises:
             QiskitError: If an unsupported 2 qubit gate is present
