@@ -614,7 +614,7 @@ def decompose_CNOTDihedral(elem):
         assert elem.linear == [[1]]
         l0 = elem.poly.weight_1[0]
         k0 = elem.shift[0]
-        if (l0 > 0):
+        if l0 > 0:
             circuit.u1(l0 * np.pi / 4, 0)
         if k0 == 1:
             circuit.x(0)

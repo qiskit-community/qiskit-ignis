@@ -19,7 +19,6 @@ Test CNOT-dihedral functions:
 """
 
 import unittest
-import numpy as np
 
 # Import the dihedral_utils functions
 from qiskit.ignis.verification.randomized_benchmarking \
