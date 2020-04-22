@@ -40,6 +40,7 @@ import copy
 from functools import reduce
 from operator import mul
 
+from qiskit.exceptions import QiskitError
 from qiskit.circuit import QuantumCircuit
 
 class SpecialPolynomial():
@@ -521,12 +522,6 @@ def make_dict_0(n_qubits):
             num = int((num - num % 16) / 16)
         obj[elem.key] = (elem, circ)
 
-        #print (circ)
-        test_circ = decompose_CNOTDihedral(elem)
-        #print (test_circ)
-        test_elem = CNOTDihedral(n_qubits)
-        append_circuit(test_elem, test_circ)
-        assert (elem == test_elem)
     return obj
 
 
@@ -559,26 +554,25 @@ def make_dict_next(n_qubits, dicts_prior):
                                 and new_elem.key not in obj:
                             obj[new_elem.key] = (new_elem, new_circ)
 
-                            #print (new_circ)
-                            test_circ = decompose_CNOTDihedral(new_elem)
-                            #print (test_circ)
-                            test_elem = CNOTDihedral(n_qubits)
-                            append_circuit(test_elem, test_circ)
-                            # print (new_elem)
-                            # print (test_elem)
-                            assert (new_elem == test_elem)
     return obj
 
 def append_circuit(elem, circuit, qargs=None):
-    """Update a CNOTDihedral element inplace by applying a CNOTDihedral circuit."""
+    """Update a CNOTDihedral element inplace by applying a CNOTDihedral circuit.
+
+    Args:
+        elem (CNOTDihedral): the CNOTDihedral element to update.
+        circuit (QuantumCircuit): the gates to apply.
+        qargs (list or None): The qubits to apply gates to.
+    Returns:
+        CNOTDihedral: the updated CNOTDihedral.
+    Raises:
+        QiskitError: if input gates cannot be decomposed into CNOTDihedral gates.
+    """
 
     if qargs is None:
         qargs = list(range(elem.n_qubits))
 
-    if isinstance(circuit, QuantumCircuit):
-        gate = circuit.to_instruction()
-    else:
-        gate = circuit
+    gate = circuit.to_instruction()
 
     for instr, qregs, cregs in gate.definition:
         # Get the integer position of the flat register
@@ -590,12 +584,21 @@ def append_circuit(elem, circuit, qargs=None):
         elif instr.name == 'cx':
             elem.cnot(new_qubits[0], new_qubits[1])
         else:
-            print ('unknown gate')
+            raise QiskitError('Not a CNOT-Dihedral gate: {}'.format(gate.name))
+
     return elem
 
 
 def decompose_CNOTDihedral(elem):
-    """Decompose a CNOTDihedral element into a QuantumCircuit."""
+    """Decompose a CNOTDihedral element into a QuantumCircuit.
+
+    Args:
+        elem (CNOTDihedral): a CNOTDihedral element.
+    Return:
+        QuantumCircuit: a circuit implementation of the CNOTDihedral element.
+    Remark:
+        Decompose 1 and 2-qubit CNOTDihedral elements.
+    """
 
     circuit = QuantumCircuit(elem.n_qubits)
 
@@ -611,7 +614,6 @@ def decompose_CNOTDihedral(elem):
             circuit.u1(l*np.pi/4, 0)
         if k==1:
             circuit.x(0)
-        # print (circuit)
         return(circuit)
 
     # case elem.n_qubits == 2:
@@ -620,7 +622,6 @@ def decompose_CNOTDihedral(elem):
     weight_2 = elem.poly.weight_2
     linear = elem.linear
     shift = elem.shift
-    #print (weight_1, weight_2, linear, shift)
 
     # CS subgroup
     if linear == [[1,0],[0,1]]:
@@ -657,7 +658,6 @@ def decompose_CNOTDihedral(elem):
             circuit.cx(0, 1)
             circuit.u1(7 * np.pi / 4, 1)
             circuit.cx(0, 1)
-            # print ("CS", k0, k1, l0, l1, weight_1, linear, shift)
 
         # CSdg-like class
         if ((weight_2 == [6] and k0 == k1) or
@@ -678,7 +678,6 @@ def decompose_CNOTDihedral(elem):
             circuit.cx(0, 1)
             circuit.u1(np.pi / 4, 1)
             circuit.cx(0, 1)
-            # print("CSdg", k0, k1, l0, l1, weight_1, linear, shift)
 
         # CZ-like class
         if weight_2 == [4]:
@@ -700,7 +699,6 @@ def decompose_CNOTDihedral(elem):
             circuit.cx(1, 0)
             circuit.u1(7 * np.pi / 4, 1)
             circuit.u1(7 * np.pi / 4, 0)
-            # print("CZ", k0, k1, l0, l1, weight_1, linear, shift)
 
     # CX01-like class
     if linear == [[1, 0], [1, 1]]:
@@ -725,7 +723,6 @@ def decompose_CNOTDihedral(elem):
         circuit.cx(0, 1)
         if m in (1, 2, 3):
             circuit.u1(m * np.pi / 4, 1)
-        # print (k0,k1,l0,l1,m,linear,shift)
 
     # CX10-like class
     if linear == [[1, 1], [0, 1]]:
@@ -750,7 +747,6 @@ def decompose_CNOTDihedral(elem):
         circuit.cx(1, 0)
         if m in (1, 2, 3):
             circuit.u1(m * np.pi / 4, 0)
-        # print(k0, k1, l0, l1, m, linear, shift)
 
     # CX01*CX10-like class
     if linear == [[0, 1], [1, 1]]:
@@ -828,5 +824,4 @@ def decompose_CNOTDihedral(elem):
             circuit.u1(m * np.pi / 4, 1)
         circuit.cx(0, 1)
 
-    #print (circuit)
     return(circuit)
