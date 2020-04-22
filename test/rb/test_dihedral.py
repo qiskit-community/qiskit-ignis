@@ -23,6 +23,8 @@ import unittest
 # Import the dihedral_utils functions
 from qiskit.ignis.verification.randomized_benchmarking \
     import DihedralUtils as dutils
+from qiskit.ignis.verification.randomized_benchmarking \
+    import CNOTDihedral, append_circuit, decompose_CNOTDihedral
 
 
 class TestCNOTDihedral(unittest.TestCase):
@@ -46,14 +48,23 @@ class TestCNOTDihedral(unittest.TestCase):
             print('test: generating the cnot-dihedral group table - %d qubit'
                   % nq)
             test_dihedral_tables = self.dutils.cnot_dihedral_tables(nq)
-            test_dihedral_tables = dict(sorted(test_dihedral_tables.
-                                               items()))
-            len_table = len(test_dihedral_tables)
-            print("length:", len(test_dihedral_tables))
+            test_dihedral_tables_items = dict(sorted(test_dihedral_tables.
+                                                     items()))
+            len_table = len(test_dihedral_tables_items)
+            print("length:", len(test_dihedral_tables_items))
 
             self.assertEqual(len_table, self.table_size[nq],
                              'Error: table on %d qubit does not contain '
+
                              'the expected number of elements' % nq)
+            # Test of CNOT-Dihedral circuit decomposition
+            for circ, elem in test_dihedral_tables.items():
+                test_circ = decompose_CNOTDihedral(elem[0])
+                test_elem = CNOTDihedral(nq)
+                append_circuit(test_elem, test_circ)
+                self.assertEqual(elem[0], test_elem,
+                                 'Error: decomposed circuit is not equal '
+                                 'to the original circuit')
 
 
 if __name__ == '__main__':

@@ -21,7 +21,7 @@ Randomized Benchmarking module
 from .Clifford import Clifford
 from .basic_utils import BasicUtils
 from .clifford_utils import CliffordUtils
-from .dihedral import CNOTDihedral
+from .dihedral import CNOTDihedral, append_circuit, decompose_CNOTDihedral
 from .dihedral_utils import DihedralUtils
 from .circuits import randomized_benchmarking_seq
 from .fitters import (RBFitter, InterleavedRBFitter, PurityRBFitter,
