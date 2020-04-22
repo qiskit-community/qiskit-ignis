@@ -43,6 +43,7 @@ from operator import mul
 from qiskit.exceptions import QiskitError
 from qiskit.circuit import QuantumCircuit
 
+
 class SpecialPolynomial():
     """Multivariate polynomial with special form.
 
@@ -556,6 +557,7 @@ def make_dict_next(num_qubits, dicts_prior):
 
     return obj
 
+
 def append_circuit(elem, circuit, qargs=None):
     """Update a CNOTDihedral element inplace by applying a CNOTDihedral circuit.
 
@@ -610,13 +612,13 @@ def decompose_CNOTDihedral(elem):
     if (elem.num_qubits == 1):
         assert elem.poly.weight_0 == 0
         assert elem.linear == [[1]]
-        l = elem.poly.weight_1[0]
-        k = elem.shift[0]
-        if (l>0):
-            circuit.u1(l*np.pi/4, 0)
-        if k==1:
+        l0 = elem.poly.weight_1[0]
+        k0 = elem.shift[0]
+        if (l0 > 0):
+            circuit.u1(l0 * np.pi / 4, 0)
+        if k0 == 1:
             circuit.x(0)
-        if (l==0 and k==0):
+        if (l0 == 0 and k0 == 0):
             circuit.id(0)
         return(circuit)
 
@@ -628,7 +630,7 @@ def decompose_CNOTDihedral(elem):
     shift = elem.shift
 
     # CS subgroup
-    if linear == [[1,0],[0,1]]:
+    if linear == [[1, 0], [0, 1]]:
         [k0, k1] = shift
 
         # Dihedral class
