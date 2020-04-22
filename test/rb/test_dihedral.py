@@ -61,7 +61,7 @@ class TestCNOTDihedral(unittest.TestCase):
                              'the expected number of elements' % nq)
 
             # Test of CNOT-Dihedral circuit decomposition
-            for circ, elem in test_dihedral_tables.items():
+            for _, elem in test_dihedral_tables.items():
                 test_circ = decompose_CNOTDihedral(elem[0])
                 test_elem = CNOTDihedral(nq)
                 append_circuit(test_elem, test_circ)
@@ -72,12 +72,11 @@ class TestCNOTDihedral(unittest.TestCase):
         # Test that random elements are CNOTDihedral
         for nq in range(1, 5):
             for nseed in range(20):
-                np.random.seed(nseed)
                 elem = random_CNOTDihedral(nq, seed=nseed)
                 self.assertTrue(elem,
                                 'Error: random element is '
                                 'not CNOTDihedral')
-                if (nq < 3):
+                if nq < 3:
                     test_circ = decompose_CNOTDihedral(elem)
                     self.assertTrue(test_circ,
                                     'Error: cannot decompose a random '
