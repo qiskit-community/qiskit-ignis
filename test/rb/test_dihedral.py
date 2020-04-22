@@ -19,12 +19,14 @@ Test CNOT-dihedral functions:
 """
 
 import unittest
+import numpy as np
 
 # Import the dihedral_utils functions
 from qiskit.ignis.verification.randomized_benchmarking \
     import DihedralUtils as dutils
 from qiskit.ignis.verification.randomized_benchmarking \
-    import CNOTDihedral, append_circuit, decompose_CNOTDihedral
+    import CNOTDihedral, append_circuit, decompose_CNOTDihedral, \
+    random_CNOTDihedral
 
 
 class TestCNOTDihedral(unittest.TestCase):
@@ -57,6 +59,7 @@ class TestCNOTDihedral(unittest.TestCase):
                              'Error: table on %d qubit does not contain '
 
                              'the expected number of elements' % nq)
+
             # Test of CNOT-Dihedral circuit decomposition
             for circ, elem in test_dihedral_tables.items():
                 test_circ = decompose_CNOTDihedral(elem[0])
@@ -65,6 +68,20 @@ class TestCNOTDihedral(unittest.TestCase):
                 self.assertEqual(elem[0], test_elem,
                                  'Error: decomposed circuit is not equal '
                                  'to the original circuit')
+
+        # Test that random elements are CNOTDihedral
+        for nq in range(1, 5):
+            for nseed in range(20):
+                np.random.seed(nseed)
+                elem = random_CNOTDihedral(nq, seed=nseed)
+                self.assertTrue(elem,
+                                'Error: random element is '
+                                'not CNOTDihedral')
+                if (nq < 3):
+                    test_circ = decompose_CNOTDihedral(elem)
+                    self.assertTrue(test_circ,
+                                    'Error: cannot decompose a random '
+                                    'CNOTDihedral element to a circuit')
 
 
 if __name__ == '__main__':
