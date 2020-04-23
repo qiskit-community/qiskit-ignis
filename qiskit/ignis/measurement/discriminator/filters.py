@@ -116,7 +116,10 @@ class DiscriminationFilter:
             expected_states:
 
         Returns:
-            the base inferred from the expected states
+            int: the base inferred from the expected states
+
+        Raises:
+            QiskitError: if there is an invalid input in the expected states
         """
         base = 0
         for key in expected_states:

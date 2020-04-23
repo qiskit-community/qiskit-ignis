@@ -12,6 +12,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
+# NOTE: this is because BasicUtils doesn't define any arguments on it's methods
+# so the implementations here don't match the abstract class. This needs to
+# be fixed or reworked without an abstract class
+# pylint: disable=arguments-differ
+
 """Advanced Clifford operations needed for randomized benchmarking."""
 
 import numpy as np
@@ -31,13 +38,13 @@ class CliffordUtils(BasicUtils):
                  gatelist=None, elmnt_key=None):
         """
         Args:
-            num_qubits: number of qubits, dimension of
+            num_qubits (int): number of qubits, dimension of
                 the Clifford object.
-            group_table: table of all the Clifford objects
+            group_tables (dict): table of all the Clifford objects
                 of a given dimension.
-            elmnt: a Clifford group element.
-            elmnt_key: a unique index of a Clifford object.
-            gatelist: a list of gates corresponding to a
+            elmnt (Clifford): a Clifford group element.
+            elmnt_key (str): a unique index of a Clifford object.
+            gatelist (list): a list of gates corresponding to a
                 Clifford object.
         """
 
@@ -75,11 +82,11 @@ class CliffordUtils(BasicUtils):
         Add gates to a Clifford object from a list of gates.
 
         Args:
-            cliff: a Clifford class object.
-            gatelist: a list of gates.
+            cliff (Clifford): a Clifford class object.
+            gatelist (list): a list of gates.
 
         Returns:
-            A Clifford class object, after composing cliff and
+            Clifford: A Clifford class object, after composing cliff and
             the gates from gatelist.
 
         Raises:
@@ -119,11 +126,11 @@ class CliffordUtils(BasicUtils):
         Generate a Clifford object from a list of gates.
 
         Args:
-            num_qubits: the number of qubits for the Clifford.
-            gatelist: a list of gates.
+            num_qubits (int): the number of qubits for the Clifford.
+            gatelist (list): a list of gates.
 
         Returns:
-            A Clifford class object corresponding to composing
+            Clifford: A Clifford class object corresponding to composing
             the given list of gates.
         """
 
@@ -140,16 +147,16 @@ class CliffordUtils(BasicUtils):
         given list of gates.
 
         Args:
-            gatelist: a list of gates.
-            q: an index of the qubit.
-            pauli: an integer indicating the pauli gate:
+            gatelist (list): a list of gates.
+            q (int): an index of the qubit.
+            pauli (int): an integer indicating the pauli gate:
 
                 * 1 - for pauli-Z gate.
                 * 2 - for pauli-X gate.
                 * 3 - for pauli-Y gate.
 
         Returns:
-            A list of gates, after appending a given pauli gate
+            list: A list of gates, after appending a given pauli gate
             on qubit q.
         """
 
@@ -165,16 +172,16 @@ class CliffordUtils(BasicUtils):
         given list of gates.
 
         Args:
-            gatelist: a list of gates.
-            q: an index of the qubit.
-            h: an integer indicating whether or not
+            gatelist (list): a list of gates.
+            q (int): an index of the qubit.
+            h (int): an integer indicating whether or not
                 to apply a hadamard gate:
 
                 * 1 - for H gate.
                 * 0 - no H gate.
 
         Returns:
-            A list of gates, after appending a hadamard gate
+            list: A list of gates, after appending a hadamard gate
             on qubit q.
         """
 
@@ -191,15 +198,15 @@ class CliffordUtils(BasicUtils):
         so: W=VV and WV=I.
 
         Args:
-            gatelist: a list of gates.
-            q: an index of the qubit.
-            v: an integer indicating the gate:
+            gatelist (list): a list of gates.
+            q (int): an index of the qubit.
+            v (int): an integer indicating the gate:
 
                 * 1 - for V gate.
                 * 2 - for W gate.
 
         Returns:
-            A list of gates, after appending a gate V or W
+            list: A list of gates, after appending a gate V or W
             on qubit q.
         """
 
@@ -213,12 +220,12 @@ class CliffordUtils(BasicUtils):
         to a given list of gates.
 
         Args:
-            gatelist: a list of gates.
-            ctrl: an index of the control qubit.
-            tgt: an index of the target qubit.
+            gatelist (list): a list of gates.
+            ctrl (int): an index of the control qubit.
+            tgt (int): an index of the target qubit.
 
         Returns:
-            A list of gates, after appending a controlled-x
+            list: A list of gates, after appending a controlled-x
             gate on two qubits.
         """
 
@@ -237,8 +244,7 @@ class CliffordUtils(BasicUtils):
                 Clifford.
 
         Returns:
-            A single qubit Clifford gate.
-            A single qubit Clifford gate.
+            list: A single qubit Clifford gate.
         """
 
         gatelist = []
@@ -265,7 +271,7 @@ class CliffordUtils(BasicUtils):
                 Clifford.
 
         Returns:
-            A 2-qubit Clifford gate.
+            list: A 2-qubit Clifford gate.
         """
 
         gatelist = []
@@ -350,7 +356,7 @@ class CliffordUtils(BasicUtils):
         Generate a table of all 2-qubit Clifford gates.
 
         Returns:
-            A table of all 2-qubit Clifford gates.
+            dict: A table of all 2-qubit Clifford gates.
         """
 
         cliffords2 = {}
@@ -365,7 +371,7 @@ class CliffordUtils(BasicUtils):
         Generate a table of all 1-qubit Clifford gates.
 
         Returns:
-            A table of all 1-qubit Clifford gates.
+            dict: A table of all 1-qubit Clifford gates.
         """
 
         cliffords1 = {}
@@ -382,12 +388,8 @@ class CliffordUtils(BasicUtils):
         tables.
 
         Args:
-            picklefile: pickle file name.
-            num_qubits: number of qubits of the Clifford object.
-
-        Returns:
-            A pickle file with the 1 or 2 qubit Clifford group
-            tables.
+            picklefile (str): pickle file name.
+            num_qubits (int): number of qubits of the Clifford object.
 
         Raises:
             ValueError: number of qubits bigger than 2 is
@@ -413,10 +415,10 @@ class CliffordUtils(BasicUtils):
         group tables.
 
         Args:
-            picklefile: pickle file name.
+            picklefile (str): pickle file name.
 
         Returns:
-            A table of all the 1 and 2 qubit Clifford objects.
+            dict: A table of all the 1 and 2 qubit Clifford objects.
         """
 
         with open(picklefile, "rb") as pf:
@@ -429,10 +431,10 @@ class CliffordUtils(BasicUtils):
         Return the Clifford group tables.
 
         Args:
-            num_qubits: number of qubits for the Clifford object.
+            num_qubits (int): number of qubits for the Clifford object.
 
         Returns:
-            A table of all the Clifford objects.
+            dict: A table of all the Clifford objects.
 
         Raises:
             ValueError: number of qubits bigger than 2 is
@@ -479,15 +481,16 @@ class CliffordUtils(BasicUtils):
         Pick a random Clifford gate on num_qubits.
 
         Args:
-            num_qubits: dimension of the Clifford.
-            rand_seed: seed for the random number generator
+            num_qubits (int): dimension of the Clifford.
+            rand_seed (int): seed for the random number generator
 
         Returns:
-            A 1 or 2 qubit random Clifford gate.
+            list: A 1 or 2 qubit random Clifford gate.
 
         Raises:
             ValueError: number of qubits bigger than 2 is
                 not supported.
+            TypeError: If rand_seed is not an integer
         """
         if rand_seed is not None:
             if not isinstance(rand_seed, int):
@@ -512,11 +515,11 @@ class CliffordUtils(BasicUtils):
         Find the inverse of a Clifford gate.
 
         Args:
-            num_qubits: dimension of the Clifford object.
-            gatelist: a Clifford gate.
+            num_qubits (int): dimension of the Clifford object.
+            gatelist (list): a Clifford gate.
 
         Returns:
-            An inverse Clifford gate.
+            list: An inverse Clifford gate.
 
         Raises:
             ValueError: number of qubits bigger than 2 is
@@ -541,11 +544,11 @@ class CliffordUtils(BasicUtils):
         Find the Clifford index.
 
         Args:
-            cliff: a Clifford object.
-            num_qubits: dimension of the Clifford object.
+            cliff (Clifford): a Clifford object.
+            num_qubits (int): dimension of the Clifford object.
 
         Returns:
-            An integer which is the Clifford index in the group table.
+            int: An integer which is the Clifford index in the group table.
         """
 
         G_table = self.load_tables(num_qubits)

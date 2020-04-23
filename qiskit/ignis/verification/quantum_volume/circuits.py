@@ -31,17 +31,17 @@ def qv_circuits(qubit_lists=None, ntrials=1,
     are generated
 
     Args:
-        qubit_lists: list of list of qubits to apply qv circuits to. Assume
+        qubit_lists (list): list of list of qubits to apply qv circuits to. Assume
             the list is ordered in increasing number of qubits
-        ntrials: number of random iterations
-        qr: quantum register to act on (if None one is created)
-        cr: classical register to measure to (if None one is created)
+        ntrials (int): number of random iterations
+        qr (QuantumRegister): quantum register to act on (if None one is created)
+        cr (ClassicalRegister): classical register to measure to (if None one is created)
 
     Returns:
-        qv_circs: list of lists of circuits for the qv sequences
-        (separate list for each trial).
-        qv_circs_nomeas: same as above with no measurements for the ideal
-        simulation
+        tuple: A tuple of the type (``circuits``, ``circuits_nomeas``) wheere:
+            ``circuits`` is a list of lists of circuits for the qv sequences
+            (separate list for each trial) and `` circuitss_nomeas`` is the
+            same circuits but with no measurements for the ideal simulation
     """
 
     circuits = [[] for e in range(ntrials)]
@@ -76,12 +76,12 @@ def qv_circuits(qubit_lists=None, ntrials=1,
                 perm = np.random.permutation(depth)
                 # For each pair p in Pj, generate Haar random SU(4)
                 for k in range(int(np.floor(depth/2))):
-                    U = random_unitary(4)
+                    unitary = random_unitary(4)
                     pair = int(perm[2*k]), int(perm[2*k+1])
-                    qc.append(U, [qr[qubit_lists[depthidx][pair[0]]],
-                                  qr[qubit_lists[depthidx][pair[1]]]])
-                    qc2.append(U, [qr2[pair[0]],
-                                   qr2[pair[1]]])
+                    qc.append(unitary, [qr[qubit_lists[depthidx][pair[0]]],
+                                        qr[qubit_lists[depthidx][pair[1]]]])
+                    qc2.append(unitary, [qr2[pair[0]],
+                                         qr2[pair[1]]])
 
             # append an id to all the qubits in the ideal circuits
             # to prevent a truncation error in the statevector

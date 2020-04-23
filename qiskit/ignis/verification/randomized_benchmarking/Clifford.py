@@ -12,12 +12,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# NOTE(mtreinish): Needed to avoid error on logical_xor where pylint thinks it
-# doesn't have a return.
-# pylint: disable=assignment-from-no-return
+# pylint: disable=assignment-from-no-return,invalid-name
 
 """
-    Clifford Operator class
+Clifford Operator class
 """
 
 import numpy as np
@@ -125,9 +123,9 @@ class Clifford:
 
     def stabilizer(self, qubit):
         """Return the qubit stabilizer as a Pauli object."""
-        nq = self._num_qubits
-        z = self._table[nq + qubit, 0:nq]
-        x = self._table[nq + qubit, nq:2 * nq]
+        num_qubits = self._num_qubits
+        z = self._table[num_qubits + qubit, 0:num_qubits]
+        x = self._table[num_qubits + qubit, num_qubits:2 * num_qubits]
         return Pauli(z=z, x=x)
 
     def update_stabilizer(self, qubit, pauli):
@@ -136,9 +134,9 @@ class Clifford:
 
     def destabilizer(self, row):
         """Return the destabilizer as a Pauli object."""
-        nq = self._num_qubits
-        z = self._table[row, 0:nq]
-        x = self._table[row, nq:2 * nq]
+        num_qubits = self._num_qubits
+        z = self._table[row, 0:num_qubits]
+        x = self._table[row, num_qubits:2 * num_qubits]
         return Pauli(z=z, x=x)
 
     def update_destabilizer(self, qubit, pauli):
@@ -219,7 +217,7 @@ class Clifford:
         Returns a unique index for the Clifford.
 
         Returns:
-            A unique index (integer) for the Clifford object.
+            int: A unique index (integer) for the Clifford object.
         """
         mat = self.table
         mat = mat.reshape(mat.size)
@@ -240,8 +238,7 @@ class Clifford:
     # They should mimic the circuit API as much as possible.
     def x(self, qubit):
         """Apply a Pauli "x" gate to a qubit."""
-        iz = qubit
-        self._phases = np.logical_xor(self._phases, self._table[:, iz])
+        self._phases = np.logical_xor(self._phases, self._table[:, qubit])
 
     def y(self, qubit):
         """Apply an Pauli "y" gate to a qubit."""
