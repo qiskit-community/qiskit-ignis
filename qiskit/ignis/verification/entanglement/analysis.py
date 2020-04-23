@@ -1,21 +1,25 @@
 # for Mac python 3.5 compatibility
-# pylint: disable=import-outside-toplevel
+# pylint: disable=import-outside-toplevel,invalid-name
 
 """
 This module provides several miscellaneous tools for
 analysis of the GHZ State (most notably, Fourier Analysis)
 """
 
-
 import numpy as np
-from qiskit import *
+
+try:
+    from matplotlib import pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
 
 
 def ordered_list_generator(counts_dictionary, qn):
-    '''
+    """
     For parity oscillations; just arranges dictionary of counts
     in bitwise binary order to compute dot products more easily
-    '''
+    """
     orderedlist = []
     limit = 2**qn
 
@@ -27,9 +31,9 @@ def ordered_list_generator(counts_dictionary, qn):
 
 
 def composite_pauli_z(qn):
-    '''
+    """
     Generates n tensored pauli z matrix upon input of qubit number
-    '''
+    """
     composite_sigma_z = sigma_z = np.array([[1, 0], [0, -1]])
     for _ in range(1, qn):
         composite_sigma_z = np.kron(composite_sigma_z, sigma_z)
@@ -38,25 +42,25 @@ def composite_pauli_z(qn):
 
 
 def composite_pauli_z_expvalue(counts_dictionary, qn):
-    '''
+    """
     Generates expectation value of n tensored pauli matrix
     upon input of qubit number and composite pauli matrix
-    '''
+    """
     return np.dot(ordered_list_generator(counts_dictionary, qn),
                   np.diag(composite_pauli_z(qn)))
 
 
 class Plotter:
-    '''
+    """
     Various plots of the |000...0> state in MQC and PO experiments
-    '''
+    """
     def __init__(self, label):
         self.label = label
 
     def title_maker(self):
-        '''
+        """
         Make title depending on type of exp.
-        '''
+        """
         if self.label == 'mqc':
             title = 'Raw counts of ground state'
             title_ext = 'Error mitigated vs Raw counts of ground state (MQC)'
@@ -67,11 +71,13 @@ class Plotter:
         return title, title_ext
 
     def sin_plotter(self, x, y, y_m=None):
-        '''
+        """
         Make sin plot of counts in both mqc and po exps.
-        '''
-
-        from matplotlib import pyplot as plt
+        """
+        if not HAS_MATPLOTLIB:
+            raise ImportError("matplotlib needs to be installed and properly "
+                              "configured needed to plot. You can run "
+                              "'pip install matplotlib'")
         title, title_ext = self.title_maker()
         if y_m is None:
             plt.plot(x, y)
@@ -87,10 +93,13 @@ class Plotter:
             plt.ylabel('Normalized Contrast')
 
     def get_fourier_info(self, qn, x, y, y_m, p_dict):
-        '''
+        """
         Get fourier trans. data/plot of both mqc and po exps.
-        '''
-        from matplotlib import pyplot as plt
+        """
+        if not HAS_MATPLOTLIB:
+            raise ImportError("matplotlib needs to be installed and properly "
+                              "configured needed to plot. You can run "
+                              "'pip install matplotlib'")
         norm = len(x)
         n = qn
         if y_m is None:
@@ -154,8 +163,8 @@ class Plotter:
 
 
 def rho_to_fidelity(rho):
-    '''
+    """
     Get fidelity given rho
-    '''
+    """
     return np.abs((rho[0, 0] + rho[-1, -1] + np.abs(rho[0, -1])
                    + np.abs(rho[-1, 0]))/2)

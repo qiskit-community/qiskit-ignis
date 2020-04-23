@@ -12,6 +12,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
 """
 Test of measurement calibration:
 1) Preparation of the basis states, generating the calibration circuits
@@ -56,8 +58,8 @@ class TestMeasCal(unittest.TestCase):
         Generate a calibration circuit
 
         Args:
-            nq: number of qubits
-            pattern_type: a pattern in range(1, 2**nq)
+            nq (int): number of qubits
+            pattern_type (int): a pattern in range(1, 2**nq)
 
         Returns:
             qubits: a list of qubits according to the given pattern
@@ -84,8 +86,8 @@ class TestMeasCal(unittest.TestCase):
         Generate ideal equally distributed results
 
         Args:
-            state_labels: a list of calibration state labels
-            weight: the number of qubits
+            state_labels (list): a list of calibration state labels
+            weight (int): the number of qubits
 
         Returns:
             results_dict: a dictionary of equally distributed results
