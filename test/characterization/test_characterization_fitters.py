@@ -44,10 +44,9 @@ class TestFitters(unittest.TestCase):
                               'test_fitters_zz.pkl']
 
         for picfile in files_with_pickles:
-            fo = open(os.path.join(os.path.dirname(__file__),
-                                   picfile), 'rb')
-            file_content = pickle.load(fo)
-            fo.close()
+            with open(os.path.join(os.path.dirname(__file__),
+                                   picfile), 'rb') as file_obj:
+                file_content = pickle.load(file_obj)
 
             fit_type = file_content['type']
             error_msg_prefix = ' in test of ' + fit_type

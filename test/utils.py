@@ -27,7 +27,7 @@ def qubit_shot(i_mean: float, q_mean: float, i_std: float, q_std: float):
         q_std: standard deviation of Q distribution
 
     Returns:
-        a list of length 2 with I and Q values.
+        list: a list of length 2 with I and Q values.
     """
     return [random.gauss(i_mean, i_std), random.gauss(q_mean, q_std)]
 
@@ -45,7 +45,7 @@ def create_shots(i_mean: float, q_mean: float, i_std: float, q_std: float,
         qubits: a list of qubits.
 
     Returns:
-        a list containing lists representing the IQ data of the qubits.
+        list: a list containing lists representing the IQ data of the qubits.
     """
     data = []
     for _ in range(shots):

@@ -22,7 +22,9 @@ import unittest
 
 import numpy as np
 
-from qiskit.ignis.verification.entanglement.linear import *
+from qiskit.execute import execute
+from qiskit.providers.basicaer import BasicAer
+from qiskit.ignis.verification.entanglement import linear
 
 
 class TestEntanglement(unittest.TestCase):
@@ -33,16 +35,16 @@ class TestEntanglement(unittest.TestCase):
         Test entanglement circuits of Ignis verification -
             GHZ, MQC, parity oscillations
         """
-        qn = 5  # number of qubits
+        num_qubits = 5  # number of qubits
         sim = BasicAer.get_backend('qasm_simulator')
 
         # test simple GHZc
-        circ = get_ghz_simple(qn, measure=True)
+        circ = linear.get_ghz_simple(num_qubits, measure=True)
         counts = execute(circ, sim, shots=1024).result().get_counts(circ)
         self.assertTrue(counts.get('00000', 0) + counts.get('11111', 0) == 1024)
 
         # test MQC
-        circ, delta = get_ghz_mqc_para(qn)
+        circ, delta = linear.get_ghz_mqc_para(num_qubits)
         theta_range = np.linspace(0, 2 * np.pi, 16)
         circuits = [circ.bind_parameters({delta: theta_val})
                     for theta_val in theta_range]
@@ -52,7 +54,7 @@ class TestEntanglement(unittest.TestCase):
                             (counts.get('00000', 0) + counts.get('00001', 0)) == 1024)
 
         # test parity oscillations
-        circ, params = get_ghz_po_para(qn)
+        circ, params = linear.get_ghz_po_para(num_qubits)
         theta_range = np.linspace(0, 2 * np.pi, 16)
         circuits = [circ.bind_parameters({params[0]: theta_val,
                                           params[1]: -theta_val})

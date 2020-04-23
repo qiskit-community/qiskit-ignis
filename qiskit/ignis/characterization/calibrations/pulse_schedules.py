@@ -31,16 +31,18 @@ def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
     Generates schedules for a rabi experiment using a Gaussian pulse
 
     Args:
-        amp_list (list of floats): List of amplitudes for the Gaussian
-        pulse [-1,1]
-        qubits (list of integers): indices of the qubits to perform a rabi
-        pulse_width: width of gaussian (in dt units)
-        pulse_sigma: sigma of gaussian
-        width_sigma_ratio: set sigma to a certain ratio of the width (use if
-        pulse_sigma is None)
-        drives: list of DriveChannel objects
-        inst_map: InstructionScheduleMap object to use
-        meas_map: meas_map to use
+        amp_list (list): A list of floats of amplitudes for the Gaussian
+            pulse [-1,1]
+        qubits (list): A list of integers for indices of the qubits to perform
+            a rabi
+        pulse_width (float): width of gaussian (in dt units)
+        pulse_sigma (float): sigma of gaussian
+        width_sigma_ratio (int): set sigma to a certain ratio of the width
+            (use if pulse_sigma is None)
+        drives (list): list of :class:`~qiskit.pulse.DriveChannel` objects
+        inst_map (qiskit.pulse.InstructionScheduleMap): InstructionScheduleMap
+            object to use
+        meas_map (list): meas_map to use
 
     Returns:
        A list of QuantumSchedules
@@ -95,14 +97,14 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
         beta_list (list of floats): List of relative amplitudes
         for the derivative pulse
         qubits (list of integers): indices of the qubits to perform a rabi
-        pulse_amp: amp of the gaussian (list of length qubits)
-        pulse_width: width of gaussian (in dt units)
-        pulse_sigma: sigma of gaussian
-        width_sigma_ratio: set sigma to a certain ratio of the width (use if
-            pulse_sigma is None)
-        drives: list of DriveChannel objects
-        inst_map: InstructionScheduleMap object to use
-        meas_map: meas_map to use
+        pulse_amp (list): amp of the gaussian (list of length qubits)
+        pulse_width (float): width of gaussian (in dt units)
+        pulse_sigma (float): sigma of gaussian
+        width_sigma_ratio (int): set sigma to a certain ratio of the width (use
+            if pulse_sigma is None)
+        drives (list): list of :class:`~qiskit.pulse.DriveChannel` objects
+        inst_map (InstructionScheduleMap): InstructionScheduleMap object to use
+        meas_map (list): meas_map to use
 
     Returns:
        A list of QuantumSchedules

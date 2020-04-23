@@ -190,7 +190,7 @@ class T2StarFitter(BaseCoherenceFitter):
             Fit guessed parameters
         """
 
-        a = np.max(self.ydata['0'][qind]['mean'])
+        a_val = np.max(self.ydata['0'][qind]['mean'])
         c = np.mean(self.ydata['0'][qind]['mean'])
 
         fft_data = np.fft.fft(self.ydata['0'][qind]['mean'])
@@ -203,7 +203,7 @@ class T2StarFitter(BaseCoherenceFitter):
         main_freq = np.argmax(np.abs(fft_data)[1:])
         f_guess = fft_freqs[1:][main_freq]
 
-        return [a, self.xdata[-1]*10, f_guess,
+        return [a_val, self.xdata[-1]*10, f_guess,
                 np.angle(fft_data[1:][main_freq]), c]
 
     def plot(self, qind, series='0', ax=None, show_plot=False):
