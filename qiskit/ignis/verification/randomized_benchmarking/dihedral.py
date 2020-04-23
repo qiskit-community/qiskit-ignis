@@ -859,7 +859,7 @@ def random_CNOTDihedral(num_qubits, seed=None):
     # Random phase polynomial weights
     weight_1 = np.random.randint(8, size=num_qubits)
     elem.poly.weight_1 = weight_1
-    weight_2 = 2 * np.random.randint(3, size=int(num_qubits * (num_qubits - 1) / 2))
+    weight_2 = 2 * np.random.randint(4, size=int(num_qubits * (num_qubits - 1) / 2))
     elem.poly.weight_2 = weight_2
     weight_3 = 4 * np.random.randint(2, size=int(num_qubits * (num_qubits - 1) *
                                                  (num_qubits - 2) / 6))
