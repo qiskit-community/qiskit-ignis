@@ -593,7 +593,7 @@ def append_circuit(elem, circuit, qargs=None):
     return elem
 
 
-def decompose_CNOTDihedral(elem):
+def decompose_cnotdihedral(elem):
     """Decompose a CNOTDihedral element into a QuantumCircuit.
 
     Args:
@@ -618,13 +618,13 @@ def decompose_CNOTDihedral(elem):
     if elem.num_qubits == 1:
         assert elem.poly.weight_0 == 0
         assert elem.linear == [[1]]
-        l0 = elem.poly.weight_1[0]
-        k0 = elem.shift[0]
-        if l0 > 0:
-            circuit.u1(l0 * np.pi / 4, 0)
-        if k0 == 1:
+        tpow0 = elem.poly.weight_1[0]
+        xpow0 = elem.shift[0]
+        if tpow0 > 0:
+            circuit.u1(tpow0 * np.pi / 4, 0)
+        if xpow0 == 1:
             circuit.x(0)
-        if (l0 == 0 and k0 == 0):
+        if (tpow0 == 0 and xpow0 == 0):
             circuit.id(0)
         return circuit
 
@@ -637,35 +637,35 @@ def decompose_CNOTDihedral(elem):
 
     # CS subgroup
     if linear == [[1, 0], [0, 1]]:
-        [k0, k1] = shift
+        [xpow0, xpow1] = shift
 
         # Dihedral class
         if weight_2 == [0]:
-            [l0, l1] = weight_1
-            if l0 > 0:
-                circuit.u1(l0 * np.pi / 4, 0)
-            if k0 == 1:
+            [tpow0, tpow1] = weight_1
+            if tpow0 > 0:
+                circuit.u1(tpow0 * np.pi / 4, 0)
+            if xpow0 == 1:
                 circuit.x(0)
-            if l1 > 0:
-                circuit.u1(l1 * np.pi / 4, 1)
-            if k1 == 1:
+            if tpow1 > 0:
+                circuit.u1(tpow1 * np.pi / 4, 1)
+            if xpow1 == 1:
                 circuit.x(1)
-            if (l0 == 0 and l1 == 0 and k0 == 0 and k1 == 0):
+            if (tpow0 == 0 and tpow1 == 0 and xpow0 == 0 and xpow1 == 0):
                 circuit.id(0)
                 circuit.id(1)
 
         # CS-like class
-        if ((weight_2 == [2] and k0 == k1) or
-                (weight_2 == [6] and k0 != k1)):
-            l0 = (weight_1[0] - 2 * k1 - 4 * k0 * k1) % 8
-            l1 = (weight_1[1] - 2 * k0 - 4 * k0 * k1) % 8
-            if l0 > 0:
-                circuit.u1(l0 * np.pi / 4, 0)
-            if k0 == 1:
+        if ((weight_2 == [2] and xpow0 == xpow1) or
+                (weight_2 == [6] and xpow0 != xpow1)):
+            tpow0 = (weight_1[0] - 2 * xpow1 - 4 * xpow0 * xpow1) % 8
+            tpow1 = (weight_1[1] - 2 * xpow0 - 4 * xpow0 * xpow1) % 8
+            if tpow0 > 0:
+                circuit.u1(tpow0 * np.pi / 4, 0)
+            if xpow0 == 1:
                 circuit.x(0)
-            if l1 > 0:
-                circuit.u1(l1 * np.pi / 4, 1)
-            if k1 == 1:
+            if tpow1 > 0:
+                circuit.u1(tpow1 * np.pi / 4, 1)
+            if xpow1 == 1:
                 circuit.x(1)
             # CS gate is implemented using 2 CX gates
             circuit.u1(np.pi / 4, 0)
@@ -675,17 +675,17 @@ def decompose_CNOTDihedral(elem):
             circuit.cx(0, 1)
 
         # CSdg-like class
-        if ((weight_2 == [6] and k0 == k1) or
-                (weight_2 == [2] and k0 != k1)):
-            l0 = (weight_1[0] - 6 * k1 - 4 * k0 * k1) % 8
-            l1 = (weight_1[1] - 6 * k0 - 4 * k0 * k1) % 8
-            if l0 > 0:
-                circuit.u1(l0 * np.pi / 4, 0)
-            if k0 == 1:
+        if ((weight_2 == [6] and xpow0 == xpow1) or
+                (weight_2 == [2] and xpow0 != xpow1)):
+            tpow0 = (weight_1[0] - 6 * xpow1 - 4 * xpow0 * xpow1) % 8
+            tpow1 = (weight_1[1] - 6 * xpow0 - 4 * xpow0 * xpow1) % 8
+            if tpow0 > 0:
+                circuit.u1(tpow0 * np.pi / 4, 0)
+            if xpow0 == 1:
                 circuit.x(0)
-            if l1 > 0:
-                circuit.u1(l1 * np.pi / 4, 1)
-            if k1 == 1:
+            if tpow1 > 0:
+                circuit.u1(tpow1 * np.pi / 4, 1)
+            if xpow1 == 1:
                 circuit.x(1)
             # CSdg gate is implemented using 2 CX gates
             circuit.u1(7 * np.pi / 4, 0)
@@ -696,15 +696,15 @@ def decompose_CNOTDihedral(elem):
 
         # CZ-like class
         if weight_2 == [4]:
-            l0 = (weight_1[0] - 4 * k1) % 8
-            l1 = (weight_1[1] - 4 * k0) % 8
-            if l0 > 0:
-                circuit.u1(l0 * np.pi / 4, 0)
-            if k0 == 1:
+            tpow0 = (weight_1[0] - 4 * xpow1) % 8
+            tpow1 = (weight_1[1] - 4 * xpow0) % 8
+            if tpow0 > 0:
+                circuit.u1(tpow0 * np.pi / 4, 0)
+            if xpow0 == 1:
                 circuit.x(0)
-            if l1 > 0:
-                circuit.u1(l1 * np.pi / 4, 1)
-            if k1 == 1:
+            if tpow1 > 0:
+                circuit.u1(tpow1 * np.pi / 4, 1)
+            if xpow1 == 1:
                 circuit.x(1)
             # CZ gate is implemented using 2 CX gates
             circuit.u1(7 * np.pi / 4, 1)
@@ -717,23 +717,23 @@ def decompose_CNOTDihedral(elem):
 
     # CX01-like class
     if linear == [[1, 0], [1, 1]]:
-        k0 = shift[0]
-        k1 = (shift[1] + k0) % 2
-        if k0 == k1:
+        xpow0 = shift[0]
+        xpow1 = (shift[1] + xpow0) % 2
+        if xpow0 == xpow1:
             m = ((8 - weight_2[0]) / 2) % 4
-            l0 = (weight_1[0] - m) % 8
-            l1 = (weight_1[1] - m) % 8
+            tpow0 = (weight_1[0] - m) % 8
+            tpow1 = (weight_1[1] - m) % 8
         else:
             m = (weight_2[0] / 2) % 4
-            l0 = (weight_1[0] + m) % 8
-            l1 = (weight_1[1] + m) % 8
-        if l0 > 0:
-            circuit.u1(l0 * np.pi / 4, 0)
-        if k0 == 1:
+            tpow0 = (weight_1[0] + m) % 8
+            tpow1 = (weight_1[1] + m) % 8
+        if tpow0 > 0:
+            circuit.u1(tpow0 * np.pi / 4, 0)
+        if xpow0 == 1:
             circuit.x(0)
-        if l1 > 0:
-            circuit.u1(l1 * np.pi / 4, 1)
-        if k1 == 1:
+        if tpow1 > 0:
+            circuit.u1(tpow1 * np.pi / 4, 1)
+        if xpow1 == 1:
             circuit.x(1)
         circuit.cx(0, 1)
         if m > 0:
@@ -741,23 +741,23 @@ def decompose_CNOTDihedral(elem):
 
     # CX10-like class
     if linear == [[1, 1], [0, 1]]:
-        k1 = shift[1]
-        k0 = (shift[0] + k1) % 2
-        if k0 == k1:
+        xpow1 = shift[1]
+        xpow0 = (shift[0] + xpow1) % 2
+        if xpow0 == xpow1:
             m = ((8 - weight_2[0]) / 2) % 4
-            l0 = (weight_1[0] - m) % 8
-            l1 = (weight_1[1] - m) % 8
+            tpow0 = (weight_1[0] - m) % 8
+            tpow1 = (weight_1[1] - m) % 8
         else:
             m = (weight_2[0] / 2) % 4
-            l0 = (weight_1[0] + m) % 8
-            l1 = (weight_1[1] + m) % 8
-        if l0 > 0:
-            circuit.u1(l0 * np.pi / 4, 0)
-        if k0 == 1:
+            tpow0 = (weight_1[0] + m) % 8
+            tpow1 = (weight_1[1] + m) % 8
+        if tpow0 > 0:
+            circuit.u1(tpow0 * np.pi / 4, 0)
+        if xpow0 == 1:
             circuit.x(0)
-        if l1 > 0:
-            circuit.u1(l1 * np.pi / 4, 1)
-        if k1 == 1:
+        if tpow1 > 0:
+            circuit.u1(tpow1 * np.pi / 4, 1)
+        if xpow1 == 1:
             circuit.x(1)
         circuit.cx(1, 0)
         if m > 0:
@@ -765,23 +765,23 @@ def decompose_CNOTDihedral(elem):
 
     # CX01*CX10-like class
     if linear == [[0, 1], [1, 1]]:
-        k1 = shift[0]
-        k0 = (shift[1] + k1) % 2
-        if k0 == k1:
+        xpow1 = shift[0]
+        xpow0 = (shift[1] + xpow1) % 2
+        if xpow0 == xpow1:
             m = ((8 - weight_2[0]) / 2) % 4
-            l0 = (weight_1[0] - m) % 8
-            l1 = (weight_1[1] - m) % 8
+            tpow0 = (weight_1[0] - m) % 8
+            tpow1 = (weight_1[1] - m) % 8
         else:
             m = (weight_2[0] / 2) % 4
-            l0 = (weight_1[0] + m) % 8
-            l1 = (weight_1[1] + m) % 8
-        if l0 > 0:
-            circuit.u1(l0 * np.pi / 4, 0)
-        if k0 == 1:
+            tpow0 = (weight_1[0] + m) % 8
+            tpow1 = (weight_1[1] + m) % 8
+        if tpow0 > 0:
+            circuit.u1(tpow0 * np.pi / 4, 0)
+        if xpow0 == 1:
             circuit.x(0)
-        if l1 > 0:
-            circuit.u1(l1 * np.pi / 4, 1)
-        if k1 == 1:
+        if tpow1 > 0:
+            circuit.u1(tpow1 * np.pi / 4, 1)
+        if xpow1 == 1:
             circuit.x(1)
         circuit.cx(0, 1)
         circuit.cx(1, 0)
@@ -790,23 +790,23 @@ def decompose_CNOTDihedral(elem):
 
     # CX10*CX01-like class
     if linear == [[1, 1], [1, 0]]:
-        k0 = shift[1]
-        k1 = (shift[0] + k0) % 2
-        if k0 == k1:
+        xpow0 = shift[1]
+        xpow1 = (shift[0] + xpow0) % 2
+        if xpow0 == xpow1:
             m = ((8 - weight_2[0]) / 2) % 4
-            l0 = (weight_1[0] - m) % 8
-            l1 = (weight_1[1] - m) % 8
+            tpow0 = (weight_1[0] - m) % 8
+            tpow1 = (weight_1[1] - m) % 8
         else:
             m = (weight_2[0] / 2) % 4
-            l0 = (weight_1[0] + m) % 8
-            l1 = (weight_1[1] + m) % 8
-        if l0 > 0:
-            circuit.u1(l0 * np.pi / 4, 0)
-        if k0 == 1:
+            tpow0 = (weight_1[0] + m) % 8
+            tpow1 = (weight_1[1] + m) % 8
+        if tpow0 > 0:
+            circuit.u1(tpow0 * np.pi / 4, 0)
+        if xpow0 == 1:
             circuit.x(0)
-        if l1 > 0:
-            circuit.u1(l1 * np.pi / 4, 1)
-        if k1 == 1:
+        if tpow1 > 0:
+            circuit.u1(tpow1 * np.pi / 4, 1)
+        if xpow1 == 1:
             circuit.x(1)
         circuit.cx(1, 0)
         circuit.cx(0, 1)
@@ -815,23 +815,23 @@ def decompose_CNOTDihedral(elem):
 
     # CX01*CX10*CX01-like class
     if linear == [[0, 1], [1, 0]]:
-        k0 = shift[1]
-        k1 = shift[0]
-        if k0 == k1:
+        xpow0 = shift[1]
+        xpow1 = shift[0]
+        if xpow0 == xpow1:
             m = ((8 - weight_2[0]) / 2) % 4
-            l0 = (weight_1[0] - m) % 8
-            l1 = (weight_1[1] - m) % 8
+            tpow0 = (weight_1[0] - m) % 8
+            tpow1 = (weight_1[1] - m) % 8
         else:
             m = (weight_2[0] / 2) % 4
-            l0 = (weight_1[0] + m) % 8
-            l1 = (weight_1[1] + m) % 8
-        if l0 > 0:
-            circuit.u1(l0 * np.pi / 4, 0)
-        if k0 == 1:
+            tpow0 = (weight_1[0] + m) % 8
+            tpow1 = (weight_1[1] + m) % 8
+        if tpow0 > 0:
+            circuit.u1(tpow0 * np.pi / 4, 0)
+        if xpow0 == 1:
             circuit.x(0)
-        if l1 > 0:
-            circuit.u1(l1 * np.pi / 4, 1)
-        if k1 == 1:
+        if tpow1 > 0:
+            circuit.u1(tpow1 * np.pi / 4, 1)
+        if xpow1 == 1:
             circuit.x(1)
         circuit.cx(0, 1)
         circuit.cx(1, 0)
@@ -842,7 +842,7 @@ def decompose_CNOTDihedral(elem):
     return circuit
 
 
-def random_CNOTDihedral(num_qubits, seed=None):
+def random_cnotdihedral(num_qubits, seed=None):
     """Return a random CNOTDihedral element.
 
     Args:

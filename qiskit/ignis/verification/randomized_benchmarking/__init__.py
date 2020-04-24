@@ -22,7 +22,7 @@ from .Clifford import Clifford
 from .basic_utils import BasicUtils
 from .clifford_utils import CliffordUtils
 from .dihedral import CNOTDihedral, append_circuit, \
-    decompose_CNOTDihedral, random_CNOTDihedral
+    decompose_cnotdihedral, random_cnotdihedral
 from .dihedral_utils import DihedralUtils
 from .circuits import randomized_benchmarking_seq
 from .fitters import (RBFitter, InterleavedRBFitter, PurityRBFitter,
