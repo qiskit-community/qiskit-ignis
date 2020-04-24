@@ -45,24 +45,23 @@ class TestCNOTDihedral(unittest.TestCase):
         """
             test: generating the tables for 1 and 2 qubits
         """
-        for nq in range(1, 1+self.max_nq):
+        for qubit_num in range(1, 1 + self.max_nq):
             print('test: generating the cnot-dihedral group table - %d qubit'
-                  % nq)
-            test_dihedral_tables = self.dutils.cnot_dihedral_tables(nq)
+                  % qubit_num)
+            test_dihedral_tables = self.dutils.cnot_dihedral_tables(qubit_num)
             test_dihedral_tables_items = dict(sorted(test_dihedral_tables.
                                                      items()))
             len_table = len(test_dihedral_tables_items)
             print("length:", len(test_dihedral_tables_items))
 
-            self.assertEqual(len_table, self.table_size[nq],
+            self.assertEqual(len_table, self.table_size[qubit_num],
                              'Error: table on %d qubit does not contain '
-
-                             'the expected number of elements' % nq)
+                             'the expected number of elements' % qubit_num)
 
             # Test of CNOT-Dihedral circuit decomposition
             for _, elem in test_dihedral_tables.items():
                 test_circ = decompose_CNOTDihedral(elem[0])
-                test_elem = CNOTDihedral(nq)
+                test_elem = CNOTDihedral(qubit_num)
                 append_circuit(test_elem, test_circ)
                 self.assertEqual(elem[0], test_elem,
                                  'Error: decomposed circuit is not equal '

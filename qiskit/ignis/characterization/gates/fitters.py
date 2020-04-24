@@ -53,11 +53,10 @@ class AmpCalFitter(BaseGateFitter):
         Guess fit parameters for the amp cal
 
         Args:
-            qind: qubit index to guess fit parameters for
+            qind (int): qubit index to guess fit parameters for
 
         Returns:
-            List of fit guess parameters
-            [thetaerr, offset]
+            list: List of fit guess parameters [thetaerr, offset]
         """
 
         c = self.ydata['0'][qind]['mean'][0]
@@ -73,10 +72,10 @@ class AmpCalFitter(BaseGateFitter):
         Return the gate angle error
 
         Args:
-            qind: qubit index to return (-1 return all)
+            qind (int): qubit index to return (-1 return all)
 
         Returns:
-            a list of errors
+            list: a list of errors
         """
 
         fitparam = self._get_param(0, qind, series='0', err=False)
@@ -122,10 +121,10 @@ class AngleCalFitter(BaseGateFitter):
         Return the gate angle error
 
         Args:
-            qind: qubit index to return (-1 return all)
+            qind (int): qubit index to return (-1 return all)
 
         Returns:
-            a list of errors
+            list: a list of errors
         """
 
         fitparam = self._get_param(0, qind, series='0', err=False)
@@ -174,10 +173,10 @@ class AmpCalCXFitter(BaseGateFitter):
         Return the gate angle error
 
         Args:
-            qind: qubit index to return (-1 return all)
+            qind (int): qubit index to return (-1 return all)
 
         Returns:
-            a list of errors
+            list: a list of errors
         """
 
         fitparam = self._get_param(0, qind, series='0', err=False)
@@ -224,10 +223,10 @@ class AngleCalCXFitter(BaseGateFitter):
         Return the gate angle error
 
         Args:
-            qind: qubit index to return (-1 return all)
+            qind (int): qubit index to return (-1 return all)
 
         Returns:
-            a list of errors
+            list: a list of errors
         """
 
         fitparam = self._get_param(0, qind, series='0', err=False)

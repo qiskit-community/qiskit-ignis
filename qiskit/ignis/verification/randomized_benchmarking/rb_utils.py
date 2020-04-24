@@ -13,7 +13,7 @@
 # that they have been altered from the originals.
 
 # TODO(mtreinish): Remove these disables when implementation is finished
-# pylint: disable=unused-argument,unnecessary-pass
+# pylint: disable=unused-argument,unnecessary-pass,invalid-name
 
 """
 RB Helper functions
@@ -32,12 +32,12 @@ def count_gates(qobj, basis, qubits):
     Take a compiled qobj and output the number of gates in each circuit.
 
     Args:
-        qobj: compiled qobj.
-        basis: gates basis for the qobj.
-        qubits: qubits to count over.
+        qobj (QasmQObj): compiled qobj.
+        basis (list): gates basis for the qobj.
+        qubits (list): qubits to count over.
 
     Returns:
-        n x l x m list of number of gates.
+        list: n x l x m list of number of gates.
 
             * n: number of circuits,
             * l: number of qubits,
@@ -170,14 +170,17 @@ def coherence_limit(nQ=2, T1_list=None, T2_list=None,
     The error per gate (1-average_gate_fidelity) given by the T1,T2 limit.
 
     Args:
-        nQ: number of qubits (1 and 2 supported).
-        T1_list: list of T1's (Q1,...,Qn).
-        T2_list: list of T2's (as measured, not Tphi).
+        nQ (int): number of qubits (1 and 2 supported).
+        T1_list (list): list of T1's (Q1,...,Qn).
+        T2_list (list): list of T2's (as measured, not Tphi).
             If not given assume T2=2*T1 .
-        gatelen: length of the gate.
+        gatelen (float): length of the gate.
 
     Returns:
-        coherence limited error per gate.
+        float: coherence limited error per gate.
+
+    Raises:
+        ValueError: if there are invalid inputs
     """
 
     T1 = np.array(T1_list)
@@ -238,7 +241,7 @@ def twoQ_clifford_error(ngates: Dict[int, Dict[str, float]],
         of ``u1``, ``u2``, ``u3`` and ``cx``.
 
     Returns:
-        Error per 2Q Clifford.
+        float: Error per 2Q Clifford.
 
     Raises:
         QiskitError: when number of qubit contained in ``ngates`` is not 2.
