@@ -49,6 +49,8 @@ from qiskit.ignis.characterization.calibrations import (rabi_schedules,
 
 from qiskit.test.mock import FakeOpenPulse2Q
 
+from test.characterization.generate_data import t1_circuit_execution
+
 # Fix seed for simulations
 SEED = 9000
 
@@ -136,41 +138,16 @@ class TestT1(unittest.TestCase):
 
     def test_t1(self):
         """
-        Run the simulator with thermal relaxatoin noise.
+        Run the simulator with thermal relaxation noise.
         Then verify that the calculated T1 matches the t1
         parameter.
         """
 
-        # 15 numbers ranging from 1 to 200, linearly spaced
-        num_of_gates = (np.linspace(1, 200, 15)).astype(int)
-        gate_time = 0.11
-        qubits = [0]
-
-        circs, xdata = t1_circuits(num_of_gates, gate_time, qubits)
-
-        expected_t1 = 10
-        error = thermal_relaxation_error(expected_t1, 2*expected_t1, gate_time)
-        noise_model = NoiseModel()
-        noise_model.add_all_qubit_quantum_error(error, 'id')
-        # TODO: Include SPAM errors
-
-        backend = qiskit.Aer.get_backend('qasm_simulator')
-        shots = 100
-        backend_result = qiskit.execute(
-            circs, backend,
-            shots=shots,
-            seed_simulator=SEED,
-            backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model,
-            optimization_level=0).result()
-
-        initial_t1 = expected_t1
-        initial_a = 1
-        initial_c = 0
-
+        backend_result, xdata, qubits, t1 = t1_circuit_execution()
+        
         T1Fitter(backend_result, xdata, qubits,
-                 fit_p0=[initial_a, initial_t1, initial_c],
-                 fit_bounds=([0, 0, -1], [2, expected_t1*1.2, 1]))
+                 fit_p0=[1, t1, 0],
+                 fit_bounds=([0, 0, -1], [2, t1*1.2, 1]))
 
 
 class TestT2(unittest.TestCase):
