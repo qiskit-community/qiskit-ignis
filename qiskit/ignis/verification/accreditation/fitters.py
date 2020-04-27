@@ -27,18 +27,18 @@ from .qotp import QOTPCorrectCounts
 
 
 class AccreditationFitter:
-    '''
+    """
     Class for fitters for accreditation
 
     Implementation follows the methods from
     Samuele Ferracin, Theodoros Kapourniotis and Animesh Datta
     New Journal of Physics, Volume 21, November 2019
     https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
-    '''
+    """
 
     bound = 1
     confidence = 1
-    N_acc = 0
+    n_acc = 0
     num_runs = 0
     flag = 'accepted'
     outputs = []
@@ -90,7 +90,7 @@ class AccreditationFitter:
             else:
                 output_target = count
         if self.flag == 'accepted':
-            self.N_acc += 1
+            self.n_acc += 1
             self.outputs.append(output_target)
 
     def bound_variation_distance(self, theta):
@@ -101,12 +101,12 @@ class AccreditationFitter:
         Args:
             theta (float): number between 0 and 1
         """
-        if self.N_acc == 0:
+        if self.n_acc == 0:
             QiskitError("ERROR: Variation distance requires"
                         "at least one accepted run")
-        if self.N_acc/self.num_runs > theta:
+        if self.n_acc/self.num_runs > theta:
             self.bound = self.g_num*1.7/(self.num_traps+1)
-            self.bound = self.bound/(self.N_acc/self.num_runs-theta)
+            self.bound = self.bound/(self.n_acc/self.num_runs-theta)
             self.bound = self.bound+1-self.g_num
             self.confidence = 1-2*np.exp(-2*theta*self.num_runs*self.num_runs)
         if self.bound > 1:

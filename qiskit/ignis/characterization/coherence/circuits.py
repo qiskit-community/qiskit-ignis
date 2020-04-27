@@ -145,6 +145,8 @@ def t2_circuits(num_of_gates: Union[List[int], np.array],
     Returns:
         *   Generated circuits
         *   Delay times, i.e., `gate_time` multiplied by the numbers in `num_of_gates`
+    Raises:
+        ValueError: If n_echos is less than 1
     """
 
     if n_echos < 1:
