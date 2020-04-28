@@ -35,7 +35,8 @@ class TestFitters(unittest.TestCase):
         for i in range(len(expected_data)):
             for key in data_keys:
                 if expected_data[i][key] is None:
-                    self.assertIsNone(data[i][key], 'Incorrect ' + str(key) + ' in test no. ' + str(tst_index))
+                    self.assertIsNone(data[i][key], 'Incorrect ' + str(key) + ' in test no. '
+                                      + str(tst_index))
                 else:
                     # check if the zip function is needed
                     if isinstance(data[i][key], np.ndarray):
@@ -45,7 +46,6 @@ class TestFitters(unittest.TestCase):
                     else:
                         self.assertTrue(np.isclose(data[i][key], expected_data[i][key]),
                                         'Incorrect ' + str(key) + ' in test no. ' + str(tst_index))
-
 
     def test_fitters(self):
         """ Test the fitters """
@@ -152,7 +152,6 @@ class TestFitters(unittest.TestCase):
             self.compare_results_and_excpected(ydata, tst_expected_results['ydata'], tst_index)
             self.compare_results_and_excpected(fit, tst_expected_results['fit'], tst_index)
 
-
     def test_interleaved_fitters(self):
         """ Test the interleaved fitters """
 
@@ -235,22 +234,27 @@ class TestFitters(unittest.TestCase):
             ]
 
         for tst_index, tst_expected_results in enumerate(tests_expected_results):
-            original_result_list = load_results_from_json(tests_settings[tst_index]['original_results_file'])
-            interleaved_result_list = load_results_from_json(tests_settings[tst_index]['interleaved_results_file'])
-
+            original_result_list = load_results_from_json(
+                tests_settings[tst_index]['original_results_file'])
+            interleaved_result_list = load_results_from_json(
+                tests_settings[tst_index]['interleaved_results_file'])
 
             # InterleavedRBFitter class
             joint_rb_fit = InterleavedRBFitter(
                 original_result_list, interleaved_result_list,
-                tests_settings[tst_index]['rb_opts']['xdata'], tests_settings[tst_index]['rb_opts']['rb_pattern'])
+                tests_settings[tst_index]['rb_opts']['xdata'],
+                tests_settings[tst_index]['rb_opts']['rb_pattern'])
 
             joint_fit = joint_rb_fit.fit_int
             ydata_original = joint_rb_fit.ydata[0]
             ydata_interleaved = joint_rb_fit.ydata[1]
 
-            self.compare_results_and_excpected(ydata_original, tst_expected_results['original_ydata'], tst_index)
-            self.compare_results_and_excpected(ydata_interleaved, tst_expected_results['interleaved_ydata'], tst_index)
-            self.compare_results_and_excpected(joint_fit, tst_expected_results['joint_fit'], tst_index)
+            self.compare_results_and_excpected(ydata_original,
+                                            tst_expected_results['original_ydata'], tst_index)
+            self.compare_results_and_excpected(ydata_interleaved,
+                                            tst_expected_results['interleaved_ydata'], tst_index)
+            self.compare_results_and_excpected(joint_fit,
+                                            tst_expected_results['joint_fit'], tst_index)
 
     def test_purity_fitters(self):
         """ Test the purity fitters """
@@ -462,21 +466,27 @@ class TestFitters(unittest.TestCase):
         ]
 
         for tst_index, tst_expected_results in enumerate(tests_expected_results):
-            cnotdihedral_X_result_list = load_results_from_json(tests_settings[tst_index]['cnotdihedral_X_results_file'])
-            cnotdihedral_Z_result_list = load_results_from_json(tests_settings[tst_index]['cnotdihedral_Z_results_file'])
+            cnotdihedral_X_result_list = load_results_from_json(
+                tests_settings[tst_index]['cnotdihedral_X_results_file'])
+            cnotdihedral_Z_result_list = load_results_from_json(
+                tests_settings[tst_index]['cnotdihedral_Z_results_file'])
 
             # CNOTDihedralRBFitter class
             joint_rb_fit = CNOTDihedralRBFitter(
                 cnotdihedral_Z_result_list, cnotdihedral_X_result_list,
-                tests_settings[tst_index]['rb_opts']['xdata'], tests_settings[tst_index]['rb_opts']['rb_pattern'])
+                tests_settings[tst_index]['rb_opts']['xdata'],
+                tests_settings[tst_index]['rb_opts']['rb_pattern'])
 
             joint_fit = joint_rb_fit.fit_cnotdihedral
             ydata_Z = joint_rb_fit.ydata[0]
             ydata_X = joint_rb_fit.ydata[1]
 
-            self.compare_results_and_excpected(ydata_Z, tst_expected_results['cnotdihedral_Z_ydata'], tst_index)
-            self.compare_results_and_excpected(ydata_X, tst_expected_results['cnotdihedral_X_ydata'], tst_index)
-            self.compare_results_and_excpected(joint_fit, tst_expected_results['joint_fit'], tst_index)
+            self.compare_results_and_excpected(ydata_Z,
+                                        tst_expected_results['cnotdihedral_Z_ydata'], tst_index)
+            self.compare_results_and_excpected(ydata_X,
+                                        tst_expected_results['cnotdihedral_X_ydata'], tst_index)
+            self.compare_results_and_excpected(joint_fit,
+                                        tst_expected_results['joint_fit'], tst_index)
 
 
 if __name__ == '__main__':

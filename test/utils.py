@@ -18,6 +18,7 @@ from typing import List
 import json
 from qiskit.result.result import Result
 
+
 def qubit_shot(i_mean: float, q_mean: float, i_std: float, q_std: float):
     """Creates a random IQ point using a Gaussian distribution.
 
@@ -57,6 +58,7 @@ def create_shots(i_mean: float, q_mean: float, i_std: float, q_std: float,
 
     return data
 
+
 def save_results_as_json(results_list: List[Result], json_path: str):
     results_json = [result.to_dict() for result in results_list]
     with open(json_path, "w") as results_file:
@@ -64,6 +66,6 @@ def save_results_as_json(results_list: List[Result], json_path: str):
 
 
 def load_results_from_json(json_path: str):
-    with open(json_path, "rb") as results_file:
+    with open(json_path, "r") as results_file:
         results_json = json.load(results_file)
     return [Result.from_dict(result) for result in results_json]
