@@ -19,6 +19,7 @@ Test the fitters
 import os
 import pickle
 import unittest
+from test.utils import *
 
 import numpy as np
 
@@ -32,19 +33,32 @@ class TestFitters(unittest.TestCase):
     def test_fitters(self):
         """ Test the fitters """
 
-        # Use pickled results files
+        # Use json results files
+        tests_settings = [
+            {
+                'rb_opts': {
+                    'xdata': np.array([[1, 21, 41, 61, 81, 101, 121, 141,
+                                        161, 181],
+                                       [2, 42, 82, 122, 162, 202, 242, 282,
+                                        322, 362]]),
+                    'rb_pattern': [[0, 1], [2]],
+                    'shots': 1024},
+                'results_file': os.path.join(os.path.dirname(__file__),
+                                             'test_fitter_results_1.json')
+            },
+            {
+                'rb_opts': {
+                    'xdata': np.array([[1, 21, 41, 61, 81, 101, 121, 141, 161,
+                                        181]]),
+                    'rb_pattern': [[0]],
+                    'shots': 1024},
+                'results_file': os.path.join(os.path.dirname(__file__),
+                                             'test_fitter_results_2.json')
+            }
 
-        tests = [{
-            'rb_opts': {
-                'xdata': np.array([[1, 21, 41, 61, 81, 101, 121, 141,
-                                    161, 181],
-                                   [2, 42, 82, 122, 162, 202, 242, 282,
-                                    322, 362]]),
-                'rb_pattern': [[0, 1], [2]],
-                'shots': 1024},
-            'results_file': os.path.join(os.path.dirname(__file__),
-                                         'test_fitter_results_1.pkl'),
-            'expected': {
+        ]
+        tests_expected_results = [
+            {
                 'ydata': [{
                     'mean': np.array([0.96367187, 0.73457031,
                                       0.58066406, 0.4828125,
@@ -55,21 +69,21 @@ class TestFitters(unittest.TestCase):
                                      0.01746491, 0.02015981, 0.02184184,
                                      0.02340167, 0.02360293, 0.00874773,
                                      0.01308156])}, {
-                                         'mean': np.array([0.98925781,
-                                                           0.87734375, 0.78125,
-                                                           0.73066406,
-                                                           0.68496094,
-                                                           0.64296875,
-                                                           0.59238281,
-                                                           0.57421875,
-                                                           0.56074219,
-                                                           0.54980469]),
-                                         'std': np.array(
-                                             [0.00276214, 0.01602991,
-                                              0.00768946, 0.01413015,
-                                              0.00820777, 0.01441348,
-                                              0.01272682, 0.01031649,
-                                              0.02103036, 0.01224408])}],
+                    'mean': np.array([0.98925781,
+                                      0.87734375, 0.78125,
+                                      0.73066406,
+                                      0.68496094,
+                                      0.64296875,
+                                      0.59238281,
+                                      0.57421875,
+                                      0.56074219,
+                                      0.54980469]),
+                    'std': np.array(
+                        [0.00276214, 0.01602991,
+                         0.00768946, 0.01413015,
+                         0.00820777, 0.01441348,
+                         0.01272682, 0.01031649,
+                         0.02103036, 0.01224408])}],
                 'fit': [{
                     'params': np.array([0.71936804, 0.98062119,
                                         0.25803749]),
@@ -77,47 +91,39 @@ class TestFitters(unittest.TestCase):
                                             0.00556488]),
                     'epc': 0.014534104912075935,
                     'epc_err': 0.0003572769714798349},
-                        {'params': np.array([0.49507094, 0.99354093,
-                                             0.50027262]),
-                         'params_err': np.array([0.0146191, 0.0004157,
-                                                 0.01487439]),
-                         'epc': 0.0032295343343508587,
-                         'epc_err': 0.00020920242080699664}]
-            }}, {
-                'rb_opts': {
-                    'xdata': np.array([[1, 21, 41, 61, 81, 101, 121, 141, 161,
-                                        181]]),
-                    'rb_pattern': [[0]],
-                    'shots': 1024},
-                'results_file': os.path.join(os.path.dirname(__file__),
-                                             'test_fitter_results_2.pkl'),
-                'expected': {
-                    'ydata': [{'mean': np.array([0.99199219, 0.93867188,
-                                                 0.87871094, 0.83945313,
-                                                 0.79335937, 0.74785156,
-                                                 0.73613281, 0.69414062,
-                                                 0.67460937, 0.65664062]),
-                               'std': np.array([0.00567416, 0.00791919,
-                                                0.01523437, 0.01462368,
-                                                0.01189002, 0.01445049,
-                                                0.00292317, 0.00317345,
-                                                0.00406888,
-                                                0.01504794])}],
-                    'fit': [{'params': np.array([0.59599995, 0.99518211,
-                                                 0.39866989]),
-                             'params_err': np.array([0.08843152, 0.00107311,
-                                                     0.09074325]),
-                             'epc': 0.0024089464034862673,
-                             'epc_err': 0.0005391508310961153}]}}]
+                    {'params': np.array([0.49507094, 0.99354093,
+                                         0.50027262]),
+                     'params_err': np.array([0.0146191, 0.0004157,
+                                             0.01487439]),
+                     'epc': 0.0032295343343508587,
+                     'epc_err': 0.00020920242080699664}]
+            },
+            {
+                'ydata': [{'mean': np.array([0.99199219, 0.93867188,
+                                             0.87871094, 0.83945313,
+                                             0.79335937, 0.74785156,
+                                             0.73613281, 0.69414062,
+                                             0.67460937, 0.65664062]),
+                           'std': np.array([0.00567416, 0.00791919,
+                                            0.01523437, 0.01462368,
+                                            0.01189002, 0.01445049,
+                                            0.00292317, 0.00317345,
+                                            0.00406888,
+                                            0.01504794])}],
+                'fit': [{'params': np.array([0.59599995, 0.99518211,
+                                             0.39866989]),
+                         'params_err': np.array([0.08843152, 0.00107311,
+                                                 0.09074325]),
+                         'epc': 0.0024089464034862673,
+                         'epc_err': 0.0005391508310961153}]}
+        ]
 
-        for tst_index, tst in enumerate(tests):
-            fo = open(tst['results_file'], 'rb')
-            results_list = pickle.load(fo)
-            fo.close()
+        for tst_index, tst_expected_results in enumerate(tests_expected_results):
+            results_list = load_results_from_json(tests_settings[tst_index]['results_file'])
 
             # RBFitter class
-            rb_fit = RBFitter(results_list[0], tst['rb_opts']['xdata'],
-                              tst['rb_opts']['rb_pattern'])
+            rb_fit = RBFitter(results_list[0], tests_settings[tst_index]['rb_opts']['xdata'],
+                              tests_settings[tst_index]['rb_opts']['rb_pattern'])
 
             # add the seeds in reverse order
             for seedind in range(len(results_list)-1, 0, -1):
@@ -129,9 +135,9 @@ class TestFitters(unittest.TestCase):
             for i, _ in enumerate(ydata):
                 self.assertTrue(all(np.isclose(a, b) for a, b in
                                     zip(ydata[i]['mean'],
-                                        tst['expected']['ydata'][i]['mean'])),
+                                        tst_expected_results['ydata'][i]['mean'])),
                                 'Incorrect mean in test no. ' + str(tst_index))
-                if tst['expected']['ydata'][i]['std'] is None:
+                if tst_expected_results['ydata'][i]['std'] is None:
                     self.assertIsNone(
                         ydata[i]['std'],
                         'Incorrect std in test no. ' + str(tst_index))
@@ -139,24 +145,24 @@ class TestFitters(unittest.TestCase):
                     self.assertTrue(
                         all(np.isclose(a, b) for a, b in zip(
                             ydata[i]['std'],
-                            tst['expected']['ydata'][i]['std'])),
+                            tst_expected_results['ydata'][i]['std'])),
                         'Incorrect std in test no. ' + str(tst_index))
                 self.assertTrue(
                     all(np.isclose(a, b) for a, b in zip(
                         fit[i]['params'],
-                        tst['expected']['fit'][i]['params'])),
+                        tst_expected_results['fit'][i]['params'])),
                     'Incorrect fit parameters in test no. ' + str(tst_index))
                 self.assertTrue(
                     all(np.isclose(a, b) for a, b in zip(
                         fit[i]['params_err'],
-                        tst['expected']['fit'][i]['params_err'])),
+                        tst_expected_results['fit'][i]['params_err'])),
                     'Incorrect fit error in test no. ' + str(tst_index))
                 self.assertTrue(np.isclose(fit[i]['epc'],
-                                           tst['expected']['fit'][i]['epc']),
+                                           tst_expected_results['fit'][i]['epc']),
                                 'Incorrect EPC in test no. ' + str(tst_index))
                 self.assertTrue(
                     np.isclose(fit[i]['epc_err'],
-                               tst['expected']['fit'][i]['epc_err']),
+                               tst_expected_results['fit'][i]['epc_err']),
                     'Incorrect EPC error in test no. ' + str(tst_index))
 
     def test_interleaved_fitters(self):
@@ -176,11 +182,11 @@ class TestFitters(unittest.TestCase):
                 'original_results_file':
                     os.path.join(
                         os.path.dirname(__file__),
-                        'test_fitter_original_results.pkl'),
+                        'test_fitter_original_results.json'),
                 'interleaved_results_file':
                     os.path.join(
                         os.path.dirname(__file__),
-                        'test_fitter_interleaved_results.pkl'),
+                        'test_fitter_interleaved_results.json'),
                 'expected': {
                     'original_ydata':
                         [{'mean': np.array([0.9775, 0.79, 0.66,
@@ -238,13 +244,9 @@ class TestFitters(unittest.TestCase):
                 }}]
 
         for tst_index, tst in enumerate(tests_interleaved):
-            fo = open(tst['original_results_file'], 'rb')
-            original_result_list = pickle.load(fo)
-            fo.close()
+            original_result_list = load_results_from_json(tst['original_results_file'])
+            interleaved_result_list = load_results_from_json(tst['interleaved_results_file'])
 
-            fo = open(tst['interleaved_results_file'], 'rb')
-            interleaved_result_list = pickle.load(fo)
-            fo.close()
 
             # InterleavedRBFitter class
             joint_rb_fit = InterleavedRBFitter(
@@ -369,7 +371,7 @@ class TestFitters(unittest.TestCase):
                     'shots': 200},
                 'results_file': os.path.join(
                     os.path.dirname(__file__),
-                    'test_fitter_purity_results.pkl'),
+                    'test_fitter_purity_results.json'),
                 'expected': {
                     'ydata':
                         [{'mean': np.array([0.92534849, 0.51309098,
@@ -421,7 +423,7 @@ class TestFitters(unittest.TestCase):
                      'shots': 200},
                  'results_file': os.path.join(
                      os.path.dirname(__file__),
-                     'test_fitter_coherent_purity_results.pkl'),
+                     'test_fitter_coherent_purity_results.json'),
                  'expected': {
                      'ydata':
                          [{'mean': np.array([1.03547598, 1.00945614,
@@ -465,9 +467,7 @@ class TestFitters(unittest.TestCase):
                  }}]
 
         for tst_index, tst in enumerate(tests_purity[0:1]):
-            fo = open(tst['results_file'], 'rb')
-            purity_result_list = pickle.load(fo)
-            fo.close()
+            purity_result_list = load_results_from_json(tst['results_file'])
 
             # PurityRBFitter class
             rbfit_purity = PurityRBFitter(purity_result_list,
@@ -554,11 +554,11 @@ class TestFitters(unittest.TestCase):
                 'cnotdihedral_X_results_file':
                     os.path.join(
                         os.path.dirname(__file__),
-                        'test_fitter_cnotdihedral_X_results.pkl'),
+                        'test_fitter_cnotdihedral_X_results.json'),
                 'cnotdihedral_Z_results_file':
                     os.path.join(
                         os.path.dirname(__file__),
-                        'test_fitter_cnotdihedral_Z_results.pkl'),
+                        'test_fitter_cnotdihedral_Z_results.json'),
                 'expected': {
                     'cnotdihedral_X_ydata':
                         [{'mean': np.array([0.961, 0.72, 0.565,
@@ -608,13 +608,8 @@ class TestFitters(unittest.TestCase):
                 }}]
 
         for tst_index, tst in enumerate(tests_cnotdihedral):
-            fo = open(tst['cnotdihedral_X_results_file'], 'rb')
-            cnotdihedral_X_result_list = pickle.load(fo)
-            fo.close()
-
-            fo = open(tst['cnotdihedral_Z_results_file'], 'rb')
-            cnotdihedral_Z_result_list = pickle.load(fo)
-            fo.close()
+            cnotdihedral_X_result_list = load_results_from_json(tst['cnotdihedral_X_results_file'])
+            cnotdihedral_Z_result_list = load_results_from_json(tst['cnotdihedral_Z_results_file'])
 
             # CNOTDihedralRBFitter class
             joint_rb_fit = CNOTDihedralRBFitter(
