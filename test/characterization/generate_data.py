@@ -26,11 +26,12 @@ from qiskit.providers.aer.noise.errors.standard_errors import \
 
 from qiskit.providers.aer.noise import NoiseModel
 
-from qiskit.ignis.characterization.coherence import t1_circuits
+from qiskit.ignis.characterization.coherence import (t1_circuits,
+                                                     t2_circuits)
 
-from qiskit.ignis.characterization.coherence.fitters import T1Fitter, \
-                                                            T2Fitter, \
-                                                            T2StarFitter
+from qiskit.ignis.characterization.coherence.fitters import (T1Fitter,
+                                                            T2Fitter,
+                                                            T2StarFitter)
 
 from qiskit.ignis.characterization.hamiltonian.fitters import ZZFitter
 
@@ -94,6 +95,69 @@ def generate_data_t1(filename):
         'xdata': xdata.tolist(),
         'qubits': qubits,
         't1': t1
+        }
+
+    with open(filename, 'w') as handle:
+        json.dump(data, handle)
+
+def t2_circuit_execution():
+    """
+    Create T2 circuits and simulate them.
+    
+    Return:
+    - Backend result.
+    - xdata.
+    - Qubits for the T2 measurement.
+    - T2 that was used in the circuits creation.
+    """
+
+    num_of_gates = (np.linspace(1, 30, 10)).astype(int)
+    gate_time = 0.11
+    qubits = [0]
+    n_echos = 5
+    alt_phase_echo = True
+
+    circs, xdata = t2_circuits(num_of_gates, gate_time, qubits,
+                               n_echos, alt_phase_echo)
+
+    t2 = 20
+    error = thermal_relaxation_error(np.inf, t2, gate_time, 0.5)
+    noise_model = NoiseModel()
+    noise_model.add_all_qubit_quantum_error(error, 'id')
+    # TODO: Include SPAM errors
+
+    backend = qiskit.Aer.get_backend('qasm_simulator')
+    shots = 100
+    backend_result = qiskit.execute(
+        circs, backend,
+        shots=shots,
+        seed_simulator=SEED,
+        backend_options={'max_parallel_experiments': 0},
+        noise_model=noise_model,
+        optimization_level=0).result()
+
+    return backend_result, xdata, qubits, t2
+
+def generate_data_t2(filename):
+    """
+    Create T2 circuits and simulate them, then write the results in a json file.
+    The file will contain a dictionary with the following keys:
+    - 'backend_result', value is stored in the form of a dictionary.
+    - 'xdata', value is stored as a list (and not as a numpy array).
+    - 'qubits', these are the qubits for the T2 measurement.
+    - 't2'
+
+    Args:
+       filename - name of the json file. 
+    """
+
+    backend_result, xdata, qubits, t2 = t2_circuit_execution()
+
+    data = {
+        'backend_result': backend_result.to_dict(),
+        'xdata': xdata.tolist(),
+        'qubits': qubits,
+        't2': t2
         }
 
     with open(filename, 'w') as handle:
