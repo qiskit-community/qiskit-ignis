@@ -18,7 +18,6 @@
 Test fitters of Ignis characterization
 """
 
-import os
 import json
 import unittest
 import numpy as np
@@ -87,7 +86,7 @@ class TestFitters(unittest.TestCase):
                                         rtol=0.3,
                                         atol=0.1))
 
-    def test_t2_fitter(self):
+    def test_t2star_fitter(self):
         """
         Test T2* fitter in Ignis characterization
         """
@@ -138,6 +137,6 @@ class TestFitters(unittest.TestCase):
 
         self.assertTrue(np.isclose(fit.ZZ_rate(), data['zz'], rtol=0.3, atol=0.1))
 
-            
+
 if __name__ == '__main__':
     unittest.main()

@@ -18,22 +18,24 @@ Test coherence measurements
 """
 
 import unittest
+
+from test.characterization.generate_data import (t1_circuit_execution,
+                                                 t2_circuit_execution,
+                                                 t2star_circuit_execution,
+                                                 zz_circuit_execution)
+
 import numpy as np
 import qiskit
+
 from qiskit.providers.aer.noise.errors.standard_errors import \
-                                     (thermal_relaxation_error,
-                                      coherent_unitary_error)
+                                      coherent_unitary_error
 
 from qiskit.providers.aer.noise import NoiseModel
 
 from qiskit.ignis.characterization.coherence import \
      T2StarFitter, T1Fitter, T2Fitter
 
-from qiskit.ignis.characterization.coherence import (t1_circuits,
-                                                     t2_circuits,
-                                                     t2star_circuits)
-
-from qiskit.ignis.characterization.hamiltonian import zz_circuits, ZZFitter
+from qiskit.ignis.characterization.hamiltonian import ZZFitter
 
 from qiskit.ignis.characterization.gates import (AmpCalFitter,
                                                  ampcal_1Q_circuits,
@@ -50,10 +52,6 @@ from qiskit.ignis.characterization.calibrations import (rabi_schedules,
 
 from qiskit.test.mock import FakeOpenPulse2Q
 
-from test.characterization.generate_data import (t1_circuit_execution,
-                                                 t2_circuit_execution,
-                                                 t2star_circuit_execution,
-                                                 zz_circuit_execution)
 
 # Fix seed for simulations
 SEED = 9000
@@ -71,12 +69,12 @@ class TestT2Star(unittest.TestCase):
         parameter.
         """
 
-        backend_result, xdata, qubits, t2, omega = t2star_circuit_execution()
+        backend_result, xdata, qubits, t2_value, omega = t2star_circuit_execution()
 
         T2StarFitter(backend_result, xdata, qubits,
-                     fit_p0=[0.5, t2, omega, 0, 0.5],
+                     fit_p0=[0.5, t2_value, omega, 0, 0.5],
                      fit_bounds=([-0.5, 0, omega-0.02, -np.pi, -0.5],
-                                 [1.5, t2*1.2, omega+0.02, np.pi, 1.5]))
+                                 [1.5, t2_value*1.2, omega+0.02, np.pi, 1.5]))
 
 
 class TestT1(unittest.TestCase):
@@ -91,11 +89,11 @@ class TestT1(unittest.TestCase):
         parameter.
         """
 
-        backend_result, xdata, qubits, t1 = t1_circuit_execution()
-        
+        backend_result, xdata, qubits, t1_value = t1_circuit_execution()
+
         T1Fitter(backend_result, xdata, qubits,
-                 fit_p0=[1, t1, 0],
-                 fit_bounds=([0, 0, -1], [2, t1*1.2, 1]))
+                 fit_p0=[1, t1_value, 0],
+                 fit_bounds=([0, 0, -1], [2, t1_value*1.2, 1]))
 
 
 class TestT2(unittest.TestCase):
@@ -109,11 +107,12 @@ class TestT2(unittest.TestCase):
         Then verify that the calculated T2 matches the t2 parameter.
         """
 
-        backend_result, xdata, qubits, t2 = t2_circuit_execution()
+        backend_result, xdata, qubits, t2_value = t2_circuit_execution()
 
         T2Fitter(backend_result, xdata, qubits,
-                 fit_p0=[1, t2, -0.5],
-                 fit_bounds=([0, 0, -1], [2, t2*1.2, 1]))
+                 fit_p0=[1, t2_value, -0.5],
+                 fit_bounds=([0, 0, -1], [2, t2_value*1.2, 1]))
+
 
 class TestZZ(unittest.TestCase):
     """
@@ -126,7 +125,7 @@ class TestZZ(unittest.TestCase):
         Then verify that the calculated ZZ matches the zz parameter.
         """
 
-        backend_result, xdata, qubits, omega, spectators = zz_circuit_execution()
+        backend_result, xdata, qubits, spectators, _, omega = zz_circuit_execution()
 
         ZZFitter(backend_result, xdata, qubits, spectators,
                  fit_p0=[0.5, omega, 0, 0.5],

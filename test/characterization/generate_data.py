@@ -15,7 +15,7 @@
 Generate data for characterization fitters tests
 """
 
-import os
+from typing import List, Tuple
 import json
 import numpy as np
 
@@ -31,27 +31,26 @@ from qiskit.ignis.characterization.coherence import (t1_circuits,
                                                      t2_circuits,
                                                      t2star_circuits)
 
-from qiskit.ignis.characterization.coherence.fitters import (T1Fitter,
-                                                            T2Fitter,
-                                                            T2StarFitter)
-
-from qiskit.ignis.characterization.hamiltonian import zz_circuits, ZZFitter
+from qiskit.ignis.characterization.hamiltonian import zz_circuits
 
 # Fix seed for simulations
 SEED = 9000
 
 
-def t1_circuit_execution():
+def t1_circuit_execution() -> Tuple[qiskit.result.Result,
+                                    np.array,
+                                    List[int],
+                                    float]:
     """
     Create T1 circuits and simulate them.
-    
-    Return:
-    - Backend result.
-    - xdata.
-    - Qubits for the T1 measurement.
-    - T1 that was used in the circuits creation.
+
+    Returns:
+       *   Backend result.
+       *   xdata.
+       *   Qubits for the T1 measurement.
+       *   T1 that was used in the circuits creation.
     """
-    
+
     # 15 numbers ranging from 1 to 200, linearly spaced
     num_of_gates = (np.linspace(1, 200, 15)).astype(int)
     gate_time = 0.11
@@ -59,8 +58,8 @@ def t1_circuit_execution():
 
     circs, xdata = t1_circuits(num_of_gates, gate_time, qubits)
 
-    t1 = 10
-    error = thermal_relaxation_error(t1, 2*t1, gate_time)
+    t1_value = 10
+    error = thermal_relaxation_error(t1_value, 2*t1_value, gate_time)
     noise_model = NoiseModel()
     noise_model.add_all_qubit_quantum_error(error, 'id')
     # TODO: Include SPAM errors
@@ -75,7 +74,8 @@ def t1_circuit_execution():
         noise_model=noise_model,
         optimization_level=0).result()
 
-    return backend_result, xdata, qubits, t1
+    return backend_result, xdata, qubits, t1_value
+
 
 def generate_data_t1(filename):
     """
@@ -87,30 +87,34 @@ def generate_data_t1(filename):
     - 't1'
 
     Args:
-       filename - name of the json file. 
+       filename - name of the json file.
     """
 
-    backend_result, xdata, qubits, t1 = t1_circuit_execution()
+    backend_result, xdata, qubits, t1_value = t1_circuit_execution()
 
     data = {
         'backend_result': backend_result.to_dict(),
         'xdata': xdata.tolist(),
         'qubits': qubits,
-        't1': t1
+        't1': t1_value
         }
 
     with open(filename, 'w') as handle:
         json.dump(data, handle)
 
-def t2_circuit_execution():
+
+def t2_circuit_execution() -> Tuple[qiskit.result.Result,
+                                    np.array,
+                                    List[int],
+                                    float]:
     """
     Create T2 circuits and simulate them.
-    
-    Return:
-    - Backend result.
-    - xdata.
-    - Qubits for the T2 measurement.
-    - T2 that was used in the circuits creation.
+
+    Returns:
+        *   Backend result.
+        *   xdata.
+        *   Qubits for the T2 measurement.
+        *   T2 that was used in the circuits creation.
     """
 
     num_of_gates = (np.linspace(1, 30, 10)).astype(int)
@@ -122,8 +126,8 @@ def t2_circuit_execution():
     circs, xdata = t2_circuits(num_of_gates, gate_time, qubits,
                                n_echos, alt_phase_echo)
 
-    t2 = 20
-    error = thermal_relaxation_error(np.inf, t2, gate_time, 0.5)
+    t2_value = 20
+    error = thermal_relaxation_error(np.inf, t2_value, gate_time, 0.5)
     noise_model = NoiseModel()
     noise_model.add_all_qubit_quantum_error(error, 'id')
     # TODO: Include SPAM errors
@@ -138,7 +142,8 @@ def t2_circuit_execution():
         noise_model=noise_model,
         optimization_level=0).result()
 
-    return backend_result, xdata, qubits, t2
+    return backend_result, xdata, qubits, t2_value
+
 
 def generate_data_t2(filename):
     """
@@ -150,31 +155,36 @@ def generate_data_t2(filename):
     - 't2'
 
     Args:
-       filename - name of the json file. 
+       filename - name of the json file.
     """
 
-    backend_result, xdata, qubits, t2 = t2_circuit_execution()
+    backend_result, xdata, qubits, t2_value = t2_circuit_execution()
 
     data = {
         'backend_result': backend_result.to_dict(),
         'xdata': xdata.tolist(),
         'qubits': qubits,
-        't2': t2
+        't2': t2_value
         }
 
     with open(filename, 'w') as handle:
         json.dump(data, handle)
 
-def t2star_circuit_execution():
+
+def t2star_circuit_execution() -> Tuple[qiskit.result.Result,
+                                        np.array,
+                                        List[int],
+                                        float,
+                                        float]:
     """
     Create T2* circuits and simulate them.
-    
-    Return:
-    - Backend result.
-    - xdata.
-    - Qubits for the T2* measurement.
-    - T2* that was used in the circuits creation.
-    - Frequency.
+
+    Returns:
+        *   Backend result.
+        *   xdata.
+        *   Qubits for the T2* measurement.
+        *   T2* that was used in the circuits creation.
+        *   Frequency.
     """
 
     # Setting parameters
@@ -185,8 +195,8 @@ def t2star_circuit_execution():
     gate_time = 0.1
     qubits = [0]
 
-    t2 = 10
-    error = thermal_relaxation_error(np.inf, t2, gate_time, 0.5)
+    t2_value = 10
+    error = thermal_relaxation_error(np.inf, t2_value, gate_time, 0.5)
     noise_model = NoiseModel()
     noise_model.add_all_qubit_quantum_error(error, 'id')
 
@@ -198,14 +208,15 @@ def t2star_circuit_execution():
                                               qubits, 5)
 
     backend_result = qiskit.execute(
-            circs_osc, backend,
-            shots=shots,
-            seed_simulator=SEED,
-            backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model,
-            optimization_level=0).result()
+        circs_osc, backend,
+        shots=shots,
+        seed_simulator=SEED,
+        backend_options={'max_parallel_experiments': 0},
+        noise_model=noise_model,
+        optimization_level=0).result()
 
-    return backend_result, xdata, qubits, t2, omega
+    return backend_result, xdata, qubits, t2_value, omega
+
 
 def generate_data_t2star(filename):
     """
@@ -218,33 +229,39 @@ def generate_data_t2star(filename):
     - 'omega'
 
     Args:
-       filename - name of the json file. 
+       filename - name of the json file.
     """
 
-    backend_result, xdata, qubits, t2, omega = t2star_circuit_execution()
+    backend_result, xdata, qubits, t2_value, omega = t2star_circuit_execution()
 
     data = {
         'backend_result': backend_result.to_dict(),
         'xdata': xdata.tolist(),
         'qubits': qubits,
-        't2': t2,
+        't2': t2_value,
         'omega': omega
         }
 
     with open(filename, 'w') as handle:
         json.dump(data, handle)
 
-def zz_circuit_execution():
+
+def zz_circuit_execution() -> Tuple[qiskit.result.Result,
+                                    np.array,
+                                    List[int],
+                                    List[int],
+                                    float,
+                                    float]:
     """
     Create ZZ circuits and simulate them.
-    
-    Return:
-    - Backend result.
-    - xdata.
-    - Qubits for the ZZ measurement.
-    - Spectators.
-    - ZZ parameter that used in the circuit creation
-    - Frequency.
+
+    Returns:
+        *   Backend result.
+        *   xdata.
+        *   Qubits for the ZZ measurement.
+        *   Spectators.
+        *   ZZ parameter that used in the circuit creation
+        *   Frequency.
     """
 
     num_of_gates = np.arange(0, 60, 10)
@@ -258,9 +275,9 @@ def zz_circuit_execution():
                                       spectators, nosc=2)
 
     # Set the simulator with ZZ
-    zz = 0.1
+    zz_value = 0.1
     zz_unitary = np.eye(4, dtype=complex)
-    zz_unitary[3, 3] = np.exp(1j*2*np.pi*zz*gate_time)
+    zz_unitary[3, 3] = np.exp(1j*2*np.pi*zz_value*gate_time)
     error = coherent_unitary_error(zz_unitary)
     noise_model = NoiseModel()
     noise_model.add_nonlocal_quantum_error(error, 'id', [0], [0, 1])
@@ -275,7 +292,8 @@ def zz_circuit_execution():
                                     noise_model=noise_model,
                                     optimization_level=0).result()
 
-    return backend_result, xdata, qubits, spectators, zz, omega
+    return backend_result, xdata, qubits, spectators, zz_value, omega
+
 
 def generate_data_zz(filename):
     """
@@ -289,21 +307,19 @@ def generate_data_zz(filename):
     - 'omega'
 
     Args:
-       filename - name of the json file. 
+       filename - name of the json file.
     """
 
-    backend_result, xdata, qubits, spectators, zz, omega = zz_circuit_execution()
+    backend_result, xdata, qubits, spectators, zz_value, omega = zz_circuit_execution()
 
     data = {
         'backend_result': backend_result.to_dict(),
         'xdata': xdata.tolist(),
         'qubits': qubits,
         'spectators': spectators,
-        'zz': zz,
+        'zz': zz_value,
         'omega': omega
         }
 
     with open(filename, 'w') as handle:
         json.dump(data, handle)
-
-generate_data_zz('zz_data.json')
