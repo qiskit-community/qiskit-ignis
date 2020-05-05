@@ -115,6 +115,29 @@ class TestFitters(unittest.TestCase):
                                         rtol=0.3,
                                         atol=0.1))
 
+    def test_zz_fitter(self):
+        """
+        Test ZZ fitter in Ignis characterization
+        """
+
+        with open('zz_data.json', 'r') as handle:
+            data = json.load(handle)
+
+        fit = ZZFitter(Result.from_dict(data['backend_result']),
+                       data['xdata'], data['qubits'], data['spectators'],
+                       fit_p0=[0.5, data['omega'], 0, 0.5],
+                       fit_bounds=([-0.5, 0, -np.pi, -0.5],
+                                   [1.5, 2*data['omega'], np.pi, 1.5]))
+
+        self.assertEqual(fit.series, ['0', '1'])
+        self.assertEqual(list(fit.params.keys()), ['0', '1'])
+
+        num_of_qubits = len(data['qubits'])
+        self.assertEqual(len(fit.params['0']), num_of_qubits)
+        self.assertEqual(len(fit.params_err['0']), num_of_qubits)
+
+        self.assertTrue(np.isclose(fit.ZZ_rate(), data['zz'], rtol=0.3, atol=0.1))
+
             
 if __name__ == '__main__':
     unittest.main()

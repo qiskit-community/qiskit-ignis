@@ -52,7 +52,8 @@ from qiskit.test.mock import FakeOpenPulse2Q
 
 from test.characterization.generate_data import (t1_circuit_execution,
                                                  t2_circuit_execution,
-                                                 t2star_circuit_execution)
+                                                 t2star_circuit_execution,
+                                                 zz_circuit_execution)
 
 # Fix seed for simulations
 SEED = 9000
@@ -125,44 +126,12 @@ class TestZZ(unittest.TestCase):
         Then verify that the calculated ZZ matches the zz parameter.
         """
 
-        num_of_gates = np.arange(0, 60, 10)
-        gate_time = 0.1
-        qubits = [0]
-        spectators = [1]
-
-        # Generate experiments
-        circs, xdata, osc_freq = zz_circuits(num_of_gates,
-                                             gate_time, qubits,
-                                             spectators, nosc=2)
-
-        # Set the simulator with ZZ
-        zz_expected = 0.1
-        zz_unitary = np.eye(4, dtype=complex)
-        zz_unitary[3, 3] = np.exp(1j*2*np.pi*zz_expected*gate_time)
-        error = coherent_unitary_error(zz_unitary)
-        noise_model = NoiseModel()
-        noise_model.add_nonlocal_quantum_error(error, 'id', [0], [0, 1])
-
-        # Run the simulator
-        backend = qiskit.Aer.get_backend('qasm_simulator')
-        shots = 100
-        # For demonstration purposes split the execution into two jobs
-        backend_result = qiskit.execute(circs, backend,
-                                        shots=shots,
-                                        seed_simulator=SEED,
-                                        noise_model=noise_model,
-                                        optimization_level=0).result()
-
-        initial_a = 0.5
-        initial_c = 0.5
-        initial_f = osc_freq
-        initial_phi = 0.0
+        backend_result, xdata, qubits, omega, spectators = zz_circuit_execution()
 
         ZZFitter(backend_result, xdata, qubits, spectators,
-                 fit_p0=[initial_a, initial_f,
-                         initial_phi, initial_c],
+                 fit_p0=[0.5, omega, 0, 0.5],
                  fit_bounds=([-0.5, 0, -np.pi, -0.5],
-                             [1.5, 2*osc_freq, np.pi, 1.5]))
+                             [1.5, 2*omega, np.pi, 1.5]))
 
 
 class TestCals(unittest.TestCase):

@@ -22,7 +22,8 @@ import numpy as np
 import qiskit
 
 from qiskit.providers.aer.noise.errors.standard_errors import \
-                                     thermal_relaxation_error
+     (thermal_relaxation_error,
+      coherent_unitary_error)
 
 from qiskit.providers.aer.noise import NoiseModel
 
@@ -34,7 +35,7 @@ from qiskit.ignis.characterization.coherence.fitters import (T1Fitter,
                                                             T2Fitter,
                                                             T2StarFitter)
 
-from qiskit.ignis.characterization.hamiltonian.fitters import ZZFitter
+from qiskit.ignis.characterization.hamiltonian import zz_circuits, ZZFitter
 
 # Fix seed for simulations
 SEED = 9000
@@ -233,4 +234,76 @@ def generate_data_t2star(filename):
     with open(filename, 'w') as handle:
         json.dump(data, handle)
 
+def zz_circuit_execution():
+    """
+    Create ZZ circuits and simulate them.
+    
+    Return:
+    - Backend result.
+    - xdata.
+    - Qubits for the ZZ measurement.
+    - Spectators.
+    - ZZ parameter that used in the circuit creation
+    - Frequency.
+    """
 
+    num_of_gates = np.arange(0, 60, 10)
+    gate_time = 0.1
+    qubits = [0]
+    spectators = [1]
+
+    # Generate experiments
+    circs, xdata, omega = zz_circuits(num_of_gates,
+                                      gate_time, qubits,
+                                      spectators, nosc=2)
+
+    # Set the simulator with ZZ
+    zz = 0.1
+    zz_unitary = np.eye(4, dtype=complex)
+    zz_unitary[3, 3] = np.exp(1j*2*np.pi*zz*gate_time)
+    error = coherent_unitary_error(zz_unitary)
+    noise_model = NoiseModel()
+    noise_model.add_nonlocal_quantum_error(error, 'id', [0], [0, 1])
+
+    # Run the simulator
+    backend = qiskit.Aer.get_backend('qasm_simulator')
+    shots = 100
+
+    backend_result = qiskit.execute(circs, backend,
+                                    shots=shots,
+                                    seed_simulator=SEED,
+                                    noise_model=noise_model,
+                                    optimization_level=0).result()
+
+    return backend_result, xdata, qubits, spectators, zz, omega
+
+def generate_data_zz(filename):
+    """
+    Create ZZ circuits and simulate them, then write the results in a json file.
+    The file will contain a dictionary with the following keys:
+    - 'backend_result', value is stored in the form of a dictionary.
+    - 'xdata', value is stored as a list (and not as a numpy array).
+    - 'qubits', these are the qubits for the ZZ measurement.
+    - 'spectators'
+    - 'zz'
+    - 'omega'
+
+    Args:
+       filename - name of the json file. 
+    """
+
+    backend_result, xdata, qubits, spectators, zz, omega = zz_circuit_execution()
+
+    data = {
+        'backend_result': backend_result.to_dict(),
+        'xdata': xdata.tolist(),
+        'qubits': qubits,
+        'spectators': spectators,
+        'zz': zz,
+        'omega': omega
+        }
+
+    with open(filename, 'w') as handle:
+        json.dump(data, handle)
+
+generate_data_zz('zz_data.json')
