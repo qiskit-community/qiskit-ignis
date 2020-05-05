@@ -68,7 +68,7 @@ class TestFitters(unittest.TestCase):
         """
 
         with open(os.path.join(os.path.dirname(__file__), 't2_data.json'),
-                               'r') as handle:
+                  'r') as handle:
             data = json.load(handle)
 
         fit = T2Fitter(Result.from_dict(data['backend_result']),
