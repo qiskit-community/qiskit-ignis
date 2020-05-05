@@ -225,7 +225,6 @@ class TestCals(unittest.TestCase):
                            fit_p0=[initial_theta, initial_c],
                            fit_bounds=([-np.pi, -1],
                                        [np.pi, 1]))
-        print(fit.angle_err(0))
         self.assertAlmostEqual(fit.angle_err(0), 0.1, 2)
 
     def test_anglecal1Q(self):
