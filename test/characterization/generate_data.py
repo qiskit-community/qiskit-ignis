@@ -27,7 +27,8 @@ from qiskit.providers.aer.noise.errors.standard_errors import \
 from qiskit.providers.aer.noise import NoiseModel
 
 from qiskit.ignis.characterization.coherence import (t1_circuits,
-                                                     t2_circuits)
+                                                     t2_circuits,
+                                                     t2star_circuits)
 
 from qiskit.ignis.characterization.coherence.fitters import (T1Fitter,
                                                             T2Fitter,
@@ -162,4 +163,74 @@ def generate_data_t2(filename):
 
     with open(filename, 'w') as handle:
         json.dump(data, handle)
+
+def t2star_circuit_execution():
+    """
+    Create T2* circuits and simulate them.
+    
+    Return:
+    - Backend result.
+    - xdata.
+    - Qubits for the T2* measurement.
+    - T2* that was used in the circuits creation.
+    - Frequency.
+    """
+
+    # Setting parameters
+
+    num_of_gates = np.append(
+        (np.linspace(10, 150, 10)).astype(int),
+        (np.linspace(160, 450, 5)).astype(int))
+    gate_time = 0.1
+    qubits = [0]
+
+    t2 = 10
+    error = thermal_relaxation_error(np.inf, t2, gate_time, 0.5)
+    noise_model = NoiseModel()
+    noise_model.add_all_qubit_quantum_error(error, 'id')
+
+    backend = qiskit.Aer.get_backend('qasm_simulator')
+    shots = 200
+
+    # Estimate T2* via an oscilliator function
+    circs_osc, xdata, omega = t2star_circuits(num_of_gates, gate_time,
+                                              qubits, 5)
+
+    backend_result = qiskit.execute(
+            circs_osc, backend,
+            shots=shots,
+            seed_simulator=SEED,
+            backend_options={'max_parallel_experiments': 0},
+            noise_model=noise_model,
+            optimization_level=0).result()
+
+    return backend_result, xdata, qubits, t2, omega
+
+def generate_data_t2star(filename):
+    """
+    Create T2* circuits and simulate them, then write the results in a json file.
+    The file will contain a dictionary with the following keys:
+    - 'backend_result', value is stored in the form of a dictionary.
+    - 'xdata', value is stored as a list (and not as a numpy array).
+    - 'qubits', these are the qubits for the T2 measurement.
+    - 't2'
+    - 'omega'
+
+    Args:
+       filename - name of the json file. 
+    """
+
+    backend_result, xdata, qubits, t2, omega = t2star_circuit_execution()
+
+    data = {
+        'backend_result': backend_result.to_dict(),
+        'xdata': xdata.tolist(),
+        'qubits': qubits,
+        't2': t2,
+        'omega': omega
+        }
+
+    with open(filename, 'w') as handle:
+        json.dump(data, handle)
+
 

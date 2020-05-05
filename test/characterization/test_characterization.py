@@ -51,7 +51,8 @@ from qiskit.ignis.characterization.calibrations import (rabi_schedules,
 from qiskit.test.mock import FakeOpenPulse2Q
 
 from test.characterization.generate_data import (t1_circuit_execution,
-                                                 t2_circuit_execution)
+                                                 t2_circuit_execution,
+                                                 t2star_circuit_execution)
 
 # Fix seed for simulations
 SEED = 9000
@@ -69,68 +70,12 @@ class TestT2Star(unittest.TestCase):
         parameter.
         """
 
-        # Setting parameters
-
-        num_of_gates = np.append(
-            (np.linspace(10, 150, 10)).astype(int),
-            (np.linspace(160, 450, 5)).astype(int))
-        gate_time = 0.1
-        qubits = [0]
-
-        expected_t2 = 10
-        error = thermal_relaxation_error(np.inf, expected_t2, gate_time, 0.5)
-        noise_model = NoiseModel()
-        noise_model.add_all_qubit_quantum_error(error, 'id')
-
-        backend = qiskit.Aer.get_backend('qasm_simulator')
-        shots = 200
-
-        # Estimating T2* via an exponential function
-        circs, xdata, _ = t2star_circuits(num_of_gates, gate_time,
-                                          qubits)
-        backend_result = qiskit.execute(
-            circs, backend, shots=shots,
-            seed_simulator=SEED,
-            backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model,
-            optimization_level=0).result()
-
-        initial_t2 = expected_t2
-        initial_a = 0.5
-        initial_c = 0.5
-
-        T2Fitter(backend_result, xdata,
-                 qubits,
-                 fit_p0=[initial_a, initial_t2, initial_c],
-                 fit_bounds=([-0.5, 0, -0.5],
-                             [1.5, expected_t2*1.2, 1.5]),
-                 circbasename='t2star')
-
-        # Estimate T2* via an oscilliator function
-        circs_osc, xdata, omega = t2star_circuits(num_of_gates, gate_time,
-                                                  qubits, 5)
-
-        backend_result = qiskit.execute(
-            circs_osc, backend,
-            shots=shots,
-            seed_simulator=SEED,
-            backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model,
-            optimization_level=0).result()
-
-        initial_a = 0.5
-        initial_c = 0.5
-        initial_f = omega
-        initial_phi = 0
+        backend_result, xdata, qubits, t2, omega = t2star_circuit_execution()
 
         T2StarFitter(backend_result, xdata, qubits,
-                     fit_p0=[initial_a, initial_t2, initial_f,
-                             initial_phi, initial_c],
+                     fit_p0=[0.5, t2, omega, 0, 0.5],
                      fit_bounds=([-0.5, 0, omega-0.02, -np.pi, -0.5],
-                                 [1.5, expected_t2*1.2, omega+0.02,
-                                  np.pi, 1.5]))
-
-        # TODO: add SPAM
+                                 [1.5, t2*1.2, omega+0.02, np.pi, 1.5]))
 
 
 class TestT1(unittest.TestCase):
