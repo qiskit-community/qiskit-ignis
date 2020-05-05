@@ -18,6 +18,7 @@
 Test fitters of Ignis characterization
 """
 
+import os
 import json
 import unittest
 import numpy as np
@@ -39,7 +40,8 @@ class TestFitters(unittest.TestCase):
         Test T1 fitter in Ignis characterization
         """
 
-        with open('t1_data.json', 'r') as handle:
+        with open(os.path.join(os.path.dirname(__file__), 't1_data.json'),
+                  'r') as handle:
             data = json.load(handle)
 
         fit = T1Fitter(Result.from_dict(data['backend_result']),
@@ -65,7 +67,8 @@ class TestFitters(unittest.TestCase):
         Test T2 fitter in Ignis characterization
         """
 
-        with open('t2_data.json', 'r') as handle:
+        with open(os.path.join(os.path.dirname(__file__), 't2_data.json'),
+                               'r') as handle:
             data = json.load(handle)
 
         fit = T2Fitter(Result.from_dict(data['backend_result']),
@@ -91,7 +94,8 @@ class TestFitters(unittest.TestCase):
         Test T2* fitter in Ignis characterization
         """
 
-        with open('t2star_data.json', 'r') as handle:
+        with open(os.path.join(os.path.dirname(__file__), 't2star_data.json'),
+                  'r') as handle:
             data = json.load(handle)
 
         fit = T2StarFitter(Result.from_dict(data['backend_result']),
@@ -119,7 +123,8 @@ class TestFitters(unittest.TestCase):
         Test ZZ fitter in Ignis characterization
         """
 
-        with open('zz_data.json', 'r') as handle:
+        with open(os.path.join(os.path.dirname(__file__), 'zz_data.json'),
+                  'r') as handle:
             data = json.load(handle)
 
         fit = ZZFitter(Result.from_dict(data['backend_result']),
