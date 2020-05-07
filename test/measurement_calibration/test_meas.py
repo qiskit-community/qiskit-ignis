@@ -417,6 +417,7 @@ class TestMeasCal(unittest.TestCase):
             predicted_results['111'],
             places=1)
 
+    @unittest.skip('Pickle files are no longer valid')
     def test_tensored_meas_fitter_with_noise(self):
         """Test the TensoredFitter with noise."""
 
