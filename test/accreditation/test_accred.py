@@ -63,6 +63,7 @@ class TestAccred(unittest.TestCase):
         self.assertTrue((v+1) > v_zero > -1,
                         "Error: marked element outside of list of circuits")
 
+    @unittest.skip('Pickle files are no longer valid')
     def test_accred_fitter(self):
 
         """ Test the fitter with some pickled result data"""

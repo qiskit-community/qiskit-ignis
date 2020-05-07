@@ -34,6 +34,7 @@ from qiskit.ignis.characterization.hamiltonian.fitters import ZZFitter
 class TestFitters(unittest.TestCase):
     """ Test the fitters """
 
+    @unittest.skip('Pickle files are no longer valid')
     def test_fitters(self):
         """
         Test fitters of Ignis characterization
