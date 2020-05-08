@@ -24,7 +24,6 @@ from scipy.optimize import minimize
 import scipy.linalg as la
 import numpy as np
 import qiskit
-from qiskit.validation.base import Obj
 from qiskit import QiskitError
 from qiskit.tools import parallel_map
 from ...verification.tomography import count_keys
@@ -146,8 +145,7 @@ class MeasurementFilter():
                 task_args=(raw_data, method))
 
             for resultidx, new_counts in new_counts_list:
-                new_result.results[resultidx].data.counts = \
-                    Obj(**new_counts)
+                new_result.results[resultidx].data.counts = new_counts
 
             return new_result
 
@@ -326,8 +324,7 @@ class TensoredFilter():
                 task_args=(raw_data, method))
 
             for resultidx, new_counts in new_counts_list:
-                new_result.results[resultidx].data.counts = \
-                    Obj(**new_counts)
+                new_result.results[resultidx].data.counts = new_counts
 
             return new_result
 
