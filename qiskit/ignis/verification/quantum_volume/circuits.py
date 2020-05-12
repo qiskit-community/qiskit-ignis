@@ -50,7 +50,7 @@ def qv_circuits(qubit_lists=None, ntrials=1,
     # get the largest qubit number out of all the lists (for setting the
     # register)
 
-    depth_list = [len(l) for l in qubit_lists]
+    depth_list = [len(qubit_list) for qubit_list in qubit_lists]
 
     # go through for each trial
     for trial in range(ntrials):
