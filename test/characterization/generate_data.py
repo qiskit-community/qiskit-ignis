@@ -15,6 +15,9 @@
 Generate data for characterization fitters tests
 """
 
+import os
+import sys
+
 from typing import List, Tuple
 import json
 import numpy as np
@@ -323,3 +326,18 @@ def generate_data_zz(filename):
 
     with open(filename, 'w') as handle:
         json.dump(data, handle)
+
+
+if __name__ == '__main__':
+    DIRNAME = os.path.dirname(os.path.abspath(__file__))
+    for fit_type in sys.argv[1:]:
+        if fit_type == 'zz':
+            generate_data_zz(os.path.join(DIRNAME, 'zz_data.json'))
+        elif fit_type == 't2star':
+            generate_data_t2star(os.path.join(DIRNAME, 't2star_data.json'))
+        elif fit_type == 't2':
+            generate_data_t2(os.path.join(DIRNAME, 't2_data.json'))
+        elif fit_type == 't1':
+            generate_data_t1(os.path.join(DIRNAME, 't1_data.json'))
+        else:
+            print('Skipping unknown argument ' + fit_type)

@@ -38,6 +38,9 @@ class TestFitters(unittest.TestCase):
     def test_t1_fitter(self):
         """
         Test T1 fitter in Ignis characterization
+
+        This test relies on static data stored in the file t1_data.json.
+        To generate t1_data.json, run 'python generate_data.py t1'.
         """
 
         with open(os.path.join(os.path.dirname(__file__), 't1_data.json'),
@@ -65,6 +68,9 @@ class TestFitters(unittest.TestCase):
     def test_t2_fitter(self):
         """
         Test T2 fitter in Ignis characterization
+
+        This test relies on static data stored in the file t2_data.json.
+        To generate t2_data.json, run 'python generate_data.py t2'.
         """
 
         with open(os.path.join(os.path.dirname(__file__), 't2_data.json'),
@@ -92,6 +98,9 @@ class TestFitters(unittest.TestCase):
     def test_t2star_fitter(self):
         """
         Test T2* fitter in Ignis characterization
+
+        This test relies on static data stored in the file t2star_data.json.
+        To generate t2star_data.json, run 'python generate_data.py t2star'.
         """
 
         with open(os.path.join(os.path.dirname(__file__), 't2star_data.json'),
@@ -121,6 +130,9 @@ class TestFitters(unittest.TestCase):
     def test_zz_fitter(self):
         """
         Test ZZ fitter in Ignis characterization
+
+        This test relies on static data stored in the file zz_data.json.
+        To generate zz_data.json, run 'python generate_data.py zz'.
         """
 
         with open(os.path.join(os.path.dirname(__file__), 'zz_data.json'),
