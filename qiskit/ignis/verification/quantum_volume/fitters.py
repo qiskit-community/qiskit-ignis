@@ -45,7 +45,7 @@ class QVFitter:
         """
 
         self._qubit_lists = qubit_lists
-        self._depths = [len(l) for l in qubit_lists]
+        self._depths = [len(qubit_list) for qubit_list in qubit_lists]
         self._ntrials = 0
 
         self._result_list = []
