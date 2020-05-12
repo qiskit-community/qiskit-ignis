@@ -146,7 +146,7 @@ class TestFitters(unittest.TestCase):
                                    [1.5, 2*data['omega'], np.pi, 1.5]))
 
         self.assertEqual(fit.series, ['0', '1'])
-        self.assertEqual(list(fit.params.keys()), ['0', '1'])
+        self.assertEqual(sorted(list(fit.params.keys())), ['0', '1'])
 
         num_of_qubits = len(data['qubits'])
         self.assertEqual(len(fit.params['0']), num_of_qubits)
