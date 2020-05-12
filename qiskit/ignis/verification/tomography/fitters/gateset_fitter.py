@@ -306,10 +306,10 @@ class GST_Optimize():
 
     # auxiliary functions
     @staticmethod
-    def _split_list(l: List, sizes: List) -> List[List]:
+    def _split_list(input_list: List, sizes: List) -> List[List]:
         """Splits a list to several lists of given size
         Args:
-            l: A list
+            input_list: A list
             sizes: The sizes of the splitted lists
         Returns:
             list: The splitted lists
@@ -320,14 +320,14 @@ class GST_Optimize():
         Raises:
             RuntimeError: if length of l does not equal sum of sizes
         """
-        if sum(sizes) != len(l):
+        if sum(sizes) != len(input_list):
             msg = "Length of list ({}) " \
-                  "differs from sum of split sizes ({})".format(len(l), sizes)
+                  "differs from sum of split sizes ({})".format(len(input_list), sizes)
             raise RuntimeError(msg)
         result = []
         i = 0
         for s in sizes:
-            result.append(l[i:i + s])
+            result.append(input_list[i:i + s])
             i = i + s
         return result
 
