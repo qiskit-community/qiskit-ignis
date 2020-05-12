@@ -60,12 +60,26 @@ def create_shots(i_mean: float, q_mean: float, i_std: float, q_std: float,
 
 
 def save_results_as_json(results_list: List[Result], json_path: str):
+    """
+    saves the list of Results in json format at the given path
+    Args:
+        results_list: list of run results
+        json_path: the path to save the json file
+    """
     results_json = [result.to_dict() for result in results_list]
     with open(json_path, "w") as results_file:
         json.dump(results_json, results_file)
 
 
 def load_results_from_json(json_path: str):
+    """
+    loads run results from json file
+    Args:
+        json_path: the path of the json file to load the results from
+
+    Returns: results object that was saved in the json file
+
+    """
     with open(json_path, "r") as results_file:
         results_json = json.load(results_file)
     return [Result.from_dict(result) for result in results_json]
