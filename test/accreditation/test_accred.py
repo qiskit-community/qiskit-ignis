@@ -11,7 +11,9 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-# pylint: disable= no-member
+
+# pylint: disable=no-member,invalid-name
+
 """
 Run through Accreditation
 """
@@ -61,6 +63,7 @@ class TestAccred(unittest.TestCase):
         self.assertTrue((v+1) > v_zero > -1,
                         "Error: marked element outside of list of circuits")
 
+    @unittest.skip('Pickle files are no longer valid')
     def test_accred_fitter(self):
 
         """ Test the fitter with some pickled result data"""

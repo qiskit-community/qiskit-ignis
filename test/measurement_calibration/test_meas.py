@@ -12,6 +12,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
 """
 Test of measurement calibration:
 1) Preparation of the basis states, generating the calibration circuits
@@ -56,8 +58,8 @@ class TestMeasCal(unittest.TestCase):
         Generate a calibration circuit
 
         Args:
-            nq: number of qubits
-            pattern_type: a pattern in range(1, 2**nq)
+            nq (int): number of qubits
+            pattern_type (int): a pattern in range(1, 2**nq)
 
         Returns:
             qubits: a list of qubits according to the given pattern
@@ -84,8 +86,8 @@ class TestMeasCal(unittest.TestCase):
         Generate ideal equally distributed results
 
         Args:
-            state_labels: a list of calibration state labels
-            weight: the number of qubits
+            state_labels (list): a list of calibration state labels
+            weight (int): the number of qubits
 
         Returns:
             results_dict: a dictionary of equally distributed results
@@ -181,11 +183,9 @@ class TestMeasCal(unittest.TestCase):
         q3 = 3
 
         # Generate the quantum register according to the pattern
-        qr = qiskit.QuantumRegister(5)
         # Generate the calibration circuits
         meas_calibs, state_labels = \
-            complete_meas_cal(qubit_list=[1, 2, 3],
-                              qr=qr)
+            complete_meas_cal(qubit_list=[1, 2, 3], qr=5)
 
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
@@ -199,14 +199,13 @@ class TestMeasCal(unittest.TestCase):
         fidelity = meas_cal.readout_fidelity()
 
         # Make a 3Q GHZ state
-        cr = ClassicalRegister(3)
-        ghz = QuantumCircuit(qr, cr)
-        ghz.h(qr[q1])
-        ghz.cx(qr[q1], qr[q2])
-        ghz.cx(qr[q2], qr[q3])
-        ghz.measure(qr[q1], cr[0])
-        ghz.measure(qr[q2], cr[1])
-        ghz.measure(qr[q3], cr[2])
+        ghz = QuantumCircuit(5, 3)
+        ghz.h(q1)
+        ghz.cx(q1, q2)
+        ghz.cx(q2, q3)
+        ghz.measure(q1, 0)
+        ghz.measure(q2, 1)
+        ghz.measure(q3, 2)
 
         job = qiskit.execute([ghz], backend=backend,
                              shots=self.shots)
@@ -418,6 +417,7 @@ class TestMeasCal(unittest.TestCase):
             predicted_results['111'],
             places=1)
 
+    @unittest.skip('Pickle files are no longer valid')
     def test_tensored_meas_fitter_with_noise(self):
         """Test the TensoredFitter with noise."""
 

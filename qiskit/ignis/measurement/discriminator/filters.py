@@ -17,18 +17,15 @@
 
 """
 Discrimination filters.
-
 """
 from copy import deepcopy
 from typing import List
 
 from qiskit.exceptions import QiskitError
-from qiskit.ignis.characterization.fitters import BaseFitter
 from qiskit.ignis.measurement.discriminator.discriminators import \
     BaseDiscriminationFitter
 from qiskit.result.result import Result
 from qiskit.result.models import ExperimentResultData
-from qiskit.validation.base import Obj
 
 
 class DiscriminationFilter:
@@ -45,8 +42,8 @@ class DiscriminationFilter:
                  base: int = None):
         """
         Args:
-            discriminator (BaseFitter): a discriminator that maps level 1 data
-                to level 2 data.
+            discriminator (BaseDiscriminationFitter): a discriminator that maps level 1
+                data to level 2 data.
                 - Level 1 data may correspond to, e. g., IQ data.
                 - Level 2 data is the state counts.
             base: the base of the expected states. If it is not given the base
@@ -90,7 +87,7 @@ class DiscriminationFilter:
         start = 0
         for idx, n_shots in enumerate(shots_per_experiment_result):
             memory = y_data[start:(start+n_shots)]
-            counts = Obj.from_dict(self.count(memory))
+            counts = self.count(memory)
             new_results.results[idx].data = ExperimentResultData(counts=counts,
                                                                  memory=memory)
             start += n_shots
@@ -118,7 +115,10 @@ class DiscriminationFilter:
             expected_states:
 
         Returns:
-            the base inferred from the expected states
+            int: the base inferred from the expected states
+
+        Raises:
+            QiskitError: if there is an invalid input in the expected states
         """
         base = 0
         for key in expected_states:

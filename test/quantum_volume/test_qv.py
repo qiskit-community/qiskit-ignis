@@ -12,7 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=undefined-loop-variable
+# pylint: disable=undefined-loop-variable,invalid-name
 
 """
 Run through Quantum volume
@@ -43,6 +43,7 @@ class TestQV(unittest.TestCase):
                          "Error: Not enough circuits for the "
                          "number of specified qubit lists")
 
+    @unittest.skip('Pickle files are no longer valid')
     def test_qv_fitter(self):
 
         """ Test the fitter with some pickled result data"""

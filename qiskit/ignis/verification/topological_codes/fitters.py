@@ -12,6 +12,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
 """
 Decoders for quantum error correction codes, with a focus on those that can be
 expressed as solving a graph-theoretic problem.
@@ -41,15 +43,17 @@ class GraphDecoder():
     def __init__(self, code, S=None):
         """
         Args:
-            code: The QEC Code object for which this decoder will be used.
-            S: Graph describing connectivity between syndrome elements. Will
-            be generated automatically if not supplied.
+            code (RepitionCode): The QEC Code object for which this decoder
+                will be used.
+            S (networkx.Graph): Graph describing connectivity between syndrome
+                elements. Will be generated automatically if not supplied.
+
         Additional information:
-            The decoder for the supplied `code` is initialized by running
-            `_make_syndrome_graph()`. Since this process can take some
-            time, it is also possible to load in a premade `S`. However,
-            if this was created for a differently defined `code`,it won't work
-            properly.
+            The decoder for the supplied ``code`` is initialized by running
+            ``_make_syndrome_graph()``. Since this process can take some
+            time, it is also possible to load in a premade ``S``. However,
+            if this was created for a differently defined ``code``, it won't
+            work properly.
         """
 
         self.code = code
@@ -85,7 +89,7 @@ class GraphDecoder():
     def _make_syndrome_graph(self):
         """
         This method injects all possible Pauli errors into the circuit for
-        `code`.
+        ``code``.
 
         This is done by examining the qubits used in each gate of the
         circuit for a stored logical 0. A graph is then created with a node
@@ -113,7 +117,7 @@ class GraphDecoder():
                     temp_qc = copy.deepcopy(blank_qc)
                     temp_qc.name = str((j, qubit, error))
                     temp_qc.data = qc.data[0:j]
-                    eval('temp_qc.' + error + '(qubit)')
+                    getattr(temp_qc, error)(qubit)
                     temp_qc.data += qc.data[j:depth + 1]
                     circuit_name[(j, qubit, error)] = temp_qc.name
                     error_circuit[temp_qc.name] = temp_qc
@@ -158,9 +162,8 @@ class GraphDecoder():
         """Generate weighted syndrome graph from result counts.
 
         Args:
-            results: A results dictionary, as produced by the
+            results (dict): A results dictionary, as produced by the
             `process_results` method of the code.
-            algorithm: Choice of which decoder to use.
 
         Additional information:
             Uses `results` to estimate the probability of the errors that
@@ -199,8 +202,8 @@ class GraphDecoder():
     def make_error_graph(self, string, subgraphs=None):
         """
         Args:
-            string: A string describing the output from the code.
-            subgraphs: Used when multiple, semi-independent graphs need
+            string (str): A string describing the output from the code.
+            subgraphs (list): Used when multiple, semi-independent graphs need
             need to created.
 
         Returns:
@@ -246,11 +249,11 @@ class GraphDecoder():
     def matching(self, string):
         """
         Args:
-            string: A string describing the output from the code.
+            string (str): A string describing the output from the code.
 
         Returns:
-            logical_string: A string with corrected logical values,
-            computed using minimum weight perfect matching.
+            str: A string with corrected logical values,
+                computed using minimum weight perfect matching.
 
         Additional information:
             This function can be run directly, or used indirectly to
@@ -312,12 +315,12 @@ class GraphDecoder():
     def get_logical_prob(self, results, algorithm='matching'):
         """
         Args:
-            results: A results dictionary, as produced by the
+            results (dict): A results dictionary, as produced by the
             `process_results` method of the code.
-            algorithm: Choice of which decoder to use.
+            algorithm (str): Choice of which decoder to use.
 
         Returns:
-            logical_prob: Dictionary of logical error probabilities for
+            dict: Dictionary of logical error probabilities for
             each of the encoded logical states whose results were given in
             the input.
         """
@@ -360,13 +363,13 @@ def postselection_decoding(results):
     This postselects all results with trivial syndrome.
 
     Args:
-        results: A results dictionary, as produced by the
+        results (dict): A results dictionary, as produced by the
             `process_results` method of a code.
 
     Returns:
-        logical_prob: Dictionary of logical error probabilities for
-        each of the encoded logical states whose results were given in
-        the input.
+        dict: Dictionary of logical error probabilities for
+           each of the encoded logical states whose results were given in
+           the input.
     """
     logical_prob = {}
     postselected_results = {}
@@ -404,15 +407,15 @@ def lookuptable_decoding(training_results, real_results):
     This postselects all results with trivial syndrome.
 
     Args:
-        training_results: A results dictionary, as produced by the
-            `process_results` method of a code.
-        real_results: A results dictionary, as produced by the
-            `process_results` method of a code.
+        training_results (dict): A results dictionary, as produced by the
+            ``process_results`` method of a code.
+        real_results (dict): A results dictionary, as produced by the
+            ``process_results`` method of a code.
 
     Returns:
-        logical_prob: Dictionary of logical error probabilities for
-        each of the encoded logical states whose results were given in
-        the input.
+        dict: Dictionary of logical error probabilities for
+            each of the encoded logical states whose results were given in
+            the input.
 
 
     Additional information:

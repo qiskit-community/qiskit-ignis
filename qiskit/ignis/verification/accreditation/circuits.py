@@ -21,6 +21,7 @@ https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
 import copy
 import numpy as np
 from qiskit import QuantumCircuit
+from qiskit.exceptions import QiskitError
 from .qotp import layer_parser, QOTP_fromlayers
 
 
@@ -34,10 +35,6 @@ class AccreditationCircuits:
     https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
     """
     def __init__(self, target_circ, two_qubit_gate='cx', coupling_map=None, seed=None):
-        self._rng = np.random.RandomState(seed)
-        self.target_circuit(target_circ,
-                            two_qubit_gate=two_qubit_gate,
-                            coupling_map=coupling_map)
         """
         Initialize the circuit generation class
         parse into layers
@@ -50,6 +47,10 @@ class AccreditationCircuits:
                 as list of list (e.g. [[0,1],[1,2],[2,0]])
             seed (int): seed to the random number generator
         """
+        self._rng = np.random.RandomState(seed)
+        self.target_circuit(target_circ,
+                            two_qubit_gate=two_qubit_gate,
+                            coupling_map=coupling_map)
 
     def target_circuit(self, target_circ, two_qubit_gate='cx', coupling_map=None):
         """
@@ -76,9 +77,11 @@ class AccreditationCircuits:
             num_trap (int): number of trap circuits
 
         Returns:
-            circuit_list (list): accreditation circuits
-            postp_list (list): strings used for classical post-processing
-            v_zero (int): position of target circuit
+            tuple: A tuple of the form
+                (``circuit_list``, `postp_list``, ``v_zero``) where:
+                circuit_list (list): accreditation circuits
+                postp_list (list): strings used for classical post-processing
+                v_zero (int): position of target circuit
         """
         # Position of the target
         v_zero = self._rng.randint(0, num_trap+1)
@@ -103,11 +106,11 @@ class AccreditationCircuits:
         Routine 2.
         It returns random 1-qubit gate for trap circuits
 
-        Args:
-            czs (list): a list of circuits encoding the cz gate layers
-
         Returns:
-            gate_trap (list): list of all 1-qubit gates in trap circuit
+            list: gate_trap list of all 1-qubit gates in trap circuit
+
+        Raises:
+            QiskitError: If an unsupported 2 qubit gate is present
         """
         # generate a temporary set of single qubit gate initialized to I
         qregs = self.layers['qregs']
@@ -153,9 +156,9 @@ class AccreditationCircuits:
                         gate_trap[layer].h(qsub[1])
                         gate_trap[layer+1].h(qsub[1])
                 else:
-                    raise Exception("Two qubit gate {0}"
-                                    "is not implemented"
-                                    "in accreditation circuits".format(g2q))
+                    raise QiskitError("Two qubit gate {0}"
+                                      "is not implemented"
+                                      "in accreditation circuits".format(g2q))
             for q in self.layers['qregs']:
                 # if we didn't do anything to this index yet
                 # apply a h or an s

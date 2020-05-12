@@ -12,6 +12,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
 """
 Circuit generation for measuring gate errors
 """
@@ -32,13 +34,14 @@ def ampcal_1Q_circuits(max_reps, qubits):
     Y90-(Y90-Y90)^n
 
     Args:
-        max_reps: the maximum number of repetitions. Circuits will increment
-            by 1 rep up to max_rep
-        qubits (list of integers): indices of the qubits to perform the
-        calibration on
+        max_reps (int): the maximum number of repetitions. Circuits will
+            increment by 1 rep up to max_rep
+        qubits (list): a list of integers indices of the qubits to perform the
+            calibration on
     Returns:
-        A list of QuantumCircuit
-        xdata: a list of gate repetitions (number of u2 gates)
+        tuple: A tuple of the form (``circuits``, ``xdata``) where
+            ``circuits`` is a list of QuantumCircuit and ``xdata`` is a list of
+            gate repetitions (number of u2 gates)
     """
 
     xdata = np.arange(max_reps)*2
@@ -71,14 +74,17 @@ def anglecal_1Q_circuits(max_reps, qubits, angleerr=0.0):
     Y90-(X90-X90-Y90-Y90)^n - X90
 
     Args:
-        max_reps: the maximum number of repetitions. Circuits will increment
-            by 1 rep up to max_rep
-        qubits (list of integers): indices of the qubits to perform the
+        max_reps (int): the maximum number of repetitions. Circuits will
+            increment by 1 rep up to max_rep
+        qubits (list): a list of integers indices of the qubits to perform the
             calibration on
-        angleerr: put in an artificial angle error (for testing)
+        angleerr (float): put in an artificial angle error (for testing)
+
+
     Returns:
-       A list of QuantumCircuit
-       xdata: a list of gate repetitions
+        tuple: A tuple of the form (``circuits``, ``xdata``) where
+            ``circuits`` is a list of QuantumCircuit and ``xdata`` is a list of
+            gate repetitions (number of u2 gates)
     """
 
     xdata = np.arange(max_reps)*2
@@ -129,16 +135,17 @@ def ampcal_cx_circuits(max_reps, qubits, control_qubits):
     target-control pairs are not in the coupling map
 
     Args:
-        max_reps: the maximum number of repetitions. Circuits will increment
-            by 1 rep up to max_rep
-        qubits (list of integers): indices of the target qubits
-            to perform the calibration on
-        control_qubits (list of integers): indices of the control qubits
+        max_reps (int): the maximum number of repetitions. Circuits will
+            increment by 1 rep up to max_rep
+        qubits (list): a list of integer indices of the qubits to perform the
+            calibration on
+        control_qubits (list): a list of integer indices of the control qubits
             to perform the calibration on
 
     Returns:
-        A list of QuantumCircuit
-        xdata: a list of gate repetitions
+        tuple: A tuple of the form (``circuits``, ``xdata``) where
+            ``circuits`` is a list of QuantumCircuit and ``xdata`` is a list of
+            gate repetitions (number of u2 gates)
     """
     xdata = np.arange(max_reps)
 
@@ -179,15 +186,20 @@ def anglecal_cx_circuits(max_reps, qubits, control_qubits, angleerr=0.0):
     target-control pairs are not in the coupling map
 
     Args:
-        max_reps: the maximum number of repetitions. Circuits will increment
-            by 1 rep up to max_rep
-        qubits (list of integers): indices of the target qubits
+        max_reps (int): the maximum number of repetitions. Circuits will
+            increment by 1 rep up to max_rep
+        qubits (list): a list of integers indices of the qubits to perform the
+            calibration on
+        control_qubits (list): a list of integer indices of the control qubits
             to perform the calibration on
-        angleerr: Injected angle error for testing
+        angleerr (float): put in an artificial angle error (for testing)
+
 
     Returns:
-        A list of QuantumCircuit
-        xdata: a list of gate repetitions
+        tuple: A tuple of the form (``circuits``, ``xdata``) where
+            ``circuits`` is a list of QuantumCircuit and ``xdata`` is a list of
+            gate repetitions (number of u2 gates)
+
     """
 
     xdata = np.arange(max_reps)

@@ -18,14 +18,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [UNRELEASED]
 
 ### Added
-
-- CNOT-Dihedral RB (\#296)
-- Accreditation (\#252, \#325)
+- API documentation (\#345, \#346, \#347, \#348, \#353)
+- CNOT-Dihedral randomized benchmarking (\#296)
+- Accreditation module for output accrediation of noisy devices (\#252, \#325, \#329)
 - Pulse calibrations for single qubits (\#292, \#302, \#303, \#304)
 - Pulse Discriminator (\#238, \#278, \#297, \#316)
+- Entanglement verification circuits (\#328)
+- Gateset tomography for single-qubit gate sets (\#330)
+- Adds randomized benchmarking utility functions `calculate_1q_epg`, `calculate_2q_epg` functions to calculate 1 and 2-qubit error per gate from error per Clifford (\#335)
+- Adds randomized benchmarking utility functions `calculate_1q_epc`, `calculate_2q_epc` for calculating 1 and 2-qubit error per Clifford from error per gate (\#368)
+
+### Changed
+- Support integer labels for qubits in tomography (\# 359)
+- Support integer labels for measurement error mitigation (\# 359)
 
 ### Deprecated
 
+- Deprecates `twoQ_clifford_error` function. Use `calculate_2q_epc` instead.
 - Python 3.5 support in qiskit-ignis is deprecated. Support will be
   removed on the upstream python community's end of life date for the version,
   which is 09/13/2020.

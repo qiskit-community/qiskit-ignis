@@ -34,6 +34,7 @@ from qiskit.ignis.characterization.hamiltonian.fitters import ZZFitter
 class TestFitters(unittest.TestCase):
     """ Test the fitters """
 
+    @unittest.skip('Pickle files are no longer valid')
     def test_fitters(self):
         """
         Test fitters of Ignis characterization
@@ -44,10 +45,9 @@ class TestFitters(unittest.TestCase):
                               'test_fitters_zz.pkl']
 
         for picfile in files_with_pickles:
-            fo = open(os.path.join(os.path.dirname(__file__),
-                                   picfile), 'rb')
-            file_content = pickle.load(fo)
-            fo.close()
+            with open(os.path.join(os.path.dirname(__file__),
+                                   picfile), 'rb') as file_obj:
+                file_content = pickle.load(file_obj)
 
             fit_type = file_content['type']
             error_msg_prefix = ' in test of ' + fit_type
