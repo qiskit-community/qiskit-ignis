@@ -26,7 +26,6 @@ from qiskit.ignis.measurement.discriminator.discriminators import \
     BaseDiscriminationFitter
 from qiskit.result.result import Result
 from qiskit.result.models import ExperimentResultData
-from qiskit.validation.base import Obj
 
 
 class DiscriminationFilter:
@@ -88,7 +87,7 @@ class DiscriminationFilter:
         start = 0
         for idx, n_shots in enumerate(shots_per_experiment_result):
             memory = y_data[start:(start+n_shots)]
-            counts = Obj.from_dict(self.count(memory))
+            counts = self.count(memory)
             new_results.results[idx].data = ExperimentResultData(counts=counts,
                                                                  memory=memory)
             start += n_shots

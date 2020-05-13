@@ -43,6 +43,7 @@ class TestQV(unittest.TestCase):
                          "Error: Not enough circuits for the "
                          "number of specified qubit lists")
 
+    @unittest.skip('Pickle files are no longer valid')
     def test_qv_fitter(self):
 
         """ Test the fitter with some pickled result data"""

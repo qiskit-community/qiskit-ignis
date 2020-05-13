@@ -155,7 +155,7 @@ class CompleteMeasFitter:
         q_q_mapping = []
         state_labels_reduced = []
         for label in self.state_labels:
-            tmplabel = [label[l] for l in qubit_sublist_ind]
+            tmplabel = [label[index] for index in qubit_sublist_ind]
             state_labels_reduced.append(''.join(tmplabel))
 
         for sub_lab_ind, _ in enumerate(new_state_labels):
