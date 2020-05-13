@@ -18,21 +18,24 @@ Test coherence measurements
 """
 
 import unittest
+
+from test.characterization.generate_data import (t1_circuit_execution,
+                                                 t2_circuit_execution,
+                                                 t2star_circuit_execution,
+                                                 zz_circuit_execution)
+
 import numpy as np
 import qiskit
+
 from qiskit.providers.aer.noise.errors.standard_errors import \
-                                     thermal_relaxation_error, \
-                                     coherent_unitary_error
+                                      coherent_unitary_error
 
 from qiskit.providers.aer.noise import NoiseModel
 
 from qiskit.ignis.characterization.coherence import \
      T2StarFitter, T1Fitter, T2Fitter
 
-from qiskit.ignis.characterization.coherence import t1_circuits, \
-                                t2_circuits, t2star_circuits
-
-from qiskit.ignis.characterization.hamiltonian import zz_circuits, ZZFitter
+from qiskit.ignis.characterization.hamiltonian import ZZFitter
 
 from qiskit.ignis.characterization.gates import (AmpCalFitter,
                                                  ampcal_1Q_circuits,
@@ -48,6 +51,7 @@ from qiskit.ignis.characterization.calibrations import (rabi_schedules,
                                                         update_u_gates)
 
 from qiskit.test.mock import FakeOpenPulse2Q
+
 
 # Fix seed for simulations
 SEED = 9000
@@ -65,68 +69,12 @@ class TestT2Star(unittest.TestCase):
         parameter.
         """
 
-        # Setting parameters
-
-        num_of_gates = np.append(
-            (np.linspace(10, 150, 10)).astype(int),
-            (np.linspace(160, 450, 5)).astype(int))
-        gate_time = 0.1
-        qubits = [0]
-
-        expected_t2 = 10
-        error = thermal_relaxation_error(np.inf, expected_t2, gate_time, 0.5)
-        noise_model = NoiseModel()
-        noise_model.add_all_qubit_quantum_error(error, 'id')
-
-        backend = qiskit.Aer.get_backend('qasm_simulator')
-        shots = 200
-
-        # Estimating T2* via an exponential function
-        circs, xdata, _ = t2star_circuits(num_of_gates, gate_time,
-                                          qubits)
-        backend_result = qiskit.execute(
-            circs, backend, shots=shots,
-            seed_simulator=SEED,
-            backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model,
-            optimization_level=0).result()
-
-        initial_t2 = expected_t2
-        initial_a = 0.5
-        initial_c = 0.5
-
-        T2Fitter(backend_result, xdata,
-                 qubits,
-                 fit_p0=[initial_a, initial_t2, initial_c],
-                 fit_bounds=([-0.5, 0, -0.5],
-                             [1.5, expected_t2*1.2, 1.5]),
-                 circbasename='t2star')
-
-        # Estimate T2* via an oscilliator function
-        circs_osc, xdata, omega = t2star_circuits(num_of_gates, gate_time,
-                                                  qubits, 5)
-
-        backend_result = qiskit.execute(
-            circs_osc, backend,
-            shots=shots,
-            seed_simulator=SEED,
-            backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model,
-            optimization_level=0).result()
-
-        initial_a = 0.5
-        initial_c = 0.5
-        initial_f = omega
-        initial_phi = 0
+        backend_result, xdata, qubits, t2_value, omega = t2star_circuit_execution()
 
         T2StarFitter(backend_result, xdata, qubits,
-                     fit_p0=[initial_a, initial_t2, initial_f,
-                             initial_phi, initial_c],
+                     fit_p0=[0.5, t2_value, omega, 0, 0.5],
                      fit_bounds=([-0.5, 0, omega-0.02, -np.pi, -0.5],
-                                 [1.5, expected_t2*1.2, omega+0.02,
-                                  np.pi, 1.5]))
-
-        # TODO: add SPAM
+                                 [1.5, t2_value*1.2, omega+0.02, np.pi, 1.5]))
 
 
 class TestT1(unittest.TestCase):
@@ -136,41 +84,16 @@ class TestT1(unittest.TestCase):
 
     def test_t1(self):
         """
-        Run the simulator with thermal relaxatoin noise.
+        Run the simulator with thermal relaxation noise.
         Then verify that the calculated T1 matches the t1
         parameter.
         """
 
-        # 15 numbers ranging from 1 to 200, linearly spaced
-        num_of_gates = (np.linspace(1, 200, 15)).astype(int)
-        gate_time = 0.11
-        qubits = [0]
-
-        circs, xdata = t1_circuits(num_of_gates, gate_time, qubits)
-
-        expected_t1 = 10
-        error = thermal_relaxation_error(expected_t1, 2*expected_t1, gate_time)
-        noise_model = NoiseModel()
-        noise_model.add_all_qubit_quantum_error(error, 'id')
-        # TODO: Include SPAM errors
-
-        backend = qiskit.Aer.get_backend('qasm_simulator')
-        shots = 100
-        backend_result = qiskit.execute(
-            circs, backend,
-            shots=shots,
-            seed_simulator=SEED,
-            backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model,
-            optimization_level=0).result()
-
-        initial_t1 = expected_t1
-        initial_a = 1
-        initial_c = 0
+        backend_result, xdata, qubits, t1_value = t1_circuit_execution()
 
         T1Fitter(backend_result, xdata, qubits,
-                 fit_p0=[initial_a, initial_t1, initial_c],
-                 fit_bounds=([0, 0, -1], [2, expected_t1*1.2, 1]))
+                 fit_p0=[1, t1_value, 0],
+                 fit_bounds=([0, 0, -1], [2, t1_value*1.2, 1]))
 
 
 class TestT2(unittest.TestCase):
@@ -184,38 +107,11 @@ class TestT2(unittest.TestCase):
         Then verify that the calculated T2 matches the t2 parameter.
         """
 
-        num_of_gates = (np.linspace(1, 30, 10)).astype(int)
-        gate_time = 0.11
-        qubits = [0]
-        n_echos = 5
-        alt_phase_echo = True
-
-        circs, xdata = t2_circuits(num_of_gates, gate_time, qubits,
-                                   n_echos, alt_phase_echo)
-
-        expected_t2 = 20
-        error = thermal_relaxation_error(np.inf, expected_t2, gate_time, 0.5)
-        noise_model = NoiseModel()
-        noise_model.add_all_qubit_quantum_error(error, 'id')
-        # TODO: Include SPAM errors
-
-        backend = qiskit.Aer.get_backend('qasm_simulator')
-        shots = 100
-        backend_result = qiskit.execute(
-            circs, backend,
-            shots=shots,
-            seed_simulator=SEED,
-            backend_options={'max_parallel_experiments': 0},
-            noise_model=noise_model,
-            optimization_level=0).result()
-
-        initial_t2 = expected_t2
-        initial_a = 1
-        initial_c = 0.5*(-1)
+        backend_result, xdata, qubits, t2_value = t2_circuit_execution()
 
         T2Fitter(backend_result, xdata, qubits,
-                 fit_p0=[initial_a, initial_t2, initial_c],
-                 fit_bounds=([0, 0, -1], [2, expected_t2*1.2, 1]))
+                 fit_p0=[1, t2_value, -0.5],
+                 fit_bounds=([0, 0, -1], [2, t2_value*1.2, 1]))
 
 
 class TestZZ(unittest.TestCase):
@@ -229,44 +125,12 @@ class TestZZ(unittest.TestCase):
         Then verify that the calculated ZZ matches the zz parameter.
         """
 
-        num_of_gates = np.arange(0, 60, 10)
-        gate_time = 0.1
-        qubits = [0]
-        spectators = [1]
-
-        # Generate experiments
-        circs, xdata, osc_freq = zz_circuits(num_of_gates,
-                                             gate_time, qubits,
-                                             spectators, nosc=2)
-
-        # Set the simulator with ZZ
-        zz_expected = 0.1
-        zz_unitary = np.eye(4, dtype=complex)
-        zz_unitary[3, 3] = np.exp(1j*2*np.pi*zz_expected*gate_time)
-        error = coherent_unitary_error(zz_unitary)
-        noise_model = NoiseModel()
-        noise_model.add_nonlocal_quantum_error(error, 'id', [0], [0, 1])
-
-        # Run the simulator
-        backend = qiskit.Aer.get_backend('qasm_simulator')
-        shots = 100
-        # For demonstration purposes split the execution into two jobs
-        backend_result = qiskit.execute(circs, backend,
-                                        shots=shots,
-                                        seed_simulator=SEED,
-                                        noise_model=noise_model,
-                                        optimization_level=0).result()
-
-        initial_a = 0.5
-        initial_c = 0.5
-        initial_f = osc_freq
-        initial_phi = 0.0
+        backend_result, xdata, qubits, spectators, _, omega = zz_circuit_execution()
 
         ZZFitter(backend_result, xdata, qubits, spectators,
-                 fit_p0=[initial_a, initial_f,
-                         initial_phi, initial_c],
+                 fit_p0=[0.5, omega, 0, 0.5],
                  fit_bounds=([-0.5, 0, -np.pi, -0.5],
-                             [1.5, 2*osc_freq, np.pi, 1.5]))
+                             [1.5, 2*omega, np.pi, 1.5]))
 
 
 class TestCals(unittest.TestCase):
@@ -329,7 +193,6 @@ class TestCals(unittest.TestCase):
                            fit_p0=[initial_theta, initial_c],
                            fit_bounds=([-np.pi, -1],
                                        [np.pi, 1]))
-        print(fit.angle_err(0))
         self.assertAlmostEqual(fit.angle_err(0), 0.1, 2)
 
     def test_anglecal1Q(self):
