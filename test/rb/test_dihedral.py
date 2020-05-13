@@ -75,10 +75,16 @@ class TestCNOTDihedral(unittest.TestCase):
                                 'Error: random element is '
                                 'not CNOTDihedral')
                 if qubit_num < 3:
-                    test_circ = decompose_cnotdihedral(elem)
+                    test_circ = elem.to_circuit()
                     self.assertTrue(test_circ,
                                     'Error: cannot decompose a random '
                                     'CNOTDihedral element to a circuit')
+                    new_elem = CNOTDihedral(qubit_num)
+                    test_elem = new_elem.from_circuit(test_circ)
+                    # Test of to_circuit and from_circuit methods
+                    self.assertEqual(elem, test_elem,
+                                     'Error: decomposed circuit is not equal '
+                                     'to the original circuit')
 
 
 if __name__ == '__main__':

@@ -496,6 +496,28 @@ class CNOTDihedral():
         out += ")\n"
         return out
 
+    def to_circuit(self):
+        """Return a QuantumCircuit implementing the CNOT-Dihedral element."""
+        return decompose_cnotdihedral(self)
+
+    def from_circuit(self, circuit):
+        """Initialize from a QuantumCircuit.
+        Args:
+            circuit (QuantumCircuit): instruction to initialize.
+        Returns:
+            Clifford: the Clifford object for the circuit.
+        Raises:
+            QiskitError: if the input instruction is non-Clifford or contains
+                         classical register instruction.
+        """
+        if not isinstance(circuit, (QuantumCircuit)):
+            raise QiskitError("Input must be a QuantumCircuit")
+
+        # Initialize an identity CNOTDihedral object
+        elem = CNOTDihedral(self.num_qubits)
+        append_circuit(elem, circuit)
+        return elem
+
 
 def make_dict_0(num_qubits):
     """Make the zero-CNOT dictionary.
