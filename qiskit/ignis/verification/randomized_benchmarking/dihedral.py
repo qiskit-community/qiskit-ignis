@@ -524,7 +524,7 @@ class CNOTDihedral():
             other (CNOTDihedral): an operator object.
         Returns:
             CNOTDihedral: The operator self @ other.
-        Raise:
+        Raises:
             QiskitError: if operators have incompatible dimensions for
                          composition.
         Additional Information:
@@ -533,11 +533,11 @@ class CNOTDihedral():
             Setting ``front=True`` returns `right` matrix multiplication
             ``A * B`` and is equivalent to the :meth:`dot` method.
         """
-        if (self.num_qubits != other.num_qubits):
+        if self.num_qubits != other.num_qubits:
             raise QiskitError("Incompatible dimension for composition")
-        self = other * self
-        self.poly.weight_0 = 0  # set global phase
-        return self
+        other = other * self
+        other.poly.weight_0 = 0  # set global phase
+        return other
 
     def dot(self, other):
         """Return the right multiplied operator self * other.
@@ -549,11 +549,11 @@ class CNOTDihedral():
             QiskitError: if operators have incompatible dimensions for
                          composition.
         """
-        if (self.num_qubits != other.num_qubits):
+        if self.num_qubits != other.num_qubits:
             raise QiskitError("Incompatible dimension for composition")
-        self = self * other
-        self.poly.weight_0 = 0  # set global phase
-        return self
+        other = self * other
+        other.poly.weight_0 = 0  # set global phase
+        return other
 
 
 def make_dict_0(num_qubits):

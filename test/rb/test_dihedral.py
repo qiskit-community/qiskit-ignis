@@ -24,8 +24,7 @@ import unittest
 from qiskit.ignis.verification.randomized_benchmarking \
     import DihedralUtils as dutils
 from qiskit.ignis.verification.randomized_benchmarking \
-    import CNOTDihedral, append_circuit, decompose_cnotdihedral, \
-    random_cnotdihedral
+    import CNOTDihedral, random_cnotdihedral
 
 
 class TestCNOTDihedral(unittest.TestCase):
