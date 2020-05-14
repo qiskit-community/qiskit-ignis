@@ -60,14 +60,19 @@ class TestCNOTDihedral(unittest.TestCase):
 
             # Test of CNOT-Dihedral circuit decomposition
             for _, elem in test_dihedral_tables.items():
-                test_circ = decompose_cnotdihedral(elem[0])
+                test_circ = elem[0].to_circuit()
                 test_elem = CNOTDihedral(qubit_num)
-                append_circuit(test_elem, test_circ)
+                test_elem = test_elem.from_circuit(test_circ)
                 self.assertEqual(elem[0], test_elem,
                                  'Error: decomposed circuit is not equal '
                                  'to the original circuit')
 
-        # Test that random elements are CNOTDihedral
+    def test_dihedral_random_decompose(self):
+        """
+        Test that random elements are CNOTDihedral
+        and to_circuit and from_circuit methods
+        (where num_qubits < 3)
+        """
         for qubit_num in range(1, 5):
             for nseed in range(20):
                 elem = random_cnotdihedral(qubit_num, seed=nseed)
@@ -85,6 +90,38 @@ class TestCNOTDihedral(unittest.TestCase):
                     self.assertEqual(elem, test_elem,
                                      'Error: decomposed circuit is not equal '
                                      'to the original circuit')
+
+    def test_compose_method(self):
+        """Test compose method"""
+        samples = 10
+        nseed = 111
+        for qubit_num in range(1, 3):
+            for i in range(samples):
+                elem1 = random_cnotdihedral(qubit_num, seed=nseed + i)
+                elem2 = random_cnotdihedral(qubit_num, seed=nseed + samples + i)
+                circ1 = elem1.to_circuit()
+                circ2 = elem2.to_circuit()
+                value = elem1.compose(elem2)
+                target = CNOTDihedral(qubit_num)
+                target = target.from_circuit(circ1.extend(circ2))
+                self.assertEqual(target, value,
+                                 'Error: composed circuit is not the same')
+
+    def test_dot_method(self):
+        """Test dot method"""
+        samples = 10
+        nseed = 222
+        for qubit_num in range(1, 3):
+            for i in range(samples):
+                elem1 = random_cnotdihedral(qubit_num, seed=nseed + i)
+                elem2 = random_cnotdihedral(qubit_num, seed=nseed + samples + i)
+                circ1 = elem1.to_circuit()
+                circ2 = elem2.to_circuit()
+                value = elem1.dot(elem2)
+                target = CNOTDihedral(qubit_num)
+                target = target.from_circuit(circ2.extend(circ1))
+                self.assertEqual(target, value,
+                                 'Error: composed circuit is not the same')
 
 
 if __name__ == '__main__':

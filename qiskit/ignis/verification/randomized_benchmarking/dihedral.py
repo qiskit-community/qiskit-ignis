@@ -518,6 +518,43 @@ class CNOTDihedral():
         append_circuit(elem, circuit)
         return elem
 
+    def compose(self, other):
+        """Return the composed operator.
+        Args:
+            other (CNOTDihedral): an operator object.
+        Returns:
+            CNOTDihedral: The operator self @ other.
+        Raise:
+            QiskitError: if operators have incompatible dimensions for
+                         composition.
+        Additional Information:
+            Composition (``@``) is defined as `left` matrix multiplication for
+            matrix operators. That is that ``A @ B`` is equal to ``B * A``.
+            Setting ``front=True`` returns `right` matrix multiplication
+            ``A * B`` and is equivalent to the :meth:`dot` method.
+        """
+        if (self.num_qubits != other.num_qubits):
+            raise QiskitError("Incompatible dimension for composition")
+        self = other * self
+        self.poly.weight_0 = 0  # set global phase
+        return self
+
+    def dot(self, other):
+        """Return the right multiplied operator self * other.
+        Args:
+            other (CNOTDihedral): an operator object.
+        Returns:
+            CNOTDihedral: The operator self * other.
+        Raises:
+            QiskitError: if operators have incompatible dimensions for
+                         composition.
+        """
+        if (self.num_qubits != other.num_qubits):
+            raise QiskitError("Incompatible dimension for composition")
+        self = self * other
+        self.poly.weight_0 = 0  # set global phase
+        return self
+
 
 def make_dict_0(num_qubits):
     """Make the zero-CNOT dictionary.
