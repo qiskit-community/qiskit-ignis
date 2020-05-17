@@ -17,7 +17,7 @@ in randomized benchmarking"""
 
 import numpy as np
 from qiskit.exceptions import QiskitError
-from  qiskit.quantum_info.operators.symplectic import Clifford
+from qiskit.quantum_info.operators.symplectic import Clifford
 from qiskit.quantum_info.random import random_clifford
 from .dihedral import CNOTDihedral, random_cnotdihedral
 
@@ -43,6 +43,7 @@ class RBgroup():
             self.rb_group = CNOTDihedral
             self.rb_circ_type = 'rb_cnotdihedral'
             self.group_gates_type = 1
+            assert self.num_qubits <= 2, "num_qubits for CNOT-Dihedral RB should be 1 or 2"
         else:
             raise QiskitError("Unknown group or set of gates.")
 
