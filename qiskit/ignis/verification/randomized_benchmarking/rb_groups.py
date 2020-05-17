@@ -43,9 +43,13 @@ class RBgroup():
             self.rb_group = CNOTDihedral
             self.rb_circ_type = 'rb_cnotdihedral'
             self.group_gates_type = 1
-            assert self.num_qubits <= 2, "num_qubits for CNOT-Dihedral RB should be 1 or 2"
+            assert num_qubits <= 2, "num_qubits for CNOT-Dihedral RB should be 1 or 2"
         else:
             raise QiskitError("Unknown group or set of gates.")
+
+    def num_qubits(self):
+        """Return the number of qubits."""
+        return self.num_qubits
 
     def iden(self):
         """Initialize an identity group element"""
@@ -73,7 +77,7 @@ class RBgroup():
         # decompose the group element into a QuantumCircuit
         circ = elem.to_circuit()
         # invert the QuantumCircuit
-        return (circ.inverse())
+        return circ.inverse()
 
     def to_circuit(self, orig):
         """Returns the corresponding QuantumCircuit"""
