@@ -68,7 +68,7 @@ class RBgroup():
 
     def random(self):
         """Generate a random group element"""
-        if self.group_gates_type:
+        if self._group_gates_type:
             return random_cnotdihedral(self._num_qubits)
         else:
             return random_clifford(self._num_qubits)
