@@ -15,17 +15,16 @@
 # pylint: disable=missing-docstring,invalid-name
 import unittest
 import numpy as np
-from qiskit import Aer, transpile, execute
+from qiskit import Aer
 from qiskit.compiler import assemble
 from qiskit.ignis.verification.tomography import GatesetTomographyFitter
 from qiskit.ignis.verification.tomography import gateset_tomography_circuits
 from qiskit.ignis.verification.tomography.basis import default_gateset_basis
 
-from qiskit.providers.aer.noise import NoiseModel, depolarizing_error, \
-    ReadoutError
+from qiskit.providers.aer.noise import NoiseModel
 
 from qiskit.extensions import HGate, SGate
-from qiskit.quantum_info import PTM, Operator, DensityMatrix
+from qiskit.quantum_info import PTM
 
 
 class TestGatesetTomography(unittest.TestCase):
@@ -46,7 +45,8 @@ class TestGatesetTomography(unittest.TestCase):
         E = Gs['E']
         B = np.array([(F @ rho).T[0] for F in Fs]).T
         BB = np.linalg.inv(B)
-        gates = {label: BB @ G @ B for (label, G) in Gs.items() if label not in ['E', 'rho']}
+        gates = {label: BB @ G @ B for (label, G) in Gs.items()
+                 if label not in ['E', 'rho']}
         gates['E'] = E @ B
         gates['rho'] = BB @ rho
         return gates
@@ -106,7 +106,9 @@ class TestGatesetTomography(unittest.TestCase):
         # fitter optimization test
         result_gates = fitter.fit()
         expected_gates = gates
-        self.compare_gates(expected_gates, result_gates, labels)
+        expected_gates['E'] = self.convert_from_ptm(expected_gates['E'])
+        expected_gates['rho'] = self.convert_from_ptm(expected_gates['rho'])
+        self.compare_gates(expected_gates, result_gates, labels + ['E', 'rho'])
 
     def test_noiseless_standard_basis(self):
         self.run_test_on_basis_and_noise()
@@ -142,6 +144,7 @@ class TestGatesetTomography(unittest.TestCase):
         noise_model.add_all_qubit_quantum_error(noise_ptm, ['u1', 'u2', 'u3'])
         self.run_test_on_basis_and_noise(noise_model=noise_model,
                                          noise_ptm=np.real(noise_ptm.data))
+
 
 if __name__ == '__main__':
     unittest.main()

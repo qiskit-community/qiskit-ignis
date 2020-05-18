@@ -154,7 +154,7 @@ class GatesetTomographyFitter:
 
     def _ideal_gateset(self, size):
         ideal_gateset = {label: PTM(self.gateset_basis.gate_matrices[label])
-                   for label in self.gateset_basis.gate_labels}
+                         for label in self.gateset_basis.gate_labels}
         ideal_gateset['E'] = self._default_measurement_op(size)
         ideal_gateset['rho'] = self._default_init_state(size)
         return ideal_gateset
@@ -252,7 +252,6 @@ class GaugeOptimize():
         gateset['rho'] = BB @ self.initial_gateset['rho']
         return gateset
 
-
     def _obj_fn(self, x: np.array) -> float:
         """The norm-based score function for the gauge optimizer
         Args:
@@ -263,8 +262,14 @@ class GaugeOptimize():
             and the one corresponding to B
         """
         gateset = self._x_to_gateset(x)
-        return sum([np.linalg.norm(gateset[label].data - self.ideal_gateset[label].data)
-                    for label in self.gateset_basis.gate_labels])
+        result = sum([np.linalg.norm(gateset[label].data -
+                                     self.ideal_gateset[label].data)
+                      for label in self.gateset_basis.gate_labels])
+        result = result + np.linalg.norm(gateset['E'] -
+                                         self.ideal_gateset['E'])
+        result = result + np.linalg.norm(gateset['rho'] -
+                                         self.ideal_gateset['rho'])
+        return result
 
     def optimize(self) -> List[np.array]:
         """The main optimization method
