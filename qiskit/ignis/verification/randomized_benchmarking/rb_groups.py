@@ -51,6 +51,14 @@ class RBgroup():
         """Return the number of qubits."""
         return self.num_qubits
 
+    def group_gate_type(self):
+        """Return an integer of the group type"""
+        return self.group_gate_type
+
+    def rb_circ_type(self):
+        """Return a string of type for the circuit name"""
+        return self.rb_circ_type
+
     def iden(self):
         """Initialize an identity group element"""
         if self.group_gates_type:
