@@ -27,61 +27,61 @@ class RBgroup():
 
     def __init__(self, num_qubits, group_gates):
         """Initialization from num_qubits and group_gates"""
-        self.num_qubit = num_qubits
-        self.group_gates = group_gates
-        self.rb_circ_type = 'rb'
-        self.group_gates_type = 0
+        self._num_qubits = num_qubits
+        self._group_gates = group_gates
+        self._rb_circ_type = 'rb'
+        self._group_gates_type = 0
 
         if group_gates is None or group_gates in ('0',
                                                   'Clifford',
                                                   'clifford'):
-            self.rb_group = Clifford
+            self._rb_group = Clifford
         elif group_gates in ('1', 'Non-Clifford',
                              'NonClifford'
                              'CNOTDihedral',
                              'CNOT-Dihedral'):
-            self.rb_group = CNOTDihedral
-            self.rb_circ_type += '_cnotdihedral'
-            self.group_gates_type = 1
+            self._rb_group = CNOTDihedral
+            self._rb_circ_type += '_cnotdihedral'
+            self._group_gates_type = 1
             assert num_qubits <= 2, "num_qubits for CNOT-Dihedral RB should be 1 or 2"
         else:
             raise QiskitError("Unknown group or set of gates.")
 
     def num_qubits(self):
         """Return the number of qubits."""
-        return self.num_qubits
+        return self._num_qubits
 
-    def group_gate_type(self):
+    def group_gates_type(self):
         """Return an integer of the group type"""
-        return self.group_gate_type
+        return self._group_gates_type
 
     def rb_circ_type(self):
         """Return a string of type for the circuit name"""
-        return self.rb_circ_type
+        return self._rb_circ_type
 
     def iden(self):
         """Initialize an identity group element"""
-        if self.group_gates_type:
-            return CNOTDihedral(self.num_qubits)
+        if self._group_gates_type:
+            return CNOTDihedral(self._num_qubits)
         else:
-            return Clifford(np.eye(2 * self.num_qubits))
+            return Clifford(np.eye(2 * self._num_qubits))
 
     def random(self):
         """Generate a random group element"""
         if self.group_gates_type:
-            return random_cnotdihedral(self.num_qubits)
+            return random_cnotdihedral(self._num_qubits)
         else:
-            return random_clifford(self.num_qubits)
+            return random_clifford(self._num_qubits)
 
     def compose(self, orig, other):
         """Compose two group elements: orig and other"""
-        orig_elem = self.rb_group(orig)
-        other_elem = self.rb_group(other)
+        orig_elem = self._rb_group(orig)
+        other_elem = self._rb_group(other)
         return orig_elem.compose(other_elem)
 
     def inverse(self, orig):
         """Computes the inverse QuantumCircuit"""
-        elem = self.rb_group(orig)
+        elem = self._rb_group(orig)
         # decompose the group element into a QuantumCircuit
         circ = elem.to_circuit()
         # invert the QuantumCircuit
@@ -89,5 +89,5 @@ class RBgroup():
 
     def to_circuit(self, orig):
         """Returns the corresponding QuantumCircuit"""
-        elem = self.rb_group(orig)
+        elem = self._rb_group(orig)
         return elem.to_circuit()
