@@ -25,7 +25,7 @@ from qiskit.providers.aer.noise import NoiseModel, depolarizing_error, \
     ReadoutError
 
 from qiskit.extensions import HGate, SGate
-from qiskit.quantum_info import PTM
+from qiskit.quantum_info import PTM, Operator, DensityMatrix
 
 
 class TestGatesetTomography(unittest.TestCase):
@@ -54,6 +54,15 @@ class TestGatesetTomography(unittest.TestCase):
     @staticmethod
     def hs_distance(A, B):
         return sum([np.abs(x) ** 2 for x in np.nditer(A-B)])
+
+    @staticmethod
+    def convert_from_ptm(vector):
+        Id = np.sqrt(0.5) * np.array([[1, 0], [0, 1]])
+        X = np.sqrt(0.5) * np.array([[0, 1], [1, 0]])
+        Y = np.sqrt(0.5) * np.array([[0, -1j], [1j, 0]])
+        Z = np.sqrt(0.5) * np.array([[1, 0], [0, -1]])
+        v = vector.reshape(4)
+        return v[0] * Id + v[1] * X + v[2] * Y + v[3] * Z
 
     def compare_gates(self, expected_gates, result_gates, labels, delta=0.2):
         for label in labels:
@@ -90,14 +99,14 @@ class TestGatesetTomography(unittest.TestCase):
                                               gateset_basis=gateset_basis)
 
         # linear inversion test
-        expected_gates = self.expected_linear_inversion_gates(gates, Fs)
         result_gates = fitter.linear_inversion()
+        expected_gates = self.expected_linear_inversion_gates(gates, Fs)
         self.compare_gates(expected_gates, result_gates, labels + ['E', 'rho'])
 
         # fitter optimization test
-        expected_gates = gates
         result_gates = fitter.fit()
-        self.compare_gates(expected_gates, result_gates, labels + ['E', 'rho'])
+        expected_gates = gates
+        self.compare_gates(expected_gates, result_gates, labels)
 
     def test_noiseless_standard_basis(self):
         self.run_test_on_basis_and_noise()
@@ -133,36 +142,6 @@ class TestGatesetTomography(unittest.TestCase):
         noise_model.add_all_qubit_quantum_error(noise_ptm, ['u1', 'u2', 'u3'])
         self.run_test_on_basis_and_noise(noise_model=noise_model,
                                          noise_ptm=np.real(noise_ptm.data))
-
-    def test_readout_errors(self):
-        noise_model = NoiseModel()
-        depol_error = depolarizing_error(0.1, 1)
-        readout_error = ReadoutError([[0.9, 0.1], [0.15, 0.85]])
-        noise_model.add_all_qubit_quantum_error(depol_error, ['u2', 'u3'])
-        #noise_model.add_all_qubit_readout_error(readout_error)
-
-        # create GST circuits
-        gate = HGate()
-        basis = default_gateset_basis()
-        basis.add_gate(gate)
-        circuits = gateset_tomography_circuits(gateset_basis=basis)
-        for i in range(len(circuits)):
-            circuits[i] = transpile(circuits[i], basis_gates=['id', 'u2', 'u3'])
-
-        # Run GST circuits
-        job = execute(circuits, Aer.get_backend('qasm_simulator'),
-                             noise_model=noise_model, shots=10000)
-        result = job.result()
-
-        # Run GST fitter
-        fitter = GatesetTomographyFitter(result, circuits, basis)
-        result_gates = fitter.fit()
-        print(result_gates.keys())
-        # 'E', 'rho', 'Id', 'X_Rot_90', 'Y_Rot_90', 'h'
-        print(result_gates['rho'])
-        # [[1., 0.], [0., 0.]]
-        print(result_gates['E'])
-        # [[1., 0.], [0., 0.]]
 
 if __name__ == '__main__':
     unittest.main()

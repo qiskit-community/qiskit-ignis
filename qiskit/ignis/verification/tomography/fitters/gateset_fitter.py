@@ -176,17 +176,7 @@ class GatesetTomographyFitter:
             3) Use MLE optimization to obtain the final outcome
         """
         linear_inversion_results = self.linear_inversion()
-        # print(linear_inversion_results)
         n = len(self.gateset_basis.spam_labels)
-        # E = self._default_measurement_op(n)
-        # rho = self._default_init_state(n)
-        # Gs = [self.gateset_basis.gate_matrices[label]
-        #       for label in self.gateset_basis.gate_labels]
-        # Fs = [self.gateset_basis.spam_matrix(label)
-        #       for label in self.gateset_basis.spam_labels]
-        # Gs_E = [linear_inversion_results[label].data
-        #         for label in self.gateset_basis.gate_labels]
-        # gauge_opt = GaugeOptimize(Gs, Gs_E, Fs, rho)
         gauge_opt = GaugeOptimize(self._ideal_gateset(n),
                                   linear_inversion_results,
                                   self.gateset_basis)
@@ -231,14 +221,8 @@ class GaugeOptimize():
         self.gateset_basis = gateset_basis
         self.ideal_gateset = ideal_gateset
         self.initial_gateset = initial_gateset
-        #
-        # self.Gs = [ideal_gateset[label]
-        #            for label in self.gateset_basis.gate_labels]
         self.Fs = [self.gateset_basis.spam_matrix(label)
                    for label in self.gateset_basis.spam_labels]
-        # self.initial_Gs_E = [initial_gateset[label].data
-        #                      for label in gateset_basis.gate_labels]
-        # self.d = np.shape(Gs[0])[0]
         self.d = np.shape(ideal_gateset['rho'])[0]
         self.n = len(gateset_basis.gate_labels)
         self.rho = ideal_gateset['rho']
@@ -469,7 +453,7 @@ class GST_Optimize():
         result = E_vec + rho_vec
         for G_T in Gs_T:
             result += self._complex_matrix_to_vec(G_T)
-        return result
+        return np.array(result)
 
     def _obj_fn(self, x: np.array) -> float:
         """The MLE objective function
@@ -536,7 +520,7 @@ class GST_Optimize():
         """
         _, rho, _ = self._split_input_vector(x)
         d = (2 ** self.qubits)  # rho is dxd and starts at variable d^2
-        rho = rho.reshape((d, d))
+        rho = self._convert_from_ptm(rho.reshape((d, d)))
         trace = sum([rho[i][i] for i in range(d)])
         return (np.real(trace), np.imag(trace))
 
