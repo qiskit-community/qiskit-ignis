@@ -25,7 +25,7 @@ from .dihedral import CNOTDihedral, random_cnotdihedral
 class RBgroup():
     """Class that handles the group operations needed for RB."""
 
-    def __init__(self, num_qubits, group_gates):
+    def __init__(self, group_gates, num_qubits=2):
         """Initialization from num_qubits and group_gates"""
         self._num_qubits = num_qubits
         self._group_gates = group_gates
@@ -59,19 +59,21 @@ class RBgroup():
         """Return a string of type for the circuit name"""
         return self._rb_circ_type
 
-    def iden(self):
+    def iden(self, num_qubits):
         """Initialize an identity group element"""
+        self._num_qubits = num_qubits
         if self._group_gates_type:
-            return CNOTDihedral(self._num_qubits)
+            return CNOTDihedral(num_qubits)
         else:
-            return Clifford(np.eye(2 * self._num_qubits))
+            return Clifford(np.eye(2 * num_qubits))
 
-    def random(self):
+    def random(self, num_qubits):
         """Generate a random group element"""
+        self._num_qubits = num_qubits
         if self._group_gates_type:
-            return random_cnotdihedral(self._num_qubits)
+            return random_cnotdihedral(num_qubits)
         else:
-            return random_clifford(self._num_qubits)
+            return random_clifford(num_qubits)
 
     def compose(self, orig, other):
         """Compose two group elements: orig and other"""
