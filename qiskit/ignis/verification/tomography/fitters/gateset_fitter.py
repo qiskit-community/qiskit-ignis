@@ -137,7 +137,7 @@ class GatesetTomographyFitter:
         gates = [PTM(gram_inverse @ gate_matrix) for gate_matrix in gate_matrices]
         result = dict(zip(self.gateset_basis.gate_labels, gates))
         result['E'] = E
-        result['rho'] = rho
+        result['rho'] = gram_inverse @ rho
         return result
 
     def _default_init_state(self, size):
@@ -264,8 +264,8 @@ class GaugeOptimize():
             return None
         gateset = {label: PTM(BB @ self.initial_gateset[label].data @ B)
                    for label in self.gateset_basis.gate_labels}
-        gateset['E'] = self.initial_gateset['E'] @ BB
-        gateset['rho'] = B @ self.initial_gateset['rho']
+        gateset['E'] = self.initial_gateset['E'] @ B
+        gateset['rho'] = BB @ self.initial_gateset['rho']
         return gateset
 
 
