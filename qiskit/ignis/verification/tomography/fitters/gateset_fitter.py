@@ -114,13 +114,17 @@ class GatesetTomographyFitter:
         n = len(self.gateset_basis.spam_labels)
         m = len(self.gateset_basis.gate_labels)
         gram_matrix = np.zeros((n, n))
+        E = np.zeros((1, n))
+        rho = np.zeros((n, 1))
         gate_matrices = []
         for i in range(m):
             gate_matrices.append(np.zeros((n, n)))
 
         for i in range(n):  # row
+            F_i = self.gateset_basis.spam_labels[i]
+            E[0][i] = self.probs[(F_i,)]
+            rho[i][0] = self.probs[(F_i,)]
             for j in range(n):  # column
-                F_i = self.gateset_basis.spam_labels[i]
                 F_j = self.gateset_basis.spam_labels[j]
                 gram_matrix[i][j] = self.probs[(F_j, F_i)]
 
@@ -131,7 +135,10 @@ class GatesetTomographyFitter:
         gram_inverse = np.linalg.inv(gram_matrix)
 
         gates = [PTM(gram_inverse @ gate_matrix) for gate_matrix in gate_matrices]
-        return dict(zip(self.gateset_basis.gate_labels, gates))
+        result = dict(zip(self.gateset_basis.gate_labels, gates))
+        result['E'] = E
+        result['rho'] = rho
+        return result
 
     def _default_init_state(self, size):
         """Returns the PTM representation of the usual ground state"""
@@ -144,6 +151,13 @@ class GatesetTomographyFitter:
         if size == 4:
             return np.array([[np.sqrt(0.5), 0, 0, np.sqrt(0.5)]])
         raise RuntimeError("No default measurement op for more than 1 qubit")
+
+    def _ideal_gateset(self, size):
+        ideal_gateset = {label: self.gateset_basis.gate_matrices[label]
+                   for label in self.gateset_basis.gate_labels}
+        ideal_gateset['E'] = self._default_measurement_op(size)
+        ideal_gateset['rho'] = self._default_init_state(size)
+        return ideal_gateset
 
     def fit(self) -> Dict:
         """
@@ -162,16 +176,20 @@ class GatesetTomographyFitter:
             3) Use MLE optimization to obtain the final outcome
         """
         linear_inversion_results = self.linear_inversion()
+        print(linear_inversion_results)
         n = len(self.gateset_basis.spam_labels)
-        E = self._default_measurement_op(n)
-        rho = self._default_init_state(n)
-        Gs = [self.gateset_basis.gate_matrices[label]
-              for label in self.gateset_basis.gate_labels]
-        Fs = [self.gateset_basis.spam_matrix(label)
-              for label in self.gateset_basis.spam_labels]
-        Gs_E = [linear_inversion_results[label].data
-                for label in self.gateset_basis.gate_labels]
-        gauge_opt = GaugeOptimize(Gs, Gs_E, Fs, rho)
+        # E = self._default_measurement_op(n)
+        # rho = self._default_init_state(n)
+        # Gs = [self.gateset_basis.gate_matrices[label]
+        #       for label in self.gateset_basis.gate_labels]
+        # Fs = [self.gateset_basis.spam_matrix(label)
+        #       for label in self.gateset_basis.spam_labels]
+        # Gs_E = [linear_inversion_results[label].data
+        #         for label in self.gateset_basis.gate_labels]
+        # gauge_opt = GaugeOptimize(Gs, Gs_E, Fs, rho)
+        gauge_opt = GaugeOptimize(self._ideal_gateset(),
+                                  linear_inversion_results,
+                                  self.gateset_basis)
         Gs_E = gauge_opt.optimize()
         optimizer = GST_Optimize(self.gateset_basis.gate_labels,
                                  self.gateset_basis.spam_labels,

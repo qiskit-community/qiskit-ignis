@@ -15,13 +15,14 @@
 # pylint: disable=missing-docstring,invalid-name
 import unittest
 import numpy as np
-from qiskit import Aer
+from qiskit import Aer, transpile, execute
 from qiskit.compiler import assemble
 from qiskit.ignis.verification.tomography import GatesetTomographyFitter
 from qiskit.ignis.verification.tomography import gateset_tomography_circuits
 from qiskit.ignis.verification.tomography.basis import default_gateset_basis
 
-from qiskit.providers.aer.noise import NoiseModel
+from qiskit.providers.aer.noise import NoiseModel, depolarizing_error, \
+    ReadoutError
 
 from qiskit.extensions import HGate, SGate
 from qiskit.quantum_info import PTM
@@ -127,6 +128,35 @@ class TestGatesetTomography(unittest.TestCase):
         self.run_test_on_basis_and_noise(noise_model=noise_model,
                                          noise_ptm=np.real(noise_ptm.data))
 
+    def test_readout_errors(self):
+        noise_model = NoiseModel()
+        depol_error = depolarizing_error(0.1, 1)
+        readout_error = ReadoutError([[0.9, 0.1], [0.15, 0.85]])
+        noise_model.add_all_qubit_quantum_error(depol_error, ['u2', 'u3'])
+        noise_model.add_all_qubit_readout_error(readout_error)
+
+        # create GST circuits
+        gate = HGate()
+        basis = default_gateset_basis()
+        basis.add_gate(gate)
+        circuits = gateset_tomography_circuits(gateset_basis=basis)
+        for i in range(len(circuits)):
+            circuits[i] = transpile(circuits[i], basis_gates=['id', 'u2', 'u3'])
+
+        # Run GST circuits
+        job = execute(circuits, Aer.get_backend('qasm_simulator'),
+                             noise_model=noise_model, shots=10000)
+        result = job.result()
+
+        # Run GST fitter
+        fitter = GatesetTomographyFitter(result, circuits, basis)
+        result_gates = fitter.fit()
+        print(result_gates.keys())
+        # 'E', 'rho', 'Id', 'X_Rot_90', 'Y_Rot_90', 'h'
+        print(result_gates['rho'])
+        # [[1., 0.], [0., 0.]]
+        print(result_gates['E'])
+        # [[1., 0.], [0., 0.]]
 
 if __name__ == '__main__':
     unittest.main()
