@@ -29,19 +29,19 @@ class RBgroup():
         """Initialization from num_qubits and group_gates"""
         self.num_qubit = num_qubits
         self.group_gates = group_gates
+        self.rb_circ_type = 'rb'
+        self.group_gates_type = 0
 
         if group_gates is None or group_gates in ('0',
                                                   'Clifford',
                                                   'clifford'):
             self.rb_group = Clifford
-            self.rb_circ_type = 'rb'
-            self.group_gates_type = 0
         elif group_gates in ('1', 'Non-Clifford',
                              'NonClifford'
                              'CNOTDihedral',
                              'CNOT-Dihedral'):
             self.rb_group = CNOTDihedral
-            self.rb_circ_type = 'rb_cnotdihedral'
+            self.rb_circ_type += '_cnotdihedral'
             self.group_gates_type = 1
             assert num_qubits <= 2, "num_qubits for CNOT-Dihedral RB should be 1 or 2"
         else:
