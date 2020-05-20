@@ -83,7 +83,7 @@ class GateSetBasis:
                 gate: Either a qiskit gate object or a function taking
                 (QuantumCircuit, QuantumRegister)
                 and adding the gate to the circuit
-                str: the name of the new gate
+                name: the name of the new gate
             Raises:
                 RuntimeError: If the gate is given as a function but without
                 a name.
@@ -219,8 +219,8 @@ class GateSetBasis:
             The corresponding matrix
         """
         spec = self.spam_spec[label]
-        F_matrices = [self.gate_matrices[gate_label] for gate_label in spec]
-        result = functools.reduce(lambda a, b: a @ b, F_matrices)
+        f_matrices = [self.gate_matrices[gate_label] for gate_label in spec]
+        result = functools.reduce(lambda a, b: a @ b, f_matrices)
         return result
 
     def get_tomography_basis(self) -> TomographyBasis:

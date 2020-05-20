@@ -19,10 +19,11 @@ Test fitters of Ignis characterization
 """
 
 import os
-import pickle
+import json
 import unittest
-
 import numpy as np
+
+from qiskit.result import Result
 
 from qiskit.ignis.characterization.coherence.fitters import T1Fitter, \
                                                             T2Fitter, \
@@ -34,70 +35,124 @@ from qiskit.ignis.characterization.hamiltonian.fitters import ZZFitter
 class TestFitters(unittest.TestCase):
     """ Test the fitters """
 
-    def test_fitters(self):
+    def test_t1_fitter(self):
         """
-        Test fitters of Ignis characterization
+        Test T1 fitter in Ignis characterization
+
+        This test relies on static data stored in the file t1_data.json.
+        To generate t1_data.json, run 'python generate_data.py t1'.
         """
 
-        files_with_pickles = ['test_fitters_t1.pkl', 'test_fitters_t2.pkl',
-                              'test_fitters_t2star.pkl',
-                              'test_fitters_zz.pkl']
+        with open(os.path.join(os.path.dirname(__file__), 't1_data.json'),
+                  'r') as handle:
+            data = json.load(handle)
 
-        for picfile in files_with_pickles:
-            fo = open(os.path.join(os.path.dirname(__file__),
-                                   picfile), 'rb')
-            file_content = pickle.load(fo)
-            fo.close()
+        fit = T1Fitter(Result.from_dict(data['backend_result']),
+                       data['xdata'], data['qubits'],
+                       fit_p0=[1, data['t1'], 0],
+                       fit_bounds=([0, 0, -1], [2, data['t1']*1.2, 1]))
 
-            fit_type = file_content['type']
-            error_msg_prefix = ' in test of ' + fit_type
+        self.assertEqual(fit.series, ['0'])
+        self.assertEqual(list(fit.params.keys()), ['0'])
 
-            input_to_fitter = file_content['input_to_fitter']
-            if fit_type == 't1':
-                fit = T1Fitter(**input_to_fitter)
-            elif fit_type == 't2':
-                fit = T2Fitter(**input_to_fitter)
-            elif fit_type == 't2star':
-                fit = T2StarFitter(**input_to_fitter)
-            elif fit_type == 'zz':
-                fit = ZZFitter(**input_to_fitter)
-            else:
-                raise NotImplementedError('Unrecognized fitter type '
-                                          + fit_type)
+        num_of_qubits = len(data['qubits'])
+        self.assertEqual(len(fit.params['0']), num_of_qubits)
+        self.assertEqual(len(fit.params_err['0']), num_of_qubits)
 
-            expected_fit = file_content['expected_fit']
-            series = fit.series
-            self.assertTrue(series == expected_fit.series and
-                            sorted(series) ==
-                            sorted(list(fit.params.keys())) and
-                            sorted(series) ==
-                            sorted(list(expected_fit.params.keys())),
-                            'Incorrect series in ' + error_msg_prefix)
+        for qubit in range(num_of_qubits):
+            self.assertTrue(np.allclose(fit.params['0'][qubit],
+                                        [1, data['t1'], 0],
+                                        rtol=0.3,
+                                        atol=0.1))
 
-            num_of_qubits = len(input_to_fitter['qubits'])
-            for serie in series:
-                self.assertTrue(num_of_qubits ==
-                                len(fit.params[serie]) and
-                                num_of_qubits ==
-                                len(expected_fit.params[serie]) and
-                                num_of_qubits ==
-                                len(fit.params_err[serie]) and
-                                num_of_qubits ==
-                                len(expected_fit.params_err[serie]),
-                                'Error for serie ' + serie + error_msg_prefix)
+    def test_t2_fitter(self):
+        """
+        Test T2 fitter in Ignis characterization
 
-                self.assertTrue(
-                    all(
-                        (all(np.isclose(a, b) for a, b in zip(
-                            fit.params[serie][qubit],
-                            expected_fit.params[serie][qubit]))
-                         and
-                         all(np.isclose(a, b) for a, b in zip(
-                             fit.params_err[serie][qubit],
-                             expected_fit.params_err[serie][qubit])))
-                        for qubit in range(num_of_qubits)),
-                    'Incorrect fit parameters for serie'
-                    + serie + error_msg_prefix)
+        This test relies on static data stored in the file t2_data.json.
+        To generate t2_data.json, run 'python generate_data.py t2'.
+        """
+
+        with open(os.path.join(os.path.dirname(__file__), 't2_data.json'),
+                  'r') as handle:
+            data = json.load(handle)
+
+        fit = T2Fitter(Result.from_dict(data['backend_result']),
+                       data['xdata'], data['qubits'],
+                       fit_p0=[1, data['t2'], -0.5],
+                       fit_bounds=([0, 0, -1], [2, data['t2']*1.2, 1]))
+
+        self.assertEqual(fit.series, ['0'])
+        self.assertEqual(list(fit.params.keys()), ['0'])
+
+        num_of_qubits = len(data['qubits'])
+        self.assertEqual(len(fit.params['0']), num_of_qubits)
+        self.assertEqual(len(fit.params_err['0']), num_of_qubits)
+
+        for qubit in range(num_of_qubits):
+            self.assertTrue(np.allclose(fit.params['0'][qubit],
+                                        [0.5, data['t2'], 0.5],
+                                        rtol=0.3,
+                                        atol=0.1))
+
+    def test_t2star_fitter(self):
+        """
+        Test T2* fitter in Ignis characterization
+
+        This test relies on static data stored in the file t2star_data.json.
+        To generate t2star_data.json, run 'python generate_data.py t2star'.
+        """
+
+        with open(os.path.join(os.path.dirname(__file__), 't2star_data.json'),
+                  'r') as handle:
+            data = json.load(handle)
+
+        fit = T2StarFitter(Result.from_dict(data['backend_result']),
+                           data['xdata'], data['qubits'],
+                           fit_p0=[0.5, data['t2'], data['omega'], 0, 0.5],
+                           fit_bounds=([-0.5, 0, data['omega']-0.02, -np.pi, -0.5],
+                                       [1.5, data['t2']*1.2, data['omega']+0.02,
+                                        np.pi, 1.5]))
+
+        self.assertEqual(fit.series, ['0'])
+        self.assertEqual(list(fit.params.keys()), ['0'])
+
+        num_of_qubits = len(data['qubits'])
+        self.assertEqual(len(fit.params['0']), num_of_qubits)
+        self.assertEqual(len(fit.params_err['0']), num_of_qubits)
+
+        for qubit in range(num_of_qubits):
+            self.assertTrue(np.allclose(fit.params['0'][qubit],
+                                        [0.5, data['t2'], data['omega'], 0, 0.5],
+                                        rtol=0.3,
+                                        atol=0.1))
+
+    def test_zz_fitter(self):
+        """
+        Test ZZ fitter in Ignis characterization
+
+        This test relies on static data stored in the file zz_data.json.
+        To generate zz_data.json, run 'python generate_data.py zz'.
+        """
+
+        with open(os.path.join(os.path.dirname(__file__), 'zz_data.json'),
+                  'r') as handle:
+            data = json.load(handle)
+
+        fit = ZZFitter(Result.from_dict(data['backend_result']),
+                       data['xdata'], data['qubits'], data['spectators'],
+                       fit_p0=[0.5, data['omega'], 0, 0.5],
+                       fit_bounds=([-0.5, 0, -np.pi, -0.5],
+                                   [1.5, 2*data['omega'], np.pi, 1.5]))
+
+        self.assertEqual(fit.series, ['0', '1'])
+        self.assertEqual(sorted(list(fit.params.keys())), ['0', '1'])
+
+        num_of_qubits = len(data['qubits'])
+        self.assertEqual(len(fit.params['0']), num_of_qubits)
+        self.assertEqual(len(fit.params_err['0']), num_of_qubits)
+
+        self.assertTrue(np.isclose(fit.ZZ_rate(), data['zz'], rtol=0.3, atol=0.1))
 
 
 if __name__ == '__main__':

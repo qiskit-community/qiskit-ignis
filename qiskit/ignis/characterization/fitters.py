@@ -12,7 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=import-outside-toplevel
+# pylint: disable=invalid-name
 
 """
 Fitters of characteristic times
@@ -25,6 +25,12 @@ from qiskit import QiskitError
 from qiskit.result import Result
 from ..verification.tomography import marginal_counts
 from ..utils import build_counts_dict_from_list
+
+try:
+    from matplotlib import pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
 
 
 class BaseFitter:
@@ -114,7 +120,7 @@ class BaseFitter:
         """
         Return the execution results
         """
-        return self._backend_result
+        return self._backend_result_list
 
     @property
     def series(self) -> Optional[List[str]]:
@@ -391,8 +397,13 @@ class IQFitter(BaseFitter):
         experiment and circuit/program
 
         Returns:
-            mean of the iq data, variance of the iq data (if
-            single shot IQ)
+            tuple: A tuple of the form (``iq_list_mean``, ``iq_list_var``) where
+                ``iq_list_mean`` is a list of the mean of the iq data
+                ``iq_list_var`` is a list of the variance of the iq data (if
+                single shot IQ)
+
+        Raises:
+            QiskitError: invalid input
         """
 
         iq_list = {}
@@ -498,15 +509,22 @@ class IQFitter(BaseFitter):
         Plot calibration data.
 
         Args:
-            qind: qubit index to plot
-            ax: plot axes
-            show_plot: call plt.show()
+            qind (int): qubit index to plot
+            series (str): The series to plot
+            ax (Axes): plot axes
+            show_plot (bool): call plt.show()
 
         Returns:
-            The axes object
+            Axes: The axes object
+
+        Raises:
+            ImportError: if matplotlib is not installed
         """
 
-        from matplotlib import pyplot as plt
+        if not HAS_MATPLOTLIB:
+            raise ImportError("matplotlib must be installed and properly "
+                              "configured to use this method. To install you "
+                              "can run: 'pip install matplotlib'")
 
         if ax is None:
             plt.figure()
@@ -606,7 +624,7 @@ class BaseCoherenceFitter(BaseFitter):
            series: the series to get
 
         Returns:
-           The error of the characteristic time of the qubit, or all qubits
+            The error of the characteristic time of the qubit, or all qubits
         """
 
         return self._get_param(self._time_index,
@@ -627,10 +645,15 @@ class BaseCoherenceFitter(BaseFitter):
             show_plot: whether to call plt.show()
 
         Returns:
-            The axes object
-        """
+            Axes: The axes object
 
-        from matplotlib import pyplot as plt
+        Raises:
+            ImportError: if matplotlib is not installed
+        """
+        if not HAS_MATPLOTLIB:
+            raise ImportError("matplotlib must be installed and properly "
+                              "configured to use this method. To install you "
+                              "can run: 'pip install matplotlib'")
 
         if ax is None:
             plt.figure()
@@ -685,16 +708,22 @@ class BaseGateFitter(BaseFitter):
         Plot err data.
 
         Args:
-            qind: qubit index to plot
-            ax: plot axes
-            show_plot: call plt.show()
+            qind (int): qubit index to plot
+            series (str): the series to plot
+            ax (Axes): plot axes
+            show_plot (bool): call plt.show()
 
         Returns:
-            The axes object
+            Axes: The axes object
+
+        Raises:
+            ImportError: if matplotlib is not installed
         """
 
-        from matplotlib import pyplot as plt
-
+        if not HAS_MATPLOTLIB:
+            raise ImportError("matplotlib must be installed and properly "
+                              "configured to use this method. To install you "
+                              "can run: 'pip install matplotlib'")
         if ax is None:
             plt.figure()
             ax = plt.gca()

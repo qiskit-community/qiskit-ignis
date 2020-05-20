@@ -12,6 +12,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
 """
 IQ Discriminator module to discriminate date in the IQ Plane.
 """
@@ -86,8 +88,11 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                                   (``2``) both calibration and non-calibration data
             schedules: Either the names of the schedules or the schedules themselves.
 
-        Returns (List[List[float]]):
+        Returns:
             data as a list of features. Each feature is a list.
+
+        Raises:
+            PulseError: if IQ data could not be found
         """
         xdata = []
         if schedules is None:
@@ -126,8 +131,8 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
             schedules: Either the names of the schedules or the schedules themselves.
 
         Returns:
-            The y data, i.e. expected states. get_ydata is designed to produce
-            y data with the same length as the x data.
+            list: The y data, i.e. expected states. get_ydata is designed to produce
+                y data with the same length as the x data.
         """
         ydata = []
 
@@ -163,8 +168,11 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
         Args:
             iq_data (np.ndarray): data obtained from get_memory().
 
-        Returns (List[List[float]]):
+        Returns:
             A list of shots where each entry is a list of IQ points.
+
+        Raises:
+            PulseError: if the measurement return type is unknown
         """
         xdata = []
         if len(iq_data.shape) == 2:  # meas_return 'single' case
@@ -212,10 +220,15 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
             title (bool): adds a title to each subplot with the number of
                 the qubit.
 
-        Returns: (Union[List[axes], axes], figure):
-            the axes object used for the plot as well as the figure handle.
-            The figure handle returned is not None only when the figure handle
-            is created by the discriminator's plot method.
+        Returns:
+            tuple: A tuple of the form: ``(Union[List[axes], axes], figure)``
+                where the axes object used for the plot as well as the figure handle.
+                The figure handle returned is not None only when the figure handle
+                is created by the discriminator's plot method.
+
+        Raises:
+            QiskitError: If matplotlib is not installed, or there is
+                invalid input
         """
         if not HAS_MATPLOTLIB:
             raise QiskitError('please install matplotlib')
@@ -343,6 +356,9 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 get_xdata will be used to retrieve the x data from the Result
                 or list of Results.
             color (str): color of the IQ points in the scatter plot.
+
+        Raises:
+            QiskitError: If not enough axis instances are provided
         """
         if not isinstance(axs, np.ndarray):
             axs = np.asarray(axs)
@@ -444,7 +460,7 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
             x_data (List[List[float]]): list of features. Each feature is
                                         itself a list.
 
-        Returns (List[str]):
+        Returns:
             The discriminated x_data as a list of labels.
         """
         return self._lda.predict(x_data)
@@ -511,7 +527,7 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
             x_data (List[List[float]]): list of features. Each feature is
                                         itself a list.
 
-        Returns (List[str]):
+        Returns:
             The discriminated x_data as a list of labels.
         """
         return self._qda.predict(x_data)
@@ -529,7 +545,7 @@ class SklearnIQDiscriminator(IQDiscriminationFitter):
                  schedules: Union[List[str], List[Schedule]] = None):
         """
         Args:
-            classifier:
+            classifier (Classifier):
                 An sklearn classifier to train and do the discrimination. The
                 classifier must have a fit method and a predict method
             cal_results (Union[Result, List[Result]]): calibration results,
@@ -586,7 +602,7 @@ class SklearnIQDiscriminator(IQDiscriminationFitter):
             x_data (List[List[float]]): list of features. Each feature is
                                         itself a list.
 
-        Returns (List[str]):
+        Returns:
             the discriminated x_data as a list of labels.
         """
         return self._classifier.predict(x_data)
