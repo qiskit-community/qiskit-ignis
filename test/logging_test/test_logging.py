@@ -59,7 +59,7 @@ class TestLoggingBase(unittest.TestCase):
         :return:
         """
         try:
-            os.makedirs(self._qiskit_dir)
+            os.makedirs(self._qiskit_dir, exist_ok=True)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
@@ -79,7 +79,7 @@ class TestLoggingBase(unittest.TestCase):
         """
         try:
             os.remove("logging.yaml")
-        except OSError:
+        except OSError as e:
             pass
 
         # Resurrecting the original files
@@ -101,6 +101,8 @@ def _safe_rename_file(src, dst):
     try:
         os.replace(src, dst)
     except FileNotFoundError:
+        pass
+    except OSError as e:
         pass
 
 
@@ -157,7 +159,10 @@ class TestLoggingConfiguration(TestLoggingBase):
         logger.log_to_file(test="test")
 
         self.assertTrue(os.path.exists("test_log.log"))
-        os.remove("test_log.log")
+        try:
+            os.remove("test_log.log")
+        except OSError:
+            pass
 
     def test_file_rotation(self):
         """
@@ -283,7 +288,10 @@ class TestLogReader(TestLoggingBase):
         self.assertEqual(len(files), 6)
 
         for f in reader.get_log_files():
-            os.remove(f)
+            try:
+                os.remove(f)
+            except OSError:
+                pass
 
     def test_filtering(self):
         """
