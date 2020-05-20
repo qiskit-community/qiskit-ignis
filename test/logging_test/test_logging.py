@@ -38,8 +38,7 @@ Unit testing of the Ignis Logging facility. Covering the following specs:
 """
 import unittest
 import os
-import errno
-from qiskit.ignis.logging import *
+from qiskit.ignis.logging import IgnisLogging, IgnisLogReader
 
 
 class TestLoggingBase(unittest.TestCase):
@@ -58,11 +57,7 @@ class TestLoggingBase(unittest.TestCase):
         Basic setup - making the .qiskit dir and preserving any existing files
         :return:
         """
-        try:
-            os.makedirs(self._qiskit_dir, exist_ok=True)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
+        os.makedirs(self._qiskit_dir, exist_ok=True)
 
         # Protecting the original files, if exist
         _safe_rename_file(os.path.join(self._qiskit_dir, "logging.yaml"),
@@ -79,7 +74,7 @@ class TestLoggingBase(unittest.TestCase):
         """
         try:
             os.remove("logging.yaml")
-        except OSError as e:
+        except OSError:
             pass
 
         # Resurrecting the original files
@@ -102,7 +97,7 @@ def _safe_rename_file(src, dst):
         os.replace(src, dst)
     except FileNotFoundError:
         pass
-    except OSError as e:
+    except OSError:
         pass
 
 
@@ -125,8 +120,8 @@ class TestLoggingConfiguration(TestLoggingBase):
         Only tests the main param: file_logging
         :return:
         """
-        with open(os.path.join(self._qiskit_dir, "logging.yaml"), "w") as f:
-            f.write("file_logging1: true")
+        with open(os.path.join(self._qiskit_dir, "logging.yaml"), "w") as file:
+            file.write("file_logging1: true")
 
         logger = IgnisLogging().get_logger(__name__)
         logger.log_to_file(test="test")
@@ -138,8 +133,8 @@ class TestLoggingConfiguration(TestLoggingBase):
         Only tests the main param: file_logging
         :return:
         """
-        with open(os.path.join(self._qiskit_dir, "logging.yaml"), "w") as f:
-            f.write("file_logging: tru")
+        with open(os.path.join(self._qiskit_dir, "logging.yaml"), "w") as file:
+            file.write("file_logging: tru")
 
         logger = IgnisLogging().get_logger(__name__)
         logger.log_to_file(test="test")
@@ -151,9 +146,8 @@ class TestLoggingConfiguration(TestLoggingBase):
         test that a custom log file path is honored
         :return:
         """
-        with open(os.path.join(self._qiskit_dir, "logging.yaml"), "w") as f:
-            f.write("file_logging: true\n"
-                    "log_file: test_log.log")
+        with open(os.path.join(self._qiskit_dir, "logging.yaml"), "w") as file:
+            file.write("file_logging: true\nlog_file: test_log.log")
 
         logger = IgnisLogging().get_logger(__name__)
         logger.log_to_file(test="test")
@@ -169,10 +163,10 @@ class TestLoggingConfiguration(TestLoggingBase):
         Test that the file rotation is working
         :return:
         """
-        with open(os.path.join(self._qiskit_dir, "logging.yaml"), "w") as f:
-            f.write("file_logging: true\n"
-                    "max_size: 10\n"
-                    "max_rotations: 3")
+        with open(os.path.join(self._qiskit_dir, "logging.yaml"), "w") as file:
+            file.write("file_logging: true\n"
+                       "max_size: 10\n"
+                       "max_rotations: 3")
 
         logger = IgnisLogging().get_logger(__name__)
         for i in range(100):
@@ -203,8 +197,8 @@ class TestLoggingConfiguration(TestLoggingBase):
         Test that disabling the logging manually works
         :return:
         """
-        with open(os.path.join(self._qiskit_dir, "logging.yaml"), "w") as f:
-            f.write("file_logging: true\n")
+        with open(os.path.join(self._qiskit_dir, "logging.yaml"), "w") as file:
+            file.write("file_logging: true\n")
 
         logger = IgnisLogging().get_logger(__name__)
         logger.disable_file_logging()
@@ -274,10 +268,8 @@ class TestLogReader(TestLoggingBase):
         """
         Test reading multiple lines
         """
-        with open(os.path.join(self._qiskit_dir, "logging.yaml"), "w") as f:
-            f.write("file_logging: true\n"
-                    "max_size: 40\n"
-                    "max_rotations: 5")
+        with open(os.path.join(self._qiskit_dir, "logging.yaml"), "w") as file:
+            file.write("file_logging: true\nmax_size: 40\nmax_rotations: 5")
 
         logger = IgnisLogging().get_logger(__name__)
         for i in range(10):
@@ -287,9 +279,9 @@ class TestLogReader(TestLoggingBase):
         files = reader.get_log_files()
         self.assertEqual(len(files), 6)
 
-        for f in reader.get_log_files():
+        for file in reader.get_log_files():
             try:
-                os.remove(f)
+                os.remove(file)
             except OSError:
                 pass
 
