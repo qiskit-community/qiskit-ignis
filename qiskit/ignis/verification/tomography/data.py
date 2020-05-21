@@ -57,7 +57,7 @@ def marginal_counts(counts: Dict[str, int],
 
     # Check if we do not need to marginalize. In this case we just trim
     # whitespace from count keys
-    if num_qubits == len(meas_qubits) or (meas_qubits is True):
+    if (meas_qubits is True) or (num_qubits == len(meas_qubits)):
         ret = {}
         for key, val in counts.items():
             key = key.replace(' ', '')
