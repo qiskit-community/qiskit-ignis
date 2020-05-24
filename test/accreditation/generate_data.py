@@ -20,6 +20,7 @@ Generate data for accreditation tests
 
 # Import general libraries (needed for functions)
 import pickle
+import json
 import qiskit
 
 
@@ -81,14 +82,13 @@ def generate_data_ideal():
                       simulator,
                       shots=1)
         all_results.append(job.result())
-        all_postp_list.append(postp_list)
+        all_postp_list.append([postp.tolist() for postp in postp_list])
         all_v_zero.append(v_zero)
-    outputdict = {'all_results': all_results,
+    outputdict = {'all_results': [result.to_dict() for result in all_results],
                   'all_postp_list': all_postp_list,
                   'all_v_zero': all_v_zero}
-    f = open('accred_ideal_results.pkl', 'wb')
-    pickle.dump(outputdict, f)
-    f.close()
+    with open('accred_ideal_results.json', "w") as results_file:
+        json.dump(outputdict, results_file)
 
 
 def generate_data_noisy():
@@ -125,7 +125,7 @@ def generate_data_noisy():
                       noise_model=noise_model, basis_gates=basis_gates,
                       shots=1, seed_simulator=seed_simulator + run)
         all_results.append(job.result())
-        all_postp_list.append(postp_list)
+        all_postp_list.append([postp.tolist() for postp in postp_list])
         all_v_zero.append(v_zero)
         # Post-process the outputs and see if the protocol accepts
         test_3.single_protocol_run(job.result(), postp_list, v_zero)
@@ -134,15 +134,14 @@ def generate_data_noisy():
     theta = 5/100
     test_3.bound_variation_distance(theta)
     bound = test_3.bound
-    outputdict = {'all_results': all_results,
+    outputdict = {'all_results': [result.to_dict() for result in all_results],
                   'all_postp_list': all_postp_list,
                   'all_v_zero': all_v_zero,
                   'all_acc': all_acc,
                   'theta': theta,
                   'bound': bound}
-    f = open('accred_noisy_results.pkl', 'wb')
-    pickle.dump(outputdict, f)
-    f.close()
+    with open('accred_noisy_results.json', "w") as results_file:
+        json.dump(outputdict, results_file)
 
 
 if __name__ == '__main__':
