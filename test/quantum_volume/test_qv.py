@@ -21,7 +21,6 @@ Run through Quantum volume
 import unittest
 import os
 from test.utils import *
-import pickle
 import qiskit.ignis.verification.quantum_volume as qv
 
 
@@ -46,7 +45,7 @@ class TestQV(unittest.TestCase):
 
     def test_qv_fitter(self):
 
-        """ Test the fitter with some pickled result data"""
+        """ Test the fitter with some result data pre-saved as json"""
 
         ideal_results = load_results_from_json(os.path.join(os.path.dirname(__file__),
                                                             'qv_ideal_results.json'))
