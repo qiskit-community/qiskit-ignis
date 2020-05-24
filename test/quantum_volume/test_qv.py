@@ -20,6 +20,7 @@ Run through Quantum volume
 
 import unittest
 import os
+from test.utils import *
 import pickle
 import qiskit.ignis.verification.quantum_volume as qv
 
@@ -43,20 +44,14 @@ class TestQV(unittest.TestCase):
                          "Error: Not enough circuits for the "
                          "number of specified qubit lists")
 
-    @unittest.skip('Pickle files are no longer valid')
     def test_qv_fitter(self):
 
         """ Test the fitter with some pickled result data"""
 
-        f0 = open(os.path.join(os.path.dirname(__file__),
-                               'qv_ideal_results.pkl'), 'rb')
-        ideal_results = pickle.load(f0)
-        f0.close()
-
-        f0 = open(os.path.join(os.path.dirname(__file__),
-                               'qv_exp_results.pkl'), 'rb')
-        exp_results = pickle.load(f0)
-        f0.close()
+        ideal_results = load_results_from_json(os.path.join(os.path.dirname(__file__),
+                                                            'qv_ideal_results.json'))
+        exp_results = load_results_from_json(os.path.join(os.path.dirname(__file__),
+                                                          'qv_exp_results.json'))
 
         qubit_lists = [[0, 1, 3], [0, 1, 3, 5], [0, 1, 3, 5, 7],
                        [0, 1, 3, 5, 7, 10]]
