@@ -20,9 +20,12 @@ Generates randomized benchmarking sequences
 """
 
 import copy
+import os
+import sys
 from typing import List, Optional
 import numpy as np
 import qiskit
+
 
 from .rb_groups import RBgroup
 
@@ -131,7 +134,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                 align_cliffs: bool = False,
                                 interleaved_gates: Optional[List[List[str]]] = None,
                                 is_purity: bool = False,
-                                group_gates: Optional[str] = None) -> \
+                                group_gates: Optional[str] = None,
+                                rand_seed=None) -> \
         (List[List[qiskit.QuantumCircuit]], List[List[int]],
          Optional[List[List[qiskit.QuantumCircuit]]],
          Optional[List[List[List[qiskit.QuantumCircuit]]]],
@@ -207,6 +211,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
 
             * ``group_gates='1'`` or ``group_gates='CNOT-Dihedral'`` \
             or ``group_gates='Non-Clifford'`` -- CNOT-Dihedral group.
+
+        rand_seed: random number generator seed, to be used when getting random gates
 
     Returns:
         A tuple of different fields depending on the inputs.
@@ -298,7 +304,9 @@ def randomized_benchmarking_seq(nseeds: int = 1,
     xdata = calc_xdata(length_vector, length_multiplier)
 
     pattern_sizes = [len(pat) for pat in rb_pattern]
-    max_nrb = np.max(pattern_sizes)
+
+    rand_seed = int.from_bytes(os.urandom(4), byteorder=sys.byteorder) \
+        if rand_seed is None else rand_seed
 
     # Set the RBgroup class for RB (default is Clifford)
     rb_group = RBgroup(group_gates)
@@ -342,7 +350,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
 
                 for _ in range(length_multiplier[rb_pattern_index]):
-                    new_elmnt_gatelist = rb_group.random(rb_q_num)
+                    new_elmnt_gatelist = rb_group.random(rb_q_num, rand_seed)
                     Elmnts[rb_pattern_index] = rb_group.compose(
                         Elmnts[rb_pattern_index], new_elmnt_gatelist)
                     general_circ += replace_q_indices(
