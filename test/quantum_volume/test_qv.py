@@ -48,9 +48,6 @@ class TestQV(unittest.TestCase):
 
         """ Test the fitter with some pickled result data"""
 
-        os.path.join(os.path.dirname(__file__),
-                     'test_fitter_results_2.pkl')
-
         f0 = open(os.path.join(os.path.dirname(__file__),
                                'qv_ideal_results.pkl'), 'rb')
         ideal_results = pickle.load(f0)
