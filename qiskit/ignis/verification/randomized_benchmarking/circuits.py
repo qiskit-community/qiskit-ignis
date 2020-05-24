@@ -24,11 +24,7 @@ from typing import List, Optional
 import numpy as np
 import qiskit
 
-from .Clifford import Clifford
-from .clifford_utils import CliffordUtils as clutils
-from .dihedral import CNOTDihedral
-from .dihedral_utils import DihedralUtils as dutils
-
+from .rb_groups import RBgroup
 
 def handle_length_multiplier(length_multiplier, len_pattern,
                              is_purity=False):
@@ -285,26 +281,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
         Create purity 2-qubit RB circuits separately on qubits
         Q0 and Q3 and on qubtis Q1 and Q2.
         The output is ``npurity = 9`` in this case.
-
     """
-    # Set modules (default is Clifford)
-    if group_gates is None or group_gates in ('0',
-                                              'Clifford',
-                                              'clifford'):
-        g_utils = clutils()
-        g_group = Clifford
-        rb_circ_type = 'rb'
-        group_gates_type = 0
-    elif group_gates in ('1', 'Non-Clifford',
-                         'NonClifford'
-                         'CNOTDihedral',
-                         'CNOT-Dihedral'):
-        g_utils = dutils()
-        g_group = CNOTDihedral
-        rb_circ_type = 'rb_cnotdihedral'
-        group_gates_type = 1
-    else:
-        raise ValueError("Unknown group or set of gates.")
 
     if rb_pattern is None:
         rb_pattern = [[0]]
@@ -323,10 +300,10 @@ def randomized_benchmarking_seq(nseeds: int = 1,
     pattern_sizes = [len(pat) for pat in rb_pattern]
     max_nrb = np.max(pattern_sizes)
 
-    # load group tables
-    group_tables = [[] for _ in range(max_nrb)]
-    for rb_num in range(max_nrb):
-        group_tables[rb_num] = g_utils.load_tables(rb_num+1)
+    # Set the RBgroup class for RB (default is Clifford)
+    rb_group = RBgroup(group_gates)
+    group_gates_type = rb_group.group_gates_type()
+    rb_circ_type = rb_group.rb_circ_type()
 
     # initialization: rb sequences
     circuits = [[] for e in range(nseeds)]
@@ -353,11 +330,11 @@ def randomized_benchmarking_seq(nseeds: int = 1,
         # rb_pattern
         Elmnts = []
         for rb_q_num in pattern_sizes:
-            Elmnts.append(g_group(rb_q_num))
+            Elmnts.append(rb_group.iden(rb_q_num))
         # Sequences for interleaved rb sequences
             Elmnts_interleaved = []
         for rb_q_num in pattern_sizes:
-            Elmnts_interleaved.append(g_group(rb_q_num))
+            Elmnts_interleaved.append(rb_group.iden(rb_q_num))
 
         # go through and add elements to RB sequences
         length_index = 0
@@ -365,13 +342,11 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
 
                 for _ in range(length_multiplier[rb_pattern_index]):
-                    new_elmnt_gatelist = g_utils.random_gates(
-                        rb_q_num)
-                    Elmnts[rb_pattern_index] = g_utils.compose_gates(
+                    new_elmnt_gatelist = rb_group.random(rb_q_num)
+                    Elmnts[rb_pattern_index] = rb_group.compose(
                         Elmnts[rb_pattern_index], new_elmnt_gatelist)
                     general_circ += replace_q_indices(
-                        get_quantum_circuit(g_utils.gatelist(),
-                                            rb_q_num),
+                        rb_group.to_circuit(Elmnts[rb_pattern_index]),
                         rb_pattern[rb_pattern_index], qr)
 
                     # add a barrier
@@ -381,23 +356,23 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                     # interleaved rb sequences
                     if interleaved_gates is not None:
                         Elmnts_interleaved[rb_pattern_index] = \
-                            g_utils.compose_gates(
+                            rb_group.compose(
                                 Elmnts_interleaved[rb_pattern_index],
                                 new_elmnt_gatelist)
                         interleaved_circ += replace_q_indices(
-                            get_quantum_circuit(g_utils.gatelist(),
-                                                rb_q_num),
+                            rb_group.to_circuit(
+                                Elmnts_interleaved[rb_pattern_index]),
                             rb_pattern[rb_pattern_index], qr)
                         Elmnts_interleaved[rb_pattern_index] = \
-                            g_utils.compose_gates(
+                            rb_group.compose(
                                 Elmnts_interleaved[rb_pattern_index],
                                 interleaved_gates[rb_pattern_index])
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
                             *[qr[x] for x in rb_pattern[rb_pattern_index]])
                         interleaved_circ += replace_q_indices(
-                            get_quantum_circuit(g_utils.gatelist(),
-                                                rb_q_num),
+                            rb_group.to_circuit(
+                                interleaved_gates[rb_pattern_index]),
                             rb_pattern[rb_pattern_index], qr)
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
@@ -423,25 +398,16 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                 circ_interleaved += interleaved_circ
 
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
-                    inv_key = g_utils.find_key(Elmnts[rb_pattern_index],
-                                               rb_q_num)
-                    inv_circuit = g_utils.find_inverse_gates(
-                        rb_q_num,
-                        group_tables[rb_q_num-1][inv_key])
-                    circ += replace_q_indices(
-                        get_quantum_circuit(inv_circuit, rb_q_num),
-                        rb_pattern[rb_pattern_index], qr)
+                    inv_circuit = rb_group.inverse(Elmnts[rb_pattern_index])
+                    circ += replace_q_indices(inv_circuit,
+                                              rb_pattern[rb_pattern_index], qr)
                     # calculate the inverse and produce the circuit
                     # for interleaved rb
                     if interleaved_gates is not None:
-                        inv_key = g_utils.find_key(Elmnts_interleaved
-                                                   [rb_pattern_index],
-                                                   rb_q_num)
-                        inv_circuit = g_utils.find_inverse_gates(
-                            rb_q_num,
-                            group_tables[rb_q_num - 1][inv_key])
+                        inv_circuit = rb_group.inverse(
+                            Elmnts_interleaved[rb_pattern_index])
                         circ_interleaved += replace_q_indices(
-                            get_quantum_circuit(inv_circuit, rb_q_num),
+                            inv_circuit,
                             rb_pattern[rb_pattern_index], qr)
 
                 # Circuits for purity rb
@@ -586,44 +552,3 @@ def replace_q_indices(circuit, q_nums, qr):
         new_circuit.data.append(new_op)
 
     return new_circuit
-
-
-def get_quantum_circuit(gatelist, num_qubits):
-    """
-    Returns the circuit in the form of a QuantumCircuit object.
-
-    Args:
-        num_qubits (int): the number of qubits (dimension).
-        gatelist (list): a list of gates.
-
-    Returns:
-        QuantumCircuit: A QuantumCircuit object.
-    """
-    qr = qiskit.QuantumRegister(num_qubits)
-    qc = qiskit.QuantumCircuit(qr)
-
-    for op in gatelist:
-        split = op.split()
-        op_names = [split[0]]
-
-        # temporary correcting the ops name since QuantumCircuit has no
-        # attributes 'v' or 'w' yet:
-        if op_names == ['v']:
-            op_names = ['sdg', 'h']
-        elif op_names == ['w']:
-            op_names = ['h', 's']
-
-        if op_names == ['u1']:
-            qubits = [qr[int(x)] for x in split[2:]]
-            theta = float(split[1])
-        else:
-            qubits = [qr[int(x)] for x in split[1:]]
-
-        for sub_op in op_names:
-            operation = getattr(qiskit.QuantumCircuit, sub_op)
-            if sub_op == 'u1':
-                operation(qc, theta, *qubits)
-            else:
-                operation(qc, *qubits)
-
-    return qc
