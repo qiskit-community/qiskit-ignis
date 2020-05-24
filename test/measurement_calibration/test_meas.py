@@ -422,7 +422,7 @@ class TestMeasCal(unittest.TestCase):
         # pre-generated results with noise
         # load from json file
         with open(os.path.join(
-            os.path.dirname(__file__), 'test_tensored_meas_results.json'), "r") as saved_file:
+                os.path.dirname(__file__), 'test_tensored_meas_results.json'), "r") as saved_file:
             saved_info = json.load(saved_file)
         saved_info['cal_results'] = Result.from_dict(saved_info['cal_results'])
         saved_info['results'] = Result.from_dict(saved_info['results'])
