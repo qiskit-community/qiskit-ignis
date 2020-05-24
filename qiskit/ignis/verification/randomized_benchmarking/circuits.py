@@ -29,6 +29,7 @@ import qiskit
 
 from .rb_groups import RBgroup
 
+
 def handle_length_multiplier(length_multiplier, len_pattern,
                              is_purity=False):
     """
@@ -132,7 +133,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                 length_multiplier: Optional[List[int]] = 1,
                                 seed_offset: int = 0,
                                 align_cliffs: bool = False,
-                                interleaved_gates: Optional[List[List[str]]] = None,
+                                interleaved_elem: Optional[qiskit.quantum_info.operators.symplectic.Clifford] = None,
                                 is_purity: bool = False,
                                 group_gates: Optional[str] = None,
                                 rand_seed=None) -> \
@@ -189,9 +190,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
 
             **Note:** the alignment considers the group multiplier.
 
-        interleaved_gates: A list of lists of gates that
-            will be interleaved. It is not ``None`` only for interleaved
-            randomized benchmarking.
+        interleaved_elem: An element that  will be interleaved.
+        It is not ``None`` only for interleaved randomized benchmarking.
             The lengths of the lists should be equal to the length of the
             lists in ``rb_pattern``.
 
@@ -224,7 +224,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
          * ``xdata``: the sequences lengths (with multiplier if applicable).
 
          * ``circuits_interleaved``: \
-           (only if ``interleaved_gates`` is not ``None``): \
+           (only if ``interleaved_elem`` is not ``None``): \
            list of lists of circuits for the interleaved RB sequences \
            (a separate list for each seed).
 
@@ -271,7 +271,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
         .. code-block::
 
             rb_pattern = [[0,3],[2],[1]]
-            interleaved_gates = [['cx 0 1'], ['x 0'], ['h 0']]
+            interleaved_elem = [['cx 0 1'], ['x 0'], ['h 0']]
 
         Interleave the 2-qubit gate ``cx`` on qubits Q0 and Q3,
         a 1-qubit gate ``x`` on qubit Q2,
@@ -362,7 +362,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                         *[qr[x] for x in rb_pattern[rb_pattern_index]])
 
                     # interleaved rb sequences
-                    if interleaved_gates is not None:
+                    if interleaved_elem is not None:
                         Elmnts_interleaved[rb_pattern_index] = \
                             rb_group.compose(
                                 Elmnts_interleaved[rb_pattern_index],
@@ -374,13 +374,13 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                         Elmnts_interleaved[rb_pattern_index] = \
                             rb_group.compose(
                                 Elmnts_interleaved[rb_pattern_index],
-                                interleaved_gates[rb_pattern_index])
+                                interleaved_elem[rb_pattern_index])
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
                             *[qr[x] for x in rb_pattern[rb_pattern_index]])
                         interleaved_circ += replace_q_indices(
                             rb_group.to_circuit(
-                                interleaved_gates[rb_pattern_index]),
+                                interleaved_elem[rb_pattern_index]),
                             rb_pattern[rb_pattern_index], qr)
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
@@ -391,7 +391,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                 general_circ.barrier(
                     *[qr[x] for x in qlist_flat])
                 # align for interleaved rb
-                if interleaved_gates is not None:
+                if interleaved_elem is not None:
                     interleaved_circ.barrier(
                         *[qr[x] for x in qlist_flat])
 
@@ -411,7 +411,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                               rb_pattern[rb_pattern_index], qr)
                     # calculate the inverse and produce the circuit
                     # for interleaved rb
-                    if interleaved_gates is not None:
+                    if interleaved_elem is not None:
                         inv_circuit = rb_group.inverse(
                             Elmnts_interleaved[rb_pattern_index])
                         circ_interleaved += replace_q_indices(
@@ -525,11 +525,11 @@ def randomized_benchmarking_seq(nseeds: int = 1,
     if is_purity:
         return circuits_purity, xdata, npurity
     # output of non-clifford cnot-dihedral interleaved rb
-    if interleaved_gates is not None and group_gates_type == 1:
+    if interleaved_elem is not None and group_gates_type == 1:
         return circuits, xdata, circuits_cnotdihedral, circuits_interleaved, \
                circuits_cnotdihedral_interleaved
     # output of interleaved rb
-    if interleaved_gates is not None:
+    if interleaved_elem is not None:
         return circuits, xdata, circuits_interleaved
     # output of Non-Clifford cnot-dihedral rb
     if group_gates_type == 1:
