@@ -20,7 +20,8 @@ Run through Accreditation
 
 import unittest
 import os
-from test.utils import *
+import json
+from qiskit.result.result import Result
 # Import Qiskit classes
 import qiskit.ignis.verification.accreditation as accred
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister

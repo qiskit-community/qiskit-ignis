@@ -31,7 +31,8 @@ expected (equally distributed) result
 
 import unittest
 import os
-from test.utils import *
+import json
+from qiskit.result.result import Result
 import numpy as np
 import qiskit
 from qiskit import QuantumCircuit, ClassicalRegister, Aer

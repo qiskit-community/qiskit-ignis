@@ -20,7 +20,7 @@ Run through Quantum volume
 
 import unittest
 import os
-from test.utils import *
+from test.utils import load_results_from_json
 import qiskit.ignis.verification.quantum_volume as qv
 
 

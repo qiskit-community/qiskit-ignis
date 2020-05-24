@@ -20,7 +20,7 @@ Test the fitters
 
 import os
 import unittest
-from test.utils import *
+from test.utils import load_results_from_json
 import json
 
 import numpy as np
