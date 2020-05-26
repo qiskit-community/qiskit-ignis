@@ -110,6 +110,12 @@ class MeasurementFilter():
             # counts dictionary
             data_format = 0
             # convert to form2
+            for data_label in raw_data.keys():
+                if data_label not in self._state_labels:
+                    raise QiskitError("Unexpected state label '" + data_label +
+                                      "', verify the fitter's state labels "
+                                      "correpsond to the input data")
+
             raw_data2 = [np.zeros(len(self._state_labels), dtype=float)]
             for stateidx, state in enumerate(self._state_labels):
                 raw_data2[0][stateidx] = raw_data.get(state, 0)
