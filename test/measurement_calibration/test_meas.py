@@ -32,9 +32,9 @@ expected (equally distributed) result
 import unittest
 import os
 import json
-from qiskit.result.result import Result
 import numpy as np
 import qiskit
+from qiskit.result.result import Result
 from qiskit import QuantumCircuit, ClassicalRegister, Aer
 from qiskit.ignis.mitigation.measurement \
      import (CompleteMeasFitter, TensoredMeasFitter,

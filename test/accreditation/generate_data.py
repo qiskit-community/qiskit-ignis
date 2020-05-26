@@ -19,7 +19,6 @@ Generate data for accreditation tests
 """
 
 # Import general libraries (needed for functions)
-import pickle
 import json
 import qiskit
 
@@ -60,7 +59,7 @@ def make_accred_system(seed=None):
 
 
 def generate_data_ideal():
-    """generaete a ideal data pickle"""
+    """generaete a ideal data and save it as json"""
     seed_accreditation = 134780132
 
     accsys = make_accred_system(seed=seed_accreditation)
@@ -92,7 +91,7 @@ def generate_data_ideal():
 
 
 def generate_data_noisy():
-    """generaete a noisy data pickle"""
+    """generaete a noisy data and save it as json"""
     seed_accreditation = 1435754
     seed_simulator = 877924554
 
