@@ -18,10 +18,6 @@ Randomized Benchmarking module
 """
 
 # Randomized Benchmarking functions
-# from .Clifford import Clifford
-# from .basic_utils import BasicUtils
-# from .clifford_utils import CliffordUtils
-# from .dihedral_utils import DihedralUtils
 from .circuits import randomized_benchmarking_seq
 from .dihedral import CNOTDihedral, append_circuit, \
     decompose_cnotdihedral, random_cnotdihedral

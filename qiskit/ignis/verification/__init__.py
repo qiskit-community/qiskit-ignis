@@ -43,11 +43,7 @@ as well as performing interleaved RB, purity RB and RB on the non-Clifford CNOT-
    InterleavedRBFitter
    PurityRBFitter
    CNOTDihedralRBFitter
-   BasicUtils
-   Clifford
-   CliffordUtils
    CNOTDihedral
-   DihedralUtils
    count_gates
    gates_per_clifford
    calculate_1q_epg
