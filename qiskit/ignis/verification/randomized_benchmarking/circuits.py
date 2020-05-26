@@ -137,7 +137,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                 Optional[qiskit.quantum_info.operators.symplectic.Clifford] = None,
                                 is_purity: bool = False,
                                 group_gates: Optional[str] = None,
-                                rand_seed=None) -> \
+                                rand_seed: Optional[int] = None) -> \
         (List[List[qiskit.QuantumCircuit]], List[List[int]],
          Optional[List[List[qiskit.QuantumCircuit]]],
          Optional[List[List[List[qiskit.QuantumCircuit]]]],
