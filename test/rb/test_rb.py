@@ -538,8 +538,8 @@ class TestRB(unittest.TestCase):
 #                rb.randomized_benchmarking_seq(
 #                    **rb_opts_interleaved)
         # Non-Clifford cnot-dihedral RB sequences:
-#        rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs = \
-#            rb.randomized_benchmarking_seq(**rb_opts_cnotdihedral)
+        rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs = \
+            rb.randomized_benchmarking_seq(**rb_opts_cnotdihedral)
         # Purity RB sequences:
         if is_purity:
             rb_purity_circs, _, npurity = \
@@ -550,7 +550,7 @@ class TestRB(unittest.TestCase):
                 'Error: npurity does not equal to 3^n')
 
         # Perform an ideal execution on the generated sequences
-        basis_gates = ['u1', 'u2', 'u3', 'cx']
+        basis_gates = ['id', 'u1', 'u2', 'u3', 'cx']
         shots = 100
         result = []
         result_original = []
@@ -574,16 +574,16 @@ class TestRB(unittest.TestCase):
 #                               backend=backend,
 #                               basis_gates=basis_gates,
 #                               shots=shots).result())
-#            result_cnotdihedral_Z.append(
-#                qiskit.execute(rb_cnotdihedral_Z_circs[seed],
-#                               backend=backend,
-#                               basis_gates=basis_gates,
-#                               shots=shots).result())
-#           result_cnotdihedral_X.append(
-#                qiskit.execute(rb_cnotdihedral_X_circs[seed],
-#                               backend=backend,
-#                               basis_gates=basis_gates,
-#                               shots=shots).result())
+            result_cnotdihedral_Z.append(
+                qiskit.execute(rb_cnotdihedral_Z_circs[seed],
+                               backend=backend,
+                               basis_gates=basis_gates,
+                               shots=shots).result())
+            result_cnotdihedral_X.append(
+                qiskit.execute(rb_cnotdihedral_X_circs[seed],
+                               backend=backend,
+                               basis_gates=basis_gates,
+                               shots=shots).result())
             if is_purity:
                 for d in range(npurity):
                     result_purity[d].append(qiskit.execute(
@@ -613,17 +613,17 @@ class TestRB(unittest.TestCase):
 #                    'rb_interleaved_length_%d_seed_%d' % (
 #                        circ_index, seed),
 #                    'Error: incorrect interleaved circuit name')
-#                self.assertEqual(
-#                    rb_cnotdihedral_Z_circs[seed][circ_index].name,
-#                    'rb_cnotdihedral_Z_length_%d_seed_%d' % (
-#                        circ_index, seed),
-#                    'Error: incorrect cnotdihedral circuit name')
-#                self.assertEqual(
-#                    rb_cnotdihedral_X_circs[seed][circ_index].name,
-#                    'rb_cnotdihedral_X_length_%d_seed_%d' % (
-#                        circ_index, seed),
-#                    'Error: incorrect non-Clifford CNOT-Dihedral \
-#                    circuit name')
+                self.assertEqual(
+                    rb_cnotdihedral_Z_circs[seed][circ_index].name,
+                    'rb_cnotdihedral_Z_length_%d_seed_%d' % (
+                        circ_index, seed),
+                    'Error: incorrect cnotdihedral circuit name')
+                self.assertEqual(
+                    rb_cnotdihedral_X_circs[seed][circ_index].name,
+                    'rb_cnotdihedral_X_length_%d_seed_%d' % (
+                        circ_index, seed),
+                    'Error: incorrect non-Clifford CNOT-Dihedral \
+                    circuit name')
                 if is_purity:
                     for d in range(npurity):
                         name_type, _ = self.update_purity_gates(
@@ -651,18 +651,18 @@ class TestRB(unittest.TestCase):
 #                                    result_interleaved[seed],
 #                                    shots,
 #                                    is_interleaved=True)
-#                self.verify_circuit(rb_cnotdihedral_Z_circs[seed]
-#                                    [circ_index],
-#                                    nq, rb_opts_cnotdihedral,
-#                                    vec_len,
-#                                    result_cnotdihedral_Z[seed],
-#                                    shots)
-#                self.verify_circuit(rb_cnotdihedral_X_circs[seed]
-#                                    [circ_index],
-#                                    nq, rb_opts_cnotdihedral,
-#                                    vec_len,
-#                                    result_cnotdihedral_X[seed],
-#                                    shots, is_cnotdihedral=True)
+                self.verify_circuit(rb_cnotdihedral_Z_circs[seed]
+                                    [circ_index],
+                                    nq, rb_opts_cnotdihedral,
+                                    vec_len,
+                                    result_cnotdihedral_Z[seed],
+                                    shots)
+                self.verify_circuit(rb_cnotdihedral_X_circs[seed]
+                                    [circ_index],
+                                    nq, rb_opts_cnotdihedral,
+                                    vec_len,
+                                    result_cnotdihedral_X[seed],
+                                    shots, is_cnotdihedral=True)
                 if is_purity:
                     self.verify_circuit(rb_purity_circs[seed][0]
                                         [circ_index],
@@ -684,13 +684,17 @@ class TestRB(unittest.TestCase):
 #                    rb_interleaved_circs[seed][circ_index],
 #                    nq, rb_opts_interleaved, vec_len)
                 # compare the non-Clifford cnot-dihedral RB circuits
-#                self.compare_cnotdihedral_circuit(
-#                    rb_cnotdihedral_Z_circs[seed][circ_index],
-#                    rb_cnotdihedral_X_circs[seed][circ_index],
-#                    nq, rb_opts_cnotdihedral, vec_len)
+                self.compare_cnotdihedral_circuit(
+                    rb_cnotdihedral_Z_circs[seed][circ_index],
+                    rb_cnotdihedral_X_circs[seed][circ_index],
+                    nq, rb_opts_cnotdihedral, vec_len)
 
         self.assertEqual(circ_index, len(rb_circs),
                          "Error: additional circuits exist")
+        self.assertEqual(circ_index, len(rb_cnotdihedral_Z_circs),
+                         "Error: additional CNOTDihedral circuits exist")
+        self.assertEqual(circ_index, len(rb_cnotdihedral_X_circs),
+                         "Error: additional CNOTDihedral circuits exist")
         if is_purity:
             self.assertEqual(circ_index, len(rb_purity_circs),
                              "Error: additional purity circuits exist")
