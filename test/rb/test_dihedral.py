@@ -13,16 +13,12 @@
 # that they have been altered from the originals.
 
 """
-Test CNOT-dihedral functions:
-- Generating CNOT-dihedral group tables on 1 and 2 qubits:
-  dihedral_utils.cnot_dihedral_tables
+Tests for CNOT-dihedral functions
 """
 
 import unittest
 
 # Import the dihedral_utils functions
-from qiskit.ignis.verification.randomized_benchmarking \
-    import DihedralUtils as dutils
 from qiskit.ignis.verification.randomized_benchmarking \
     import CNOTDihedral, random_cnotdihedral
 
@@ -37,34 +33,7 @@ class TestCNOTDihedral(unittest.TestCase):
         """
         self.number_of_tests = 20  # number of pseudo-random seeds
         self.max_qubit_num = 2  # maximal number of qubits to check
-        self.dutils = dutils()
         self.table_size = [0, 16, 6144]
-
-    def test_dihedral_tables(self):
-        """
-            test: generating the tables for 1 and 2 qubits
-        """
-        for qubit_num in range(1, 1 + self.max_qubit_num):
-            print('test: generating the cnot-dihedral group table - %d qubit'
-                  % qubit_num)
-            test_dihedral_tables = self.dutils.cnot_dihedral_tables(qubit_num)
-            test_dihedral_tables_items = dict(sorted(test_dihedral_tables.
-                                                     items()))
-            len_table = len(test_dihedral_tables_items)
-            print("length:", len(test_dihedral_tables_items))
-
-            self.assertEqual(len_table, self.table_size[qubit_num],
-                             'Error: table on %d qubit does not contain '
-                             'the expected number of elements' % qubit_num)
-
-            # Test of CNOT-Dihedral circuit decomposition
-            for _, elem in test_dihedral_tables.items():
-                test_circ = elem[0].to_circuit()
-                test_elem = CNOTDihedral(qubit_num)
-                test_elem = test_elem.from_circuit(test_circ)
-                self.assertEqual(elem[0], test_elem,
-                                 'Error: decomposed circuit is not equal '
-                                 'to the original circuit')
 
     def test_dihedral_random_decompose(self):
         """
