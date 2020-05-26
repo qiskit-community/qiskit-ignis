@@ -487,7 +487,6 @@ class TestRB(unittest.TestCase):
                          "Error: The last purity gates in the \
                          %d qubit purity RB are wrong" % nq)
 
-
     @data(*itertools.product([1, 2, 3, 4], range(3), range(2)))
     @unpack
     def test_rb(self, nq, pattern_type, multiplier_type):
@@ -526,10 +525,10 @@ class TestRB(unittest.TestCase):
         # Adding seed_offset and align_cliffs
         rb_opts['seed_offset'] = 10
         rb_opts['align_cliffs'] = True
-        print (rb_opts)
-        print (rb_opts_purity)
-        print (rb_opts_cnotdihedral)
-        print (rb_opts_interleaved)
+        print(rb_opts)
+        print(rb_opts_purity)
+        print(rb_opts_cnotdihedral)
+        print(rb_opts_interleaved)
 
         # Generate the sequences
         # Standard (simultaneous) RB sequences:

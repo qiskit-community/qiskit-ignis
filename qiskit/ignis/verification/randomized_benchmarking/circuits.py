@@ -133,7 +133,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                 length_multiplier: Optional[List[int]] = 1,
                                 seed_offset: int = 0,
                                 align_cliffs: bool = False,
-                                interleaved_elem: Optional[qiskit.quantum_info.operators.symplectic.Clifford] = None,
+                                interleaved_elem: \
+                                        Optional[qiskit.quantum_info.operators.symplectic.Clifford] = None,
                                 is_purity: bool = False,
                                 group_gates: Optional[str] = None,
                                 rand_seed=None) -> \
