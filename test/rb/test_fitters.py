@@ -35,19 +35,19 @@ class TestFitters(unittest.TestCase):
     def compare_results_and_excpected(self, data, expected_data, tst_index):
         """ utility function to compare results """
         data_keys = data[0].keys()
-        for i in range(len(expected_data)):
+        for i, expect_data in enumerate(expected_data):
             for key in data_keys:
-                if expected_data[i][key] is None:
+                if expect_data[key] is None:
                     self.assertIsNone(data[i][key], 'Incorrect ' + str(key) + ' in test no. '
                                       + str(tst_index))
                 else:
                     # check if the zip function is needed
                     if isinstance(data[i][key], np.ndarray):
                         self.assertTrue(all(np.isclose(a, b) for a, b in
-                                            zip(data[i][key], expected_data[i][key])),
+                                            zip(data[i][key], expect_data[key])),
                                         'Incorrect ' + str(key) + ' in test no. ' + str(tst_index))
                     else:
-                        self.assertTrue(np.isclose(data[i][key], expected_data[i][key]),
+                        self.assertTrue(np.isclose(data[i][key], expect_data[key]),
                                         'Incorrect ' + str(key) + ' in test no. ' + str(tst_index))
 
     def test_fitters(self):

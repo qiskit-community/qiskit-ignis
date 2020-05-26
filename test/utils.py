@@ -77,8 +77,8 @@ def load_results_from_json(json_path: str):
     Args:
         json_path: the path of the json file to load the results from
 
-    Returns: results object that was saved in the json file
-
+    Returns:
+        list: results object that was saved in the json file (list of qiskit Results)
     """
     with open(json_path, "r") as results_file:
         results_json = json.load(results_file)
