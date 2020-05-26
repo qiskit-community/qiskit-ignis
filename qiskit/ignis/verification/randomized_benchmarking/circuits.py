@@ -350,11 +350,11 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
 
                 for _ in range(length_multiplier[rb_pattern_index]):
-                    new_elmnt_gatelist = rb_group.random(rb_q_num, rand_seed)
+                    new_elmnt = rb_group.random(rb_q_num, rand_seed + elmnts_index)
                     Elmnts[rb_pattern_index] = rb_group.compose(
-                        Elmnts[rb_pattern_index], new_elmnt_gatelist)
+                        Elmnts[rb_pattern_index], new_elmnt)
                     general_circ += replace_q_indices(
-                        rb_group.to_circuit(Elmnts[rb_pattern_index]),
+                        rb_group.to_circuit(new_elmnt),
                         rb_pattern[rb_pattern_index], qr)
 
                     # add a barrier
@@ -366,10 +366,10 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                         Elmnts_interleaved[rb_pattern_index] = \
                             rb_group.compose(
                                 Elmnts_interleaved[rb_pattern_index],
-                                new_elmnt_gatelist)
+                                new_elmnt)
                         interleaved_circ += replace_q_indices(
                             rb_group.to_circuit(
-                                Elmnts_interleaved[rb_pattern_index]),
+                                new_elmnt),
                             rb_pattern[rb_pattern_index], qr)
                         Elmnts_interleaved[rb_pattern_index] = \
                             rb_group.compose(
@@ -412,10 +412,10 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                     # calculate the inverse and produce the circuit
                     # for interleaved rb
                     if interleaved_elem is not None:
-                        inv_circuit = rb_group.inverse(
+                        inv_circuit_interleaved = rb_group.inverse(
                             Elmnts_interleaved[rb_pattern_index])
                         circ_interleaved += replace_q_indices(
-                            inv_circuit,
+                            inv_circuit_interleaved,
                             rb_pattern[rb_pattern_index], qr)
 
                 # Circuits for purity rb
@@ -519,6 +519,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                 if is_purity:
                     for d in range(npurity):
                         circuits_purity[seed][d].append(circ_purity[d])
+
                 length_index += 1
 
     # output of purity rb
