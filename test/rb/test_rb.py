@@ -29,7 +29,7 @@ from ddt import ddt, data, unpack
 import qiskit
 import qiskit.ignis.verification.randomized_benchmarking as rb
 from qiskit import QiskitError
-
+from qiskit.quantum_info.operators.symplectic.clifford_circuits import _append_circuit
 
 @ddt
 class TestRB(unittest.TestCase):
@@ -116,29 +116,37 @@ class TestRB(unittest.TestCase):
         return res
 
     @staticmethod
-    def choose_interleaved_gates(rb_pattern):
+    def choose_interleaved_gates(rb_pattern, group_gates):
         """
         Args:
             rb_pattern (list): pattern for randomized benchmarking
+            group_gates: on which group (or set of gates) we perform RB
 
         Returns:
-            list: A list of gates of group elements that
+            intelreved_elmnts: A list of group elements that
                 will be interleaved (for interleaved randomized benchmarking)
                 The length of the list would equal the length of the rb_pattern.
+            intelreved_gates: A corresponding list of gates.
         """
         pattern_sizes = [len(pat) for pat in rb_pattern]
+        rb_group = rb.RBgroup(group_gates)
         interleaved_gates = []
+        interleaved_elemnts = []
         for (_, nq) in enumerate(pattern_sizes):
             gatelist = []
+            elem = rb_group.iden(nq)
             # The interleaved gates contain x gate on each qubit
             # and cx gate on each pair of consecutive qubits
             for qubit in range(nq):
                 gatelist.append('x ' + str(qubit))
+                elem = _append_circuit(elem, 'x', [qubit])
             for qubit_i in range(nq):
                 for qubit_j in range(qubit_i+1, nq):
                     gatelist.append('cx ' + str(qubit_i) + ' ' + str(qubit_j))
+                    elem = _append_circuit(elem, 'cx', [qubit_i, qubit_j])
             interleaved_gates.append(gatelist)
-        return interleaved_gates
+            interleaved_elemnts.append(elem)
+        return interleaved_elemnts, interleaved_gates
 
     @staticmethod
     def update_interleaved_gates(gatelist, pattern):
@@ -302,7 +310,8 @@ class TestRB(unittest.TestCase):
                          ground state back to the ground state" % nq)
 
     def compare_interleaved_circuit(self, original_circ, interleaved_circ,
-                                    nq, rb_opts_interleaved, vec_len):
+                                    nq, rb_opts_interleaved, interleaved_gates,
+                                    vec_len):
         """
         Verifies that interleaved RB circuits meet the requirements:
         - The non-interleaved gates are the same as the
@@ -316,6 +325,8 @@ class TestRB(unittest.TestCase):
             nq: number of qubits
             rb_opts_interleaved: the specification that
                 generated the set of sequences which includes circ
+            interleaved_gates: a list of the interleaved gates
+                for comparison.
             vec_len: the expected length vector of circ
                 (one of rb_opts['length_vector'])
         """
@@ -337,8 +348,8 @@ class TestRB(unittest.TestCase):
                 # updating the gates in:
                 # rb_opts_interleaved['interleaved_gates']
                 updated_gatelist = self.update_interleaved_gates(
-                    rb_opts_interleaved['interleaved_gates']
-                    [pat_index], rb_opts_interleaved['rb_pattern'][pat_index])
+                    interleaved_gates[pat_index],
+                    rb_opts_interleaved['rb_pattern'][pat_index])
                 # for each element...
                 for _ in range(rb_opts_interleaved['length_multiplier']
                                [pat_index]):
@@ -511,8 +522,8 @@ class TestRB(unittest.TestCase):
             multiplier_type, len(rb_opts['rb_pattern']))
         # Choose options for interleaved RB:
         rb_opts_interleaved = rb_opts.copy()
-        rb_opts_interleaved['interleaved_elem'] = \
-            self.choose_interleaved_gates(rb_opts['rb_pattern'])
+        rb_opts_interleaved['interleaved_elem'], interleaved_gates = \
+            self.choose_interleaved_gates(rb_opts['rb_pattern'], 'clifford')
         # Choose options for Non-Clifford cnot-dihedral RB:
         rb_opts_cnotdihedral = rb_opts.copy()
         rb_opts_cnotdihedral['group_gates'] = 'CNOT-Dihedral'
@@ -525,18 +536,14 @@ class TestRB(unittest.TestCase):
         # Adding seed_offset and align_cliffs
         rb_opts['seed_offset'] = 10
         rb_opts['align_cliffs'] = True
-        print(rb_opts)
-        print(rb_opts_purity)
-        print(rb_opts_cnotdihedral)
-        print(rb_opts_interleaved)
 
         # Generate the sequences
         # Standard (simultaneous) RB sequences:
         rb_circs, _ = rb.randomized_benchmarking_seq(**rb_opts)
         # Interleaved RB sequences:
-#       rb_original_circs, _, rb_interleaved_circs = \
-#                rb.randomized_benchmarking_seq(
-#                    **rb_opts_interleaved)
+        rb_original_circs, _, rb_interleaved_circs = \
+                rb.randomized_benchmarking_seq(
+                    **rb_opts_interleaved)
         # Non-Clifford cnot-dihedral RB sequences:
         rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs = \
             rb.randomized_benchmarking_seq(**rb_opts_cnotdihedral)
@@ -564,16 +571,16 @@ class TestRB(unittest.TestCase):
                 qiskit.execute(rb_circs[seed], backend=backend,
                                basis_gates=basis_gates,
                                shots=shots).result())
-#           result_original.append(
-#                qiskit.execute(rb_original_circs[seed],
-#                               backend=backend,
-#                               basis_gates=basis_gates,
-#                               shots=shots).result())
-#            result_interleaved.append(
-#                qiskit.execute(rb_interleaved_circs[seed],
-#                               backend=backend,
-#                               basis_gates=basis_gates,
-#                               shots=shots).result())
+            result_original.append(
+                qiskit.execute(rb_original_circs[seed],
+                               backend=backend,
+                               basis_gates=basis_gates,
+                               shots=shots).result())
+            result_interleaved.append(
+                qiskit.execute(rb_interleaved_circs[seed],
+                               backend=backend,
+                               basis_gates=basis_gates,
+                               shots=shots).result())
             result_cnotdihedral_Z.append(
                 qiskit.execute(rb_cnotdihedral_Z_circs[seed],
                                backend=backend,
@@ -603,16 +610,16 @@ class TestRB(unittest.TestCase):
                         circ_index, seed +
                         rb_opts['seed_offset']),
                     'Error: incorrect circuit name')
-#                self.assertEqual(
-#                    rb_original_circs[seed][circ_index].name,
-#                    'rb_length_%d_seed_%d' % (
-#                        circ_index, seed),
-#                    'Error: incorrect circuit name')
-#                self.assertEqual(
-#                    rb_interleaved_circs[seed][circ_index].name,
-#                    'rb_interleaved_length_%d_seed_%d' % (
-#                        circ_index, seed),
-#                    'Error: incorrect interleaved circuit name')
+                self.assertEqual(
+                    rb_original_circs[seed][circ_index].name,
+                    'rb_length_%d_seed_%d' % (
+                        circ_index, seed),
+                    'Error: incorrect circuit name')
+                self.assertEqual(
+                    rb_interleaved_circs[seed][circ_index].name,
+                    'rb_interleaved_length_%d_seed_%d' % (
+                        circ_index, seed),
+                    'Error: incorrect interleaved circuit name')
                 self.assertEqual(
                     rb_cnotdihedral_Z_circs[seed][circ_index].name,
                     'rb_cnotdihedral_Z_length_%d_seed_%d' % (
@@ -639,18 +646,18 @@ class TestRB(unittest.TestCase):
                 self.verify_circuit(rb_circs[seed][circ_index],
                                     nq, rb_opts,
                                     vec_len, result[seed], shots)
-#                self.verify_circuit(rb_original_circs[seed]
-#                                    [circ_index],
-#                                    nq, rb_opts,
-#                                    vec_len,
-#                                    result_original[seed], shots)
-#                self.verify_circuit(rb_interleaved_circs[seed]
-#                                    [circ_index],
-#                                    nq, rb_opts_interleaved,
-#                                    vec_len,
-#                                    result_interleaved[seed],
-#                                    shots,
-#                                    is_interleaved=True)
+                self.verify_circuit(rb_original_circs[seed]
+                                    [circ_index],
+                                    nq, rb_opts,
+                                    vec_len,
+                                    result_original[seed], shots)
+                self.verify_circuit(rb_interleaved_circs[seed]
+                                    [circ_index],
+                                    nq, rb_opts_interleaved,
+                                    vec_len,
+                                    result_interleaved[seed],
+                                    shots,
+                                    is_interleaved=True)
                 self.verify_circuit(rb_cnotdihedral_Z_circs[seed]
                                     [circ_index],
                                     nq, rb_opts_cnotdihedral,
@@ -679,10 +686,10 @@ class TestRB(unittest.TestCase):
                             vec_len)
                 # compare the interleaved RB circuits with
                 # the original RB circuits
-#                self.compare_interleaved_circuit(
-#                    rb_original_circs[seed][circ_index],
-#                    rb_interleaved_circs[seed][circ_index],
-#                    nq, rb_opts_interleaved, vec_len)
+                self.compare_interleaved_circuit(
+                    rb_original_circs[seed][circ_index],
+                    rb_interleaved_circs[seed][circ_index],
+                    nq, rb_opts_interleaved, interleaved_gates, vec_len)
                 # compare the non-Clifford cnot-dihedral RB circuits
                 self.compare_cnotdihedral_circuit(
                     rb_cnotdihedral_Z_circs[seed][circ_index],
@@ -691,6 +698,10 @@ class TestRB(unittest.TestCase):
 
         self.assertEqual(circ_index, len(rb_circs),
                          "Error: additional circuits exist")
+        self.assertEqual(circ_index, len(rb_original_circs),
+                         "Error: additional interleaved circuits exist")
+        self.assertEqual(circ_index, len(rb_interleaved_circs),
+                         "Error: additional interleaved circuits exist")
         self.assertEqual(circ_index, len(rb_cnotdihedral_Z_circs),
                          "Error: additional CNOTDihedral circuits exist")
         self.assertEqual(circ_index, len(rb_cnotdihedral_X_circs),
