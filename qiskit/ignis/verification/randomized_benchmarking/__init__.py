@@ -19,8 +19,7 @@ Randomized Benchmarking module
 
 # Randomized Benchmarking functions
 from .circuits import randomized_benchmarking_seq
-from .dihedral import CNOTDihedral, append_circuit, \
-    decompose_cnotdihedral, random_cnotdihedral
+from .dihedral import (CNOTDihedral, decompose_cnotdihedral, random_cnotdihedral)
 from .fitters import (RBFitter, InterleavedRBFitter, PurityRBFitter,
                       CNOTDihedralRBFitter)
 from .rb_utils import (count_gates, gates_per_clifford,
