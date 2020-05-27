@@ -545,9 +545,6 @@ class TestRB(unittest.TestCase):
         # Interleaved RB sequences:
         rb_original_circs, _, rb_interleaved_circs = \
             rb.randomized_benchmarking_seq(**rb_opts_interleaved)
-        #rb_original_circs, _, rb_circuits_cnotdihedral, rb_interleaved_circs, \
-        #       rb_circuits_cnotdihedral_interleaved = \
-        #    rb.randomized_benchmarking_seq(**rb_opts_interleaved)
         # Non-Clifford cnot-dihedral RB sequences:
         rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs = \
             rb.randomized_benchmarking_seq(**rb_opts_cnotdihedral)
