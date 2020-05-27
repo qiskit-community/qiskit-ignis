@@ -29,7 +29,6 @@ from ddt import ddt, data, unpack
 import qiskit
 import qiskit.ignis.verification.randomized_benchmarking as rb
 from qiskit import QiskitError
-from qiskit.quantum_info.operators.symplectic.clifford_circuits import _append_circuit
 
 
 @ddt
@@ -136,16 +135,18 @@ class TestRB(unittest.TestCase):
         for (_, nq) in enumerate(pattern_sizes):
             gatelist = []
             elem = rb_group.iden(nq)
+            qc = qiskit.QuantumCircuit(nq)
             # The interleaved gates contain x gate on each qubit
             # and cx gate on each pair of consecutive qubits
             for qubit in range(nq):
                 gatelist.append('x ' + str(qubit))
-                elem = _append_circuit(elem, 'x', [qubit])
+                qc.x(qubit)
             for qubit_i in range(nq):
                 for qubit_j in range(qubit_i+1, nq):
                     gatelist.append('cx ' + str(qubit_i) + ' ' + str(qubit_j))
-                    elem = _append_circuit(elem, 'cx', [qubit_i, qubit_j])
+                    qc.cx(qubit_i, qubit_j)
             interleaved_gates.append(gatelist)
+            elem = elem.from_circuit(qc)
             interleaved_elemnts.append(elem)
         return interleaved_elemnts, interleaved_gates
 
@@ -544,6 +545,9 @@ class TestRB(unittest.TestCase):
         # Interleaved RB sequences:
         rb_original_circs, _, rb_interleaved_circs = \
             rb.randomized_benchmarking_seq(**rb_opts_interleaved)
+        #rb_original_circs, _, rb_circuits_cnotdihedral, rb_interleaved_circs, \
+        #       rb_circuits_cnotdihedral_interleaved = \
+        #    rb.randomized_benchmarking_seq(**rb_opts_interleaved)
         # Non-Clifford cnot-dihedral RB sequences:
         rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs = \
             rb.randomized_benchmarking_seq(**rb_opts_cnotdihedral)
