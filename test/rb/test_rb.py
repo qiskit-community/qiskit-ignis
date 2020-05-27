@@ -31,6 +31,7 @@ import qiskit.ignis.verification.randomized_benchmarking as rb
 from qiskit import QiskitError
 from qiskit.quantum_info.operators.symplectic.clifford_circuits import _append_circuit
 
+
 @ddt
 class TestRB(unittest.TestCase):
     """The test class."""
@@ -542,8 +543,7 @@ class TestRB(unittest.TestCase):
         rb_circs, _ = rb.randomized_benchmarking_seq(**rb_opts)
         # Interleaved RB sequences:
         rb_original_circs, _, rb_interleaved_circs = \
-                rb.randomized_benchmarking_seq(
-                    **rb_opts_interleaved)
+            rb.randomized_benchmarking_seq(**rb_opts_interleaved)
         # Non-Clifford cnot-dihedral RB sequences:
         rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs = \
             rb.randomized_benchmarking_seq(**rb_opts_cnotdihedral)
