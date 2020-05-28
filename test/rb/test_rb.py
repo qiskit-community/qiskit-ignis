@@ -529,6 +529,9 @@ class TestRB(unittest.TestCase):
         # Choose options for Non-Clifford cnot-dihedral RB:
         rb_opts_cnotdihedral = rb_opts.copy()
         rb_opts_cnotdihedral['group_gates'] = 'CNOT-Dihedral'
+        rb_opts_cnotdihedral_interleaved =  rb_opts_cnotdihedral.copy()
+        rb_opts_cnotdihedral_interleaved['interleaved_elem'], interleaved_gates = \
+            self.choose_interleaved_gates(rb_opts['rb_pattern'], 'CNOT-Dihedral')
         # Choose options for purity rb
         # no length_multiplier
         rb_opts_purity['length_multiplier'] = 1
@@ -548,6 +551,10 @@ class TestRB(unittest.TestCase):
         # Non-Clifford cnot-dihedral RB sequences:
         rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs = \
             rb.randomized_benchmarking_seq(**rb_opts_cnotdihedral)
+        # Non-Clifford interleaved cnot-dihedral RB sequences:
+        # (thses circuits will not be executed to save time)
+        _, _, _, _, _ = \
+            rb.randomized_benchmarking_seq(**rb_opts_cnotdihedral_interleaved)
         # Purity RB sequences:
         if is_purity:
             rb_purity_circs, _, npurity = \
