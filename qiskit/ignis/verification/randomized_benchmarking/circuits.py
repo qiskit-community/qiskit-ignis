@@ -65,7 +65,7 @@ def handle_length_multiplier(length_multiplier, len_pattern,
     return length_multiplier
 
 
-def check_pattern(pattern, is_purity=False):
+def check_pattern(pattern, is_purity=False, interleaved_elem=None):
     """
     Verifies that the input pattern is valid
     i.e., that each qubit appears at most once
@@ -73,9 +73,13 @@ def check_pattern(pattern, is_purity=False):
     In case of purity rb, checks that all simultaneous sequences have the same
     dimension (e.g. only 1-qubit sequences, or only 2-qubit sequences etc.)
 
+    In case of interleaved rb, checks that the interleaved elements
+    correspond to the rb_pattern.
+
     Args:
         pattern (list): RB pattern
         is_purity (bool): True only for purity rb (default is False)
+        interleaved_elem: not None only for interleaved RB
 
     Raises:
         ValueError: if the pattern is not valid
@@ -102,8 +106,14 @@ def check_pattern(pattern, is_purity=False):
     if is_purity:
         if len(dim_distinct) > 1:
             raise ValueError("Invalid pattern for purity RB. \
-            All simultaneous sequences should have the \
-            same dimension.")
+            All simultaneous sequences should have the same dimension.")
+
+    interleaved_dim = []
+    if interleaved_elem is not None:
+        for elem in interleaved_elem:
+            interleaved_dim.append(elem.num_qubits)
+        if pattern_dim != interleaved_dim:
+            raise ValueError("Invalid pattern for interleaved RB.")
 
     return pattern_flat, np.max(pattern_flat).item(), np.max(pattern_dim)
 
@@ -305,7 +315,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
     if length_vector is None:
         length_vector = [1, 10, 20]
 
-    qlist_flat, n_q_max, max_dim = check_pattern(rb_pattern, is_purity)
+    qlist_flat, n_q_max, max_dim = check_pattern(rb_pattern, is_purity,
+                                                 interleaved_elem)
     length_multiplier = handle_length_multiplier(length_multiplier,
                                                  len(rb_pattern),
                                                  is_purity)
