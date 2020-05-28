@@ -147,7 +147,7 @@ class TestRB(unittest.TestCase):
                 gatelist.append('x ' + str(qubit))
                 qc.x(qubit)
             for qubit in range(nq):
-                if (qubit > 0):
+                if qubit > 0:
                     gatelist.append('cx ' + '0' + ' ' + str(qubit))
                     qc.cx(0, qubit)
             interleaved_gates.append(gatelist)

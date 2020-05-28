@@ -79,7 +79,8 @@ def check_pattern(pattern, is_purity=False, interleaved_elem=None):
     Args:
         pattern (list): RB pattern
         is_purity (bool): True only for purity rb (default is False)
-        interleaved_elem: not None only for interleaved RB
+        interleaved_elem (qiskit.quantum_info.operators.symplectic.Clifford):
+            not None only for interleaved RB
 
     Raises:
         ValueError: if the pattern is not valid
