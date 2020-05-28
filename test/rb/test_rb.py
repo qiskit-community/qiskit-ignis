@@ -92,7 +92,7 @@ class TestRB(unittest.TestCase):
             # split_loc = random.randint(1, nq-1)
             split_loc = 2  # deterministic test
             res = [shuffled_bits[:split_loc], shuffled_bits[split_loc:]]
-            # for only have 1-qubit and 2-qubit RB
+            # for only 1-qubit and 2-qubit RB
             if (split_loc > 2) | (nq-split_loc > 2):
                 is_dihedral = False
             if 2*split_loc != nq:
@@ -147,7 +147,7 @@ class TestRB(unittest.TestCase):
                 gatelist.append('x ' + str(qubit))
                 qc.x(qubit)
             for qubit in range(nq):
-                if (qubit>0):
+                if (qubit > 0):
                     gatelist.append('cx ' + '0' + ' ' + str(qubit))
                     qc.cx(0, qubit)
             interleaved_gates.append(gatelist)
@@ -534,7 +534,7 @@ class TestRB(unittest.TestCase):
         # Choose options for Non-Clifford cnot-dihedral RB:
         rb_opts_cnotdihedral = rb_opts.copy()
         rb_opts_cnotdihedral['group_gates'] = 'CNOT-Dihedral'
-        rb_opts_cnotdihedral_interleaved =  rb_opts_cnotdihedral.copy()
+        rb_opts_cnotdihedral_interleaved = rb_opts_cnotdihedral.copy()
         if is_dihedral:
             rb_opts_cnotdihedral_interleaved['interleaved_elem'], interleaved_gates = \
                 self.choose_interleaved_gates(rb_opts['rb_pattern'], 'CNOT-Dihedral')
