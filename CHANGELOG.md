@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Support integer labels for qubits in tomography (\# 359)
 - Support integer labels for measurement error mitigation (\# 359)
+- Support passing a list of results to the tomography fitters (\# 410)
 
 ### Deprecated
 
