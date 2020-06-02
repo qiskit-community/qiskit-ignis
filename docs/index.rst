@@ -7,6 +7,7 @@ Qiskit Ignis documentation
   :hidden:
 
   API References <apidocs/ignis>
+  Release Notes <release_notes>
 
 .. Hiding - Indices and tables
    :ref:`genindex`

@@ -42,18 +42,18 @@ class TestCNOTDihedral(unittest.TestCase):
         """
             test: generating the tables for 1 and 2 qubits
         """
-        for nq in range(1, 1+self.max_nq):
+        for qubit_num in range(1, 1 + self.max_nq):
             print('test: generating the cnot-dihedral group table - %d qubit'
-                  % nq)
-            test_dihedral_tables = self.dutils.cnot_dihedral_tables(nq)
+                  % qubit_num)
+            test_dihedral_tables = self.dutils.cnot_dihedral_tables(qubit_num)
             test_dihedral_tables = dict(sorted(test_dihedral_tables.
                                                items()))
             len_table = len(test_dihedral_tables)
             print("length:", len(test_dihedral_tables))
 
-            self.assertEqual(len_table, self.table_size[nq],
+            self.assertEqual(len_table, self.table_size[qubit_num],
                              'Error: table on %d qubit does not contain '
-                             'the expected number of elements' % nq)
+                             'the expected number of elements' % qubit_num)
 
 
 if __name__ == '__main__':

@@ -12,13 +12,15 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
 """
 Test the fitters
 """
 
 import os
 import unittest
-from test.utils import *
+from test.utils import load_results_from_json
 import json
 
 import numpy as np
@@ -33,19 +35,19 @@ class TestFitters(unittest.TestCase):
     def compare_results_and_excpected(self, data, expected_data, tst_index):
         """ utility function to compare results """
         data_keys = data[0].keys()
-        for i in range(len(expected_data)):
+        for i, expect_data in enumerate(expected_data):
             for key in data_keys:
-                if expected_data[i][key] is None:
+                if expect_data[key] is None:
                     self.assertIsNone(data[i][key], 'Incorrect ' + str(key) + ' in test no. '
                                       + str(tst_index))
                 else:
                     # check if the zip function is needed
                     if isinstance(data[i][key], np.ndarray):
                         self.assertTrue(all(np.isclose(a, b) for a, b in
-                                            zip(data[i][key], expected_data[i][key])),
+                                            zip(data[i][key], expect_data[key])),
                                         'Incorrect ' + str(key) + ' in test no. ' + str(tst_index))
                     else:
-                        self.assertTrue(np.isclose(data[i][key], expected_data[i][key]),
+                        self.assertTrue(np.isclose(data[i][key], expect_data[key]),
                                         'Incorrect ' + str(key) + ' in test no. ' + str(tst_index))
 
     def test_fitters(self):
@@ -120,8 +122,9 @@ class TestFitters(unittest.TestCase):
                     os.path.join(
                         os.path.dirname(__file__),
                         'test_fitter_interleaved_results.json'),
-                'expected_results_file': os.path.join(os.path.dirname(__file__),
-                                                      'test_fitter_interleaved_expected_results.json')
+                'expected_results_file':
+                    os.path.join(os.path.dirname(__file__),
+                                 'test_fitter_interleaved_expected_results.json')
             }]
 
         for tst_index, tst_settings in enumerate(tests_settings):
@@ -245,9 +248,11 @@ class TestFitters(unittest.TestCase):
                 tst_settings['cnotdihedral_X_results_file'])
             cnotdihedral_Z_result_list = load_results_from_json(
                 tst_settings['cnotdihedral_Z_results_file'])
-            with open(tst_settings['cnotdihedral_X_expected_results_file'], "r") as expected_results_file:
+            with open(tst_settings['cnotdihedral_X_expected_results_file'], "r")\
+                    as expected_results_file:
                 tst_cnotdihedral_X_expected_results = json.load(expected_results_file)
-            with open(tst_settings['cnotdihedral_Z_expected_results_file'], "r") as expected_results_file:
+            with open(tst_settings['cnotdihedral_Z_expected_results_file'], "r")\
+                    as expected_results_file:
                 tst_cnotdihedral_Z_expected_results = json.load(expected_results_file)
 
             # CNOTDihedralRBFitter class
@@ -261,10 +266,12 @@ class TestFitters(unittest.TestCase):
             ydata_X = joint_rb_fit.ydata[1]
 
             self.compare_results_and_excpected(ydata_Z,
-                                               tst_cnotdihedral_Z_expected_results['cnotdihedral_Z_ydata'],
+                                               tst_cnotdihedral_Z_expected_results[
+                                                   'cnotdihedral_Z_ydata'],
                                                tst_index)
             self.compare_results_and_excpected(ydata_X,
-                                               tst_cnotdihedral_X_expected_results['cnotdihedral_X_ydata'],
+                                               tst_cnotdihedral_X_expected_results[
+                                                   'cnotdihedral_X_ydata'],
                                                tst_index)
             self.compare_results_and_excpected(joint_fit,
                                                tst_cnotdihedral_X_expected_results['joint_fit'],

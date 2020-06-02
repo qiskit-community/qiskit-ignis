@@ -29,7 +29,7 @@ def qubit_shot(i_mean: float, q_mean: float, i_std: float, q_std: float):
         q_std: standard deviation of Q distribution
 
     Returns:
-        a list of length 2 with I and Q values.
+        list: a list of length 2 with I and Q values.
     """
     return [random.gauss(i_mean, i_std), random.gauss(q_mean, q_std)]
 
@@ -47,7 +47,7 @@ def create_shots(i_mean: float, q_mean: float, i_std: float, q_std: float,
         qubits: a list of qubits.
 
     Returns:
-        a list containing lists representing the IQ data of the qubits.
+        list: a list containing lists representing the IQ data of the qubits.
     """
     data = []
     for _ in range(shots):
@@ -77,8 +77,8 @@ def load_results_from_json(json_path: str):
     Args:
         json_path: the path of the json file to load the results from
 
-    Returns: results object that was saved in the json file
-
+    Returns:
+        list: results object that was saved in the json file (list of qiskit Results)
     """
     with open(json_path, "r") as results_file:
         results_json = json.load(results_file)

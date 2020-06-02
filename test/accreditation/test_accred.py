@@ -11,14 +11,17 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-# pylint: disable= no-member
+
+# pylint: disable=no-member,invalid-name
+
 """
 Run through Accreditation
 """
 
 import unittest
 import os
-import pickle
+import json
+from qiskit.result.result import Result
 # Import Qiskit classes
 import qiskit.ignis.verification.accreditation as accred
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
@@ -63,13 +66,12 @@ class TestAccred(unittest.TestCase):
 
     def test_accred_fitter(self):
 
-        """ Test the fitter with some pickled result data"""
+        """ Test the fitter with some saved result data"""
         # ideal results
-        f0 = open(os.path.join(os.path.dirname(__file__),
-                               'accred_ideal_results.pkl'), 'rb')
-        ideal_results = pickle.load(f0)
-        f0.close()
-        all_results = ideal_results['all_results']
+        with open(os.path.join(os.path.dirname(__file__),
+                               'accred_ideal_results.json'), "r") as saved_file:
+            ideal_results = json.load(saved_file)
+        all_results = [Result.from_dict(result) for result in ideal_results['all_results']]
         all_postp_list = ideal_results['all_postp_list']
         all_v_zero = ideal_results['all_v_zero']
         test_1 = accred.AccreditationFitter()
@@ -79,11 +81,10 @@ class TestAccred(unittest.TestCase):
                              'accepted',
                              "Error: Ideal outcomes not passing accred")
         # noisy results
-        f0 = open(os.path.join(os.path.dirname(__file__),
-                               'accred_noisy_results.pkl'), 'rb')
-        noisy_results = pickle.load(f0)
-        f0.close()
-        all_results = noisy_results['all_results']
+        with open(os.path.join(os.path.dirname(__file__),
+                               'accred_noisy_results.json'), "r") as saved_file:
+            noisy_results = json.load(saved_file)
+        all_results = [Result.from_dict(result) for result in noisy_results['all_results']]
         all_postp_list = noisy_results['all_postp_list']
         all_v_zero = noisy_results['all_v_zero']
         all_acc = noisy_results['all_acc']

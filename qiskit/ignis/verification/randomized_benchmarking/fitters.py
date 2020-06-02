@@ -12,6 +12,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
+# NOTE: this is because BasicUtils doesn't define any arguments on it's methods
+# so the implementations here don't match the abstract class. This needs to
+# be fixed or reworked without an abstract class
+# pylint: disable=arguments-differ
+
 """
 Functions used for the analysis of randomized benchmarking results.
 """
@@ -135,10 +142,10 @@ class RBFitter(RBFitterBase):
                  rb_pattern=None):
         """
         Args:
-            backend_result: list of results (qiskit.Result).
-            cliff_lengths: the Clifford lengths, 2D list i x j where i is the
+            backend_result (Result): list of results (qiskit.Result).
+            cliff_lengths (list): the Clifford lengths, 2D list i x j where i is the
                 number of patterns, j is the number of cliffords lengths.
-            rb_pattern: the pattern for the RB sequences.
+            rb_pattern (list): the pattern for the RB sequences.
         """
         if rb_pattern is None:
             rb_pattern = [[0]]
@@ -216,8 +223,8 @@ class RBFitter(RBFitterBase):
         fit.
 
         Args:
-            new_backend_result: list of RB results.
-            rerun_fit: re calculate the means and fit the result.
+            new_backend_result (list): list of RB results.
+            rerun_fit (bool): re calculate the means and fit the result.
 
         Additional information:
             Assumes that the executed 'result' is
@@ -345,8 +352,8 @@ class RBFitter(RBFitterBase):
         Fit the RB results of a particular pattern to an exponential curve.
 
         Args:
-            patt_ind: index of the data pattern to fit.
-            fit_guess: guess values for the fit.
+            patt_ind (int): index of the data pattern to fit.
+            fit_guess (list): guess values for the fit.
 
         Puts the results into a list of fit dictionaries where each dictionary
         corresponds to a pattern and has fields:
@@ -429,8 +436,8 @@ class RBFitter(RBFitterBase):
         """Plot randomized benchmarking data of a single pattern.
 
         Args:
-            pattern_index: which RB pattern to plot.
-            ax (Axes or None): plot axis (if passed in).
+            pattern_index (int): which RB pattern to plot.
+            ax (Axes): plot axis (if passed in).
             add_label (bool): Add an EPC label.
             show_plt (bool): display the plot.
 
@@ -499,13 +506,13 @@ class InterleavedRBFitter(RBFitterBase):
                  cliff_lengths, rb_pattern=None):
         """
         Args:
-            original_result: list of results of the
+            original_result (list): list of results of the
                 original RB sequence (qiskit.Result).
-            interleaved_result: list of results of the
+            interleaved_result (list): list of results of the
                 interleaved RB sequence (qiskit.Result).
-            cliff_lengths: the Clifford lengths, 2D list i x j where i is the
-                number of patterns, j is the number of cliffords lengths.
-            rb_pattern: the pattern for the RB sequences.
+            cliff_lengths (list): the Clifford lengths, 2D list i x j where i
+                is the number of patterns, j is the number of cliffords lengths.
+            rb_pattern (list): the pattern for the RB sequences.
         """
 
         self._cliff_lengths = cliff_lengths
@@ -581,10 +588,10 @@ class InterleavedRBFitter(RBFitterBase):
         Add a new result.
 
         Args:
-            new_original_result: list of RB results of the original circuits.
-            new_interleaved_result: list of RB results
+            new_original_result (list): list of RB results of the original circuits.
+            new_interleaved_result (list): list of RB results
                 of the interleaved circuits.
-            rerun_fit: re-calculate the means and fit the result.
+            rerun_fit (bool): re-calculate the means and fit the result.
 
         Additional information:
             Assumes that the executed 'result' is
@@ -618,9 +625,9 @@ class InterleavedRBFitter(RBFitterBase):
         Fit the RB results of a particular pattern to an exponential curve.
 
         Args:
-            patt_ind: index of the data to fit.
-            fit_guess: guess values for the fit.
-            fit_index: 0 fit the standard data, 1 fit the
+            patt_ind (int): index of the data to fit.
+            fit_guess (list): guess values for the fit.
+            fit_index (int): 0 fit the standard data, 1 fit the
                 interleaved data.
 
         """
@@ -702,8 +709,8 @@ class InterleavedRBFitter(RBFitterBase):
         Plot interleaved randomized benchmarking data of a single pattern.
 
         Args:
-            pattern_index: which RB pattern to plot.
-            ax (Axes or None): plot axis (if passed in).
+            pattern_index (int): which RB pattern to plot.
+            ax (Axes): plot axis (if passed in).
             add_label (bool): Add an EPC label.
             show_plt (bool): display the plot.
 
@@ -779,12 +786,12 @@ class PurityRBFitter(RBFitterBase):
                  rb_pattern=None):
         """
         Args:
-            purity_result: list of results of the
+            purity_result (list): list of results of the
                 3^n purity RB sequences per seed (qiskit.Result).
-            npurity: equals 3^n (where n is the dimension).
-            cliff_lengths: the Clifford lengths, 2D list i x j where i is the
+            npurity (int): equals 3^n (where n is the dimension).
+            cliff_lengths (list): the Clifford lengths, 2D list i x j where i is the
                 number of patterns, j is the number of cliffords lengths.
-            rb_pattern: the pattern for the RB sequences.
+            rb_pattern (list): the pattern for the RB sequences.
         """
         if rb_pattern is None:
             rb_pattern = [[0]]
@@ -901,9 +908,9 @@ class PurityRBFitter(RBFitterBase):
         Add a new result.
 
         Args:
-            new_purity_result: list of RB results of the
+            new_purity_result (list): list of RB results of the
                 purity RB circuits.
-            rerun_fit: re-calculate the means and fit the result.
+            rerun_fit (bool): re-calculate the means and fit the result.
 
         Additional information:
             Assumes that the executed 'result' is
@@ -1041,8 +1048,8 @@ class PurityRBFitter(RBFitterBase):
         Fit the RB results of a particular pattern to an exponential curve.
 
         Args:
-            patt_ind: index of the subsystem to fit.
-            fit_guess: guess values for the fit.
+            patt_ind (int): index of the subsystem to fit.
+            fit_guess (list): guess values for the fit.
 
         Puts the results into a list of fit dictionaries where each dictionary
         corresponds to a pattern and has fields:
@@ -1242,11 +1249,11 @@ class CNOTDihedralRBFitter(RBFitterBase):
         Add a new result.
 
         Args:
-            new_cnotdihedral_Z_result: list of rb results
+            new_cnotdihedral_Z_result (list): list of rb results
                 of the cnot-dihedral Z circuits.
-            new_cnotdihedral_X_result: list of rb results
+            new_cnotdihedral_X_result (list): list of rb results
                 of the cnot-dihedral X circuits.
-            rerun_fit: re-calculate the means and fit the result.
+            rerun_fit (bool): re-calculate the means and fit the result.
 
         Additional information:
             Assumes that the executed 'result' is
@@ -1280,9 +1287,9 @@ class CNOTDihedralRBFitter(RBFitterBase):
         to an exponential curve.
 
         Args:
-            patt_ind: index of the data pattern to fit.
-            fit_guess: guess values for the fit.
-            fit_index: 0 fit the standard data, 1 fit the
+            patt_ind (int): index of the data pattern to fit.
+            fit_guess (list): guess values for the fit.
+            fit_index (int): 0 fit the standard data, 1 fit the
                 interleaved data.
         """
 
@@ -1356,8 +1363,8 @@ class CNOTDihedralRBFitter(RBFitterBase):
         of a single pattern.
 
         Args:
-            pattern_index: which RB pattern to plot.
-            ax (Axes or None): plot axis (if passed in).
+            pattern_index (int): which RB pattern to plot.
+            ax (Axes): plot axis (if passed in).
             add_label (bool): Add an EPG label.
             show_plt (bool): display the plot.
 
