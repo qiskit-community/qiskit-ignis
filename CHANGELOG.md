@@ -39,6 +39,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   removed on the upstream python community's end of life date for the version,
   which is 09/13/2020.
 
+### Fixed
+- Raises `QiskitError` when using incorrect labels in measurement mitigation.
 
 ## [0.2.0](https://github.com/Qiskit/qiskit/compare/0.1.1...0.2.0)- 2019-08-22
 
