@@ -65,7 +65,7 @@ def complete_meas_cal(qubit_list: List[int] = None,
     Raises:
         QiskitError: if both `qubit_list` and `qr` are `None`.
 
-    """
+    """ 
 
     if qubit_list is None and qr is None:
         raise QiskitError("Must give one of a qubit_list or a qr")
