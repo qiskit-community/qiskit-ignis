@@ -11,10 +11,13 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
+"""
+Base discriminator class. All discriminators should inherite from this base class.
+"""
 from abc import ABC, abstractmethod
 import re
 from typing import Union, List
-from sklearn.preprocessing import StandardScaler
 
 from qiskit.exceptions import QiskitError
 from qiskit.result import Result
@@ -34,21 +37,19 @@ class BaseDiscriminationFitter(ABC):
                  schedules: Union[List[str], List[Schedule]] = None):
         """
         Args:
-            cal_results (Union[Result, List[Result]]): calibration results,
-                Result or list of Result used to fit the discriminator.
-            qubit_mask (List[int]): determines which qubit's level 1 data to
-                use in the discrimination process.
-            expected_states (List[str]): a list that should have the same
-                length as schedules. All results in cal_results are used if
-                schedules is None. expected_states must have the corresponding
-                length.
-            standardize (bool): if true the discriminator will standardize the
-                xdata using the internal method _scale_data.
-            schedules (Union[List[str], List[Schedule]]): The schedules or a
-                subset of schedules in cal_results used to train the
-                discriminator. The user may also pass the name of the schedules
-                instead of the schedules. If schedules is None, then all the
-                schedules in cal_results are used.
+            cal_results: calibration results, Result or list of Result used to
+                         fit the discriminator.
+            qubit_mask: determines which qubit's level 1 data to
+                        use in the discrimination process.
+            expected_states: a list that should have the same length as schedules.
+                             All results in cal_results are used if schedules is None.
+                             expected_states must have the corresponding length.
+            standardize: if true the discriminator will standardize the
+                         xdata using the internal method _scale_data.
+            schedules: The schedules or a subset of schedules in cal_results used
+                       to train the discriminator. The user may also pass the name
+                       of the schedules instead of the schedules. If schedules is None,
+                       then all the schedules in cal_results are used.
         """
         # Regex pattern used to identify calibration schedules
         self._cal_pattern = r'cal_\d+$'
@@ -88,8 +89,7 @@ class BaseDiscriminationFitter(ABC):
         Adds the expected state of schedule to self._ydata.
 
         Args:
-            schedule (Union[Schedule, str]): schedule or schedule name.
-                Used to get the expected state.
+            schedule: schedule or schedule name. Used to get the expected state.
         """
         if isinstance(schedule, Schedule):
             self._ydata.append(self._expected_state[schedule.name])
@@ -101,12 +101,13 @@ class BaseDiscriminationFitter(ABC):
                  schedules: Union[List[Schedule], List[str]] = None):
         """
         Args:
-            result (Result): a Result containing new data to be used to
-                train the discriminator.
-            expected_states (List[str]): the expected states of the results in
-                result.
-            refit (bool): refit the discriminator if True.
-            schedules (Union[List[Schedule], List[str]]):
+            result: a Result containing new data to be used to train the discriminator.
+            expected_states: the expected states of the results in result.
+            refit: refit the discriminator if True.
+            schedules: The schedules or a subset of schedules in cal_results used
+                       to train the discriminator. The user may also pass the name
+                       of the schedules instead of the schedules. If schedules is None,
+                       then all the schedules in cal_results are used.
         """
         if schedules is None:
             schedules = self._get_schedules(result, 0)
@@ -126,10 +127,13 @@ class BaseDiscriminationFitter(ABC):
         Adds the given expected states to self._expected_states.
 
         Args:
-            expected_states (List[str]): list of expected states. Must have the
-                same length as the number of schedules.
-            schedules (Union[List[Schedule], List[str]]): schedules or their
-                names corresponding to the expected states.
+            expected_states: list of expected states. Must have the
+                             same length as the number of schedules.
+            schedules: schedules or their names corresponding to the expected states.
+
+        Raises:
+            QiskitError: If the number of input schedules does not equal the
+                number of expected states
         """
         if len(expected_states) != len(schedules):
             raise QiskitError('Number of input schedules and assigned '
@@ -149,11 +153,11 @@ class BaseDiscriminationFitter(ABC):
         the regex pattern self._cal_pattern.
 
         Args:
-            result_name (str): name of the result to be tested.
+            result_name: name of the result to be tested.
 
-        Returns (bool):
-            True if the name of the result indicates that it is a calibration
-            result.
+        Returns:
+            bool: True if the name of the result indicates that it is a
+                calibration result.
         """
         return re.match(self._cal_pattern, result_name) is not None
 
@@ -165,15 +169,15 @@ class BaseDiscriminationFitter(ABC):
         returned.
 
         Args:
-            results (Union[Result, List[Result]]): the results for which to
+            results: the results for which to
                 extract the names,
-            schedule_type_to_get (int): defines which schedule type to include
-                in the returned schedules.
-                type == 0: only calibration schedules.
-                type == 1: only non-calibration schedules.
-                type == 2: all schedules in the results.
-        Returns (List[str]):
-            The name of the schedules in results.
+            schedule_type_to_get: defines which schedule type to include
+                                  in the returned schedules.
+                                  (``0``) calibration data only
+                                  (``1``) non-calibration data
+                                  (``2``) both calibration and non-calibration data
+        Returns:
+            list: A list of strings with the name of the schedules in results.
         """
         if isinstance(results, Result):
             results_list = [results]
@@ -194,13 +198,16 @@ class BaseDiscriminationFitter(ABC):
         Helper function to append schedule names.
 
         Args:
-            name (str): name of the schedule that may be appended to schedules.
-            schedule_type (int): defines which schedule type to include
-                in the returned schedules.
-                type == 0: only calibration schedules.
-                type == 1: only non-calibration schedules.
-                type == 2: all schedules in the results.
+            name: name of the schedule that may be appended to schedules.
+            schedule_type: defines which schedule type to include
+                           in the returned schedules.
+                           (``0``) calibration data only
+                           (``1``) non-calibration data
+                           (``2``) both calibration and non-calibration data
             schedules (list): a list of schedule names.
+
+        Raises:
+            QiskitError: If schedule type is not 0, 1, or 2
         """
         if schedule_type == 0:
             if self.is_calibration(name):
@@ -225,11 +232,11 @@ class BaseDiscriminationFitter(ABC):
         'cal_01' becomes '01'.
 
         Args:
-            schedules (Union[List[Schedule], List[str]]): a list of schedules
-            or a list of schedule names. These schedules are used to identify
-            the names of the expected states.
+            schedules: a list of schedules or a list of schedule names.
+                       These schedules are used to identify the names of
+                       the expected states.
 
-        Returns (List[str]):
+        Returns:
             expected_states extracted from the schedules.
         """
         expected_states = []
@@ -265,15 +272,24 @@ class BaseDiscriminationFitter(ABC):
         variance data.
 
         Args:
-            xdata (List[List[float]]): data as a list of features. Each
-                feature is itself a list.
-            refit (bool): if true than self._scaler is refit using the given
-                xdata.
-        Returns (List[List[float]]):
+            xdata: data as a list of features. Each feature is itself a list.
+            refit: if true than self._scaler is refit using the given xdata
+
+        Returns:
             the scaled xdata as a list of features.
+
+        Raises:
+            ImportError: If sckit-learn is not installed
         """
         if not self._standardize:
             return xdata
+
+        try:
+            from sklearn.preprocessing import StandardScaler
+        except ImportError:
+            raise ImportError("To scale the xdata scikit-learn must be "
+                              "installed. This can be done with 'pip install "
+                              "scikit-learn'")
 
         if not self._scaler or refit:
             self._scaler = StandardScaler(with_std=True)
@@ -290,22 +306,19 @@ class BaseDiscriminationFitter(ABC):
         Retrieves feature data (xdata) for the discriminator.
 
         Args:
-            results (Union[Result, List[Result]]): the get_memory() method is
-                used to retrieve the level 1 data. If result is a list of
-                Result then the first Result to return the data of schedule in
-                schedules is used.
-            schedule_type_to_get (int): use to specify if we should return data
-                corresponding to:
-                0: calibration data only
-                1: non-calibration data
-                2: both calibration and non-calibration data
-            schedules (Union[List[str], List[Schedule]]): Either the names of
-                the schedules or the schedules themselves.
+            results: the get_memory() method is used to retrieve the level 1 data.
+                     If result is a list of Result, then the first Result in the
+                     list that returns the data of schedule
+                     (through get_memory(schedule)) is used.
+            schedule_type_to_get: use to specify if we should return data corresponding to
+                                  (``0``) calibration data only
+                                  (``1``) non-calibration data
+                                  (``2``) both calibration and non-calibration data
+            schedules: Either the names of the schedules or the schedules themselves.
 
-        Returns (List[List[float]]):
-            data as a list of features. Each feature is a list.
+        Returns:
+            The xdata as a list of features. Each feature is a list.
         """
-        pass
 
     @abstractmethod
     def get_ydata(self, results: Union[Result, List[Result]],
@@ -313,27 +326,24 @@ class BaseDiscriminationFitter(ABC):
                   schedules: Union[List[str], List[Schedule]] = None) \
             -> List[str]:
         """
-        Args:
-            results (Union[Result, List[Result]]): results for which to
-                retrieve the y data (i.e. expected states).
-            schedule_type_to_get (int): use to specify if we should return data
-                corresponding to:
-                0: calibration data only
-                1: non-calibration data
-                2: both calibration and non-calibration data
-            schedules (Union[List[str], List[Schedule]]): the schedules for
-                which to get the y data.
+        Retrieves the expected states (ydata) for the discriminator.
 
-        Returns (List[str]):
-            the y data, i.e. expected states. get_ydata is
-            designed to produce y data with the same length as the x data.
+        Args:
+            results: results for which to retrieve the y data (i.e. expected states).
+            schedule_type_to_get: use to specify if we should return data corresponding to
+                                  (``0``) calibration data only
+                                  (``1``) non-calibration data
+                                  (``2``) both calibration and non-calibration data
+            schedules: Either the names of the schedules or the schedules themselves.
+
+        Returns:
+            The y data, i.e. expected states. get_ydata is designed to produce
+            y data with the same length as the x data.
         """
-        pass
 
     @abstractmethod
     def fit(self):
         """ Fits the discriminator using self._xdata and self._ydata. """
-        pass
 
     @abstractmethod
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
@@ -347,7 +357,6 @@ class BaseDiscriminationFitter(ABC):
         Returns (List[str]):
             the discriminated x_data as a list of labels.
         """
-        pass
 
     @abstractmethod
     def plot(self, axs=None,
@@ -384,7 +393,6 @@ class BaseDiscriminationFitter(ABC):
             The figure handle returned is not ``None`` only when the figure
             handle is created by the discriminator's plot method.
         """
-        pass
 
     @abstractmethod
     def plot_xdata(self, axs,
@@ -403,4 +411,3 @@ class BaseDiscriminationFitter(ABC):
                 or list of Results.
             color (str): color of the IQ points in the scatter plot.
         """
-        pass

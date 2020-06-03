@@ -1,0 +1,5 @@
+---
+other:
+  - |
+    Started using `reno <https://pypi.org/project/reno/>`_ for release
+    documentation.

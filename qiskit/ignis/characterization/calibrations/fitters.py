@@ -12,6 +12,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
 """
 Fitters for calibration routines
 """
@@ -37,7 +39,7 @@ class RabiFitter(IQFitter):
 
         schedule_names = []
         for cind, _ in enumerate(xdata):
-            schedule_names.append('rabicircuit_%d_' % cind)
+            schedule_names.append('rabisched_%d_' % cind)
 
         IQFitter.__init__(self, '$Rabi$',
                           backend_result, xdata,
@@ -51,15 +53,15 @@ class RabiFitter(IQFitter):
         Guess fit parameters for rabi oscillation data
 
         Args:
-            qind: qubit index to guess fit parameters for
+            qind (int): qubit index to guess fit parameters for
 
         Returns:
-            List of fit guess parameters
-            [amp, freq, phase, offset]
+            list: List of fit guess parameters
+                [amp, freq, phase, offset]
         """
 
-        a = np.max(self.ydata['0'][qind]['mean'])
-        c = np.mean(self.ydata['0'][qind]['mean'])
+        a_out = np.max(self.ydata['0'][qind]['mean'])
+        c_out = np.mean(self.ydata['0'][qind]['mean'])
 
         fft_data = np.fft.fft(self.ydata['0'][qind]['mean'])
 
@@ -71,30 +73,30 @@ class RabiFitter(IQFitter):
         main_freq = np.argmax(np.abs(fft_data))
         f_guess = fft_freqs[main_freq]
 
-        return [a, f_guess, np.angle(fft_data[main_freq]), c]
+        return [a_out, f_guess, np.angle(fft_data[main_freq]), c_out]
 
     def pi2_amplitude(self, qind=-1):
-        """
+        r"""
         Return the pi/2 amplitude from the fit
 
         Args:
-            qind: qubit index
+            qind (int): qubit index
 
         Returns:
-            Pi/2 amp (float)
+            float: :math:`\frac{\pi}{2}` amp
         """
 
         return self.pi_amplitude(qind)/2
 
     def pi_amplitude(self, qind=-1):
-        """
+        r"""
         Return the pi amplitude from the fit
 
         Args:
-            qind: qubit index
+            qind (int): qubit index
 
         Returns:
-            Pi amp (float)
+            float: :math:`\pi` amp
         """
 
         piamp_list = self._get_param(1, -1)
@@ -111,13 +113,13 @@ class RabiFitter(IQFitter):
         Plot the data and fit
 
         Args:
-            qind: qubit index
-            series: data series to plot (for rabi data always '0')
-            ax: matploblib axes (if none created)
-            show_plot: do plot.show
+            qind (int): qubit index
+            series (str): data series to plot (for rabi data always '0')
+            ax (Axes): matploblib axes (if none created)
+            show_plot (bool): do plot.show
 
         Returns:
-            Plot axes
+            Axes: Plot axes
         """
 
         ax = IQFitter.plot(self, qind, series, ax,
@@ -148,7 +150,7 @@ class DragFitter(IQFitter):
 
         schedule_names = []
         for cind, _ in enumerate(xdata):
-            schedule_names.append('dragcircuit_%d_' % cind)
+            schedule_names.append('dragsched_%d_' % cind)
 
         if fit_bounds is None:
             fit_bounds = ([-np.inf for e in range(len(fit_p0))],
@@ -166,11 +168,12 @@ class DragFitter(IQFitter):
         Guess parameters for the drag fit
 
         Args:
-            qind: qubit index
+            qind (int): qubit index
 
         Returns:
-            guess parameters (list)
-            [a, x0, c] where the fit is a*(x-x0)^2+c
+            list: guess parameters
+                [a, x0, c] where the fit is
+                :math:`a * (x - x0)^{2+c}`
         """
 
         a = np.max(self.ydata['0'][qind]['mean']) - \
@@ -194,10 +197,10 @@ class DragFitter(IQFitter):
         Return the drag amplitude from the fit
 
         Args:
-            qind: qubit index
+            qind (int): qubit index
 
         Returns:
-            drag amp (float)
+            float: drag amp
         """
 
         return self._get_param(1, qind)
@@ -207,13 +210,13 @@ class DragFitter(IQFitter):
         Plot the data and fit
 
         Args:
-            qind: qubit index
-            series: data series to plot (for rabi data always '0')
-            ax: matploblib axes (if none created)
-            show_plot: do plot.show
+            qind (int): qubit index
+            series (str): data series to plot (for rabi data always '0')
+            ax (Axes): matploblib axes (if none created)
+            show_plot (bool): do plot.show
 
         Returns:
-            Plot axes
+            Axes: Plot axes
         """
 
         ax = IQFitter.plot(self, qind, series, ax,

@@ -12,6 +12,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+# NOTE: this is because BasicUtils doesn't define any arguments on it's methods
+# so the implementations here don't match the abstract class. This needs to
+# be fixed or reworked without an abstract class
+# pylint: disable=arguments-differ
+
+
 """
 Advanced CNOT-dihedral operations needed for randomized benchmarking.
 """
@@ -35,13 +42,13 @@ class DihedralUtils(BasicUtils):
                  gatelist=None, elmnt_key=None):
         """
         Args:
-            num_qubits: number of qubits, dimension of the CNOT-dihedral
+            num_qubits (int): number of qubits, dimension of the CNOT-dihedral
                 object.
-            group_table: table of all CNOTDihedral objects of a given
+            group_tables (dict): table of all CNOTDihedral objects of a given
                 dimension.
-            elmnt: a CNOT-dihedral group element.
-            elmnt_key: a unique key of a CNOTDihedral object.
-            gatelist: a list of gates corresponding to a
+            elmnt (CNOTDihedral): a CNOT-dihedral group element.
+            elmnt_key (str): a unique key of a CNOTDihedral object.
+            gatelist (list): a list of gates corresponding to a
                 CNOTDihedral object.
         """
 
@@ -81,25 +88,25 @@ class DihedralUtils(BasicUtils):
         on num_qubits.
 
         Args:
-            num_qubits: number of qubits for the CNOTDihedral
+            num_qubits (int): number of qubits for the CNOTDihedral
                 object.
 
         Returns:
-            A table of all CNOT-dihedral group elements
-            on num_qubits.
+            dict: A table of all CNOT-dihedral group elements
+                on num_qubits.
         """
 
-        G0 = make_dict_0(num_qubits)
-        G_dict = [G0]
-        G_size = len(G0)
-        G = {**G0}
-        while G_size > 0:
-            Gi = make_dict_next(num_qubits, G_dict)
-            G_size = len(Gi)
-            G_dict.append(Gi)
-            G.update({**Gi})
+        g_0 = make_dict_0(num_qubits)
+        g_dict = [g_0]
+        g_size = len(g_0)
+        g_out = {**g_0}
+        while g_size > 0:
+            g_i = make_dict_next(num_qubits, g_dict)
+            g_size = len(g_i)
+            g_dict.append(g_i)
+            g_out.update({**g_i})
 
-        return G
+        return g_out
 
     def pickle_dihedral_table(self, num_qubits=2):
         """
@@ -107,11 +114,8 @@ class DihedralUtils(BasicUtils):
         tables.
 
         Args:
-            num_qubits: number of qubits of the CNOTDihedral
+            num_qubits (int): number of qubits of the CNOTDihedral
                 object.
-
-        Returns:
-            A pickle file with the CNOT-dihedral group tables.
 
         Raises:
             ValueError: number of qubits bigger than 2 is
@@ -134,10 +138,10 @@ class DihedralUtils(BasicUtils):
           Load pickled files of the CNOT-dihedral group tables.
 
           Args:
-              picklefile: pickle file name.
+              picklefile (str): pickle file name.
 
           Returns:
-              A table of all CNOT-dihedral group elements.
+              dict: A table of all CNOT-dihedral group elements.
           """
         with open(picklefile, "rb") as pf:
             pickletable = pickle.load(pf)
@@ -149,10 +153,10 @@ class DihedralUtils(BasicUtils):
         Return the CNOT dihedral group tables.
 
         Args:
-            num_qubits: number of qubits for the CNOTDihedral object.
+            num_qubits (int): number of qubits for the CNOTDihedral object.
 
         Returns:
-            A table of all the CNOTDihedral objects.
+            dict: A table of all the CNOTDihedral objects.
 
         Raises:
             ValueError: number of qubits bigger than 2 is
@@ -192,11 +196,11 @@ class DihedralUtils(BasicUtils):
         Convert a CNOT-dihedral list of gates for the QuantumCircuit.
 
         Args:
-            circ: list of gates of an element in the CNOT-dihedral
+            circ (list): list of gates of an element in the CNOT-dihedral
                 group (from the group table).
 
         Returns:
-            List of gates for the QuantumCircuit.
+            list: List of gates for the QuantumCircuit.
 
         Raises:
             ValueError: unknown gate type.
@@ -226,17 +230,17 @@ class DihedralUtils(BasicUtils):
     # ------------------------------------------------------
     # Create a CNOT-dihedral element based on a unique index
     # ------------------------------------------------------
-    def cnot_dihedral_gates(self, idx: int, G_table, G_keys):
+    def cnot_dihedral_gates(self, idx, G_table, G_keys):
         """
         Make a single CNOT-dihedral element on num_qubits.
 
         Args:
-            idx: a unique index of a single CNOT-dihedral element.
-            G_table: the CNOT-dihedral group table on num_qubits.
-            G_keys: list of keys to the CNOT-dihedral group table.
+            idx (int): a unique index of a single CNOT-dihedral element.
+            G_table (dict): the CNOT-dihedral group table on num_qubits.
+            G_keys (list): list of keys to the CNOT-dihedral group table.
 
         Returns:
-            A single CNOT-dihedral element on num_qubits.
+            CNOTDihedral: A single CNOT-dihedral element on num_qubits.
         """
 
         elem_key = G_keys[idx]
@@ -256,10 +260,10 @@ class DihedralUtils(BasicUtils):
         Pick a random CNOT-dihedral element on num_qubits.
 
         Args:
-            num_qubits: number of qubits of the CNOTDihedral object.
+            num_qubits (int): number of qubits of the CNOTDihedral object.
 
         Returns:
-            A CNOTDihedral object.
+            CNOTDihedral: A CNOTDihedral object.
 
         Raises:
             ValueError: number of qubits bigger than 2 is
@@ -288,11 +292,11 @@ class DihedralUtils(BasicUtils):
         Compose two CNOTDihedral objects.
 
         Args:
-            elem: a CNOTDihedral object.
-            next_elem: another CNOTDihedral object.
+            elem (CNOTDihedral): a CNOTDihedral object.
+            next_elem (CNOTDihedral): another CNOTDihedral object.
 
         Returns:
-            A CNOTDihedral object, that is a composition
+            CNOTDihedral: A CNOTDihedral object, that is a composition
             of the two CNOTDihedral objects.
         """
         self._gatelist = self.elem_to_gates(next_elem[1])
@@ -308,11 +312,11 @@ class DihedralUtils(BasicUtils):
         Find the inverse of a CNOT-dihedral element.
 
         Args:
-            num_qubits: the dimension of the CNOTDihedral element.
-            elem: an element in the CNOTDihedral group table.
+            num_qubits (int): the dimension of the CNOTDihedral element.
+            elem (CNOTDihedral): an element in the CNOTDihedral group table.
 
         Returns:
-            An inverse list of gates.
+            list: An inverse list of gates.
 
         Raises:
             ValueError: number of qubits bigger than 2 is
@@ -334,11 +338,11 @@ class DihedralUtils(BasicUtils):
         Find the key of a CNOTDihedral object in the group table.
 
         Args:
-            elem: CNOTDihedral object
-            num_qubits: the dimension of the CNOTDihedral object.
+            elem (CNOTDihedral): CNOTDihedral object
+            num_qubits (int): the dimension of the CNOTDihedral object.
 
         Returns:
-            A unique key to the CNOT-dihedral group table.
+            str: A unique key to the CNOT-dihedral group table.
         """
         G_table = self.load_tables(num_qubits)
         elem.poly.weight_0 = 0  # set global phase

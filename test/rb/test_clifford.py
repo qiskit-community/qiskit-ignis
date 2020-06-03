@@ -64,8 +64,8 @@ class TestClifford(unittest.TestCase):
         expected_file_path = os.path.join(
             os.path.dirname(__file__),
             'test_tables_expected.txt')
-        with open(expected_file_path, 'r') as fd:
-            expected_file_content = fd.readlines()
+        with open(expected_file_path, 'r') as file_obj:
+            expected_file_content = file_obj.readlines()
         self.assertEqual(expected_file_content, test_tables_content,
                          "Error: tables on 1 and 2 qubits are not the same")
 
@@ -80,21 +80,21 @@ class TestClifford(unittest.TestCase):
         test_random_file_content = []
         # test: generating a pseudo-random Clifford using tables -
         # 1&2 qubits and computing its inverse
-        for nq in range(1, 1+self.max_nq):
+        for qubit_num in range(1, 1+self.max_nq):
             for i in range(0, self.number_of_tests):
                 my_seed = i
                 np.random.seed(my_seed)
                 random.seed(my_seed)
                 test_random_file_content.append(
                     "test: generating a pseudo-random clifford using the "
-                    "tables - %d qubit - seed=%d:\n" % (nq, my_seed))
-                cliff_nq = self.clutils.random_gates(nq)
+                    "tables - %d qubit - seed=%d:\n" % (qubit_num, my_seed))
+                cliff_nq = self.clutils.random_gates(qubit_num)
                 test_random_file_content.append(str(cliff_nq) + '\n')
                 test_random_file_content.append(
                     "test: inverting a pseudo-random clifford using the "
-                    "tables - %d qubit - seed=%d:\n" % (nq, my_seed))
+                    "tables - %d qubit - seed=%d:\n" % (qubit_num, my_seed))
                 inv_cliff_nq = self.clutils.find_inverse_gates(
-                    nq, cliff_nq)
+                    qubit_num, cliff_nq)
                 test_random_file_content.append(str(inv_cliff_nq) + '\n')
                 test_random_file_content.append(
                     "-----------------------------------------------------"
@@ -103,8 +103,8 @@ class TestClifford(unittest.TestCase):
         expected_file_path = os.path.join(
             os.path.dirname(__file__),
             'test_random_expected.txt')
-        with open(expected_file_path, 'r') as fd:
-            expected_file_content = fd.readlines()
+        with open(expected_file_path, 'r') as file_obj:
+            expected_file_content = file_obj.readlines()
         self.assertEqual(expected_file_content, test_random_file_content,
                          "Error: random and/or inverse cliffords are not "
                          "the same")

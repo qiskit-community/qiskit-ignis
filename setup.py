@@ -20,7 +20,7 @@ import sys
 
 requirements = [
     "numpy>=1.13",
-    "qiskit-terra>=0.12.0",
+    "qiskit-terra>=0.13.0",
     "scipy>=0.19,!=0.19.1",
     "setuptools>=40.1.0",
 ]

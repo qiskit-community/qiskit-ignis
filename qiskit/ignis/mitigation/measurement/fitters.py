@@ -34,7 +34,7 @@ except ImportError:
     HAS_MATPLOTLIB = False
 
 
-class CompleteMeasFitter():
+class CompleteMeasFitter:
     """
     Measurement correction fitter for a full calibration
     """
@@ -62,7 +62,6 @@ class CompleteMeasFitter():
                 created according to the length of state_labels[0].
             circlabel: if the qubits were labeled.
         """
-
         if qubit_list is None:
             qubit_list = range(len(state_labels[0]))
         self._qubit_list = qubit_list
@@ -107,8 +106,9 @@ class CompleteMeasFitter():
         Add measurement calibration data
 
         Args:
-            new_results: a single result or list of results
-            rebuild_cal_matrix: rebuild the calibration matrix
+            new_results (list or qiskit.result.Result): a single result or list
+                of result objects.
+            rebuild_cal_matrix (bool): rebuild the calibration matrix
         """
 
         self._tens_fitt.add_data(new_results, rebuild_cal_matrix)
@@ -119,11 +119,14 @@ class CompleteMeasFitter():
         list.
 
         Args:
-            qubit_sublist: must be a subset of qubit_list
+            qubit_sublist (list): must be a subset of qubit_list
 
         Returns:
-            A fitter than has the calibration for a subset of qubits
+            CompleteMeasFitter: A new fitter that has the calibration for a
+                subset of qubits
 
+        Raises:
+            QiskitError: If the calibration matrix is not initialized
         """
 
         if self._tens_fitt.cal_matrices is None:
@@ -132,8 +135,8 @@ class CompleteMeasFitter():
         if qubit_sublist is None:
             raise QiskitError("Qubit sublist must be specified")
 
-        for qb in qubit_sublist:
-            if qb not in self._qubit_list:
+        for qubit in qubit_sublist:
+            if qubit not in self._qubit_list:
                 raise QiskitError("Qubit not in the original set of qubits")
 
         # build state labels
@@ -143,8 +146,8 @@ class CompleteMeasFitter():
         # the sublist
         qubit_sublist_ind = []
         for sqb in qubit_sublist:
-            for qbind, qb in enumerate(self._qubit_list):
-                if qb == sqb:
+            for qbind, qubit in enumerate(self._qubit_list):
+                if qubit == sqb:
                     qubit_sublist_ind.append(qbind)
 
         # states in the full calibration which correspond
@@ -152,7 +155,7 @@ class CompleteMeasFitter():
         q_q_mapping = []
         state_labels_reduced = []
         for label in self.state_labels:
-            tmplabel = [label[l] for l in qubit_sublist_ind]
+            tmplabel = [label[index] for index in qubit_sublist_ind]
             state_labels_reduced.append(''.join(tmplabel))
 
         for sub_lab_ind, _ in enumerate(new_state_labels):
@@ -172,9 +175,10 @@ class CompleteMeasFitter():
         for i in range(len(new_state_labels)):
             for j in range(len(new_state_labels)):
 
-                for l in q_q_mapping[i]:
-                    for k in q_q_mapping[j]:
-                        new_cal_matrix[i, j] += self.cal_matrix[l, k]
+                for q_q_i_map in q_q_mapping[i]:
+                    for q_q_j_map in q_q_mapping[j]:
+                        new_cal_matrix[i, j] += self.cal_matrix[q_q_i_map,
+                                                                q_q_j_map]
 
                 new_cal_matrix[i, j] /= len(q_q_mapping[i])
 
@@ -188,13 +192,13 @@ class CompleteMeasFitter():
         normalized trace of the calibration matrix
 
         Args:
-            label_list: If `None`, returns the average assignment fidelity
+            label_list (bool): If `None`, returns the average assignment fidelity
                 of a single state. Otherwise it returns the assignment fidelity
                 to be in any one of these states averaged over the second
                 index.
 
         Returns:
-            readout fidelity (assignment fidelity)
+            numpy.array: readout fidelity (assignment fidelity)
 
         Additional Information:
             The on-diagonal elements of the calibration matrix are the
@@ -209,7 +213,8 @@ class CompleteMeasFitter():
 
         Args:
             show_plot (bool): call plt.show()
-
+            ax (matplotlib.axes.Axes): An optional Axes object to use for the
+                plot
         """
 
         self._tens_fitt.plot_calibration(0, ax, show_plot)
@@ -242,7 +247,11 @@ class TensoredMeasFitter():
                 calibration matrix, the labels of its rows and columns.
                 If `None`, the labels are ordered lexicographically
 
-            circlable: if the qubits were labeled
+            circlabel: if the qubits were labeled
+
+        Raises:
+            ValueError: if the mit_pattern doesn't match the
+                substate_labels_list
         """
 
         self._result_list = []
@@ -300,8 +309,9 @@ class TensoredMeasFitter():
         Add measurement calibration data
 
         Args:
-            new_results: a single result or list of results
-            rebuild_cal_matrix: rebuild the calibration matrix
+            new_results (list or qiskit.result.Result): a single result or list
+                of Result objects.
+            rebuild_cal_matrix (bool): rebuild the calibration matrix
         """
 
         if new_results is None:
@@ -323,14 +333,17 @@ class TensoredMeasFitter():
 
         Args:
             cal_index(integer): readout fidelity for this index in _cal_matrices
-            label_list (list of lists on states):
-                Returns the average fidelity over of the groups of states.
-                If `None`, then each state used in the construction of the
-                calibration matrices forms a group of size 1
+            label_list (list):  Returns the average fidelity over of the groups
+                f states. In the form of a list of lists of states. If `None`,
+                then each state used in the construction of the calibration
+                matrices forms a group of size 1
 
         Returns:
-            readout fidelity (assignment fidelity)
+            numpy.array: The readout fidelity (assignment fidelity)
 
+        Raises:
+            QiskitError: If the calibration matrix has not been set for the
+                object.
 
         Additional Information:
             The on-diagonal elements of the calibration matrices are the

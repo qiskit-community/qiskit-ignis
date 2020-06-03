@@ -36,12 +36,16 @@ def zz_circuits(num_of_gates, gate_time, qubits, spectators, nosc=5):
         spectators (list of integers): indices of the qubits to flip the
             state (ie measure the ZZ between qubits and spectators). Must
             be the same length as qubits
-        nosc: number of oscillations to induce using the phase gate
+        nosc (int): number of oscillations to induce using the phase gate
 
     Returns:
         A list of QuantumCircuit
         xdata: a list of delay times
         osc_freq: the induced oscillation frequency
+
+    Raises:
+        ValueError: If the number of qubits differs from the number of
+            spectators
     """
 
     if len(qubits) != len(spectators):
