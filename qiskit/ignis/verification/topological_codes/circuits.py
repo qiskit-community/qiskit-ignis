@@ -92,6 +92,39 @@ class RepetitionCode():
                 self.circuit[log].x(self.code_qubit[j])
             if barrier:
                 self.circuit[log].barrier()
+                
+    def z(self, logs=('0', '1'), barrier=False):
+        """
+        Applies z gates to all data-qubits to the circuits for the given logical values.
+        In the +,- basis this acts like a logical z
+
+        Args:
+            logs (list or tuple): List or tuple of logical values expressed as
+                strings.
+            barrier (bool): Boolean denoting whether to include a barrier at
+                the end.
+        """
+        for log in logs:
+            for j in range(self.d):
+                self.circuit[log].z(self.code_qubit[j])
+            if barrier:
+                self.circuit[log].barrier()
+                
+    def i(self, logs=('0', '1'), barrier=False):
+        """
+        Applies a logical identity to the circuits for the given logical values.
+
+        Args:
+            logs (list or tuple): List or tuple of logical values expressed as
+                strings.
+            barrier (bool): Boolean denoting whether to include a barrier at
+                the end.
+        """
+        for log in logs:
+            for j in range(self.d):
+                self.circuit[log].i(self.code_qubit[j])
+            if barrier:
+                self.circuit[log].barrier()
 
     def _preparation(self):
         """
@@ -197,3 +230,25 @@ class RepetitionCode():
                 results[log][new_string] = raw_results[log][string]
 
         return results
+    
+    def encode_bit_flip(self, logs=('0', '1'), barrier=False):
+        
+        for log in logs:
+            for j in range(self.d - 1):
+                self.circuit[log].cx(self.code_qubit[0], self.code_qubit[j])
+            if barrier:
+                self.circuit[log].barrier()
+        
+    
+    def encode_phase_flip(self, logs=('0','1'), barrier=False):
+        
+        self.encode_bit_flip(logs=logs)
+        
+        for log in logs:
+            for j in range(self.d - 1):
+                self.circuit[log].h(self.code_qubit[j])
+            if barrier:
+                self.circuit[log].barrier()
+                
+                
+            
