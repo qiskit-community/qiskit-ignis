@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Raises `QiskitError` when using incorrect labels in measurement mitigation.
