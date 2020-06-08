@@ -52,7 +52,9 @@ class RepetitionCode():
 
         self.link_bits = []
         self.code_bit = ClassicalRegister(d, 'code_bit')
-
+        
+        self.basis = 'Z'
+        
         self.circuit = {}
         for log in ['0', '1']:
             self.circuit[log] = QuantumCircuit(
@@ -63,7 +65,7 @@ class RepetitionCode():
         for _ in range(T-1):
             self.syndrome_measurement()
         
-        self.basis = 'Z'
+
         
         if T != 0:
             self.syndrome_measurement(reset=False)
