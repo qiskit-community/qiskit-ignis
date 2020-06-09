@@ -230,16 +230,13 @@ class TestFitters(unittest.TestCase):
                     os.path.join(
                         os.path.dirname(__file__),
                         'test_fitter_cnotdihedral_X_results.json'),
-                'cnotdihedral_X_expected_results_file':
-                    os.path.join(os.path.dirname(__file__),
-                                 'test_fitter_cnotdihedral_X_expected_results.json'),
                 'cnotdihedral_Z_results_file':
                     os.path.join(
                         os.path.dirname(__file__),
                         'test_fitter_cnotdihedral_Z_results.json'),
-                'cnotdihedral_Z_expected_results_file':
+                'cnotdihedral_expected_results_file':
                     os.path.join(os.path.dirname(__file__),
-                                 'test_fitter_cnotdihedral_Z_expected_results.json')
+                                 'test_fitter_cnotdihedral_expected_results.json')
             }
         ]
 
@@ -248,12 +245,9 @@ class TestFitters(unittest.TestCase):
                 tst_settings['cnotdihedral_X_results_file'])
             cnotdihedral_Z_result_list = load_results_from_json(
                 tst_settings['cnotdihedral_Z_results_file'])
-            with open(tst_settings['cnotdihedral_X_expected_results_file'], "r")\
+            with open(tst_settings['cnotdihedral_expected_results_file'], "r")\
                     as expected_results_file:
-                tst_cnotdihedral_X_expected_results = json.load(expected_results_file)
-            with open(tst_settings['cnotdihedral_Z_expected_results_file'], "r")\
-                    as expected_results_file:
-                tst_cnotdihedral_Z_expected_results = json.load(expected_results_file)
+                tst_cnotdihedral_expected_results = json.load(expected_results_file)
 
             # CNOTDihedralRBFitter class
             joint_rb_fit = CNOTDihedralRBFitter(
@@ -266,15 +260,15 @@ class TestFitters(unittest.TestCase):
             ydata_X = joint_rb_fit.ydata[1]
 
             self.compare_results_and_excpected(ydata_Z,
-                                               tst_cnotdihedral_Z_expected_results[
+                                               tst_cnotdihedral_expected_results[
                                                    'cnotdihedral_Z_ydata'],
                                                tst_index)
             self.compare_results_and_excpected(ydata_X,
-                                               tst_cnotdihedral_X_expected_results[
+                                               tst_cnotdihedral_expected_results[
                                                    'cnotdihedral_X_ydata'],
                                                tst_index)
             self.compare_results_and_excpected(joint_fit,
-                                               tst_cnotdihedral_X_expected_results['joint_fit'],
+                                               tst_cnotdihedral_expected_results['joint_fit'],
                                                tst_index)
 
 
