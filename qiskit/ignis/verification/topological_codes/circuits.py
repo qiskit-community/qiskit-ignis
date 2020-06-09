@@ -63,7 +63,6 @@ class RepetitionCode():
         for _ in range(T-1):
             self.syndrome_measurement()
 
-
         if T != 0:
             self.syndrome_measurement(reset=False)
             self.readout()
