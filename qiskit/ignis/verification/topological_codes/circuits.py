@@ -65,8 +65,6 @@ class RepetitionCode():
         for _ in range(T-1):
             self.syndrome_measurement()
         
-
-        
         if T != 0:
             self.syndrome_measurement(reset=False)
             self.readout()
@@ -100,7 +98,7 @@ class RepetitionCode():
     def z(self, logs=('0', '1'), barrier=False):
         """
         Applies z gates to all data-qubits to the circuits for the given logical values.
-        In the +,- basis this acts like a logical z
+        In the X-basis this acts like a logical z.
 
         Args:
             logs (list or tuple): List or tuple of logical values expressed as
@@ -246,11 +244,9 @@ class RepetitionCode():
 
         return results
     
-    
     def change_basis(self, logs=('0', '1'), barrier=False):
         """
-        Changes between bit-flip encoding (0,1 states) and phase-flip 
-        (+,- states) encoding.
+        Changes between Z-basis (bit-flip) and X-basis (phase-flip) repetition encoding.
 
         Args:
             logs (list or tuple): List or tuple of logical values expressed as
