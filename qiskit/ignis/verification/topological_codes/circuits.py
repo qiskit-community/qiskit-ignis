@@ -52,7 +52,9 @@ class RepetitionCode():
 
         self.link_bits = []
         self.code_bit = ClassicalRegister(d, 'code_bit')
-
+        
+        self.basis = 'Z'
+        
         self.circuit = {}
         for log in ['0', '1']:
             self.circuit[log] = QuantumCircuit(
@@ -62,9 +64,9 @@ class RepetitionCode():
 
         for _ in range(T-1):
             self.syndrome_measurement()
-        self.syndrome_measurement(reset=False)
-
+        
         if T != 0:
+            self.syndrome_measurement(reset=False)
             self.readout()
 
     def get_circuit_list(self):
@@ -92,6 +94,39 @@ class RepetitionCode():
                 self.circuit[log].x(self.code_qubit[j])
             if barrier:
                 self.circuit[log].barrier()
+                
+    def z(self, logs=('0', '1'), barrier=False):
+        """
+        Applies z gates to all data-qubits to the circuits for the given logical values.
+        In the X-basis this acts like a logical z.
+
+        Args:
+            logs (list or tuple): List or tuple of logical values expressed as
+                strings.
+            barrier (bool): Boolean denoting whether to include a barrier at
+                the end.
+        """
+        for log in logs:
+            for j in range(self.d):
+                self.circuit[log].z(self.code_qubit[j])
+            if barrier:
+                self.circuit[log].barrier()
+                
+    def i(self, logs=('0', '1'), barrier=False):
+        """
+        Applies a logical identity to the circuits for the given logical values.
+
+        Args:
+            logs (list or tuple): List or tuple of logical values expressed as
+                strings.
+            barrier (bool): Boolean denoting whether to include a barrier at
+                the end.
+        """
+        for log in logs:
+            for j in range(self.d):
+                self.circuit[log].i(self.code_qubit[j])
+            if barrier:
+                self.circuit[log].barrier()
 
     def _preparation(self):
         """
@@ -114,6 +149,10 @@ class RepetitionCode():
         for log in ['0', '1']:
 
             self.circuit[log].add_register(self.link_bits[-1])
+            
+            if self.basis == 'H':
+                for j in range(self.d):
+                    self.circuit[log].h(self.code_qubit[j])
 
             for j in range(self.d - 1):
                 self.circuit[log].cx(self.code_qubit[j], self.link_qubit[j])
@@ -127,6 +166,10 @@ class RepetitionCode():
                     self.link_qubit[j], self.link_bits[self.T][j])
                 if reset:
                     self.circuit[log].reset(self.link_qubit[j])
+                    
+            if self.basis == 'H':
+                for j in range(self.d):
+                    self.circuit[log].h(self.code_qubit[j])
 
             if barrier:
                 self.circuit[log].barrier()
@@ -139,6 +182,9 @@ class RepetitionCode():
         as well as allowing for a measurement of the syndrome to be inferred.
         """
         for log in ['0', '1']:
+            if self.basis == 'H':
+                for j in range(self.d):
+                    self.circuit[log].h(self.code_qubit[j])
             self.circuit[log].add_register(self.code_bit)
             self.circuit[log].measure(self.code_qubit, self.code_bit)
 
@@ -197,3 +243,19 @@ class RepetitionCode():
                 results[log][new_string] = raw_results[log][string]
 
         return results
+    
+    def change_basis(self, logs=('0', '1'), barrier=False):
+        """
+        Changes between Z-basis (bit-flip) and X-basis (phase-flip) repetition encoding.
+
+        Args:
+            logs (list or tuple): List or tuple of logical values expressed as
+                strings.
+            barrier (bool): Boolean denoting whether to include a barrier at the end.
+        """
+        for log in logs:
+            for j in range(self.d):
+                self.circuit[log].h(self.code_qubit[j])
+            if barrier:
+                self.circuit[log].barrier()
+        self.basis = 'H' if self.basis == 'Z' else 'Z'
