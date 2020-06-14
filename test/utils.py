@@ -16,6 +16,7 @@
 import random
 from typing import List
 import json
+import numpy as np
 from qiskit.result.result import Result
 
 
@@ -84,14 +85,15 @@ def load_results_from_json(json_path: str):
         results_json = json.load(results_file)
     return [Result.from_dict(result) for result in results_json]
 
-def convert_ndarray_to_list_in_data(data):
+
+def convert_ndarray_to_list_in_data(data: np.ndarray):
     """
     converts ndarray format into list format (keeps all the dicts in the array)
     Args:
         data: ndarray containing dicts in it
 
     Returns:
-        list - same array, converted to list format (in order to save it as json)
+        list: same array, converted to list format (in order to save it as json)
 
     """
     new_data = []

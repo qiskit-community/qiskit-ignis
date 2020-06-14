@@ -31,6 +31,7 @@ from qiskit.providers.aer.noise.errors.standard_errors import depolarizing_error
 # fixed seed for simulations
 SEED = 42
 
+
 def rb_circuit_execution(rb_opts: dict, shots: int):
     """
     Create rb circuits with depolarizing error and simulates them
@@ -65,6 +66,7 @@ def rb_circuit_execution(rb_opts: dict, shots: int):
                                       noise_model=noise_model,
                                       seed_simulator=SEED).result())
     return results, xdata
+
 
 def rb_circuit_execution_2(rb_opts: dict, shots: int):
     """
@@ -107,6 +109,7 @@ def rb_circuit_execution_2(rb_opts: dict, shots: int):
                                       seed_simulator=SEED).result())
     return results, xdata
 
+
 def rb_interleaved_execution(rb_opts: dict, shots: int):
     """
         Create interleaved rb circuits with depolarizing error and simulates them
@@ -147,6 +150,7 @@ def rb_interleaved_execution(rb_opts: dict, shots: int):
                                                   shots=shots, noise_model=noise_model,
                                                   seed_simulator=SEED).result())
     return results, xdata, interleaved_results
+
 
 def rb_cnotdihedral_execution(rb_opts: dict, shots: int):
     """
@@ -191,6 +195,7 @@ def rb_cnotdihedral_execution(rb_opts: dict, shots: int):
                                                      shots=shots, noise_model=noise_model,
                                                      seed_simulator=SEED).result())
     return cnotdihedral_x_results, xdata, cnotdihedral_z_results
+
 
 def rb_purity_circuit_execution(rb_opts: dict, shots: int):
     """
@@ -248,10 +253,11 @@ def rb_purity_circuit_execution(rb_opts: dict, shots: int):
             coherent_results.append(qiskit.execute(current_circ, backend=backend,
                                                    basis_gates=basis_gates,
                                                    shots=shots,
-                                                   noise_model=noise_model,
+                                                   noise_model=coherent_noise_model,
                                                    seed_simulator=SEED).result())
 
     return purity_results, xdata, npurity, coherent_results
+
 
 def generate_fitter_data_1(results_file_path: str, expected_results_file_path: str):
     """
@@ -342,6 +348,7 @@ def generate_fitter_data_2(results_file_path: str, expected_results_file_path: s
     with open(expected_results_file_path, "w") as expected_results_file:
         json.dump(expected_result, expected_results_file)
 
+
 def generate_interleaved_data(results_file_path_original: str,
                               results_file_path_interleaved: str,
                               expected_results_file_path: str):
@@ -353,7 +360,7 @@ def generate_interleaved_data(results_file_path_original: str,
 
         The simulation results file will contain a list of Result objects in a dictionary format.
         The fitter data file will contain dictionary with the following keys:
-        - 'cnotdihedral_Z_ydata', value is stored in the form of list of dictionaries with keys of:
+        - 'original_ydata', value is stored in the form of list of dictionaries with keys of:
             - mean, list of integers
             - std, list of integers
         - 'interleaved_ydata', value is stored in the form of list of dictionaries with keys of:
@@ -405,6 +412,7 @@ def generate_interleaved_data(results_file_path_original: str,
                        "interleaved_ydata": interleaved_ydata, "joint_fit": joint_fit}
     with open(expected_results_file_path, "w") as expected_results_file:
         json.dump(expected_result, expected_results_file)
+
 
 def generate_cnotdihedral_data(results_file_path_cnotdihedral_x: str,
                                results_file_path_cnotdihedral_z: str,
@@ -466,6 +474,7 @@ def generate_cnotdihedral_data(results_file_path_cnotdihedral_x: str,
                        "cnotdihedral_X_ydata": cnotdihedral_x_ydata, "joint_fit": joint_fit}
     with open(expected_results_file_path, "w") as expected_results_file:
         json.dump(expected_result, expected_results_file)
+
 
 def generate_purity_data(results_file_path_purity: str,
                          results_file_path_coherent: str,
