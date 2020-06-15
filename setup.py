@@ -43,10 +43,18 @@ version_path = os.path.abspath(
 with open(version_path, 'r') as fd:
     version = fd.read().rstrip()
 
+README_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                           'README.md')
+with open(README_PATH) as readme_file:
+    README = readme_file.read()
+
+
 setuptools.setup(
     name="qiskit-ignis",
     version=version,
     description="Qiskit tools for quantum information science",
+    long_description=README,
+    long_description_content_type='text/markdown',
     url="https://github.com/Qiskit/qiskit-ignis",
     author="Qiskit Development Team",
     author_email="qiskit@qiskit.org",
