@@ -109,25 +109,17 @@ def cvx_fit(data: np.array,
 
     # Check if CVXPY package is installed
     if cvxpy is None:
-        raise ImportError('CVXPY is not installed. Use `lstsq` instead.')
-    # Check CVXPY version
-    version = cvxpy.__version__
-    if not (version[0] == '1' or version[:3] == '0.4'):
-        raise ImportError('Incompatible CVXPY version. Install 1.0 or 0.4')
-
+        raise ImportError("The CVXPY package is required to use the cvx_fit() "
+                          "function. You can install it with 'pip install "
+                          "cvxpy' or use a `lstsq` fitter instead of cvx_fit.")
     # SDP VARIABLES
 
     # Since CVXPY only works with real variables we must specify the real
     # and imaginary parts of rho seperately: rho = rho_r + 1j * rho_i
 
     dim = int(np.sqrt(basis_matrix.shape[1]))
-    if version[:3] == '0.4':
-        # Compatibility with legacy 0.4
-        rho_r = cvxpy.Variable(dim, dim)
-        rho_i = cvxpy.Variable(dim, dim)
-    else:
-        rho_r = cvxpy.Variable((dim, dim))
-        rho_i = cvxpy.Variable((dim, dim))
+    rho_r = cvxpy.Variable((dim, dim))
+    rho_i = cvxpy.Variable((dim, dim))
 
     # CONSTRAINTS
 
