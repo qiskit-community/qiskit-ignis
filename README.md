@@ -19,6 +19,17 @@ PIP will handle all dependencies automatically for us and you will always instal
 
 To install from source, follow the instructions in the [contribution guidelines](./CONTRIBUTING.md).
 
+### Extra Requirements
+
+Some functionality has extra optional requirements. If you're going to use any
+visualization functions for fitters you'll need to install matplotlib. You
+can do this with `pip install matplotlib` or when you install ignis with
+`pip install qiskit-ignis[visualization]`. If you're going to use a cvx fitter
+for running tomogography you'll need to install cvxpy. You can do this with
+`pip install cvxpy` or when you install install ignis with
+`pip install qiskit-ignis[cvx]`. If you want to install both when you install
+ignis you can run `pip install qiskit-ignis[visualization,cvx]`.
+
 ## Creating your first quantum experiment with Qiskit Ignis
 Now that you have Qiskit Ignis installed, you can start creating experiments, to reveal information about the device quality. Here is a basic example:
 
