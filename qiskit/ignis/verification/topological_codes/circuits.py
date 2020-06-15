@@ -62,9 +62,9 @@ class RepetitionCode():
 
         for _ in range(T-1):
             self.syndrome_measurement()
-        self.syndrome_measurement(reset=False)
 
         if T != 0:
+            self.syndrome_measurement(reset=False)
             self.readout()
 
     def get_circuit_list(self):
