@@ -29,26 +29,6 @@ except ImportError:
     _HAS_CVX = False
 
 
-def _default_sdp_solver():
-    solvers = cvxpy.installed_solvers()
-    if 'CVXOPT' in solvers:
-        return 'CVXOPT'
-    if 'SCS' in solvers:
-        # Try example problem to see if BLAS is installed
-        try:
-            var = cvxpy.Variable((4, 4), PSD=True)
-            obj = cvxpy.Minimize(cvxpy.norm(var))
-            cvxpy.Problem(obj).solve(solver='SCS')
-            return 'SCS'
-        except cvxpy.error.SolverError:
-            return None
-    return None
-
-
-# Check if a suitable default solver is available
-_DEFAULT_SOLVER = _default_sdp_solver()
-
-
 def cvx_fit(data: np.array,
             basis_matrix: np.array,
             weights: Optional[np.array] = None,
@@ -215,7 +195,8 @@ def cvx_fit(data: np.array,
     max_iters = kwargs.get('max_iters', 20000)
     # Set default solver if none is specified
     if 'solver' not in kwargs:
-        kwargs['solver'] = _DEFAULT_SOLVER
+        if 'CVXOPT' in cvxpy.installed_solvers():
+            kwargs['solver'] = 'CVXOPT'
 
     problem_solved = False
     while not problem_solved:
