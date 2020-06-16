@@ -65,7 +65,9 @@ jobs:
           displayName: Create Anaconda environment
         - script: |
             call activate qiskit-ignis
+            conda config --add channels conda-forge
+            conda install cvxopt
             python -m pip install -c constraints.txt --upgrade pip virtualenv setuptools
-            pip install -c constraints.txt -U tox cvxopt
+            pip install -c constraints.txt -U tox
             tox --sitepackages -e%TOXENV%
           displayName: 'Install dependencies and run tests'
