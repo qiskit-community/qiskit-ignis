@@ -66,6 +66,7 @@ def qv_circuit_execution(qubit_lists: list, ntrials: int, shots: int):
         exp_results.append(
             qiskit.execute(qv_circs[trial], basis_gates=basis_gates, backend=backend,
                            noise_model=noise_model, shots=shots,
+                           seed_simulator=SEED,
                            backend_options={'max_parallel_experiments': 0}).result())
 
     return ideal_results, exp_results
