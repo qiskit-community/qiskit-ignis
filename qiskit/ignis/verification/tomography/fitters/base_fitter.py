@@ -495,6 +495,7 @@ class TomographyFitter:
         """Check if CVXPY solver is available"""
         if cls._HAS_SDP_SOLVER is None:
             if _HAS_CVX:
+                # pylint:disable=import-error
                 import cvxpy
                 solvers = cvxpy.installed_solvers()
                 if 'CVXOPT' in solvers:
