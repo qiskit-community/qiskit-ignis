@@ -66,6 +66,6 @@ jobs:
         - script: |
             call activate qiskit-ignis
             python -m pip install -c constraints.txt --upgrade pip virtualenv setuptools
-            pip install -c constraints.txt -U tox cxvopt
+            pip install -c constraints.txt -U tox cvxopt
             tox --sitepackages -e%TOXENV%
           displayName: 'Install dependencies and run tests'
