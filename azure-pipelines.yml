@@ -64,9 +64,6 @@ jobs:
         - script: conda create --yes --quiet --name qiskit-ignis python=%PYTHON_VERSION%
           displayName: Create Anaconda environment
         - script: |
-            call activate qiskit-ginis
-            pip install cvxopt
-        - script: |
             call activate qiskit-ignis
             python -m pip install -c constraints.txt --upgrade pip virtualenv setuptools
             pip install -c constraints.txt -U tox cxvopt
