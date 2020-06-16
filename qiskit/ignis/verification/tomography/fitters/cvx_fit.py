@@ -24,8 +24,29 @@ from scipy import sparse as sps
 # Check if CVXPY package is installed
 try:
     import cvxpy
+    _HAS_CVX = True
 except ImportError:
-    cvxpy = None
+    _HAS_CVX = False
+
+
+def _default_sdp_solver():
+    solvers = cvxpy.installed_solvers()
+    if 'CVXOPT' in solvers:
+        return 'CVXOPT'
+    if 'SCS' in solvers:
+        # Try example problem to see if BLAS is installed
+        try:
+            var = cvxpy.Variable((4, 4), PSD=True)
+            obj = cvxpy.Minimize(cvxpy.norm(var))
+            cvxpy.Problem(obj).solve(solver='SCS')
+            return 'SCS'
+        except cvxpy.error.SolverError:
+            return None
+    return None
+
+
+# Check if a suitable default solver is available
+_DEFAULT_SOLVER = _default_sdp_solver()
 
 
 def cvx_fit(data: np.array,
@@ -108,7 +129,7 @@ def cvx_fit(data: np.array,
     """
 
     # Check if CVXPY package is installed
-    if cvxpy is None:
+    if not _HAS_CVX:
         raise ImportError("The CVXPY package is required to use the cvx_fit() "
                           "function. You can install it with 'pip install "
                           "cvxpy' or use a `lstsq` fitter instead of cvx_fit.")
@@ -192,6 +213,9 @@ def cvx_fit(data: np.array,
     prob = cvxpy.Problem(obj, cons)
     iters = 5000
     max_iters = kwargs.get('max_iters', 20000)
+    # Set default solver if none is specified
+    if 'solver' not in kwargs:
+        kwargs['solver'] = _DEFAULT_SOLVER
 
     problem_solved = False
     while not problem_solved:

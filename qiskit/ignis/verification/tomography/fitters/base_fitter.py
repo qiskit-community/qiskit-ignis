@@ -29,7 +29,7 @@ from qiskit import QuantumCircuit
 from qiskit.result import Result
 from ..basis import TomographyBasis, default_basis
 from ..data import marginal_counts, combine_counts, count_keys
-from .cvx_fit import cvxpy, cvx_fit
+from .cvx_fit import cvx_fit, _HAS_CVX, _DEFAULT_SOLVER
 from .lstsq_fit import lstsq_fit
 
 # Create logger
@@ -195,10 +195,10 @@ class TomographyFitter:
                                                         beta)
         # Choose automatic method
         if method == 'auto':
-            if cvxpy is None:
-                method = 'lstsq'
-            else:
+            if _HAS_CVX and _DEFAULT_SOLVER:
                 method = 'cvx'
+            else:
+                method = 'lstsq'
         if method == 'lstsq':
             return lstsq_fit(data, basis_matrix,
                              weights=weights,
