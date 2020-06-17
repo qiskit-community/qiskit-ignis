@@ -4,8 +4,15 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
 trigger:
-- master
-- stable
+  branches:
+  include:
+    - master
+    - stable/*
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - '*'
 
 jobs:
     - job: 'Docs'
