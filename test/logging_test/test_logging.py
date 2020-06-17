@@ -114,7 +114,7 @@ class TestLogging(unittest.TestCase):
             fd.write("file_logging: true\nlog_file: %s" % log_path)
 
         logger = IgnisLogging(self.temp_config_path).get_logger(__name__)
-        self.addClassCleanup(os.remove, log_path)
+        self.addCleanup(os.remove, log_path)
         logger.log_to_file(test="test")
 
         self.assertTrue(os.path.exists, log_path)
