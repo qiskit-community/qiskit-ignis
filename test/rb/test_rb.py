@@ -12,7 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=undefined-loop-variable
+# pylint: disable=undefined-loop-variable,invalid-name,missing-type-doc
 
 """
 Run through RB for different qubit numbers to check that it's working
@@ -41,7 +41,7 @@ class TestRB(unittest.TestCase):
         Choose a valid field for rb_opts['rb_pattern']
 
         Args:
-            pattern_type: a number between 0 and 2.
+            pattern_type (int): a number between 0 and 2.
                 0 - a list of all qubits, for nq=5 it is
                     [1, 2, 3, 4, 5].
                 1 - a list of lists of single qubits, for nq=5
@@ -50,17 +50,21 @@ class TestRB(unittest.TestCase):
                     two lists where the first one has 2 elements,
                     for example for nq=5 it can be
                     [[4, 1], [2, 5, 3]].
-            nq: number of qubits
+            nq (int): number of qubits
 
         Returns:
-            the pattern or ``None``.
-            Returns ``None`` if the pattern type is not relevant to the
-            number of qubits, i.e,, one of two cases:
-            pattern_type = 1 and nq = 1, which implies [[1]]
-            pattern_type = 2 and nq <= 2: - for nq=1 this is impossible
-                                        - for nq=2 this implies
-                                            [[1], [2]], which is already
-                                            tested when pattern_type = 1.
+            tuple: of the form (``res``, ``is_purity``)
+                where the tuple is  the pattern or ``None``.
+                Returns ``None`` if the pattern type is not relevant to the
+                number of qubits, i.e,, one of two cases:
+                pattern_type = 1 and nq = 1, which implies [[1]]
+                pattern_type = 2 and nq <= 2:
+
+                - for nq=1 this is impossible
+                - for nq=2 this implies
+                  [[1], [2]], which is already
+                  tested when pattern_type = 1.
+
             is_purity = True if the pattern fits for purity rb
             (namely, all the patterns have the same dimension:
             only 1-qubit, only 2-qubits etc.).
@@ -96,13 +100,13 @@ class TestRB(unittest.TestCase):
         """
 
         Args:
-            multi_opt:
+            mult_opt (int): the multiplier option to use:
                 0: fixed length
                 1: vector of lengths
-            len_pattern: number of patterns
+            len_pattern (int): number of patterns
 
         Returns:
-            the length multiplier
+            int or list: the length multiplier
         """
         if mult_opt == 0:
             res = 1
@@ -115,13 +119,12 @@ class TestRB(unittest.TestCase):
     def choose_interleaved_gates(rb_pattern):
         """
         Args:
-            rb_pattern: pattern for randomized benchmarking
+            rb_pattern (list): pattern for randomized benchmarking
 
         Returns:
-            interleaved_gates:
-            A list of gates of group elements that
-            will be interleaved (for interleaved randomized benchmarking)
-            The length of the list would equal the length of the rb_pattern.
+            list: A list of gates of group elements that
+                will be interleaved (for interleaved randomized benchmarking)
+                The length of the list would equal the length of the rb_pattern.
         """
         pattern_sizes = [len(pat) for pat in rb_pattern]
         interleaved_gates = []

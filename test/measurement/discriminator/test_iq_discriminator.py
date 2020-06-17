@@ -11,7 +11,8 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-# pylint: disable=no-name-in-module
+
+# pylint: disable=no-name-in-module,invalid-name
 
 """
 Test IQ discrimination fitters.
@@ -20,6 +21,9 @@ Test IQ discrimination fitters.
 import unittest
 
 import test.utils as utils
+
+from sklearn.svm import SVC
+
 import qiskit
 from qiskit import Aer
 from qiskit.exceptions import QiskitError
@@ -28,7 +32,6 @@ from qiskit.ignis.measurement.discriminator.iq_discriminators import \
     LinearIQDiscriminator, SklearnIQDiscriminator
 from qiskit.ignis.mitigation.measurement import circuits
 from qiskit.result.models import ExperimentResultData
-from sklearn.svm import SVC
 
 
 class BaseTestIQDiscriminator(unittest.TestCase):

@@ -18,7 +18,6 @@ Base discriminator class. All discriminators should inherite from this base clas
 from abc import ABC, abstractmethod
 import re
 from typing import Union, List
-from sklearn.preprocessing import StandardScaler
 
 from qiskit.exceptions import QiskitError
 from qiskit.result import Result
@@ -131,6 +130,10 @@ class BaseDiscriminationFitter(ABC):
             expected_states: list of expected states. Must have the
                              same length as the number of schedules.
             schedules: schedules or their names corresponding to the expected states.
+
+        Raises:
+            QiskitError: If the number of input schedules does not equal the
+                number of expected states
         """
         if len(expected_states) != len(schedules):
             raise QiskitError('Number of input schedules and assigned '
@@ -153,8 +156,8 @@ class BaseDiscriminationFitter(ABC):
             result_name: name of the result to be tested.
 
         Returns:
-            True if the name of the result indicates that it is a calibration
-            result.
+            bool: True if the name of the result indicates that it is a
+                calibration result.
         """
         return re.match(self._cal_pattern, result_name) is not None
 
@@ -173,8 +176,8 @@ class BaseDiscriminationFitter(ABC):
                                   (``0``) calibration data only
                                   (``1``) non-calibration data
                                   (``2``) both calibration and non-calibration data
-        Returns (List[str]):
-            The name of the schedules in results.
+        Returns:
+            list: A list of strings with the name of the schedules in results.
         """
         if isinstance(results, Result):
             results_list = [results]
@@ -202,6 +205,9 @@ class BaseDiscriminationFitter(ABC):
                            (``1``) non-calibration data
                            (``2``) both calibration and non-calibration data
             schedules (list): a list of schedule names.
+
+        Raises:
+            QiskitError: If schedule type is not 0, 1, or 2
         """
         if schedule_type == 0:
             if self.is_calibration(name):
@@ -271,9 +277,19 @@ class BaseDiscriminationFitter(ABC):
 
         Returns:
             the scaled xdata as a list of features.
+
+        Raises:
+            ImportError: If sckit-learn is not installed
         """
         if not self._standardize:
             return xdata
+
+        try:
+            from sklearn.preprocessing import StandardScaler
+        except ImportError:
+            raise ImportError("To scale the xdata scikit-learn must be "
+                              "installed. This can be done with 'pip install "
+                              "scikit-learn'")
 
         if not self._scaler or refit:
             self._scaler = StandardScaler(with_std=True)

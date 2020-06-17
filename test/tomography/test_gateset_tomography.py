@@ -12,7 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring,invalid-name
 import unittest
 import numpy as np
 from qiskit import Aer
@@ -41,13 +41,28 @@ class TestGatesetTomography(unittest.TestCase):
 
     @staticmethod
     def expected_linear_inversion_gates(Gs, Fs):
-        rho = np.array([[0.5], [0], [0], [0.5]])
+        rho = Gs['rho']
+        E = Gs['E']
         B = np.array([(F @ rho).T[0] for F in Fs]).T
-        return {label: np.linalg.inv(B) @ G @ B for (label, G) in Gs.items()}
+        BB = np.linalg.inv(B)
+        gates = {label: BB @ G @ B for (label, G) in Gs.items()
+                 if label not in ['E', 'rho']}
+        gates['E'] = E @ B
+        gates['rho'] = BB @ rho
+        return gates
 
     @staticmethod
     def hs_distance(A, B):
         return sum([np.abs(x) ** 2 for x in np.nditer(A-B)])
+
+    @staticmethod
+    def convert_from_ptm(vector):
+        Id = np.sqrt(0.5) * np.array([[1, 0], [0, 1]])
+        X = np.sqrt(0.5) * np.array([[0, 1], [1, 0]])
+        Y = np.sqrt(0.5) * np.array([[0, -1j], [1j, 0]])
+        Z = np.sqrt(0.5) * np.array([[1, 0], [0, -1]])
+        v = vector.reshape(4)
+        return v[0] * Id + v[1] * X + v[2] * Y + v[3] * Z
 
     def compare_gates(self, expected_gates, result_gates, labels, delta=0.2):
         for label in labels:
@@ -69,7 +84,8 @@ class TestGatesetTomography(unittest.TestCase):
 
         labels = gateset_basis.gate_labels
         gates = gateset_basis.gate_matrices
-
+        gates['rho'] = np.array([[np.sqrt(0.5)], [0], [0], [np.sqrt(0.5)]])
+        gates['E'] = np.array([[np.sqrt(0.5), 0, 0, np.sqrt(0.5)]])
         # apply noise if given
         for label in labels:
             if label != "Id" and noise_ptm is not None:
@@ -83,14 +99,16 @@ class TestGatesetTomography(unittest.TestCase):
                                               gateset_basis=gateset_basis)
 
         # linear inversion test
-        expected_gates = self.expected_linear_inversion_gates(gates, Fs)
         result_gates = fitter.linear_inversion()
-        self.compare_gates(expected_gates, result_gates, labels)
+        expected_gates = self.expected_linear_inversion_gates(gates, Fs)
+        self.compare_gates(expected_gates, result_gates, labels + ['E', 'rho'])
 
         # fitter optimization test
-        expected_gates = gates
         result_gates = fitter.fit()
-        self.compare_gates(expected_gates, result_gates, labels)
+        expected_gates = gates
+        expected_gates['E'] = self.convert_from_ptm(expected_gates['E'])
+        expected_gates['rho'] = self.convert_from_ptm(expected_gates['rho'])
+        self.compare_gates(expected_gates, result_gates, labels + ['E', 'rho'])
 
     def test_noiseless_standard_basis(self):
         self.run_test_on_basis_and_noise()

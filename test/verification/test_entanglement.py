@@ -22,7 +22,9 @@ import unittest
 
 import numpy as np
 
-from qiskit.ignis.verification.entanglement.linear import *
+from qiskit.execute import execute
+from qiskit.providers.basicaer import BasicAer
+from qiskit.ignis.verification.entanglement import linear
 
 
 class TestEntanglement(unittest.TestCase):
@@ -33,16 +35,16 @@ class TestEntanglement(unittest.TestCase):
         Test entanglement circuits of Ignis verification -
             GHZ, MQC, parity oscillations
         """
-        qn = 5  # number of qubits
+        num_qubits = 5  # number of qubits
         sim = BasicAer.get_backend('qasm_simulator')
 
         # test simple GHZc
-        circ = get_ghz_simple(qn, measure=True)
+        circ = linear.get_ghz_simple(num_qubits, measure=True)
         counts = execute(circ, sim, shots=1024).result().get_counts(circ)
         self.assertTrue(counts.get('00000', 0) + counts.get('11111', 0) == 1024)
 
         # test MQC
-        circ, delta = get_ghz_mqc_para(qn, measure='full')
+        circ, delta = linear.get_ghz_mqc_para(num_qubits)
         theta_range = np.linspace(0, 2 * np.pi, 16)
         circuits = [circ.bind_parameters({delta: theta_val})
                     for theta_val in theta_range]
@@ -52,19 +54,18 @@ class TestEntanglement(unittest.TestCase):
                             (counts.get('00000', 0) + counts.get('00001', 0)) == 1024)
 
         # test parity oscillations
-        circ, params = get_ghz_po_para(qn, measure='full')
+        circ, params = linear.get_ghz_po_para(num_qubits)
         theta_range = np.linspace(0, 2 * np.pi, 16)
         circuits = [circ.bind_parameters({params[0]: theta_val,
                                           params[1]: -theta_val})
                     for theta_val in theta_range]
-        gap_factor = 2.0/3
         for circ in circuits:
             counts = execute(circ, sim, shots=1024).result().get_counts(circ)
             even_counts = sum(key.count('1') % 2 == 0 for key in counts.keys())
             odd_counts = sum(key.count('1') % 2 == 1 for key in counts.keys())
 
-        self.assertTrue((even_counts > gap_factor*1024) or
-                        odd_counts > gap_factor*1024)
+        self.assertTrue(even_counts in (0, 16))
+        self.assertTrue(odd_counts in (0, 16))
 
 
 if __name__ == '__main__':

@@ -12,6 +12,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
 """Generates circuits for quantum error correction."""
 
 from qiskit import QuantumRegister, ClassicalRegister
@@ -30,8 +32,8 @@ class RepetitionCode():
         using a repetition code.
 
         Args:
-            d: Number of code qubits (and hence repetitions) used.
-            T: Number of rounds of ancilla-assisted syndrome measurement.
+            d (int): Number of code qubits (and hence repetitions) used.
+            T (int): Number of rounds of ancilla-assisted syndrome measurement.
 
 
         Additional information:
@@ -60,9 +62,9 @@ class RepetitionCode():
 
         for _ in range(T-1):
             self.syndrome_measurement()
-        self.syndrome_measurement(reset=False)
 
         if T != 0:
+            self.syndrome_measurement(reset=False)
             self.readout()
 
     def get_circuit_list(self):
@@ -80,8 +82,10 @@ class RepetitionCode():
         Applies a logical x to the circuits for the given logical values.
 
         Args:
-            logs: List or tuple of logical values expressed as strings.
-            barrier: Boolean denoting whether to include a barrier at the end.
+            logs (list or tuple): List or tuple of logical values expressed as
+                strings.
+            barrier (bool): Boolean denoting whether to include a barrier at
+                the end.
         """
         for log in logs:
             for j in range(self.d):
@@ -101,7 +105,8 @@ class RepetitionCode():
         Application of a syndrome measurement round.
 
         Args:
-            barrier: Boolean denoting whether to include a barrier at the end.
+            reset (bool): If set to true add a boolean at the end of each round
+            barrier (bool): Boolean denoting whether to include a barrier at the end.
         """
         self.link_bits.append(ClassicalRegister(
             (self.d - 1), 'round_' + str(self.T) + '_link_bit'))
@@ -140,14 +145,15 @@ class RepetitionCode():
     def process_results(self, raw_results):
         """
         Args:
-            raw_results: A dictionary whose keys are logical values, and whose
-            values are standard counts dictionaries, (as obtained from the
-            `get_counts` method of a qiskit.Result object).
+            raw_results (dict): A dictionary whose keys are logical values,
+                and whose values are standard counts dictionaries, (as
+                obtained from the `get_counts` method of a ``qiskit.Result``
+                object).
 
         Returns:
             results: Dictionary with the same structure as the input, but with
-            the bit strings used as keys in the counts dictionaries converted
-            to the form required by the decoder.
+                the bit strings used as keys in the counts dictionaries
+                converted to the form required by the decoder.
 
         Additional information:
             The circuits must be executed outside of this class, so that

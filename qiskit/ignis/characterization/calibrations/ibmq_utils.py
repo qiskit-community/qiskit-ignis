@@ -30,14 +30,14 @@ def _fit_drag_func(duration, amp, sigma, beta, exp_samples):
     the experiment
 
     Args:
-        duration: pulse duration
-        amp: gauss amp
-        sigma: gauss sigma
-        beta: drag amp
-        exp_samples: the experiment pulse, split into real and imag
+        duration (int): pulse duration
+        amp (complex): gauss amp
+        sigma (float): gauss sigma
+        beta (complex): drag amp
+        exp_samples (ndarray): the experiment pulse, split into real and imag
 
     Returns:
-        difference between the drag and experimental samples
+        ndarray: difference between the drag and experimental samples
 
     """
 
@@ -52,11 +52,11 @@ def get_single_q_pulse(inst_map, qubits):
     Get the DRAG parameters for the single qubit pulse
 
     Args:
-        inst_map: Instruction schedule map object for the device
-        qubits: list of qubits to extract the parameters
+        inst_map (InstMap): Instruction schedule map object for the device
+        qubits (list): list of qubits to extract the parameters
 
     Returns:
-        List of dictionaries with the parameters for the DRAG
+        list: List of dictionaries with the parameters for the DRAG
 
     Notes:
         Deprecated once parameterized pulses are supported
@@ -101,13 +101,13 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
     Will update U2, U3
 
     Args:
-        drag_params: list of drag params
-        pi2_pulse_schedules: list of new pi/2 gate as a pulse schedule
+        drag_params (list): list of drag params
+        pi2_pulse_schedules (list): list of new pi/2 gate as a pulse schedule
                              will use the drag_params if this is None.
-        qubits: list of qubits to update
-        inst_map: InstructionScheduleMap providing circuit instruction to
-                  schedule definitions.
-        drives: List of drive chs
+        qubits (list): list of qubits to update
+        inst_map (InstructionScheduleMap): InstructionScheduleMap providing
+            circuit instruction to schedule definitions.
+        drives (list): List of drive chs
     """
 
     # U2 is -P1.Y90p.-P0
@@ -172,21 +172,21 @@ def _find_channel_groups(command, qubits, inst_map):
     Extract frame dependency of control channel on drive channel.
 
     Args:
-        command: name of command.
-        qubits: target qubit index.
-        inst_map: InstructionScheduleMap providing circuit instruction to
-                  schedule definitions.
+        command (str): name of command.
+        qubits (int): target qubit index.
+        inst_map (InstructionScheduleMap): InstructionScheduleMap providing
+            circuit instruction to schedule definitions.
     Returns:
-        channel_groups: group of channels in the same frame.
+        list: group of channels in the same frame.
     """
     params = inst_map.get_parameters(command, qubits=qubits)
     temp_sched = inst_map.get(command, qubits=qubits,
                               **dict(zip(params, np.zeros(len(params)))))
 
     synced_fcs = defaultdict(list)
-    for t0, inst in temp_sched.instructions:
+    for t_0, inst in temp_sched.instructions:
         if isinstance(inst, ShiftPhase):
-            synced_fcs[t0, inst.phase].extend(inst.channels)
+            synced_fcs[t_0, inst.phase].extend(inst.channels)
 
     channel_groups = set()
     for synced_fc in synced_fcs.values():
