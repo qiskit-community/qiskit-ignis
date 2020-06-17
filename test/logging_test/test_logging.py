@@ -12,6 +12,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
 
 """
 Unit testing of the Ignis Logging facility. Covering the following specs:
@@ -109,7 +111,7 @@ class TestLogging(unittest.TestCase):
         """
         log_path = os.path.join(tempfile.gettempdir(), 'test_log.log')
         with open(self.temp_config_path, "w") as fd:
-            fd.write("file_logging: true\nlog_file: %s" %log_path)
+            fd.write("file_logging: true\nlog_file: %s" % log_path)
 
         logger = IgnisLogging(self.temp_config_path).get_logger(__name__)
         self.addClassCleanup(os.remove, log_path)
@@ -225,7 +227,6 @@ class TestLogging(unittest.TestCase):
             lines = file.read().split('\n')
 
         self.assertGreaterEqual(len(lines), 2)
-
 
     def test_read_multiple_files(self):
         """
