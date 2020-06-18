@@ -77,17 +77,20 @@ class RBgroup():
         else:
             return random_clifford(num_qubits, rand_seed)
 
-    def compose(self, elem, other):
+    @staticmethod
+    def compose(elem, other):
         """Compose two group elements: orig and other"""
         return elem.compose(other)
 
-    def inverse(self, elem):
+    @staticmethod
+    def inverse(elem):
         """Computes the inverse QuantumCircuit"""
         # decompose the group element into a QuantumCircuit
         circ = elem.to_circuit()
         # invert the QuantumCircuit
         return circ.inverse()
 
-    def to_circuit(self, elem):
+    @staticmethod
+    def to_circuit(elem):
         """Returns the corresponding QuantumCircuit"""
         return elem.to_circuit()
