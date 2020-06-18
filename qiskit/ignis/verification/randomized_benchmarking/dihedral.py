@@ -928,7 +928,7 @@ def random_cnotdihedral(num_qubits, seed=None):
     weight_2 = 2 * rng.randint(4, size=int(num_qubits * (num_qubits - 1) / 2))
     elem.poly.weight_2 = weight_2
     weight_3 = 4 * rng.randint(2, size=int(num_qubits * (num_qubits - 1) *
-                                                 (num_qubits - 2) / 6))
+                                           (num_qubits - 2) / 6))
     elem.poly.weight_3 = weight_3
 
     # Random affine function
