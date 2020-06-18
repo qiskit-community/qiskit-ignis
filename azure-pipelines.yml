@@ -5,9 +5,9 @@
 
 trigger:
   branches:
-  include:
-    - master
-    - stable/*
+    include:
+      - master
+      - stable/*
 pr:
   autoCancel: true
   branches:
