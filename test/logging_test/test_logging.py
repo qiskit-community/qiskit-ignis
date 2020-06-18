@@ -55,6 +55,7 @@ class TestLogging(unittest.TestCase):
         :return:
         """
         super().setUp()
+        IgnisLogging._reset_to_defaults()
         _, self.temp_config_path = tempfile.mkstemp()
         self.addCleanup(os.remove, self.temp_config_path)
 
