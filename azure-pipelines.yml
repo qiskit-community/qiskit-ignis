@@ -70,8 +70,10 @@ jobs:
           displayName: Add conda to PATH
         - script: conda create --yes --quiet --name qiskit-ignis python=%PYTHON_VERSION%
           displayName: Create Anaconda environment
-        - script: |
-            call activate qiskit-ignis
+        - bash: |
+            set -e
+            set -x
+            source activate qiskit-ignis
             conda config --add channels conda-forge
             conda install cvxopt
             python -m pip install -c constraints.txt --upgrade pip virtualenv setuptools
