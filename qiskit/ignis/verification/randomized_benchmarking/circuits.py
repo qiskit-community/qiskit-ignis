@@ -20,10 +20,9 @@ Generates randomized benchmarking sequences
 """
 
 import copy
-import os
-import sys
-from typing import List, Optional
+from typing import List, Optional, Union
 import numpy as np
+from numpy.random import RandomState
 import qiskit
 
 
@@ -148,7 +147,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                 Optional[qiskit.quantum_info.operators.symplectic.Clifford] = None,
                                 is_purity: bool = False,
                                 group_gates: Optional[str] = None,
-                                rand_seed: Optional[int] = None) -> \
+                                rand_seed: Optional[Union[int, RandomState]] = None) -> \
         (List[List[qiskit.QuantumCircuit]], List[List[int]],
          Optional[List[List[qiskit.QuantumCircuit]]],
          Optional[List[List[List[qiskit.QuantumCircuit]]]],
@@ -224,7 +223,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             * ``group_gates='1'`` or ``group_gates='CNOT-Dihedral'`` \
             or ``group_gates='Non-Clifford'`` -- CNOT-Dihedral group.
 
-        rand_seed: random number generator seed, to be used when getting random gates
+        rand_seed: Optional (int or RandomState). 
+            Set a fixed seed or generator for RNG.
 
     Returns:
         A tuple of different fields depending on the inputs.
@@ -328,8 +328,12 @@ def randomized_benchmarking_seq(nseeds: int = 1,
 
     pattern_sizes = [len(pat) for pat in rb_pattern]
 
-    rand_seed = int.from_bytes(os.urandom(4), byteorder=sys.byteorder) \
-        if rand_seed is None else rand_seed
+    if rand_seed is None:
+        rng = np.random
+    elif isinstance(rand_seed, RandomState):
+        rng = rand_seed
+    else:
+        rng = RandomState(rand_seed)
 
     # Set the RBgroup class for RB (default is Clifford)
     rb_group = RBgroup(group_gates)
@@ -373,7 +377,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
 
                 for _ in range(length_multiplier[rb_pattern_index]):
-                    new_elmnt = rb_group.random(rb_q_num, rand_seed + elmnts_index)
+                    new_elmnt = rb_group.random(rb_q_num, rand_seed)
                     Elmnts[rb_pattern_index] = rb_group.compose(
                         Elmnts[rb_pattern_index], new_elmnt)
                     general_circ += replace_q_indices(

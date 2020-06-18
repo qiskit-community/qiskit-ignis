@@ -39,6 +39,7 @@ import copy
 from functools import reduce
 from operator import mul
 import numpy as np
+from numpy.random import RandomState
 
 from qiskit.exceptions import QiskitError
 from qiskit.circuit import QuantumCircuit
@@ -912,15 +913,21 @@ def random_cnotdihedral(num_qubits, seed=None):
         CNOTDihedral: a random CNOTDihedral element.
     """
 
-    np.random.seed(seed)
+    if seed is None:
+        rng = np.random
+    elif isinstance(seed, RandomState):
+        rng = seed
+    else:
+        rng = RandomState(seed)
+
     elem = CNOTDihedral(num_qubits)
 
     # Random phase polynomial weights
-    weight_1 = np.random.randint(8, size=num_qubits)
+    weight_1 = rng.randint(8, size=num_qubits)
     elem.poly.weight_1 = weight_1
-    weight_2 = 2 * np.random.randint(4, size=int(num_qubits * (num_qubits - 1) / 2))
+    weight_2 = 2 * rng.randint(4, size=int(num_qubits * (num_qubits - 1) / 2))
     elem.poly.weight_2 = weight_2
-    weight_3 = 4 * np.random.randint(2, size=int(num_qubits * (num_qubits - 1) *
+    weight_3 = 4 * rng.randint(2, size=int(num_qubits * (num_qubits - 1) *
                                                  (num_qubits - 2) / 6))
     elem.poly.weight_3 = weight_3
 
@@ -928,12 +935,12 @@ def random_cnotdihedral(num_qubits, seed=None):
     # Random invertible binary matrix
     det = 0
     while det == 0:
-        linear = np.random.randint(2, size=(num_qubits, num_qubits))
+        linear = rng.randint(2, size=(num_qubits, num_qubits))
         det = np.linalg.det(linear) % 2
     elem.linear = linear.tolist()
 
     # Random shift
-    shift = np.random.randint(2, size=num_qubits)
+    shift = rng.randint(2, size=num_qubits)
     elem.shift = shift
 
     return elem
