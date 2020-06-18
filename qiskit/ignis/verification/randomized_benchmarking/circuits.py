@@ -223,8 +223,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             * ``group_gates='1'`` or ``group_gates='CNOT-Dihedral'`` \
             or ``group_gates='Non-Clifford'`` -- CNOT-Dihedral group.
 
-        rand_seed: Optional (int or RandomState). 
-            Set a fixed seed or generator for RNG.
+        rand_seed: Optional. Set a fixed seed or generator for RNG.
 
     Returns:
         A tuple of different fields depending on the inputs.
