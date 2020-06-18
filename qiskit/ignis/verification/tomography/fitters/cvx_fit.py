@@ -24,8 +24,9 @@ from scipy import sparse as sps
 # Check if CVXPY package is installed
 try:
     import cvxpy
+    _HAS_CVX = True
 except ImportError:
-    cvxpy = None
+    _HAS_CVX = False
 
 
 def cvx_fit(data: np.array,
@@ -108,7 +109,7 @@ def cvx_fit(data: np.array,
     """
 
     # Check if CVXPY package is installed
-    if cvxpy is None:
+    if not _HAS_CVX:
         raise ImportError("The CVXPY package is required to use the cvx_fit() "
                           "function. You can install it with 'pip install "
                           "cvxpy' or use a `lstsq` fitter instead of cvx_fit.")
@@ -118,7 +119,7 @@ def cvx_fit(data: np.array,
     # and imaginary parts of rho seperately: rho = rho_r + 1j * rho_i
 
     dim = int(np.sqrt(basis_matrix.shape[1]))
-    rho_r = cvxpy.Variable((dim, dim))
+    rho_r = cvxpy.Variable((dim, dim), symmetric=True)
     rho_i = cvxpy.Variable((dim, dim))
 
     # CONSTRAINTS
@@ -128,7 +129,7 @@ def cvx_fit(data: np.array,
     #   1. rho_r.T = rho_r.T  (real part is symmetric)
     #   2. rho_i.T = -rho_i.T  (imaginary part is anti-symmetric)
 
-    cons = [rho_r == rho_r.T, rho_i == -rho_i.T]
+    cons = [rho_i == -rho_i.T]
 
     # Trace constraint: note this should not be used at the same
     # time as the trace preserving constraint.
@@ -153,7 +154,7 @@ def cvx_fit(data: np.array,
     if trace_preserving is True:
         sdim = int(np.sqrt(dim))
         ptr = partial_trace_super(sdim, sdim)
-        cons.append(ptr * cvxpy.vec(rho_r) == np.identity(sdim).ravel())
+        cons.append(ptr @ cvxpy.vec(rho_r) == np.identity(sdim).ravel())
 
     # Rescale input data and matrix by weights if they are provided
     if weights is not None:
@@ -183,7 +184,7 @@ def cvx_fit(data: np.array,
         bm_r = bm_r.todense()
         bm_i = bm_i.todense()
 
-    arg = bm_r * cvxpy.vec(rho_r) - bm_i * cvxpy.vec(rho_i) - np.array(data)
+    arg = bm_r @ cvxpy.vec(rho_r) - bm_i @ cvxpy.vec(rho_i) - np.array(data)
 
     # SDP objective function
     obj = cvxpy.Minimize(cvxpy.norm(arg, p=2))
@@ -192,6 +193,10 @@ def cvx_fit(data: np.array,
     prob = cvxpy.Problem(obj, cons)
     iters = 5000
     max_iters = kwargs.get('max_iters', 20000)
+    # Set default solver if none is specified
+    if 'solver' not in kwargs:
+        if 'CVXOPT' in cvxpy.installed_solvers():
+            kwargs['solver'] = 'CVXOPT'
 
     problem_solved = False
     while not problem_solved:
