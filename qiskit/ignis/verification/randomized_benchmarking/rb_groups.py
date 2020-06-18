@@ -68,14 +68,14 @@ class RBgroup():
         else:
             return Clifford(np.eye(2 * num_qubits))
 
-    def random(self, num_qubits, rand_seed):
+    def random(self, num_qubits, rand_seed=None):
         """Generate a random group element"""
         self._num_qubits = num_qubits
         if self._group_gates_type:
             assert num_qubits <= 2, "num_qubits for CNOT-Dihedral RB should be 1 or 2"
-            return random_cnotdihedral(num_qubits, rand_seed)
+            return random_cnotdihedral(num_qubits, seed=rand_seed)
         else:
-            return random_clifford(num_qubits, rand_seed)
+            return random_clifford(num_qubits, seed=rand_seed)
 
     @staticmethod
     def compose(elem, other):

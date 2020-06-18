@@ -518,6 +518,7 @@ class TestRB(unittest.TestCase):
         # Choose options for standard (simultaneous) RB:
         rb_opts = {}
         rb_opts['nseeds'] = 3
+        rb_opts['rand_seed'] = 1234
         rb_opts['length_vector'] = [1, 3, 4, 7]
         rb_opts['rb_pattern'], is_purity, is_dihedral = \
             self.choose_pattern(pattern_type, nq)

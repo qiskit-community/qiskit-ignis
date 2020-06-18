@@ -327,13 +327,6 @@ def randomized_benchmarking_seq(nseeds: int = 1,
 
     pattern_sizes = [len(pat) for pat in rb_pattern]
 
-    if rand_seed is None:
-        rng = np.random
-    elif isinstance(rand_seed, RandomState):
-        rng = rand_seed
-    else:
-        rng = RandomState(rand_seed)
-
     # Set the RBgroup class for RB (default is Clifford)
     rb_group = RBgroup(group_gates)
     group_gates_type = rb_group.group_gates_type()
