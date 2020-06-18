@@ -78,5 +78,5 @@ jobs:
             conda install cvxopt -y
             python -m pip install -c constraints.txt --upgrade pip virtualenv setuptools
             pip install -c constraints.txt -U tox
-            tox --sitepackages -e%TOXENV%
+            tox --sitepackages
           displayName: 'Install dependencies and run tests'
