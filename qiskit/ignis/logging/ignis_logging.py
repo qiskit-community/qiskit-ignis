@@ -214,8 +214,6 @@ class IgnisLogging:
                 logger._file_handler = None
                 logger._file_logging_enabled = False
 
-
-
     def get_logger(self, name: str) -> IgnisLogger:
         """
         Return an IgnisLogger object
@@ -460,4 +458,3 @@ class IgnisLogReader:
                 return True
 
         return False
-

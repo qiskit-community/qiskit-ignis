@@ -39,8 +39,8 @@ Unit testing of the Ignis Logging facility. Covering the following specs:
 
 """
 import os
-from pyfakefs import fake_filesystem_unittest
 import unittest
+from pyfakefs import fake_filesystem_unittest
 
 
 from qiskit.ignis.logging import IgnisLogging, IgnisLogReader
@@ -63,7 +63,7 @@ class TestLogging(fake_filesystem_unittest.TestCase):
         os.makedirs(qiskit_dir, exist_ok=True)
 
         if os.path.exists(self._config_file):
-            os.remove(self._config_file) #TODO: preserve and restore the old one
+            os.remove(self._config_file)  # TODO: preserve and restore the old one
 
     def tearDown(self):
         """
@@ -262,4 +262,3 @@ class TestLogging(fake_filesystem_unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')
-
