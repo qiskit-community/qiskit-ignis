@@ -253,7 +253,6 @@ class TestLogging(fake_filesystem_unittest.TestCase):
                 "2019/09/02 13:27:04 ignis_logging \'k3\':\'d6\'\n"
                 "2019/09/04 13:27:04 ignis_logging \'k4\':\'d7\'\n")
 
-
         reader = IgnisLogReader()
 
         self.assertEqual(len(reader.read_values(keys=["k1", "k2"])), 5)
