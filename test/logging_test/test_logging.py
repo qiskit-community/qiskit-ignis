@@ -197,6 +197,7 @@ class TestLogging(fake_filesystem_unittest.TestCase):
         logger.log_to_file(test="test")
 
         with open(self._default_log, 'r') as file:
+
             self.assertRegex(
                 file.read(),
                 r"\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} ignis_logging \S+")
@@ -242,6 +243,7 @@ class TestLogging(fake_filesystem_unittest.TestCase):
         Test filtering operations
         """
         with open(self._default_log, 'w') as log:
+
             log.write(
                 "2019/08/04 13:27:04 ignis_logging \'k1\':\'d1\'\n"
                 "2019/08/04 13:27:05 ignis_logging \'k1\':\'d2\'\n"
@@ -250,6 +252,7 @@ class TestLogging(fake_filesystem_unittest.TestCase):
                 "2019/08/06 13:27:04 ignis_logging \'k2\':\'d5\'\n"
                 "2019/09/02 13:27:04 ignis_logging \'k3\':\'d6\'\n"
                 "2019/09/04 13:27:04 ignis_logging \'k4\':\'d7\'\n")
+
 
         reader = IgnisLogReader()
 
@@ -262,4 +265,3 @@ class TestLogging(fake_filesystem_unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')
-

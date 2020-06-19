@@ -152,22 +152,25 @@ class IgnisLogging:
     _config_file_exists = False
 
     # Making the class a Singleton
-    def __new__(cls):
+    def __new__(cls, log_config_path=None):
         if IgnisLogging._instance is None:
             IgnisLogging._instance = object.__new__(cls)
-            IgnisLogging._initialize()
+            IgnisLogging._initialize(log_config_path)
 
         return IgnisLogging._instance
 
     @staticmethod
-    def _load_config_file():
+    def _load_config_file(log_config_path=None):
         """
         Load and parse the config file
         Returns:
             dict: A dictionary containing all the settings
         """
-        config_file_path = os.path.join(os.path.expanduser('~'),
-                                        ".qiskit", "logging.yaml")
+        if not log_config_path:
+            config_file_path = os.path.join(os.path.expanduser('~'),
+                                            ".qiskit", "logging.yaml")
+        else:
+            config_file_path = log_config_path
         config = dict()
         if os.path.exists(config_file_path):
             with open(config_file_path, "r") as log_file:
@@ -183,13 +186,13 @@ class IgnisLogging:
         return config
 
     @staticmethod
-    def _initialize():
+    def _initialize(log_config_path):
         """
         Initialize the logging facility for Ignis
         """
         logging.setLoggerClass(IgnisLogger)
 
-        log_config = IgnisLogging._load_config_file()
+        log_config = IgnisLogging._load_config_file(log_config_path)
         # Reading the config file content
         IgnisLogging._file_logging_enabled = \
             log_config.get('file_logging') == "true"
@@ -213,8 +216,6 @@ class IgnisLogging:
             if isinstance(logger, IgnisLogger):
                 logger._file_handler = None
                 logger._file_logging_enabled = False
-
-
 
     def get_logger(self, name: str) -> IgnisLogger:
         """
