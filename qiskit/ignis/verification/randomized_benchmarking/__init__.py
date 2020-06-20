@@ -25,7 +25,7 @@ from .dihedral import CNOTDihedral
 from .dihedral_utils import DihedralUtils
 from .circuits import randomized_benchmarking_seq
 from .fitters import (RBFitter, InterleavedRBFitter, PurityRBFitter,
-                      CNOTDihedralRBFitter)
+                      CNOTDihedralRBFitter, CorrelatedRBFitter)
 from .rb_utils import (count_gates, gates_per_clifford,
                        coherence_limit, twoQ_clifford_error,
                        calculate_1q_epg, calculate_2q_epg, calculate_1q_epc, calculate_2q_epc)
