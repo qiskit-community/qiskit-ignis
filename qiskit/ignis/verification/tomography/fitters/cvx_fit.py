@@ -27,6 +27,8 @@ try:
     _HAS_CVX = True
 except ImportError:
     _HAS_CVX = False
+    cvxpy = None
+
 
 
 def cvx_fit(data: np.array,
