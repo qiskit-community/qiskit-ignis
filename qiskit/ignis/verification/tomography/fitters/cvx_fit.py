@@ -30,7 +30,6 @@ except ImportError:
     cvxpy = None
 
 
-
 def cvx_fit(data: np.array,
             basis_matrix: np.array,
             weights: Optional[np.array] = None,
