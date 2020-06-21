@@ -24,7 +24,7 @@ Functions used for the analysis of randomized benchmarking results.
 """
 
 from abc import ABC, abstractmethod
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, least_squares
 import numpy as np
 from qiskit import QiskitError
 from qiskit.quantum_info.analysis.average import average_data
@@ -1462,7 +1462,7 @@ class CorrelatedRBFitter(RBFitterBase):
                 for kk in range(len(rb_pattern[ii])):
                     tmplist2.append(self._subsystems[-1][ii])
 
-            self._subsystems2.append(int(''.join(tmplist2),base=2))
+            self._subsystems2.append(int(''.join(tmplist2), base=2))
 
         self._r_coeff = None
 
@@ -1520,7 +1520,7 @@ class CorrelatedRBFitter(RBFitterBase):
     @property
     def fit_alphas(self):
         alphadict = {}
-        for i,j in enumerate(self._subsystems):
+        for i, j in enumerate(self._subsystems):
             alphadict[j] = self.fit[i]['params'][1]
         return alphadict
 
@@ -1695,7 +1695,7 @@ class CorrelatedRBFitter(RBFitterBase):
                 sigma = None
         else:
             sigma = None
-        params, pcov = optm.curve_fit(self._rb_fit_fun, lens,
+        params, pcov = curve_fit(self._rb_fit_fun, lens,
                                  self._ydata[patt_ind]['mean'],
                                  sigma=sigma,
                                  p0=fit_guess,
@@ -1810,14 +1810,14 @@ class CorrelatedRBFitter(RBFitterBase):
 
         #precompute the a matrix of coefficients for calculating the rauli's
         #from this matrix alpha_k = prod[1-rauli_matrix_coeff*e] where e is the error vector
-        self._r_coeff = np.zeros([len(self._subsystems),len(self._subsystems)],dtype=float)
-        for (ii,subspace1) in enumerate(self._subsystems):
-            for (kk,subspace2) in enumerate(self._subsystems):
+        self._r_coeff = np.zeros([len(self._subsystems), len(self._subsystems)], dtype=float)
+        for (ii, subspace1) in enumerate(self._subsystems):
+            for (kk, subspace2) in enumerate(self._subsystems):
 
-                depol1 = self._depol_Rauli([subspace2],subspace1,1.)[0]
-                depol2 = self._depol_Rauli([subspace2],subspace1,0.)[0]
+                depol1 = self._depol_Rauli([subspace2], subspace1, 1.)[0]
+                depol2 = self._depol_Rauli([subspace2], subspace1, 0.)[0]
 
-                self._r_coeff[ii,kk] = depol1-depol2
+                self._r_coeff[ii, kk] = depol1-depol2
 
     def _depol_Rauli(self, pauli_elem, depol_subsys, p):
         """
@@ -1838,11 +1838,11 @@ class CorrelatedRBFitter(RBFitterBase):
             1-p
         """
 
-        rauli = np.zeros(len(pauli_elem),dtype=float)
-        for (state_index,state_paulis) in enumerate(pauli_elem):
+        rauli = np.zeros(len(pauli_elem), dtype=float)
+        for (state_index, state_paulis) in enumerate(pauli_elem):
             all_id = 1
             for j in range(len(state_paulis)):
-                if depol_subsys[j]=='1' and state_paulis[j]=='1':
+                if depol_subsys[j] == '1' and state_paulis[j] == '1':
                     all_id = 0
             rauli[state_index] = (1.0-p) + p*all_id
 
@@ -1861,11 +1861,11 @@ class CorrelatedRBFitter(RBFitterBase):
             List of alphas given eps_list
         """
 
-        alpha_calc = np.ones(len(eps_list),dtype=float)
+        alpha_calc = np.ones(len(eps_list), dtype=float)
 
         for ii in range(len(eps_list)):
             for jj in range(len(eps_list)):
-                alpha_calc[ii] *= (1.0+self._r_coeff[jj,ii]*eps_list[jj])
+                alpha_calc[ii] *= (1.0+self._r_coeff[jj, ii]*eps_list[jj])
         return alpha_calc
 
 
@@ -1905,16 +1905,16 @@ class CorrelatedRBFitter(RBFitterBase):
         if init_guess is None:
             init_guess = 0.01*np.ones(len(self.fit_alphas.keys()), dtype=float)
 
-        optm_results = optm.least_squares(self._alpha_diff_func,
-                                          init_guess, bounds=[0,1.0])
+        optm_results = least_squares(self._alpha_diff_func,
+                                     init_guess, bounds=[0, 1.0])
 
         est_err = np.sqrt(optm_results.cost *
                           np.diag(np.linalg.inv(np.dot(
-                                  np.transpose(optm_results.jac),
-                                  optm_results.jac)))/len(init_guess))
+                              np.transpose(optm_results.jac),
+                              optm_results.jac)))/len(init_guess))
 
         self._epsilons = {}
-        for i,j in enumerate(self._subsystems):
+        for i, j in enumerate(self._subsystems):
             self._epsilons[j] = [optm_results.x[i], est_err[i]]
 
         return optm_results.cost
@@ -1951,11 +1951,11 @@ class CorrelatedRBFitter(RBFitterBase):
         eps_list = np.array(eps_list)[sort_args]
         eps_err_list = np.array(eps_err_list)[sort_args]
 
-        color_list = ['black','red','blue','green','yellow']
+        color_list = ['black', 'red', 'blue', 'green', 'yellow']
         prev_weight = 0
         for ii, jj in enumerate(corr_list):
             point_weight = jj.count('1')
-            if prev_weight!=point_weight:
+            if prev_weight != point_weight:
                 legend_label = 'Weight %d'%point_weight
                 prev_weight = point_weight
             else:
@@ -1968,8 +1968,8 @@ class CorrelatedRBFitter(RBFitterBase):
 
 
         ax.legend(fontsize=16)
-        ax.set_xlim([0,len(corr_weight)+1])
-        ax.set_ylim([0-np.max(eps_err_list),np.max(eps_list)+np.max(eps_err_list)])
+        ax.set_xlim([0, len(corr_weight)+1])
+        ax.set_ylim([0-np.max(eps_err_list), np.max(eps_list)+np.max(eps_err_list)])
         ax.grid()
         # add x-tick labels
         ax.set_xticks([y+1 for y in range(len(corr_weight))])
