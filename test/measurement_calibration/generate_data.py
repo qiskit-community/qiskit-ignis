@@ -18,8 +18,8 @@ Generate data for measurement calibration fitter tests
 import os
 import json
 import qiskit
-from qiskit.ignis.mitigation.measurement import (CompleteMeasFitter,
-                                                 complete_meas_cal,
+from qiskit.ignis.mitigation.measurement import (CompleteMeasFitter, TensoredMeasFitter,
+                                                 complete_meas_cal, tensored_meas_cal,
                                                  MeasurementFilter)
 from qiskit.providers.aer.noise import NoiseModel
 from qiskit.providers.aer.noise.errors.standard_errors import pauli_error
@@ -68,6 +68,49 @@ def meas_calibration_circ_execution(nqunits: int, shots: int, seed: int):
     return cal_results, state_labels, bell_results
 
 
+def tensored_calib_circ_execution(shots: int, seed: int):
+    """
+    create tensored measurement calibration circuits and simulates them with noise
+    Args:
+        shots (int): number of shots per simulation
+        seed (int): the seed to use in the simulations
+
+    Returns:
+        list: list of Results of the measurement calibration simulations
+        list: the mitigation pattern
+        dict: dictionary of results counts of bell circuit simulation with measurement errors
+    """
+    # define the circuits
+    qr = qiskit.QuantumRegister(5)
+    mit_pattern = [[2], [4, 1]]
+    meas_calibs, mit_pattern = tensored_meas_cal(mit_pattern=mit_pattern, qr=qr, circlabel='test')
+    # define noise
+    prob = 0.2
+    error_meas = pauli_error([('X', prob), ('I', 1 - prob)])
+    noise_model = NoiseModel()
+    noise_model.add_all_qubit_quantum_error(error_meas, "measure")
+
+    # run the circuits multiple times
+    backend = qiskit.Aer.get_backend('qasm_simulator')
+    cal_results = qiskit.execute(meas_calibs, backend=backend, shots=shots, noise_model=noise_model,
+                                 seed_simulator=seed).result()
+
+    # create bell state and get it's results
+    cr = qiskit.ClassicalRegister(3)
+    qc = qiskit.QuantumCircuit(qr, cr)
+    qc.h(qr[2])
+    qc.cx(qr[2], qr[4])
+    qc.cx(qr[2], qr[1])
+    qc.measure(qr[2], cr[0])
+    qc.measure(qr[4], cr[1])
+    qc.measure(qr[1], cr[2])
+
+    bell_results = qiskit.execute(qc, backend=backend, shots=shots, noise_model=noise_model,
+                                  seed_simulator=seed).result().get_counts()
+
+    return cal_results, mit_pattern, bell_results
+
+
 def generate_meas_calibration(results_file_path: str, runs: int):
     """
     run the measurement calibration circuits, calculates the fitter matrix in few methods
@@ -84,7 +127,7 @@ def generate_meas_calibration(results_file_path: str, runs: int):
     """
     results = []
     for run in range(runs):
-        cal_results, state_labels, cicuit_results = \
+        cal_results, state_labels, circuit_results = \
             meas_calibration_circ_execution(3, 1000, SEED + run)
 
         meas_cal = CompleteMeasFitter(cal_results, state_labels, circlabel='test')
@@ -92,11 +135,47 @@ def generate_meas_calibration(results_file_path: str, runs: int):
 
         # Calculate the results after mitigation
         results_pseudo_inverse = meas_filter.apply(
-            cicuit_results, method='pseudo_inverse')
+            circuit_results, method='pseudo_inverse')
         results_least_square = meas_filter.apply(
-            cicuit_results, method='least_squares')
+            circuit_results, method='least_squares')
         results.append({"cal_matrix": meas_cal.cal_matrix, "fidelity": meas_cal.readout_fidelity(),
-                        "results": cicuit_results,
+                        "results": circuit_results,
+                        "results_pseudo_inverse": results_pseudo_inverse,
+                        "results_least_square": results_least_square})
+
+    with open(results_file_path, "w") as results_file:
+        json.dump(results, results_file)
+
+
+def generate_tensormeas_calibration(results_file_path: str, runs: int):
+    """
+    run the measurement calibration circuits, calculates the fitter matrix in few methods
+    and saves the results
+    The simulation results files will contain a list of dictionaries with the keys:
+        cal_matrix - the matrix used to calculate the ideal measurement
+        fidelity - the calculated fidelity of using this matrix
+        results_pseudo_inverse - the result of using the psedo-inverse method on the bell state
+        results_least_square - the result of using the least-squares method on the bell state
+
+    Args:
+        results_file_path: path of the json file of the results file
+        runs: the number of different runs to save
+    """
+    results = []
+    for run in range(runs):
+        cal_results, mit_pattern, circuit_results = \
+            tensored_calib_circ_execution(3, 1000, SEED + run)
+
+        meas_cal = TensoredMeasFitter(cal_results, mit_pattern=mit_pattern)
+        meas_filter = meas_cal.filter
+
+        # Calculate the results after mitigation
+        results_pseudo_inverse = meas_filter.apply(
+            circuit_results, method='pseudo_inverse')
+        results_least_square = meas_filter.apply(
+            circuit_results, method='least_squares')
+        results.append({"cal_matrix": meas_cal.cal_matrix, "fidelity": meas_cal.readout_fidelity(),
+                        "results": circuit_results,
                         "results_pseudo_inverse": results_pseudo_inverse,
                         "results_least_square": results_least_square})
 
@@ -105,4 +184,4 @@ def generate_meas_calibration(results_file_path: str, runs: int):
 
 if __name__ == '__main__':
     DIRNAME = os.path.dirname(os.path.abspath(__file__))
-    generate_meas_calibration(os.path.join(DIRNAME, 'test_meas_results.json'), 3)
+    generate_meas_calibration(os.path.join(DIRNAME, 'test_meas_results_test.json'), 3)
