@@ -27,7 +27,7 @@ import qiskit
 
 
 from .rb_groups import RBgroup
-
+from .dihedral import CNOTDihedral
 
 def handle_length_multiplier(length_multiplier, len_pattern,
                              is_purity=False):
@@ -78,7 +78,8 @@ def check_pattern(pattern, is_purity=False, interleaved_elem=None):
     Args:
         pattern (list): RB pattern
         is_purity (bool): True only for purity rb (default is False)
-        interleaved_elem (qiskit.quantum_info.operators.symplectic.Clifford):
+        interleaved_elem (Optional[Union[List[qiskit.QuantumCircuit],
+            List[qiskit.quantum_info.operators.symplectic.Clifford], List[CNOTDihedral]]]):
             not None only for interleaved RB
 
     Raises:
@@ -117,6 +118,50 @@ def check_pattern(pattern, is_purity=False, interleaved_elem=None):
 
     return pattern_flat, np.max(pattern_flat).item(), np.max(pattern_dim)
 
+def handle_interleaved_elem(interleaved_elem, rb_group):
+    """ Handle the various types of the interleaved element
+
+        Args:
+        interleaved_elem (Optional[Union[List[qiskit.QuantumCircuit],
+            List[qiskit.quantum_info.operators.symplectic.Clifford], List[CNOTDihedral]]]):
+            not None only for interleaved RB
+        rb_group (RBgroup): the relevant RBgroup class object
+
+    Raises:
+        ValueError: if interleaved_elem does not have one of the relevant types,
+            or has a type that does not correspond to rb_group.group_gates_type()
+
+    Return:
+        interleaved_elem: a list of corresponding Clifford or CNOTDihedral objects
+    """
+
+    group_gates_type = rb_group.group_gates_type()
+    interleaved_elem_list = []
+
+    if interleaved_elem is None:
+        return None
+
+    else:
+        for elem in interleaved_elem:
+            if isinstance(elem, qiskit.QuantumCircuit):
+                num_qubits = elem.num_qubits
+                qc = elem
+                elem = rb_group.iden(num_qubits)
+                elem = elem.from_circuit(qc)
+            if isinstance(elem, qiskit.quantum_info.operators.symplectic.clifford.Clifford):
+                assert group_gates_type == 0, "Interleaved element has invalid type"
+            if isinstance(elem, CNOTDihedral):
+                assert group_gates_type == 1, "Interleaved element has invalid type"
+            interleaved_elem_list.append(elem)
+
+            if not isinstance(elem, qiskit.QuantumCircuit) and \
+                    not isinstance(elem, qiskit.quantum_info.operators.symplectic.clifford.Clifford) and \
+                    not isinstance(elem, CNOTDihedral):
+                raise ValueError("Invalid intelreaved element type. "
+                                 "interleaved_elem should be a list of QuantumCircuit,"
+                                 "or a list of Clifford / CNOTDihedral objects")
+
+    return interleaved_elem_list
 
 def calc_xdata(length_vector, length_multiplier):
     """
@@ -144,7 +189,9 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                 seed_offset: int = 0,
                                 align_cliffs: bool = False,
                                 interleaved_elem:
-                                Optional[qiskit.quantum_info.operators.symplectic.Clifford] = None,
+                                Optional[Union[List[qiskit.QuantumCircuit],
+                                               List[qiskit.quantum_info.operators.symplectic.Clifford],
+                                               List[CNOTDihedral]]] = None,
                                 is_purity: bool = False,
                                 group_gates: Optional[str] = None,
                                 rand_seed: Optional[Union[int, RandomState]] = None) -> \
@@ -201,8 +248,9 @@ def randomized_benchmarking_seq(nseeds: int = 1,
 
             **Note:** the alignment considers the group multiplier.
 
-        interleaved_elem: An element that  will be interleaved.
-        It is not ``None`` only for interleaved randomized benchmarking.
+        interleaved_elem: An list of QuantumCircuits or group elements 
+            that will be interleaved.
+            It is not ``None`` only for interleaved randomized benchmarking.
             The lengths of the lists should be equal to the length of the
             lists in ``rb_pattern``.
 
@@ -252,7 +300,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
         ValueError: if ``group_gates`` is unknown.
         ValueError: if ``rb_pattern`` is not valid.
         ValueError: if ``length_multiplier`` is not valid.
-
+        ValueError: if ``interleaved_elem`` type is not valid.
 
     Examples:
 
@@ -284,15 +332,12 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             rb_pattern = [[0,3],[2],[1]]
             qc_cx = QuantumCircuit(2)
             qc_cx.cx(0, 1)
-            cliff_cx = Clifford(qc_cx)
             qc_x = QuantumCircuit(1)
             qc_x.x(0)
-            cliff_x = Clifford(qc_x)
             qc_h = QuantumCircuit(1)
             qc_h.h(0)
-            cliff_h = Clifford(qc_h)
 
-            interleaved_elem = [cliff_cx, cliff_x, cliff_h]
+            interleaved_elem = [qc_cx, qc_x, qc_h]
 
         Interleave the 2-qubit gate ``cx`` on qubits Q0 and Q3,
         a 1-qubit gate ``x`` on qubit Q2,
@@ -331,6 +376,9 @@ def randomized_benchmarking_seq(nseeds: int = 1,
     rb_group = RBgroup(group_gates)
     group_gates_type = rb_group.group_gates_type()
     rb_circ_type = rb_group.rb_circ_type()
+
+    # Handle various types of the interleaved element
+    interleaved_elem = handle_interleaved_elem(interleaved_elem, rb_group)
 
     # initialization: rb sequences
     circuits = [[] for e in range(nseeds)]

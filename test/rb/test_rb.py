@@ -128,18 +128,16 @@ class TestRB(unittest.TestCase):
             group_gates: on which group (or set of gates) we perform RB
 
         Returns:
-            intelreved_elmnts: A list of group elements that
+            intelreved_elmnts: A list of QuantumCircuit elements that
                 will be interleaved (for interleaved randomized benchmarking)
                 The length of the list would equal the length of the rb_pattern.
             intelreved_gates: A corresponding list of gates.
         """
         pattern_sizes = [len(pat) for pat in rb_pattern]
-        rb_group = rb.RBgroup(group_gates)
         interleaved_gates = []
         interleaved_elemnts = []
         for (_, nq) in enumerate(pattern_sizes):
             gatelist = []
-            elem = rb_group.iden(nq)
             qc = qiskit.QuantumCircuit(nq)
             # The interleaved gates contain x gate on each qubit
             # and cx gate on each pair of consecutive qubits
@@ -151,8 +149,7 @@ class TestRB(unittest.TestCase):
                     gatelist.append('cx ' + '0' + ' ' + str(qubit))
                     qc.cx(0, qubit)
             interleaved_gates.append(gatelist)
-            elem = elem.from_circuit(qc)
-            interleaved_elemnts.append(elem)
+            interleaved_elemnts.append(qc)
         return interleaved_elemnts, interleaved_gates
 
     @staticmethod
@@ -305,16 +302,15 @@ class TestRB(unittest.TestCase):
                                     all(x.index in rb_opts['rb_pattern'][
                                         pat_index]
                                         for x in ops[op_index][1]),
-                                    "Error: operation acts on \
-                                    incorrect qubits")
+                                    "Error: operation acts on incorrect qubits")
                                 op_index += 1
                             # increment because of the barrier gate
                             op_index += 1
         # check if the ground state returns
         self.assertEqual(result.
                          get_counts(circ)['{0:b}'.format(0).zfill(nq)], shots,
-                         "Error: %d qubit RB does not return the \
-                         ground state back to the ground state" % nq)
+                         "Error: %d qubit RB does not return the"
+                         "ground state back to the ground state" % nq)
 
     def compare_interleaved_circuit(self, original_circ, interleaved_circ,
                                     nq, rb_opts_interleaved, interleaved_gates,
@@ -371,9 +367,9 @@ class TestRB(unittest.TestCase):
                     # Gates in the interleaved RB sequence
                     # should be equal to original gates
                     self.assertEqual(original_gatelist, compared_gatelist,
-                                     "Error: The gates in the %d qubit  \
-                                     interleaved RB are not the same as \
-                                     in the original RB circuits" % nq)
+                                     "Error: The gates in the %d qubit"
+                                     "interleaved RB are not the same as"
+                                     "in the original RB circuits" % nq)
                     # Gates in the interleaved RB sequence
                     # should be equal to the given gates in
                     # rb_opts_interleaved['interleaved_gates']
@@ -384,9 +380,9 @@ class TestRB(unittest.TestCase):
 
                     self.assertEqual(sorted(interleaved_gatelist),
                                      sorted(updated_gatelist),
-                                     "Error: The interleaved gates in the \
-                                     %d qubit interleaved RB are not the same \
-                                     as given in interleaved_gates input" % nq)
+                                     "Error: The interleaved gates in the" 
+                                     "%d qubit interleaved RB are not the same" 
+                                     "as given in interleaved_gates input" % nq)
 
     def compare_cnotdihedral_circuit(self, cnotdihedral_Z_circ,
                                      cnotdihedral_X_circ, nq,
@@ -441,9 +437,9 @@ class TestRB(unittest.TestCase):
             # Gates in the non-Clifford cnot-dihedralRB sequence
             # should be equal (up to the H-gates)
             self.assertEqual(circ_Z_gatelist, circ_X_gatelist,
-                             "Error: The non-Clifford gates in the \
-                             %d qubit non-Clifford CNOT-Dihedral RB \
-                             are not the same" % nq)
+                             "Error: The non-Clifford gates in the"
+                             "%d qubit non-Clifford CNOT-Dihedral RB"
+                             "are not the same" % nq)
 
     def compare_purity_circuits(self, original_circ, purity_circ, nq,
                                 purity_ind, npurity, rb_opts_purity, vec_len):
@@ -485,9 +481,9 @@ class TestRB(unittest.TestCase):
                     # Gates in the purity RB sequence
                     # should be equal to original gates
                     self.assertEqual(original_gatelist, purity_gatelist,
-                                     "Error: The purity gates in the \
-                                     %d qubit purity RB are not the same \
-                                     as in the original RB circuits" % nq)
+                                     "Error: The purity gates in the"
+                                     "%d qubit purity RB are not the same" 
+                                     "as in the original RB circuits" % nq)
 
         # The last gate in the purity RB sequence
         # should be equal to the inverse element
@@ -502,8 +498,8 @@ class TestRB(unittest.TestCase):
         purity_gatelist, pur_index = \
             self.ops_to_gates(purity_ops, pur_index, 'measure')
         self.assertEqual(original_gatelist, purity_gatelist,
-                         "Error: The last purity gates in the \
-                         %d qubit purity RB are wrong" % nq)
+                         "Error: The last purity gates in the"
+                         "%d qubit purity RB are wrong" % nq)
 
     @data(*itertools.product([1, 2, 3, 4], range(3), range(2)))
     @unpack
@@ -648,8 +644,7 @@ class TestRB(unittest.TestCase):
                         rb_cnotdihedral_X_circs[seed][circ_index].name,
                         'rb_cnotdihedral_X_length_%d_seed_%d' % (
                             circ_index, seed),
-                        'Error: incorrect non-Clifford CNOT-Dihedral \
-                        circuit name')
+                        'Error: incorrect non-Clifford CNOT-Dihedral circuit name')
                 if is_purity:
                     for d in range(npurity):
                         name_type, _ = self.update_purity_gates(
