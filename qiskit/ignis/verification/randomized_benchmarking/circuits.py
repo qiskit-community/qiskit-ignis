@@ -157,7 +157,8 @@ def handle_interleaved_elem(interleaved_elem, rb_group):
             interleaved_elem_list.append(elem)
 
             if not isinstance(elem, qiskit.QuantumCircuit) and \
-                    not isinstance(elem, qiskit.quantum_info.operators.symplectic.clifford.Clifford) \
+                    not isinstance(elem,
+                                   qiskit.quantum_info.operators.symplectic.clifford.Clifford) \
                     and not isinstance(elem, CNOTDihedral):
                 raise ValueError("Invalid intelreaved element type. "
                                  "interleaved_elem should be a list of QuantumCircuit,"
@@ -251,10 +252,10 @@ def randomized_benchmarking_seq(nseeds: int = 1,
 
             **Note:** the alignment considers the group multiplier.
 
-        interleaved_elem: An list of QuantumCircuits or group elements 
+        interleaved_elem: An list of QuantumCircuits or group elements
             that will be interleaved.
             It is not ``None`` only for interleaved randomized benchmarking.
-            The lengths of the lists should be equal to the length of the 
+            The lengths of the lists should be equal to the length of the
             lists in ``rb_pattern``.
 
         is_purity: ``True`` only for purity randomized benchmarking
