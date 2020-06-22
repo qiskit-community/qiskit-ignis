@@ -105,6 +105,7 @@ matrix:
       stage: all_python
       env: TOXENV=no-opt
       stage: all_python
+      script: tox
     - if: tag IS present
       python: "3.6"
       env:
