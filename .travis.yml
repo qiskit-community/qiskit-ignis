@@ -102,6 +102,7 @@ matrix:
         - PYTHON_VERSION=3.8.1
         - TOXENV=py38
     - python: "3.8"
+      name: "Python 3.8 tests without optional dependencies"
       stage: all_python
       env: TOXENV=no-opt
       stage: all_python
