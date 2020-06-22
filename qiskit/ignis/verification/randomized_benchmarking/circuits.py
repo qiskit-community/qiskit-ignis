@@ -29,6 +29,7 @@ import qiskit
 from .rb_groups import RBgroup
 from .dihedral import CNOTDihedral
 
+
 def handle_length_multiplier(length_multiplier, len_pattern,
                              is_purity=False):
     """
@@ -118,6 +119,7 @@ def check_pattern(pattern, is_purity=False, interleaved_elem=None):
 
     return pattern_flat, np.max(pattern_flat).item(), np.max(pattern_dim)
 
+
 def handle_interleaved_elem(interleaved_elem, rb_group):
     """ Handle the various types of the interleaved element
 
@@ -155,13 +157,13 @@ def handle_interleaved_elem(interleaved_elem, rb_group):
             interleaved_elem_list.append(elem)
 
             if not isinstance(elem, qiskit.QuantumCircuit) and \
-                    not isinstance(elem, qiskit.quantum_info.operators.symplectic.clifford.Clifford) and \
-                    not isinstance(elem, CNOTDihedral):
+                    not isinstance(elem, qiskit.quantum_info.operators.symplectic.clifford.Clifford) \
+                    and not isinstance(elem, CNOTDihedral):
                 raise ValueError("Invalid intelreaved element type. "
                                  "interleaved_elem should be a list of QuantumCircuit,"
                                  "or a list of Clifford / CNOTDihedral objects")
-
     return interleaved_elem_list
+
 
 def calc_xdata(length_vector, length_multiplier):
     """
@@ -189,9 +191,10 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                 seed_offset: int = 0,
                                 align_cliffs: bool = False,
                                 interleaved_elem:
-                                Optional[Union[List[qiskit.QuantumCircuit],
-                                               List[qiskit.quantum_info.operators.symplectic.Clifford],
-                                               List[CNOTDihedral]]] = None,
+                                Optional[
+                                    Union[List[qiskit.QuantumCircuit],
+                                          List[qiskit.quantum_info.operators.symplectic.Clifford],
+                                          List[CNOTDihedral]]] = None,
                                 is_purity: bool = False,
                                 group_gates: Optional[str] = None,
                                 rand_seed: Optional[Union[int, RandomState]] = None) -> \
@@ -251,7 +254,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
         interleaved_elem: An list of QuantumCircuits or group elements 
             that will be interleaved.
             It is not ``None`` only for interleaved randomized benchmarking.
-            The lengths of the lists should be equal to the length of the
+            The lengths of the lists should be equal to the length of the 
             lists in ``rb_pattern``.
 
         is_purity: ``True`` only for purity randomized benchmarking

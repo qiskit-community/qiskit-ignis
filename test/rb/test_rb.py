@@ -380,9 +380,9 @@ class TestRB(unittest.TestCase):
 
                     self.assertEqual(sorted(interleaved_gatelist),
                                      sorted(updated_gatelist),
-                                     "Error: The interleaved gates in the" 
-                                     "%d qubit interleaved RB are not the same" 
-                                     "as given in interleaved_gates input" % nq)
+                                     "Error: The interleaved gates in the \
+                                     %d qubit interleaved RB are not the same \
+                                     as given in interleaved_gates input" % nq)
 
     def compare_cnotdihedral_circuit(self, cnotdihedral_Z_circ,
                                      cnotdihedral_X_circ, nq,
@@ -481,9 +481,9 @@ class TestRB(unittest.TestCase):
                     # Gates in the purity RB sequence
                     # should be equal to original gates
                     self.assertEqual(original_gatelist, purity_gatelist,
-                                     "Error: The purity gates in the"
-                                     "%d qubit purity RB are not the same" 
-                                     "as in the original RB circuits" % nq)
+                                     "Error: The purity gates in the \
+                                     %d qubit purity RB are not the same \
+                                     as in the original RB circuits" % nq)
 
         # The last gate in the purity RB sequence
         # should be equal to the inverse element
