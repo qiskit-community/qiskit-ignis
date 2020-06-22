@@ -21,7 +21,7 @@ import numpy as np
 from qiskit import QiskitError
 from qiskit.quantum_info.operators import Choi
 from .base_fitter import TomographyFitter
-from .cvx_fit import cvxpy, cvx_fit
+from .cvx_fit import cvx_fit
 from .lstsq_fit import lstsq_fit
 
 
@@ -137,10 +137,11 @@ class ProcessTomographyFitter(TomographyFitter):
                              "to a process matrix.")
         # Choose automatic method
         if method == 'auto':
-            if cvxpy is None:
-                method = 'lstsq'
-            else:
+            self._check_for_sdp_solver()
+            if self._HAS_SDP_SOLVER:
                 method = 'cvx'
+            else:
+                method = 'lstsq'
         if method == 'lstsq':
             return Choi(lstsq_fit(data, basis_matrix, weights=weights,
                                   trace=dim, **kwargs))
