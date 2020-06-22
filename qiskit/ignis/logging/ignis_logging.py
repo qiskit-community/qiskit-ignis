@@ -206,11 +206,16 @@ class IgnisLogging:
             max_rotations is not None and max_rotations.isdigit() else 0
 
     @staticmethod
-    def _reset_to_defaults():
-        IgnisLogging._instance = None  # pylint: disable=W0212
-        IgnisLogging._file_logging_enabled = False  # pylint: disable=W0212
-        IgnisLogging._log_file = None  # pylint: disable=W0212
-        IgnisLogging._config_file_exists = False
+    def _reset_to_defaults(name):
+        if IgnisLogging._instance is not None:
+            IgnisLogging._instance = None
+            IgnisLogging._file_logging_enabled = False
+            IgnisLogging._log_file = None
+            IgnisLogging._config_file_exists = False
+            logger = logging.getLogger(name)
+            if isinstance(logger, IgnisLogger):
+                logger._file_handler = None
+                logger._file_logging_enabled = False
 
     def get_logger(self, name: str) -> IgnisLogger:
         """

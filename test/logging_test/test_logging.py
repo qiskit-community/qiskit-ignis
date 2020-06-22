@@ -39,14 +39,16 @@ Unit testing of the Ignis Logging facility. Covering the following specs:
 
 """
 import os
-import tempfile
 import unittest
+from pyfakefs import fake_filesystem_unittest
+
 
 from qiskit.ignis.logging import IgnisLogging, IgnisLogReader
 
 
-class TestLogging(unittest.TestCase):
+class TestLogging(fake_filesystem_unittest.TestCase):
     """Test logging module"""
+    _config_file = ""
     _default_log = "ignis.log"
 
     def setUp(self):
@@ -54,17 +56,21 @@ class TestLogging(unittest.TestCase):
         Basic setup - making the .qiskit dir and preserving any existing files
         :return:
         """
+        self.setUpPyfakefs()
         super().setUp()
-        IgnisLogging._reset_to_defaults()
-        _, self.temp_config_path = tempfile.mkstemp()
-        self.addCleanup(os.remove, self.temp_config_path)
+        qiskit_dir = os.path.join(os.path.expanduser('~'), ".qiskit")
+        self._config_file = os.path.join(qiskit_dir, "logging.yaml")
+        os.makedirs(qiskit_dir, exist_ok=True)
+
+        if os.path.exists(self._config_file):
+            os.remove(self._config_file)  # TODO: preserve and restore the old one
 
     def tearDown(self):
         """
         Remove auto-generated files, resurrecting original files, and
         resetting the IgnisLogging singleton state
         """
-        IgnisLogging._reset_to_defaults()
+        IgnisLogging._reset_to_defaults(__name__)
         if os.path.isfile(self._default_log):
             os.remove(self._default_log)
         super().tearDown()
@@ -84,10 +90,10 @@ class TestLogging(unittest.TestCase):
         Only tests the main param: file_logging
         :return:
         """
-        with open(self.temp_config_path, 'w') as fd:
+        with open(self._config_file, 'w') as fd:
             fd.write("file_logging1: true")
 
-        logger = IgnisLogging(self.temp_config_path).get_logger(__name__)
+        logger = IgnisLogging().get_logger(__name__)
         logger.log_to_file(test="test")
 
         self.assertFalse(os.path.exists(self._default_log))
@@ -97,10 +103,10 @@ class TestLogging(unittest.TestCase):
         Only tests the main param: file_logging
         :return:
         """
-        with open(self.temp_config_path, "w") as fd:
+        with open(self._config_file, "w") as fd:
             fd.write("file_logging: tru")
 
-        logger = IgnisLogging(self.temp_config_path).get_logger(__name__)
+        logger = IgnisLogging().get_logger(__name__)
         logger.log_to_file(test="test")
 
         self.assertFalse(os.path.exists(self._default_log))
@@ -110,28 +116,28 @@ class TestLogging(unittest.TestCase):
         test that a custom log file path is honored
         :return:
         """
-        log_path = os.path.join(tempfile.gettempdir(), 'test_log.log')
-        with open(self.temp_config_path, "w") as fd:
-            fd.write("file_logging: true\nlog_file: %s" % log_path)
+        log_path = "test_log.log"
+        with open(self._config_file, "w") as fd:
+            fd.write("file_logging: true\nlog_file: %s\n" % log_path)
 
-        logger = IgnisLogging(self.temp_config_path).get_logger(__name__)
-        self.addCleanup(os.remove, log_path)
+        logger = IgnisLogging().get_logger(__name__)
         logger.log_to_file(test="test")
 
-        self.assertTrue(os.path.exists, log_path)
+        self.assertTrue(os.path.exists(log_path))
+        self.addCleanup(os.remove, log_path)
 
     def test_file_rotation(self):
         """
         Test that the file rotation is working
         """
-        log_path = os.path.join(tempfile.gettempdir(), 'test_log_rotate.log')
-        with open(self.temp_config_path, "w") as fd:
+        log_path = 'test_log_rotate.log'
+        with open(self._config_file, "w") as fd:
             fd.write("file_logging: true\n"
                      "max_size: 10\n"
                      "max_rotations: 3\n"
                      "log_file: %s" % log_path)
 
-        logger = IgnisLogging(self.temp_config_path).get_logger(__name__)
+        logger = IgnisLogging().get_logger(__name__)
         self.addCleanup(os.remove, log_path)
         self.addCleanup(os.remove, log_path + '.1')
         self.addCleanup(os.remove, log_path + '.2')
@@ -149,62 +155,49 @@ class TestLogging(unittest.TestCase):
         """
         Test that enabling the logging manually works
         """
-        log_path = os.path.join(tempfile.gettempdir(), 'test_log_manual.log')
-        with open(self.temp_config_path, "w") as fd:
-            fd.write("log_file: %s" % log_path)
-
-        logger = IgnisLogging(self.temp_config_path).get_logger(__name__)
+        logger = IgnisLogging().get_logger(__name__)
         logger.enable_file_logging()
-        self.addCleanup(os.remove, log_path)
         logger.log_to_file(test="test")
 
-        self.assertTrue(os.path.exists(log_path))
+        self.assertTrue(os.path.exists(self._default_log))
 
     def test_manual_disabling(self):
         """
         Test that disabling the logging manually works
         """
-        log_path = os.path.join(tempfile.gettempdir(), 'test_log_manual.log')
-        with open(self.temp_config_path, "w") as fd:
-            fd.write("file_logging: true\nlog_file: %s" % log_path)
+        with open(self._config_file, "w") as fd:
+            fd.write("file_logging: true\n")
 
-        logger = IgnisLogging(self.temp_config_path).get_logger(__name__)
+        logger = IgnisLogging().get_logger(__name__)
         logger.disable_file_logging()
         logger.log_to_file(test="test")
 
-        self.assertFalse(os.path.exists(log_path))
+        self.assertFalse(os.path.exists(self._default_log))
 
     def test_save_line(self):
         """
         Test basic log operations
         """
-        log_path = os.path.join(tempfile.gettempdir(), 'test_log_save_log.log')
-        with open(self.temp_config_path, "w") as fd:
-            fd.write("log_file: %s" % log_path)
-        logger = IgnisLogging(self.temp_config_path).get_logger(__name__)
+        logger = IgnisLogging().get_logger(__name__)
 
         logger.enable_file_logging()
-        self.addCleanup(os.remove, log_path)
         logger.log_to_file(test="test")
 
-        self.assertTrue(os.path.exists(log_path))
-        with open(log_path, 'r') as file:
+        self.assertTrue(os.path.exists(self._default_log))
+        with open(self._default_log, 'r') as file:
             self.assertIn("\'test\':\'test\'", file.read())
 
     def test_format(self):
         """
         Test format of the saved line
         """
-        log_path = os.path.join(tempfile.gettempdir(), 'test_log_format.log')
-        with open(self.temp_config_path, "w") as fd:
-            fd.write("log_file: %s" % log_path)
-        logger = IgnisLogging(self.temp_config_path).get_logger(__name__)
+        logger = IgnisLogging().get_logger(__name__)
 
         logger.enable_file_logging()
-        self.addCleanup(os.remove, log_path)
         logger.log_to_file(test="test")
 
-        with open(log_path, 'r') as file:
+        with open(self._default_log, 'r') as file:
+
             self.assertRegex(
                 file.read(),
                 r"\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} ignis_logging \S+")
@@ -213,18 +206,13 @@ class TestLogging(unittest.TestCase):
         """
         Test logging multiple lines
         """
-        log_path = os.path.join(tempfile.gettempdir(), 'test_log_multiple_lines.log')
-        with open(self.temp_config_path, "w") as fd:
-            fd.write("log_file: %s" % log_path)
-        logger = IgnisLogging(self.temp_config_path).get_logger(__name__)
         logger = IgnisLogging().get_logger(__name__)
 
         logger.enable_file_logging()
-        self.addCleanup(os.remove, log_path)
         logger.log_to_file(test="test1")
         logger.log_to_file(test="test2")
 
-        with open(log_path, 'r') as file:
+        with open(self._default_log, 'r') as file:
             lines = file.read().split('\n')
 
         self.assertGreaterEqual(len(lines), 2)
@@ -233,11 +221,10 @@ class TestLogging(unittest.TestCase):
         """
         Test reading multiple lines
         """
-        log_path = os.path.join(tempfile.gettempdir(), 'test_log_read_multiple.log')
-        with open(self.temp_config_path, "w") as fd:
-            fd.write("file_logging: true\nmax_size: 40\nmax_rotations: 5\nlog_file: %s" % log_path)
+        with open(self._config_file, "w") as fd:
+            fd.write("file_logging: true\nmax_size: 40\nmax_rotations: 5\n")
 
-        logger = IgnisLogging(self.temp_config_path).get_logger(__name__)
+        logger = IgnisLogging().get_logger(__name__)
         for i in range(10):
             logger.log_to_file(k="data%d" % i)
 
@@ -255,8 +242,8 @@ class TestLogging(unittest.TestCase):
         """
         Test filtering operations
         """
-        log_path = os.path.join(tempfile.gettempdir(), 'test_log_filtering')
-        with open(log_path, 'w') as log:
+        with open(self._default_log, 'w') as log:
+
             log.write(
                 "2019/08/04 13:27:04 ignis_logging \'k1\':\'d1\'\n"
                 "2019/08/04 13:27:05 ignis_logging \'k1\':\'d2\'\n"
@@ -265,12 +252,6 @@ class TestLogging(unittest.TestCase):
                 "2019/08/06 13:27:04 ignis_logging \'k2\':\'d5\'\n"
                 "2019/09/02 13:27:04 ignis_logging \'k3\':\'d6\'\n"
                 "2019/09/04 13:27:04 ignis_logging \'k4\':\'d7\'\n")
-        self.addCleanup(os.remove, log_path)
-
-        with open(self.temp_config_path, "w") as fd:
-            fd.write("log_file: %s" % log_path)
-
-        IgnisLogging(self.temp_config_path).get_logger(__name__)
 
         reader = IgnisLogReader()
 
