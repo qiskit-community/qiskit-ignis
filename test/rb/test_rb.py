@@ -121,11 +121,10 @@ class TestRB(unittest.TestCase):
         return res
 
     @staticmethod
-    def choose_interleaved_gates(rb_pattern, group_gates):
+    def choose_interleaved_gates(rb_pattern):
         """
         Args:
             rb_pattern (list): pattern for randomized benchmarking
-            group_gates: on which group (or set of gates) we perform RB
 
         Returns:
             intelreved_elmnts: A list of QuantumCircuit elements that
@@ -527,14 +526,14 @@ class TestRB(unittest.TestCase):
         # Choose options for interleaved RB:
         rb_opts_interleaved = rb_opts.copy()
         rb_opts_interleaved['interleaved_elem'], interleaved_gates = \
-            self.choose_interleaved_gates(rb_opts['rb_pattern'], 'clifford')
+            self.choose_interleaved_gates(rb_opts['rb_pattern'])
         # Choose options for Non-Clifford cnot-dihedral RB:
         rb_opts_cnotdihedral = rb_opts.copy()
         rb_opts_cnotdihedral['group_gates'] = 'CNOT-Dihedral'
         rb_opts_cnotdihedral_interleaved = rb_opts_cnotdihedral.copy()
         if is_dihedral:
             rb_opts_cnotdihedral_interleaved['interleaved_elem'], interleaved_gates = \
-                self.choose_interleaved_gates(rb_opts['rb_pattern'], 'CNOT-Dihedral')
+                self.choose_interleaved_gates(rb_opts['rb_pattern'])
         # Choose options for purity rb
         # no length_multiplier
         rb_opts_purity['length_multiplier'] = 1
