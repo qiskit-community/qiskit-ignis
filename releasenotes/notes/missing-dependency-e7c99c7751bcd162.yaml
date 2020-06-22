@@ -8,3 +8,8 @@ upgrade:
     :mod:`qiskit.ignis.measurement.discriminator.iq_discriminators` module was
     imported. This is now correctly listed as a dependency so that
     ``scikit-learn`` will be installed with qiskit-ignis.
+fixes:
+  - |
+    Fixes an issue in qiskit-ignis 0.3.2 which would raise an ``ImportError``
+    when :mod:`qiskit.ignis.verification.tomography.fitters.process_fitter` was
+    imported without ``cvxpy`` being installed.
