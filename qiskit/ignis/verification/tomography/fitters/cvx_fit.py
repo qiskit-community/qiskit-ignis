@@ -155,6 +155,7 @@ def cvx_fit(data: np.array,
         sdim = int(np.sqrt(dim))
         ptr = partial_trace_super(sdim, sdim)
         cons.append(ptr @ cvxpy.vec(rho_r) == np.identity(sdim).ravel())
+        cons.append(ptr @ cvxpy.vec(rho_i) == np.zeros(sdim*sdim))
 
     # Rescale input data and matrix by weights if they are provided
     if weights is not None:
