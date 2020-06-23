@@ -17,6 +17,7 @@ Generate data for measurement calibration fitter tests
 
 import os
 import json
+from test.utils import convert_ndarray_to_list_in_data
 import qiskit
 from qiskit.ignis.mitigation.measurement import (CompleteMeasFitter, TensoredMeasFitter,
                                                  complete_meas_cal, tensored_meas_cal,
@@ -106,7 +107,7 @@ def tensored_calib_circ_execution(shots: int, seed: int):
     qc.measure(qr[1], cr[2])
 
     bell_results = qiskit.execute(qc, backend=backend, shots=shots, noise_model=noise_model,
-                                  seed_simulator=seed).result().get_counts()
+                                  seed_simulator=seed).result()
 
     return cal_results, mit_pattern, bell_results
 
@@ -118,6 +119,7 @@ def generate_meas_calibration(results_file_path: str, runs: int):
     The simulation results files will contain a list of dictionaries with the keys:
         cal_matrix - the matrix used to calculate the ideal measurement
         fidelity - the calculated fidelity of using this matrix
+        results - results of a bell state circuit with noise
         results_pseudo_inverse - the result of using the psedo-inverse method on the bell state
         results_least_square - the result of using the least-squares method on the bell state
 
@@ -138,7 +140,8 @@ def generate_meas_calibration(results_file_path: str, runs: int):
             circuit_results, method='pseudo_inverse')
         results_least_square = meas_filter.apply(
             circuit_results, method='least_squares')
-        results.append({"cal_matrix": meas_cal.cal_matrix, "fidelity": meas_cal.readout_fidelity(),
+        results.append({"cal_matrix": convert_ndarray_to_list_in_data(meas_cal.cal_matrix),
+                        "fidelity": meas_cal.readout_fidelity(),
                         "results": circuit_results,
                         "results_pseudo_inverse": results_pseudo_inverse,
                         "results_least_square": results_least_square})
@@ -147,41 +150,43 @@ def generate_meas_calibration(results_file_path: str, runs: int):
         json.dump(results, results_file)
 
 
-def generate_tensormeas_calibration(results_file_path: str, runs: int):
+def generate_tensormeas_calibration(results_file_path: str):
     """
-    run the measurement calibration circuits, calculates the fitter matrix in few methods
+    run the tensored measurement calibration circuits, calculates the fitter in few methods
     and saves the results
     The simulation results files will contain a list of dictionaries with the keys:
-        cal_matrix - the matrix used to calculate the ideal measurement
+        cal_results - the results of the measurement calibration circuit
+        results - results of a bell state circuit with noise
+        mit_pattern - the mitigation pattern
         fidelity - the calculated fidelity of using this matrix
         results_pseudo_inverse - the result of using the psedo-inverse method on the bell state
         results_least_square - the result of using the least-squares method on the bell state
 
     Args:
         results_file_path: path of the json file of the results file
-        runs: the number of different runs to save
     """
-    results = []
-    for run in range(runs):
-        cal_results, mit_pattern, circuit_results = \
-            tensored_calib_circ_execution(3, 1000, SEED + run)
+    cal_results, mit_pattern, circuit_results = \
+        tensored_calib_circ_execution(1000, SEED)
 
-        meas_cal = TensoredMeasFitter(cal_results, mit_pattern=mit_pattern)
-        meas_filter = meas_cal.filter
+    meas_cal = TensoredMeasFitter(cal_results, mit_pattern=mit_pattern)
+    meas_filter = meas_cal.filter
 
-        # Calculate the results after mitigation
-        results_pseudo_inverse = meas_filter.apply(
-            circuit_results, method='pseudo_inverse')
-        results_least_square = meas_filter.apply(
-            circuit_results, method='least_squares')
-        results.append({"cal_matrix": meas_cal.cal_matrix, "fidelity": meas_cal.readout_fidelity(),
-                        "results": circuit_results,
-                        "results_pseudo_inverse": results_pseudo_inverse,
-                        "results_least_square": results_least_square})
+    # Calculate the results after mitigation
+    results_pseudo_inverse = meas_filter.apply(
+        circuit_results.get_counts(), method='pseudo_inverse')
+    results_least_square = meas_filter.apply(
+        circuit_results.get_counts(), method='least_squares')
+    results = {"cal_results": cal_results.to_dict(),
+               "results": circuit_results.to_dict(),
+               "mit_pattern": mit_pattern,
+               "fidelity": meas_cal.readout_fidelity(),
+               "results_pseudo_inverse": results_pseudo_inverse,
+               "results_least_square": results_least_square}
 
     with open(results_file_path, "w") as results_file:
         json.dump(results, results_file)
 
 if __name__ == '__main__':
     DIRNAME = os.path.dirname(os.path.abspath(__file__))
-    generate_meas_calibration(os.path.join(DIRNAME, 'test_meas_results_test.json'), 3)
+    generate_meas_calibration(os.path.join(DIRNAME, 'test_meas_results.json'), 3)
+    generate_tensormeas_calibration(os.path.join(DIRNAME, 'test_tensored_meas_results.json'))

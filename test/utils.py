@@ -89,8 +89,9 @@ def load_results_from_json(json_path: str):
 def convert_ndarray_to_list_in_data(data: np.ndarray):
     """
     converts ndarray format into list format (keeps all the dicts in the array)
+    also convert inner ndarrays into lists (recursively)
     Args:
-        data: ndarray containing dicts in it
+        data: ndarray containing dicts or ndarrays in it
 
     Returns:
         list: same array, converted to list format (in order to save it as json)
@@ -98,9 +99,14 @@ def convert_ndarray_to_list_in_data(data: np.ndarray):
     """
     new_data = []
     for item in data:
-        new_item = {}
-        for key, value in item.items():
-            new_item[key] = value.tolist()
+        if isinstance(item, np.ndarray):
+            new_item = convert_ndarray_to_list_in_data(item)
+        elif isinstance(item, dict):
+            new_item = {}
+            for key, value in item.items():
+                new_item[key] = value.tolist()
+        else:
+            new_item = item
         new_data.append(new_item)
 
     return new_data
