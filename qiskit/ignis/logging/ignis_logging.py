@@ -91,6 +91,7 @@ class IgnisLogger(logging.getLoggerClass()):
 
         assert(self._file_handler is not None), "file_handler is not set"
 
+        # Removing the stream handler to avoid printing to console here
         Logger.removeHandler(self, self._stream_handler)
         Logger.addHandler(self, self._file_handler)
         logstr = ""
@@ -216,6 +217,7 @@ class IgnisLogging:
             if isinstance(logger, IgnisLogger):
                 logger._file_handler = None
                 logger._file_logging_enabled = False
+                logger.removeHandler(logger._stream_handler)
 
     def get_logger(self, name: str) -> IgnisLogger:
         """
