@@ -46,6 +46,7 @@ from pyfakefs import fake_filesystem_unittest
 from qiskit.ignis.logging import IgnisLogging, IgnisLogReader
 
 
+@unittest.skipIf(os.name == 'nt', 'Tests do not work on windows')
 class TestLogging(fake_filesystem_unittest.TestCase):
     """Test logging module"""
     _config_file = ""
