@@ -37,10 +37,8 @@ if not hasattr(setuptools,
 
 
 version_path = os.path.abspath(
-    os.path.join(
-        os.path.join(
-            os.path.join(os.path.dirname(__file__), 'qiskit'), 'ignis'),
-        'VERSION.txt'))
+        os.path.join(os.path.dirname(__file__), 'qiskit_ignis',
+                     'VERSION.txt'))
 with open(version_path, 'r') as fd:
     version = fd.read().rstrip()
 
@@ -76,7 +74,7 @@ setuptools.setup(
         "Topic :: Scientific/Engineering",
     ],
     keywords="qiskit sdk quantum",
-    packages=setuptools.find_namespace_packages(exclude=['test*']),
+    packages=setuptools.find_packages(exclude=['test*']),
     extras_require={
         'visualization': ['matplotlib>=2.1'],
         'cvx': ['cvxpy>=1.0.15'],

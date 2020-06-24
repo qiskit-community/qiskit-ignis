@@ -1,2 +1,2 @@
-include qiskit/ignis/VERSION.txt
+include qiskit_ignis/VERSION.txt
 include README.md
