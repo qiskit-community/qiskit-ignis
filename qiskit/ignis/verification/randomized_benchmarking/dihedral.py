@@ -664,7 +664,8 @@ def decompose_cnotdihedral(elem):
         Decompose 1 and 2-qubit CNOTDihedral elements.
 
     References:
-        1. Shelly Garion and Andrew W. Cross, *On the structure of the CNOT-Dihedral group*.
+        1. Shelly Garion and Andrew W. Cross, *On the structure of the CNOT-Dihedral group*,
+           `arXiv:2006.12042 [quant-ph] <https://arxiv.org/abs/2006.12042>`_
         2. Andrew W. Cross, Easwar Magesan, Lev S. Bishop, John A. Smolin and Jay M. Gambetta,
            *Scalable randomised benchmarking of non-Clifford gates*,
            npj Quantum Inf 2, 16012 (2016).
