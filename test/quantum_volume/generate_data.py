@@ -28,7 +28,7 @@ SEED = 42
 
 def qv_circuit_execution(qubit_lists: list, ntrials: int, shots: int):
     """
-    create quantum volume circuits, simulates the ideal state and run a noisy simulation
+    create quantum volume circuits, simulate the ideal state and run a noisy simulation
     Args:
         qubit_lists (list): list of lists of qubits to apply qv circuits to
         ntrials (int): number of iterations
@@ -74,7 +74,7 @@ def qv_circuit_execution(qubit_lists: list, ntrials: int, shots: int):
 
 def generate_qv_fitter_data(ideal_results_file_path: str, exp_results_file_path: str):
     """
-    run the quantum volume circuits and saves the results
+    run the quantum volume circuits and save the results
     The simulation results files will contain a list of Result objects in a dictionary format.
 
     Args:
