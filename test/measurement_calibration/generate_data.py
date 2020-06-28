@@ -61,7 +61,7 @@ def tensored_calib_circ_creation():
     create tensored measurement calibration circuit and a GHZ state circuit for the tests
 
     Returns:
-        Circuit: the measurement calibration circuit
+        Circuit: the tensored measurement calibration circuit
         list: the mitigation pattern
         Circuit: ghz circuit with 5 qubits (3 are used)
 
