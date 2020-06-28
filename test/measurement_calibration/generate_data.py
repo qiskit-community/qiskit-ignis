@@ -109,7 +109,7 @@ def meas_calibration_circ_execution(shots: int, seed: int):
                                  seed_simulator=seed).result()
 
     ghz_results = qiskit.execute(ghz, backend=backend, shots=shots, noise_model=noise_model,
-                                  seed_simulator=seed).result().get_counts()
+                                 seed_simulator=seed).result().get_counts()
 
     return cal_results, state_labels, ghz_results
 
@@ -140,7 +140,7 @@ def tensored_calib_circ_execution(shots: int, seed: int):
                                  seed_simulator=seed).result()
 
     ghz_results = qiskit.execute(ghz_circ, backend=backend, shots=shots, noise_model=noise_model,
-                                  seed_simulator=seed).result()
+                                 seed_simulator=seed).result()
 
     return cal_results, mit_pattern, ghz_results
 
