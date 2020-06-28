@@ -31,38 +31,38 @@ SEED = 42
 
 def meas_calib_circ_creation():
     """
-    create measurement calibration circuit and a GHZ state circuit for the tests
+    create measurement calibration circuits and a GHZ state circuit for the tests
 
     Returns:
-        QuantumCircuit: the measurement calibration circuit
-        list: the mitigation pattern
+        QuantumCircuit: the measurement calibrations circuits
+        list[str]: the mitigation pattern
         QuantumCircuit: ghz circuit with 5 qubits (3 are used)
 
     """
     meas_calibs, state_labels = complete_meas_cal(qubit_list=[1, 2, 3], qr=5)
 
     # Choose 3 qubits
-    q_1 = 1
-    q_2 = 2
-    q_3 = 3
+    q1 = 1
+    q2 = 2
+    q3 = 3
     ghz = qiskit.QuantumCircuit(5, 3)
-    ghz.h(q_1)
-    ghz.cx(q_1, q_2)
-    ghz.cx(q_1, q_3)
-    ghz.measure(q_1, 0)
-    ghz.measure(q_2, 1)
-    ghz.measure(q_3, 2)
-    ghz.measure(q_3, 2)
+    ghz.h(q1)
+    ghz.cx(q1, q2)
+    ghz.cx(q1, q3)
+    ghz.measure(q1, 0)
+    ghz.measure(q2, 1)
+    ghz.measure(q3, 2)
+    ghz.measure(q3, 2)
     return meas_calibs, state_labels, ghz
 
 
 def tensored_calib_circ_creation():
     """
-    create tensored measurement calibration circuit and a GHZ state circuit for the tests
+    create tensored measurement calibration circuits and a GHZ state circuit for the tests
 
     Returns:
         QuantumCircuit: the tensored measurement calibration circuit
-        list: the mitigation pattern
+        list[list[int]]: the mitigation pattern
         QuantumCircuit: ghz circuit with 5 qubits (3 are used)
 
     """
@@ -92,7 +92,7 @@ def meas_calibration_circ_execution(shots: int, seed: int):
     Returns:
         list: list of Results of the measurement calibration simulations
         list: list of all the possible states with this amount of qubits
-        dict: dictionary of results counts of bell circuit simulation with measurement errors
+        dict: dictionary of results counts of GHZ circuit simulation with measurement errors
     """
     # define the circuits
     meas_calibs, state_labels, ghz = meas_calib_circ_creation()
@@ -108,10 +108,10 @@ def meas_calibration_circ_execution(shots: int, seed: int):
     cal_results = qiskit.execute(meas_calibs, backend=backend, shots=shots, noise_model=noise_model,
                                  seed_simulator=seed).result()
 
-    bell_results = qiskit.execute(ghz, backend=backend, shots=shots, noise_model=noise_model,
+    ghz_results = qiskit.execute(ghz, backend=backend, shots=shots, noise_model=noise_model,
                                   seed_simulator=seed).result().get_counts()
 
-    return cal_results, state_labels, bell_results
+    return cal_results, state_labels, ghz_results
 
 
 def tensored_calib_circ_execution(shots: int, seed: int):
@@ -124,7 +124,7 @@ def tensored_calib_circ_execution(shots: int, seed: int):
     Returns:
         list: list of Results of the measurement calibration simulations
         list: the mitigation pattern
-        dict: dictionary of results counts of bell circuit simulation with measurement errors
+        dict: dictionary of results counts of GHZ circuit simulation with measurement errors
     """
     # define the circuits
     meas_calibs, mit_pattern, ghz_circ = tensored_calib_circ_creation()
@@ -139,10 +139,10 @@ def tensored_calib_circ_execution(shots: int, seed: int):
     cal_results = qiskit.execute(meas_calibs, backend=backend, shots=shots, noise_model=noise_model,
                                  seed_simulator=seed).result()
 
-    bell_results = qiskit.execute(ghz_circ, backend=backend, shots=shots, noise_model=noise_model,
+    ghz_results = qiskit.execute(ghz_circ, backend=backend, shots=shots, noise_model=noise_model,
                                   seed_simulator=seed).result()
 
-    return cal_results, mit_pattern, bell_results
+    return cal_results, mit_pattern, ghz_results
 
 
 def generate_meas_calibration(results_file_path: str, runs: int):
@@ -152,9 +152,9 @@ def generate_meas_calibration(results_file_path: str, runs: int):
     The simulation results files will contain a list of dictionaries with the keys:
         cal_matrix - the matrix used to calculate the ideal measurement
         fidelity - the calculated fidelity of using this matrix
-        results - results of a bell state circuit with noise
-        results_pseudo_inverse - the result of using the psedo-inverse method on the bell state
-        results_least_square - the result of using the least-squares method on the bell state
+        results - results of a GHZ state circuit with noise
+        results_pseudo_inverse - the result of using the psedo-inverse method on the GHZ state
+        results_least_square - the result of using the least-squares method on the GHZ state
 
     Args:
         results_file_path: path of the json file of the results file
@@ -185,15 +185,15 @@ def generate_meas_calibration(results_file_path: str, runs: int):
 
 def generate_tensormeas_calibration(results_file_path: str):
     """
-    run the tensored measurement calibration circuits, calculates the fitter in few methods
-    and saves the results
+    run the tensored measurement calibration circuits, calculate the fitter in a few methods
+    and save the results
     The simulation results files will contain a list of dictionaries with the keys:
         cal_results - the results of the measurement calibration circuit
-        results - results of a bell state circuit with noise
+        results - results of a GHZ state circuit with noise
         mit_pattern - the mitigation pattern
         fidelity - the calculated fidelity of using this matrix
-        results_pseudo_inverse - the result of using the psedo-inverse method on the bell state
-        results_least_square - the result of using the least-squares method on the bell state
+        results_pseudo_inverse - the result of using the psedo-inverse method on the GHZ state
+        results_least_square - the result of using the least-squares method on the GHZ state
 
     Args:
         results_file_path: path of the json file of the results file
