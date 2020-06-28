@@ -139,7 +139,6 @@ def tensored_calib_circ_execution(shots: int, seed: int):
     cal_results = qiskit.execute(meas_calibs, backend=backend, shots=shots, noise_model=noise_model,
                                  seed_simulator=seed).result()
 
-
     bell_results = qiskit.execute(ghz_circ, backend=backend, shots=shots, noise_model=noise_model,
                                   seed_simulator=seed).result()
 
