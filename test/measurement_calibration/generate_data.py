@@ -42,17 +42,17 @@ def meas_calib_circ_creation():
     meas_calibs, state_labels = complete_meas_cal(qubit_list=[1, 2, 3], qr=5)
 
     # Choose 3 qubits
-    q1 = 1
-    q2 = 2
-    q3 = 3
+    qubit_1 = 1
+    qubit_2 = 2
+    qubit_3 = 3
     ghz = qiskit.QuantumCircuit(5, 3)
-    ghz.h(q1)
-    ghz.cx(q1, q2)
-    ghz.cx(q1, q3)
-    ghz.measure(q1, 0)
-    ghz.measure(q2, 1)
-    ghz.measure(q3, 2)
-    ghz.measure(q3, 2)
+    ghz.h(qubit_1)
+    ghz.cx(qubit_1, qubit_2)
+    ghz.cx(qubit_1, qubit_3)
+    ghz.measure(qubit_1, 0)
+    ghz.measure(qubit_2, 1)
+    ghz.measure(qubit_3, 2)
+    ghz.measure(qubit_3, 2)
     return meas_calibs, state_labels, ghz
 
 
