@@ -34,9 +34,9 @@ def meas_calib_circ_creation():
     create measurement calibration circuit and a GHZ state circuit for the tests
 
     Returns:
-        Circuit: the measurement calibration circuit
+        QuantumCircuit: the measurement calibration circuit
         list: the mitigation pattern
-        Circuit: ghz circuit with 5 qubits (3 are used)
+        QuantumCircuit: ghz circuit with 5 qubits (3 are used)
 
     """
     meas_calibs, state_labels = complete_meas_cal(qubit_list=[1, 2, 3], qr=5)
@@ -61,9 +61,9 @@ def tensored_calib_circ_creation():
     create tensored measurement calibration circuit and a GHZ state circuit for the tests
 
     Returns:
-        Circuit: the tensored measurement calibration circuit
+        QuantumCircuit: the tensored measurement calibration circuit
         list: the mitigation pattern
-        Circuit: ghz circuit with 5 qubits (3 are used)
+        QuantumCircuit: ghz circuit with 5 qubits (3 are used)
 
     """
     mit_pattern = [[2], [4, 1]]
