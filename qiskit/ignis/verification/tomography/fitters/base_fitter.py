@@ -29,8 +29,8 @@ from qiskit import QuantumCircuit
 from qiskit.result import Result
 from ..basis import TomographyBasis, default_basis
 from ..data import marginal_counts, combine_counts, count_keys
-from .cvx_fit import cvxpy, cvx_fit
 from .lstsq_fit import lstsq_fit
+from .cvx_fit import cvx_fit, _HAS_CVX
 
 # Create logger
 logger = logging.getLogger(__name__)
@@ -38,6 +38,8 @@ logger = logging.getLogger(__name__)
 
 class TomographyFitter:
     """Base maximum-likelihood estimate tomography fitter class"""
+
+    _HAS_SDP_SOLVER = None
 
     def __init__(self,
                  result: Union[Result, List[Result]],
@@ -197,10 +199,11 @@ class TomographyFitter:
                                                         beta)
         # Choose automatic method
         if method == 'auto':
-            if cvxpy is None:
-                method = 'lstsq'
-            else:
+            self._check_for_sdp_solver()
+            if self._HAS_SDP_SOLVER:
                 method = 'cvx'
+            else:
+                method = 'lstsq'
         if method == 'lstsq':
             return lstsq_fit(data, basis_matrix,
                              weights=weights,
@@ -501,3 +504,28 @@ class TomographyFitter:
                 op = np.kron(op, meas_matrix_fn(m, outcome))
             meas_ops.append(op)
         return meas_ops
+
+    @classmethod
+    def _check_for_sdp_solver(cls):
+        """Check if CVXPY solver is available"""
+        if cls._HAS_SDP_SOLVER is None:
+            if _HAS_CVX:
+                # pylint:disable=import-error
+                import cvxpy
+                solvers = cvxpy.installed_solvers()
+                if 'CVXOPT' in solvers:
+                    cls._HAS_SDP_SOLVER = True
+                    return
+                if 'SCS' in solvers:
+                    # Try example problem to see if built with BLAS
+                    # SCS solver cannot solver larger than 2x2 matrix
+                    # problems without BLAS
+                    try:
+                        var = cvxpy.Variable((4, 4), PSD=True)
+                        obj = cvxpy.Minimize(cvxpy.norm(var))
+                        cvxpy.Problem(obj).solve(solver='SCS')
+                        cls._HAS_SDP_SOLVER = True
+                        return
+                    except cvxpy.error.SolverError:
+                        pass
+            cls._HAS_SDP_SOLVER = False

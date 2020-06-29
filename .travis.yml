@@ -101,6 +101,12 @@ matrix:
         - MPLBACKEND=ps
         - PYTHON_VERSION=3.8.1
         - TOXENV=py38
+    - python: "3.8"
+      name: "Python 3.8 tests without optional dependencies"
+      stage: all_python
+      env: TOXENV=no-opt
+      stage: all_python
+      script: tox
     - if: tag IS present
       python: "3.6"
       env:
@@ -114,7 +120,7 @@ language: python
 install: pip install -U tox pip virtualenv setuptools six
 script:
   - tox --notest
-  - .tox/$TOXENV/bin/pip install --no-cache-dir --ignore-installed 'scs<2.1.2'
+  - .tox/$TOXENV/bin/pip install --no-cache-dir cvxopt
   - tox
 
 notifications:
