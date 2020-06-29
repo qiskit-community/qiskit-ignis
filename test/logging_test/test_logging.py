@@ -41,8 +41,6 @@ Unit testing of the Ignis Logging facility. Covering the following specs:
 import os
 import unittest
 from pyfakefs import fake_filesystem_unittest
-
-
 from qiskit.ignis.logging import IgnisLogging, IgnisLogReader
 
 
@@ -63,17 +61,12 @@ class TestLogging(fake_filesystem_unittest.TestCase):
         self._config_file = os.path.join(qiskit_dir, "logging.yaml")
         os.makedirs(qiskit_dir, exist_ok=True)
 
-        if os.path.exists(self._config_file):
-            os.remove(self._config_file)  # TODO: preserve and restore the old one
-
     def tearDown(self):
         """
-        Remove auto-generated files, resurrecting original files, and
-        resetting the IgnisLogging singleton state
+          resetting the IgnisLogging singleton state
         """
         IgnisLogging._reset_to_defaults(__name__)
-        if os.path.isfile(self._default_log):
-            os.remove(self._default_log)
+
         super().tearDown()
 
     def test_no_config_file(self):
@@ -125,7 +118,6 @@ class TestLogging(fake_filesystem_unittest.TestCase):
         logger.log_to_file(test="test")
 
         self.assertTrue(os.path.exists(log_path))
-        self.addCleanup(os.remove, log_path)
 
     def test_file_rotation(self):
         """
@@ -139,10 +131,6 @@ class TestLogging(fake_filesystem_unittest.TestCase):
                      "log_file: %s" % log_path)
 
         logger = IgnisLogging().get_logger(__name__)
-        self.addCleanup(os.remove, log_path)
-        self.addCleanup(os.remove, log_path + '.1')
-        self.addCleanup(os.remove, log_path + '.2')
-        self.addCleanup(os.remove, log_path + '.3')
 
         for i in range(100):
             logger.log_to_file(test="test%d" % i)
@@ -232,12 +220,6 @@ class TestLogging(fake_filesystem_unittest.TestCase):
         reader = IgnisLogReader()
         files = reader.get_log_files()
         self.assertEqual(len(files), 6)
-
-        for file in reader.get_log_files():
-            try:
-                os.remove(file)
-            except OSError:
-                pass
 
     def test_filtering(self):
         """
