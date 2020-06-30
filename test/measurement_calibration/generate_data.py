@@ -39,19 +39,19 @@ def meas_calib_circ_creation():
         QuantumCircuit: ghz circuit with 5 qubits (3 are used)
 
     """
-    meas_calibs, state_labels = complete_meas_cal(qubit_list=[1, 2, 3], qr=5)
+    qubit_list = [1, 2, 3]
+    meas_calibs, state_labels = complete_meas_cal(qubit_list=qubit_list, qr=5)
 
     # Choose 3 qubits
-    qubit_1 = 1
-    qubit_2 = 2
-    qubit_3 = 3
+    qubit_1 = qubit_list[0]
+    qubit_2 = qubit_list[1]
+    qubit_3 = qubit_list[2]
     ghz = qiskit.QuantumCircuit(5, 3)
     ghz.h(qubit_1)
     ghz.cx(qubit_1, qubit_2)
     ghz.cx(qubit_1, qubit_3)
     ghz.measure(qubit_1, 0)
     ghz.measure(qubit_2, 1)
-    ghz.measure(qubit_3, 2)
     ghz.measure(qubit_3, 2)
     return meas_calibs, state_labels, ghz
 
@@ -73,12 +73,12 @@ def tensored_calib_circ_creation():
 
     cr = qiskit.ClassicalRegister(3)
     ghz_circ = qiskit.QuantumCircuit(qr, cr)
-    ghz_circ.h(qr[2])
-    ghz_circ.cx(qr[2], qr[4])
-    ghz_circ.cx(qr[2], qr[1])
-    ghz_circ.measure(qr[2], cr[0])
-    ghz_circ.measure(qr[4], cr[1])
-    ghz_circ.measure(qr[1], cr[2])
+    ghz_circ.h(mit_pattern[0][0])
+    ghz_circ.cx(mit_pattern[0][0], mit_pattern[1][0])
+    ghz_circ.cx(mit_pattern[0][0], mit_pattern[1][1])
+    ghz_circ.measure(mit_pattern[0][0], cr[0])
+    ghz_circ.measure(mit_pattern[1][0], cr[1])
+    ghz_circ.measure(mit_pattern[1][1], cr[2])
     return meas_calibs, mit_pattern, ghz_circ
 
 
@@ -165,7 +165,7 @@ def generate_meas_calibration(results_file_path: str, runs: int):
         cal_results, state_labels, circuit_results = \
             meas_calibration_circ_execution(1000, SEED + run)
 
-        meas_cal = CompleteMeasFitter(cal_results, state_labels, circlabel='test')
+        meas_cal = CompleteMeasFitter(cal_results, state_labels)
         meas_filter = MeasurementFilter(meas_cal.cal_matrix, state_labels)
 
         # Calculate the results after mitigation
