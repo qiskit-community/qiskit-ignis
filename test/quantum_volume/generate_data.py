@@ -31,7 +31,7 @@ def qv_circuit_execution(qubit_lists: list, ntrials: int, shots: int):
     create quantum volume circuits, simulate the ideal state and run a noisy simulation
     Args:
         qubit_lists (list): list of lists of qubits to apply qv circuits to
-        ntrials (int): number of iterations
+        ntrials (int): number of iterations (number of circuits)
         shots (int): number of shots per simulation
 
     Returns:
