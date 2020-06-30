@@ -84,7 +84,7 @@ def tensored_calib_circ_creation():
 
 def meas_calibration_circ_execution(shots: int, seed: int):
     """
-    create measurement calibration circuits and simulates them with noise
+    create measurement calibration circuits and simulate them with noise
     Args:
         shots (int): number of shots per simulation
         seed (int): the seed to use in the simulations
@@ -116,7 +116,7 @@ def meas_calibration_circ_execution(shots: int, seed: int):
 
 def tensored_calib_circ_execution(shots: int, seed: int):
     """
-    create tensored measurement calibration circuits and simulates them with noise
+    create tensored measurement calibration circuits and simulate them with noise
     Args:
         shots (int): number of shots per simulation
         seed (int): the seed to use in the simulations
@@ -147,8 +147,8 @@ def tensored_calib_circ_execution(shots: int, seed: int):
 
 def generate_meas_calibration(results_file_path: str, runs: int):
     """
-    run the measurement calibration circuits, calculates the fitter matrix in few methods
-    and saves the results
+    run the measurement calibration circuits, calculate the fitter matrix in few methods
+    and save the results
     The simulation results files will contain a list of dictionaries with the keys:
         cal_matrix - the matrix used to calculate the ideal measurement
         fidelity - the calculated fidelity of using this matrix
