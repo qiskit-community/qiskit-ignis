@@ -52,7 +52,7 @@ def meas_calib_circ_creation():
     ghz.cx(qubit_1, qubit_2)
     ghz.cx(qubit_1, qubit_3)
     for i in qubit_list:
-        ghz.measure(qubit_list[i], i)
+        ghz.measure(i, i-1)
     return meas_calibs, state_labels, ghz
 
 
