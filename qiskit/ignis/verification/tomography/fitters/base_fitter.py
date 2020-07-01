@@ -42,7 +42,7 @@ class TomographyFitter:
     _HAS_SDP_SOLVER = None
 
     def __init__(self,
-                 result: Result,
+                 result: Union[Result, List[Result]],
                  circuits: Union[List[QuantumCircuit], List[str]],
                  meas_basis: Union[TomographyBasis, str] = 'Pauli',
                  prep_basis: Union[TomographyBasis, str] = 'Pauli'):
@@ -69,6 +69,8 @@ class TomographyFitter:
 
         # Add initial data
         self._data = {}
+        if isinstance(result, Result):
+            result = [result]  # unify results handling
         self.add_data(result, circuits)
 
     def set_measure_basis(self, basis: Union[TomographyBasis, str]):
@@ -226,14 +228,20 @@ class TomographyFitter:
         """
         return self._data
 
-    def add_data(self, result, circuits):
+    def add_data(self,
+                 results: List[Result],
+                 circuits: List[Union[QuantumCircuit, str]]
+                 ):
         """Add tomography data from a Qiskit Result object.
 
         Args:
-            result (Result): a Qiskit Result object obtained from executing
-                tomography circuits.
-            circuits (list): a list of circuits or circuit names to extract
+            results: The results obtained from executing tomography circuits.
+            circuits: circuits or circuit names to extract
                 count information from the result object.
+
+        Raises:
+            QiskitError: In case some of the tomography data is not found
+                in the results
         """
         if len(circuits[0].cregs) == 1:
             marginalize = False
@@ -242,7 +250,14 @@ class TomographyFitter:
 
         # Process measurement counts into probabilities
         for circ in circuits:
-            counts = result.get_counts(circ)
+            counts = None
+            for result in results:
+                try:
+                    counts = result.get_counts(circ)
+                except QiskitError:
+                    pass
+            if counts is None:
+                raise QiskitError("Result for {} not found".format(circ.name))
             if isinstance(circ, str):
                 tup = literal_eval(circ)
             elif isinstance(circ, QuantumCircuit):
