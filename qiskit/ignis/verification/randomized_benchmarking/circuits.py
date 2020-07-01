@@ -158,13 +158,13 @@ def handle_interleaved_elem(interleaved_elem, rb_group):
                                                    and group_gates_type == 1):
                 interleaved_elem_list.append(elem)
             else:
-                raise ValueError("Invalid intelreaved element type.")
+                raise ValueError("Invalid interleaved element type.")
 
             if not isinstance(elem, QuantumCircuit) and \
                     not isinstance(elem,
                                    qiskit.quantum_info.operators.symplectic.clifford.Clifford) \
                     and not isinstance(elem, CNOTDihedral):
-                raise ValueError("Invalid intelreaved element type. "
+                raise ValueError("Invalid interleaved element type. "
                                  "interleaved_elem should be a list of QuantumCircuit,"
                                  "or a list of Clifford / CNOTDihedral objects")
     return interleaved_elem_list
