@@ -21,9 +21,11 @@ Generates randomized benchmarking sequences
 
 import copy
 from typing import List, Optional, Union
+from warnings import warn
 import numpy as np
 from numpy.random import RandomState
 import qiskit
+from qiskit import QuantumCircuit
 
 
 from .rb_groups import RBgroup
@@ -146,18 +148,21 @@ def handle_interleaved_elem(interleaved_elem, rb_group):
 
     else:
         for elem in interleaved_elem:
-            if isinstance(elem, qiskit.QuantumCircuit):
+            if isinstance(elem, QuantumCircuit):
                 num_qubits = elem.num_qubits
                 qc = elem
                 elem = rb_group.iden(num_qubits)
                 elem = elem.from_circuit(qc)
-            if isinstance(elem, qiskit.quantum_info.operators.symplectic.clifford.Clifford):
-                assert group_gates_type == 0, "Interleaved element has invalid type"
-            if isinstance(elem, CNOTDihedral):
-                assert group_gates_type == 1, "Interleaved element has invalid type"
-            interleaved_elem_list.append(elem)
+            if (isinstance(elem, qiskit.quantum_info.operators.symplectic.clifford.Clifford)
+                and group_gates_type == 0) or (isinstance(elem, CNOTDihedral)
+                                               and group_gates_type == 1):
+                interleaved_elem_list.append(elem)
+            else:
+                raise ValueError("Invalid intelreaved element type. "
+                                 "interleaved_elem should be a list of QuantumCircuit,"
+                                 "or a list of Clifford / CNOTDihedral objects")
 
-            if not isinstance(elem, qiskit.QuantumCircuit) and \
+            if not isinstance(elem, QuantumCircuit) and \
                     not isinstance(elem,
                                    qiskit.quantum_info.operators.symplectic.clifford.Clifford) \
                     and not isinstance(elem, CNOTDihedral):
@@ -192,6 +197,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                 length_multiplier: Optional[List[int]] = 1,
                                 seed_offset: int = 0,
                                 align_cliffs: bool = False,
+                                interleaved_gates: Optional[List[List[str]]] = None,
                                 interleaved_elem:
                                 Optional[
                                     Union[List[qiskit.QuantumCircuit],
@@ -360,6 +366,11 @@ def randomized_benchmarking_seq(nseeds: int = 1,
         The output is ``npurity = 9`` in this case.
     """
 
+    if interleaved_gates is not None:
+        warn("`interleaved_gates` kwarg is deprecated. "
+             "Please use the `interleaved_elem` kwarg that supersedes it.",
+             category=DeprecationWarning)
+
     if rb_pattern is None:
         rb_pattern = [[0]]
     if length_vector is None:
@@ -403,8 +414,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
     for seed in range(nseeds):
         qr = qiskit.QuantumRegister(n_q_max+1, 'qr')
         cr = qiskit.ClassicalRegister(len(qlist_flat), 'cr')
-        general_circ = qiskit.QuantumCircuit(qr, cr)
-        interleaved_circ = qiskit.QuantumCircuit(qr, cr)
+        general_circ = QuantumCircuit(qr, cr)
+        interleaved_circ = QuantumCircuit(qr, cr)
 
         # make sequences for each of the separate sequences in
         # rb_pattern
@@ -471,10 +482,10 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             # then calculate the inverse and produce the circuit
             if (elmnts_index+1) == length_vector[length_index]:
                 # circ for rb:
-                circ = qiskit.QuantumCircuit(qr, cr)
+                circ = QuantumCircuit(qr, cr)
                 circ += general_circ
                 # circ_interleaved for interleaved rb:
-                circ_interleaved = qiskit.QuantumCircuit(qr, cr)
+                circ_interleaved = QuantumCircuit(qr, cr)
                 circ_interleaved += interleaved_circ
 
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
@@ -494,7 +505,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                 if is_purity:
                     circ_purity = [[] for d in range(npurity)]
                     for d in range(npurity):
-                        circ_purity[d] = qiskit.QuantumCircuit(qr, cr)
+                        circ_purity[d] = QuantumCircuit(qr, cr)
                         circ_purity[d] += circ
                         circ_purity[d].name = rb_circ_type + '_purity_'
                         ind_d = d
@@ -535,8 +546,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                 # add measurement for Non-Clifford cnot-dihedral rb
                 # measure both the ground state |0...0> (circ)
                 # and the |+...+> state (cnot-dihedral_circ)
-                cnotdihedral_circ = qiskit.QuantumCircuit(qr, cr)
-                cnotdihedral_interleaved_circ = qiskit.QuantumCircuit(qr, cr)
+                cnotdihedral_circ = QuantumCircuit(qr, cr)
+                cnotdihedral_interleaved_circ = QuantumCircuit(qr, cr)
                 if group_gates_type == 1:
                     for _, qb in enumerate(qlist_flat):
                         cnotdihedral_circ.h(qr[qb])
@@ -625,7 +636,7 @@ def replace_q_indices(circuit, q_nums, qr):
         QuantumCircuit: updated circuit
     """
 
-    new_circuit = qiskit.QuantumCircuit(qr)
+    new_circuit = QuantumCircuit(qr)
     for instr, qargs, cargs in circuit.data:
         new_qargs = [
             qr[q_nums[x]] for x in [arg.index for arg in qargs]]
