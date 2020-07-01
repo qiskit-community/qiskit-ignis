@@ -154,8 +154,8 @@ def handle_interleaved_elem(interleaved_elem, rb_group):
                 elem = rb_group.iden(num_qubits)
                 elem = elem.from_circuit(qc)
             if (isinstance(elem, qiskit.quantum_info.operators.symplectic.clifford.Clifford)
-                and group_gates_type == 0) or (isinstance(elem, CNOTDihedral)
-                                               and group_gates_type == 1):
+                    and group_gates_type == 0) or (isinstance(elem, CNOTDihedral)
+                                                   and group_gates_type == 1):
                 interleaved_elem_list.append(elem)
             else:
                 raise ValueError("Invalid intelreaved element type. "
