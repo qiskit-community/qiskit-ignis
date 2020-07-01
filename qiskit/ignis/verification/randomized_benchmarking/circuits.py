@@ -259,7 +259,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
 
             **Note:** the alignment considers the group multiplier.
 
-        interleaved_gates: Deprecated. 
+        interleaved_gates: Deprecated.
             Please use the ``interleaved_elem`` kwarg that supersedes it.
 
         interleaved_elem: An list of QuantumCircuits or group elements
