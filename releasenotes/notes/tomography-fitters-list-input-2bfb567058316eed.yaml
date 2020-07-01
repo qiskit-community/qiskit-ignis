@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    Tomography fitters can now also get list of `Result` objects instead of a single `Result`
+    as requested in `issue #320 <https://github.com/Qiskit/qiskit-ignis/issues/320/>`_.
