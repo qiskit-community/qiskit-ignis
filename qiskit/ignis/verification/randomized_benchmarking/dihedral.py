@@ -354,21 +354,12 @@ class CNOTDihedral():
 
     def _z2matmul(self, left, right):
         """Compute product of two n x n z2 matrices."""
-        prod = [[0 for col in range(self.num_qubits)]
-                for row in range(self.num_qubits)]
-        for i in range(self.num_qubits):
-            for j in range(self.num_qubits):
-                for k in range(self.num_qubits):
-                    prod[i][j] = (prod[i][j] +
-                                  left[i][k]*right[k][j]) % 2
+        prod = (np.mod(np.dot(left, right), 2)).tolist()
         return prod
 
     def _z2matvecmul(self, mat, vec):
         """Compute mat*vec of n x n z2 matrix and vector."""
-        prod = [0 for row in range(self.num_qubits)]
-        for i in range(self.num_qubits):
-            for j in range(self.num_qubits):
-                prod[i] = (prod[i] + mat[i][j] * vec[j]) % 2
+        prod = (np.mod(np.dot(mat, vec), 2)).tolist()
         return prod
 
     def __mul__(self, other):
@@ -376,9 +367,7 @@ class CNOTDihedral():
         assert self.num_qubits == other.num_qubits, "not same num_qubits!"
         result = CNOTDihedral(self.num_qubits)
         result.shift = [(x[0] + x[1]) % 2
-                        for x in zip(self._z2matvecmul(self.linear,
-                                                       other.shift),
-                                     self.shift)]
+                        for x in zip(self._z2matvecmul(self.linear, other.shift), self.shift)]
         result.linear = self._z2matmul(self.linear, other.linear)
         # Compute x' = B1*x + c1 using the p_j identity
         new_vars = []
