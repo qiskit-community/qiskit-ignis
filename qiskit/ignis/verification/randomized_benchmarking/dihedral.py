@@ -63,9 +63,9 @@ class SpecialPolynomial():
         self.nc2 = int(n_vars * (n_vars-1) / 2)
         self.nc3 = int(n_vars * (n_vars-1) * (n_vars-2) / 6)
         self.weight_0 = 0
-        self.weight_1 = n_vars * [0]
-        self.weight_2 = self.nc2 * [0]
-        self.weight_3 = self.nc3 * [0]
+        self.weight_1 = np.zeros(n_vars, dtype=np.int8)
+        self.weight_2 = np.zeros(self.nc2, dtype=np.int8)
+        self.weight_3 = np.zeros(self.nc3, dtype=np.int8)
 
     def mul_monomial(self, indices):
         """Multiply by a monomial given by indices.
@@ -201,9 +201,9 @@ class SpecialPolynomial():
         subsets_2 = itertools.combinations(indices, 2)
         subsets_3 = itertools.combinations(indices, 3)
         self.weight_0 = 0
-        self.weight_1 = self.n_vars * [0]
-        self.weight_2 = self.nc2 * [0]
-        self.weight_3 = self.nc3 * [0]
+        self.weight_1 = (np.zeros(self.n_vars)).tolist()
+        self.weight_2 = (np.zeros(self.nc2)).tolist()
+        self.weight_3 = (np.zeros(self.nc3)).tolist()
         for j in indices:
             self.set_term([j], 1)
         for j in subsets_2:
@@ -348,10 +348,9 @@ class CNOTDihedral():
         # phase polynomial
         self.poly = SpecialPolynomial(num_qubits)
         # n x n invertible matrix over Z_2
-        self.linear = [[int(r == c) for c in range(num_qubits)]
-                       for r in range(num_qubits)]
+        self.linear = (np.eye(num_qubits, dtype=np.int8)).tolist()
         # binary shift, n coefficients in Z_2
-        self.shift = num_qubits * [0]
+        self.shift = np.zeros(num_qubits, dtype=np.int8)
 
     def _z2matmul(self, left, right):
         """Compute product of two n x n z2 matrices."""
