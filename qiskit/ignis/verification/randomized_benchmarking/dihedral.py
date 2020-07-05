@@ -74,17 +74,17 @@ class SpecialPolynomial():
         """
         length = len(indices)
         assert length < 4, "no term!"
-        assert True not in [x < 0 or x >= self.n_vars for x in indices], \
+        assert ((np.array(indices) < 0).all() is not False) and \
+               ((np.array(indices) >= self.n_vars).all() is not False), \
             "indices out of bounds!"
-        assert False not in [indices[i] < indices[i+1]
-                             for i in range(length-1)], \
-            "indices non-increasing!"
+        if length > 1:
+            assert (np.diff(np.array(indices)) > 0), "indices non-increasing!"
         result = SpecialPolynomial(self.n_vars)
         if length == 0:
             result = copy.deepcopy(self)
         else:
             terms0 = [[]]
-            terms1 = [[i] for i in range(self.n_vars)]
+            terms1 = [[i] for i in range(self.n_vars)] #np.arange(self.n_vars).tolist()
             terms2 = [[i, j] for i in range(self.n_vars-1)
                       for j in range(i+1, self.n_vars)]
             terms3 = [[i, j, k] for i in range(self.n_vars-2)
@@ -93,8 +93,7 @@ class SpecialPolynomial():
             for term in terms0 + terms1 + terms2 + terms3:
                 value = self.get_term(term)
                 new_term = list(set(term).union(set(indices)))
-                result.set_term(new_term, (result.get_term(new_term) +
-                                           value) % 8)
+                result.set_term(new_term, (result.get_term(new_term) + value) % 8)
         return result
 
     def __mul__(self, other):
@@ -195,7 +194,8 @@ class SpecialPolynomial():
 
         p_J(x) := sum_{a subseteq J,|a| neq 0} (-2)^{|a|-1}x^a
         """
-        assert True not in [x < 0 or x >= self.n_vars for x in indices], \
+        assert ((np.array(indices) < 0).all() is not False) and \
+               ((np.array(indices) >= self.n_vars).all() is not False), \
             "indices out of bounds!"
         indices = sorted(indices)
         subsets_2 = itertools.combinations(indices, 2)
@@ -225,11 +225,12 @@ class SpecialPolynomial():
         """
         length = len(indices)
         assert length < 4, "no term!"
-        assert True not in [x < 0 or x >= self.n_vars for x in indices], \
+        assert length < 4, "no term!"
+        assert ((np.array(indices) < 0).all() is not False) and \
+               ((np.array(indices) >= self.n_vars).all() is not False), \
             "indices out of bounds!"
-        assert False not in [indices[i] < indices[i+1]
-                             for i in range(length-1)], \
-            "indices non-increasing!"
+        if length > 1:
+            assert (np.diff(np.array(indices)) > 0), "indices non-increasing!"
         if length == 0:
             return self.weight_0
         if length == 1:
