@@ -417,8 +417,8 @@ class CNOTDihedral():
         """Apply a CNOT gate to this element.
         Left multiply the element by CNOT_{i,j}.
         """
-        assert (i >= 0) and (j >= 0) and (i < self.num_qubits) and (j < self.num_qubits) and (i != j), \
-            "cnot qubits out of bounds!"
+        assert (i >= 0) and (j >= 0) and (i < self.num_qubits) and \
+               (j < self.num_qubits) and (i != j), "cnot qubits out of bounds!"
         self.linear[j] = ((np.array(self.linear[i]) + np.array(self.linear[j])) % 2).tolist()
         self.shift[j] = (self.shift[i] + self.shift[j]) % 2
 
