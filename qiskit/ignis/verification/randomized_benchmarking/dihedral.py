@@ -102,9 +102,9 @@ class SpecialPolynomial():
         result = SpecialPolynomial(self.n_vars)
         if isinstance(other, int):
             result.weight_0 = (self.weight_0 * other) % 8
-            result.weight_1 = [(x * other) % 8 for x in self.weight_1]
-            result.weight_2 = [(x * other) % 8 for x in self.weight_2]
-            result.weight_3 = [(x * other) % 8 for x in self.weight_3]
+            result.weight_1 = (((np.array(self.weight_1) * other) % 8 ).astype(int)).tolist()
+            result.weight_2 = (((np.array(self.weight_2) * other) % 8 ).astype(int)).tolist()
+            result.weight_3 = (((np.array(self.weight_3) * other) % 8 ).astype(int)).tolist()
         else:
             assert self.n_vars == other.n_vars, "different n_vars!"
             terms0 = [[]]
@@ -136,12 +136,9 @@ class SpecialPolynomial():
         assert self.n_vars == other.n_vars, "different n_vars!"
         result = SpecialPolynomial(self.n_vars)
         result.weight_0 = (self.weight_0 + other.weight_0) % 8
-        result.weight_1 = [(x[0] + x[1]) % 8
-                           for x in zip(self.weight_1, other.weight_1)]
-        result.weight_2 = [(x[0] + x[1]) % 8
-                           for x in zip(self.weight_2, other.weight_2)]
-        result.weight_3 = [(x[0] + x[1]) % 8
-                           for x in zip(self.weight_3, other.weight_3)]
+        result.weight_1 = (np.array(self.weight_1) + np.array(other.weight_1)) % 8
+        result.weight_2 = (np.array(self.weight_2) + np.array(other.weight_2)) % 8
+        result.weight_3 = (np.array(self.weight_3) + np.array(other.weight_3)) % 8
         return result
 
     def evaluate(self, xval):
@@ -153,8 +150,7 @@ class SpecialPolynomial():
         """
         assert len(xval) == self.n_vars, "wrong number of variables!"
         check_int = list(map(lambda x: isinstance(x, int), xval))
-        check_poly = list(map(lambda x: isinstance(x, SpecialPolynomial),
-                              xval))
+        check_poly = list(map(lambda x: isinstance(x, SpecialPolynomial), xval))
         assert False not in check_int or False not in check_poly, "wrong type!"
         is_int = (False not in check_int)
         if not is_int:
