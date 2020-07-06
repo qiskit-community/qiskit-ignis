@@ -368,7 +368,7 @@ class CNOTDihedral():
         # Compute x' = B1*x + c1 using the p_j identity
         new_vars = []
         for i in range(self.num_qubits):
-            support = [j for j, e in enumerate(other.linear[i]) if e != 0]
+            support = np.arange(self.num_qubits)[np.nonzero(other.linear[i])]
             poly = SpecialPolynomial(self.num_qubits)
             poly.set_pj(support)
             if other.shift[i] == 1:
@@ -391,7 +391,7 @@ class CNOTDihedral():
         # Compute x' = B1*x + c1 using the p_j identity
         new_vars = []
         for i in range(self.num_qubits):
-            support = [j for j, e in enumerate(self.linear[i]) if e != 0]
+            support = np.arange(self.num_qubits)[np.nonzero(self.linear[i])]
             poly = SpecialPolynomial(self.num_qubits)
             poly.set_pj(support)
             if other.shift[i] == 1:
@@ -417,7 +417,7 @@ class CNOTDihedral():
         """Apply a CNOT gate to this element.
         Left multiply the element by CNOT_{i,j}.
         """
-        assert i >= 0 and j >= 0 and i < self.num_qubits and j < self.num_qubits and i != j, \
+        assert (i >= 0) and (j >= 0) and (i < self.num_qubits) and (j < self.num_qubits) and (i != j), \
             "cnot qubits out of bounds!"
         self.linear[j] = ((np.array(self.linear[i]) + np.array(self.linear[j])) % 2).tolist()
         self.shift[j] = (self.shift[i] + self.shift[j]) % 2
@@ -426,14 +426,14 @@ class CNOTDihedral():
         """Apply an k-th power of T to this element.
         Left multiply the element by T_i^k.
         """
-        assert i >= 0 and i < self.num_qubits, "phase qubit out of bounds!"
+        assert (i >= 0) and (i < self.num_qubits), "phase qubit out of bounds!"
         # If the kth bit is flipped, conjugate this gate
         if self.shift[i] == 1:
             k = (7*k) % 8
         # Take all subsets \alpha of the support of row i
         # of weight up to 3 and add k*(-2)**(|\alpha| - 1) mod 8
         # to the corresponding term.
-        support = [j for j, e in enumerate(self.linear[i]) if e != 0]
+        support = np.arange(self.num_qubits)[np.nonzero(self.linear[i])]
         subsets_2 = itertools.combinations(support, 2)
         subsets_3 = itertools.combinations(support, 3)
         for j in support:
@@ -450,8 +450,7 @@ class CNOTDihedral():
         """Apply X to this element.
         Left multiply the element by X_i.
         """
-        assert i >= 0, "i negative!"
-        assert i < self.num_qubits, "i too big!"
+        assert (i >= 0) and (i < self.num_qubits), "flip qubit out of bounds!"
         self.shift[i] = (self.shift[i] + 1) % 2
 
     def __str__(self):
