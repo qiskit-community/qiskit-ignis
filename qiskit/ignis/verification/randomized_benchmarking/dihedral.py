@@ -417,8 +417,8 @@ class CNOTDihedral():
         """Apply a CNOT gate to this element.
         Left multiply the element by CNOT_{i,j}.
         """
-        assert (i >= 0) and (j >= 0) and (i < self.num_qubits) and \
-               (j < self.num_qubits) and (i != j), "cnot qubits out of bounds!"
+        assert (0 <= i < self.num_qubits) and (0 <= j < self.num_qubits) \
+               and (i != j), "cnot qubits out of bounds!"
         self.linear[j] = ((np.array(self.linear[i]) + np.array(self.linear[j])) % 2).tolist()
         self.shift[j] = (self.shift[i] + self.shift[j]) % 2
 
@@ -426,7 +426,7 @@ class CNOTDihedral():
         """Apply an k-th power of T to this element.
         Left multiply the element by T_i^k.
         """
-        assert (i >= 0) and (i < self.num_qubits), "phase qubit out of bounds!"
+        assert 0 <= i < self.num_qubits, "phase qubit out of bounds!"
         # If the kth bit is flipped, conjugate this gate
         if self.shift[i] == 1:
             k = (7*k) % 8
@@ -450,7 +450,7 @@ class CNOTDihedral():
         """Apply X to this element.
         Left multiply the element by X_i.
         """
-        assert (i >= 0) and (i < self.num_qubits), "flip qubit out of bounds!"
+        assert 0 <= i < self.num_qubits, "flip qubit out of bounds!"
         self.shift[i] = (self.shift[i] + 1) % 2
 
     def __str__(self):
