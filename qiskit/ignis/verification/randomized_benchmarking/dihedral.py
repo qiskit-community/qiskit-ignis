@@ -102,9 +102,9 @@ class SpecialPolynomial():
         result = SpecialPolynomial(self.n_vars)
         if isinstance(other, int):
             result.weight_0 = (self.weight_0 * other) % 8
-            result.weight_1 = (((np.array(self.weight_1) * other) % 8 ).astype(int)).tolist()
-            result.weight_2 = (((np.array(self.weight_2) * other) % 8 ).astype(int)).tolist()
-            result.weight_3 = (((np.array(self.weight_3) * other) % 8 ).astype(int)).tolist()
+            result.weight_1 = (((np.array(self.weight_1) * other) % 8).astype(int)).tolist()
+            result.weight_2 = (((np.array(self.weight_2) * other) % 8).astype(int)).tolist()
+            result.weight_3 = (((np.array(self.weight_3) * other) % 8).astype(int)).tolist()
         else:
             assert self.n_vars == other.n_vars, "different n_vars!"
             terms0 = [[]]
@@ -157,7 +157,7 @@ class SpecialPolynomial():
             assert False not in [i.n_vars == self.n_vars for i in xval], \
                 "incompatible polynomials!"
         else:
-            xval = [x % 2 for x in xval]
+            xval = ((((np.array(xval)) % 2)).astype(int)).tolist()
         # Examine each term of this polynomial
         terms0 = [[]]
         terms1 = [[i] for i in range(self.n_vars)]
