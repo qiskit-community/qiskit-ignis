@@ -35,6 +35,7 @@ Example:
 """
 
 import itertools
+from itertools import combinations
 import copy
 from functools import reduce
 from operator import mul
@@ -83,12 +84,9 @@ class SpecialPolynomial():
             result = copy.deepcopy(self)
         else:
             terms0 = [[]]
-            terms1 = [[i] for i in range(self.n_vars)]
-            terms2 = [[i, j] for i in range(self.n_vars-1)
-                      for j in range(i+1, self.n_vars)]
-            terms3 = [[i, j, k] for i in range(self.n_vars-2)
-                      for j in range(i+1, self.n_vars-1)
-                      for k in range(j+1, self.n_vars)]
+            terms1 = list(combinations(range(self.n_vars), r=1))
+            terms2 = list(combinations(range(self.n_vars), r=2))
+            terms3 = list(combinations(range(self.n_vars), r=3))
             for term in terms0 + terms1 + terms2 + terms3:
                 value = self.get_term(term)
                 new_term = list(set(term).union(set(indices)))
@@ -108,12 +106,9 @@ class SpecialPolynomial():
         else:
             assert self.n_vars == other.n_vars, "different n_vars!"
             terms0 = [[]]
-            terms1 = [[i] for i in range(self.n_vars)]
-            terms2 = [[i, j] for i in range(self.n_vars-1)
-                      for j in range(i+1, self.n_vars)]
-            terms3 = [[i, j, k] for i in range(self.n_vars-2)
-                      for j in range(i+1, self.n_vars-1)
-                      for k in range(j+1, self.n_vars)]
+            terms1 = list(combinations(range(self.n_vars), r=1))
+            terms2 = list(combinations(range(self.n_vars), r=2))
+            terms3 = list(combinations(range(self.n_vars), r=3))
             for term in terms0 + terms1 + terms2 + terms3:
                 value = other.get_term(term)
                 if value != 0:
@@ -160,12 +155,9 @@ class SpecialPolynomial():
             xval = ((((np.array(xval)) % 2)).astype(int)).tolist()
         # Examine each term of this polynomial
         terms0 = [[]]
-        terms1 = [[i] for i in range(self.n_vars)]
-        terms2 = [[i, j] for i in range(self.n_vars-1)
-                  for j in range(i+1, self.n_vars)]
-        terms3 = [[i, j, k] for i in range(self.n_vars-2)
-                  for j in range(i+1, self.n_vars-1)
-                  for k in range(j+1, self.n_vars)]
+        terms1 = list(combinations(range(self.n_vars), r=1))
+        terms2 = list(combinations(range(self.n_vars), r=2))
+        terms3 = list(combinations(range(self.n_vars), r=3))
         # Set the initial result and start for each term
         if is_int:
             result = 0
