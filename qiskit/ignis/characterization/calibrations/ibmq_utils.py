@@ -20,7 +20,7 @@ from collections import defaultdict
 from scipy.optimize import least_squares
 import numpy as np
 
-from qiskit.pulse import pulse_lib, Schedule, Play, ShiftPhase
+from qiskit.pulse import library as pulse_lib, Schedule, Play, ShiftPhase
 from qiskit.pulse.schedule import ParameterizedSchedule
 
 
