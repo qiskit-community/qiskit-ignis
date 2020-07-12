@@ -288,6 +288,7 @@ def generate_fitter_data_1(results_file_path: str, expected_results_file_path: s
     rb_opts['rb_pattern'] = [[0, 1], [2]]
     rb_opts['length_multiplier'] = [1, 2]
     rb_opts['length_vector'] = np.arange(1, 200, 20)
+    rb_opts['rand_seed'] = SEED
 
     rb_results, xdata = rb_circuit_execution(rb_opts, shots)
     save_results_as_json(rb_results, results_file_path)
@@ -332,6 +333,7 @@ def generate_fitter_data_2(results_file_path: str, expected_results_file_path: s
     rb_opts['nseeds'] = 5
     rb_opts['rb_pattern'] = [[0]]
     rb_opts['length_vector'] = np.arange(1, 200, 20)
+    rb_opts['rand_seed'] = SEED
 
     rb_results, xdata = rb_circuit_execution_2(rb_opts, shots)
     save_results_as_json(rb_results, results_file_path)
@@ -391,7 +393,15 @@ def generate_interleaved_data(results_file_path_original: str,
     rb_opts['rb_pattern'] = [[0, 2], [1]]
     rb_opts['length_vector'] = np.arange(1, 100, 10)
     rb_opts['length_multiplier'] = [1, 3]
-    rb_opts['interleaved_gates'] = [['x 0', 'x 1', 'cx 0 1'], ['x 0']]
+    # create interleaved elem of the form [['x 0', 'x 1', 'cx 0 1'], ['x 0']]
+    qc1 = qiskit.QuantumCircuit(2)
+    qc1.x(0)
+    qc1.x(1)
+    qc1.cx(0, 1)
+    qc2 = qiskit.QuantumCircuit(1)
+    qc2.x(0)
+    rb_opts["interleaved_elem"] = [qc1, qc2]
+    rb_opts['rand_seed'] = SEED
 
     results, xdata, interleaved_results = rb_interleaved_execution(rb_opts, shots)
     save_results_as_json(results, results_file_path_original)
@@ -452,6 +462,7 @@ def generate_cnotdihedral_data(results_file_path_cnotdihedral_x: str,
     rb_opts['length_vector'] = np.arange(1, 200, 20)
     rb_opts['length_multiplier'] = [1, 3]
     rb_opts['group_gates'] = 'CNOT-Dihedral'
+    rb_opts['rand_seed'] = SEED
 
     cnotdihedral_x_results, xdata, cnotdihedral_z_results = \
         rb_cnotdihedral_execution(rb_opts, shots)
@@ -463,8 +474,8 @@ def generate_cnotdihedral_data(results_file_path_cnotdihedral_x: str,
                                         rb_opts['rb_pattern'])
 
     joint_fit = joint_rb_fit.fit_cnotdihedral
-    cnotdihedral_x_ydata = joint_rb_fit.ydata[0]
-    cnotdihedral_z_ydata = joint_rb_fit.ydata[1]
+    cnotdihedral_z_ydata = joint_rb_fit.ydata[0]
+    cnotdihedral_x_ydata = joint_rb_fit.ydata[1]
     # convert ndarray to list
     cnotdihedral_x_ydata = convert_ndarray_to_list_in_data(cnotdihedral_x_ydata)
     cnotdihedral_z_ydata = convert_ndarray_to_list_in_data(cnotdihedral_z_ydata)
@@ -515,6 +526,7 @@ def generate_purity_data(results_file_path_purity: str,
     rb_opts['rb_pattern'] = [[0, 1]]
     rb_opts['length_vector'] = np.arange(1, 200, 20)
     rb_opts['is_purity'] = True
+    rb_opts['rand_seed'] = SEED
 
     rb_purity_results, xdata, npurity, rb_coherent_results = \
         rb_purity_circuit_execution(rb_opts, shots)
