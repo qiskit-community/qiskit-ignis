@@ -18,14 +18,11 @@ Randomized Benchmarking module
 """
 
 # Randomized Benchmarking functions
-from .Clifford import Clifford
-from .basic_utils import BasicUtils
-from .clifford_utils import CliffordUtils
-from .dihedral import CNOTDihedral
-from .dihedral_utils import DihedralUtils
 from .circuits import randomized_benchmarking_seq
+from .dihedral import (CNOTDihedral, decompose_cnotdihedral, random_cnotdihedral)
 from .fitters import (RBFitter, InterleavedRBFitter, PurityRBFitter,
                       CNOTDihedralRBFitter)
 from .rb_utils import (count_gates, gates_per_clifford,
                        coherence_limit, twoQ_clifford_error,
                        calculate_1q_epg, calculate_2q_epg, calculate_1q_epc, calculate_2q_epc)
+from .rb_groups import RBgroup

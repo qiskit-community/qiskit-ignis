@@ -19,7 +19,7 @@ Pulse Schedule Generation for calibration experiments
 import copy
 
 import qiskit.pulse as pulse
-import qiskit.pulse.pulse_lib as pulse_lib
+import qiskit.pulse.library as pulse_lib
 from qiskit.exceptions import QiskitError
 from qiskit.scheduler import measure
 

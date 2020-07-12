@@ -136,6 +136,28 @@ class TestStateTomographyCVX(TestStateTomography):
         super().setUp()
         self.method = 'cvx'
 
+    def test_split_job(self):
+        q3 = QuantumRegister(3)
+        bell = QuantumCircuit(q3)
+        bell.h(q3[0])
+        bell.cx(q3[0], q3[1])
+        bell.cx(q3[1], q3[2])
+
+        psi = Statevector.from_instruction(bell)
+        qst = tomo.state_tomography_circuits(bell, q3)
+        qst1 = qst[:len(qst) // 2]
+        qst2 = qst[len(qst) // 2:]
+
+        backend = Aer.get_backend('qasm_simulator')
+        job1 = qiskit.execute(qst1, backend, shots=5000)
+        job2 = qiskit.execute(qst2, backend, shots=5000)
+
+        tomo_fit = tomo.StateTomographyFitter([job1.result(), job2.result()], qst)
+
+        rho_mle = tomo_fit.fit(method='lstsq')
+        F_bell_mle = state_fidelity(psi, rho_mle, validate=False)
+        self.assertAlmostEqual(F_bell_mle, 1, places=1)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -12,3 +12,4 @@ jupyter
 jupyter-sphinx
 reno
 matplotlib
+pyfakefs
