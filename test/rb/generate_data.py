@@ -28,7 +28,7 @@ from qiskit.providers.aer.noise import NoiseModel
 from qiskit.providers.aer.noise.errors.standard_errors import depolarizing_error,\
     thermal_relaxation_error, coherent_unitary_error
 
-# fixed seed for simulations
+# fixed seed for simulations and for rb random seed
 SEED = 42
 
 
