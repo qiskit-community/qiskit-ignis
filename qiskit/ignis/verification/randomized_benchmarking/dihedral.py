@@ -75,10 +75,11 @@ class SpecialPolynomial():
         """
         length = len(indices)
         assert length < 4, "no term!"
-        assert ((np.array(indices) < 0).all() is not False) and \
-               ((np.array(indices) >= self.n_vars).all() is not False), "indices out of bounds!"
+        indices_arr = np.array(indices)
+        assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
+            "indices out of bounds!"
         if length > 1:
-            assert (np.diff(np.array(indices)) > 0), "indices non-increasing!"
+            assert (np.diff(indices_arr) > 0).all(), "indices non-increasing!"
         result = SpecialPolynomial(self.n_vars)
         if length == 0:
             result = copy.deepcopy(self)
@@ -181,8 +182,9 @@ class SpecialPolynomial():
 
         p_J(x) := sum_{a subseteq J,|a| neq 0} (-2)^{|a|-1}x^a
         """
-        assert ((np.array(indices) < 0).all() is not False) and \
-               ((np.array(indices) >= self.n_vars).all() is not False), "indices out of bounds!"
+        indices_arr = np.array(indices)
+        assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
+            "indices out of bounds!"
         indices = sorted(indices)
         subsets_2 = itertools.combinations(indices, 2)
         subsets_3 = itertools.combinations(indices, 3)
@@ -211,10 +213,11 @@ class SpecialPolynomial():
         """
         length = len(indices)
         assert length < 4, "no term!"
-        assert ((np.array(indices) < 0).all() is not False) and \
-               ((np.array(indices) >= self.n_vars).all() is not False), "indices out of bounds!"
+        indices_arr = np.array(indices)
+        assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
+            "indices out of bounds!"
         if length > 1:
-            assert (np.diff(np.array(indices)) > 0), "indices non-increasing!"
+            assert (np.diff(indices_arr) > 0).all(), "indices non-increasing!"
         if length == 0:
             return self.weight_0
         if length == 1:
@@ -252,10 +255,11 @@ class SpecialPolynomial():
         """
         length = len(indices)
         assert length < 4, "no term!"
-        assert ((np.array(indices) < 0).all() is not False) and \
-               ((np.array(indices) >= self.n_vars).all() is not False), "indices out of bounds!"
+        indices_arr = np.array(indices)
+        assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
+            "indices out of bounds!"
         if length > 1:
-            assert (np.diff(np.array(indices)) > 0), "indices non-increasing!"
+            assert (np.diff(indices_arr) > 0).all(), "indices non-increasing!"
         value = value % 8
         if length == 0:
             self.weight_0 = value
