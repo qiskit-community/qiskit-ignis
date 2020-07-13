@@ -35,7 +35,7 @@ SEED = 42
 def create_depolarizing_noise_model():
     """
     create noise model of depolarizing error
-    
+
     Returns:
         NoiseModel: depolarizing error noise model
 
@@ -245,7 +245,7 @@ def rb_purity_circuit_execution(rb_opts: dict, shots: int):
                                                  noise_model=noise_model,
                                                  seed_simulator=SEED).result())
             # coherent purity results
-            # THE FILTER IS NOT TESTED YET
+            # THE FITTER IS NOT TESTED YET
             coherent_results.append(qiskit.execute(current_circ, backend=backend,
                                                    basis_gates=basis_gates,
                                                    shots=shots,
@@ -529,7 +529,7 @@ def generate_purity_data(results_file_path_purity: str,
 
     # save the results
     save_results_as_json(rb_purity_results, results_file_path_purity)
-    # coherent filter IS NOT TESTED YET
+    # COHERENT FITTER IS NOT TESTED YET
     save_results_as_json(rb_coherent_results, results_file_path_coherent)
 
     # generate also the expected results of the fitter
@@ -558,7 +558,7 @@ def generate_purity_data(results_file_path_purity: str,
     coherent_fit = convert_ndarray_to_list_in_data(coherent_fit)
 
     coherent_expected_result = {"ydata": coherent_ydata, "fit": coherent_fit}
-    # coherent filter IS NOT TESTED YET
+    # COHERENT FITTER IS NOT TESTED YET
     with open(expected_results_file_path_coherent, "w") as expected_results_file:
         json.dump(coherent_expected_result, expected_results_file)
 
