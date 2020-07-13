@@ -96,7 +96,7 @@ class SpecialPolynomial():
 
     def __mul__(self, other):
         """Multiply two polynomials."""
-        if not isinstance (other, SpecialPolynomial):
+        if not isinstance(other, SpecialPolynomial):
             other = int(other)
         result = SpecialPolynomial(self.n_vars)
         if isinstance(other, int):
@@ -189,9 +189,9 @@ class SpecialPolynomial():
         subsets_2 = itertools.combinations(indices, 2)
         subsets_3 = itertools.combinations(indices, 3)
         self.weight_0 = 0
-        self.weight_1 = (np.zeros(self.n_vars))
-        self.weight_2 = (np.zeros(self.nc2))
-        self.weight_3 = (np.zeros(self.nc3))
+        self.weight_1 = np.zeros(self.n_vars)
+        self.weight_2 = np.zeros(self.nc2)
+        self.weight_3 = np.zeros(self.nc3)
         for j in indices:
             self.set_term([j], 1)
         for j in subsets_2:
@@ -411,7 +411,7 @@ class CNOTDihedral():
         """
         assert (0 <= i < self.num_qubits) and (0 <= j < self.num_qubits) \
                and (i != j), "cnot qubits out of bounds!"
-        self.linear[j] = (self.linear[i]+ self.linear[j]) % 2
+        self.linear[j] = (self.linear[i] + self.linear[j]) % 2
         self.shift[j] = (self.shift[i] + self.shift[j]) % 2
 
     def phase(self, k, i):
