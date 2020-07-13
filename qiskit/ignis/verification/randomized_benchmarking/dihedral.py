@@ -96,14 +96,14 @@ class SpecialPolynomial():
 
     def __mul__(self, other):
         """Multiply two polynomials."""
-        assert isinstance(other, (SpecialPolynomial, int)), \
-            "other isn't poly or int!: %s" % str(other)
+        if not isinstance (other, SpecialPolynomial):
+            other = int(other)
         result = SpecialPolynomial(self.n_vars)
         if isinstance(other, int):
             result.weight_0 = (self.weight_0 * other) % 8
-            result.weight_1 = (((np.array(self.weight_1) * other) % 8).astype(int)).tolist()
-            result.weight_2 = (((np.array(self.weight_2) * other) % 8).astype(int)).tolist()
-            result.weight_3 = (((np.array(self.weight_3) * other) % 8).astype(int)).tolist()
+            result.weight_1 = (self.weight_1 * other) % 8
+            result.weight_2 = (self.weight_2 * other) % 8
+            result.weight_3 = (self.weight_3 * other) % 8
         else:
             assert self.n_vars == other.n_vars, "different n_vars!"
             terms0 = [[]]
@@ -132,9 +132,9 @@ class SpecialPolynomial():
         assert self.n_vars == other.n_vars, "different n_vars!"
         result = SpecialPolynomial(self.n_vars)
         result.weight_0 = (self.weight_0 + other.weight_0) % 8
-        result.weight_1 = (np.array(self.weight_1) + np.array(other.weight_1)) % 8
-        result.weight_2 = (np.array(self.weight_2) + np.array(other.weight_2)) % 8
-        result.weight_3 = (np.array(self.weight_3) + np.array(other.weight_3)) % 8
+        result.weight_1 = (self.weight_1 + other.weight_1) % 8
+        result.weight_2 = (self.weight_2 + other.weight_2) % 8
+        result.weight_3 = (self.weight_3 + other.weight_3) % 8
         return result
 
     def evaluate(self, xval):
@@ -153,7 +153,7 @@ class SpecialPolynomial():
             assert False not in [i.n_vars == self.n_vars for i in xval], \
                 "incompatible polynomials!"
         else:
-            xval = ((((np.array(xval)) % 2)).astype(int)).tolist()
+            xval = xval % 2
         # Examine each term of this polynomial
         terms0 = [[]]
         terms1 = list(combinations(range(self.n_vars), r=1))
@@ -189,9 +189,9 @@ class SpecialPolynomial():
         subsets_2 = itertools.combinations(indices, 2)
         subsets_3 = itertools.combinations(indices, 3)
         self.weight_0 = 0
-        self.weight_1 = (np.zeros(self.n_vars)).tolist()
-        self.weight_2 = (np.zeros(self.nc2)).tolist()
-        self.weight_3 = (np.zeros(self.nc3)).tolist()
+        self.weight_1 = (np.zeros(self.n_vars))
+        self.weight_2 = (np.zeros(self.nc2))
+        self.weight_3 = (np.zeros(self.nc3))
         for j in indices:
             self.set_term([j], 1)
         for j in subsets_2:
@@ -336,18 +336,18 @@ class CNOTDihedral():
         # phase polynomial
         self.poly = SpecialPolynomial(num_qubits)
         # n x n invertible matrix over Z_2
-        self.linear = (np.eye(num_qubits, dtype=np.int8)).tolist()
+        self.linear = np.eye(num_qubits, dtype=np.int8)
         # binary shift, n coefficients in Z_2
         self.shift = np.zeros(num_qubits, dtype=np.int8)
 
     def _z2matmul(self, left, right):
         """Compute product of two n x n z2 matrices."""
-        prod = (np.mod(np.dot(left, right), 2)).tolist()
+        prod = np.mod(np.dot(left, right), 2)
         return prod
 
     def _z2matvecmul(self, mat, vec):
         """Compute mat*vec of n x n z2 matrix and vector."""
-        prod = (np.mod(np.dot(mat, vec), 2)).tolist()
+        prod = np.mod(np.dot(mat, vec), 2)
         return prod
 
     def __mul__(self, other):
@@ -411,7 +411,7 @@ class CNOTDihedral():
         """
         assert (0 <= i < self.num_qubits) and (0 <= j < self.num_qubits) \
                and (i != j), "cnot qubits out of bounds!"
-        self.linear[j] = ((np.array(self.linear[i]) + np.array(self.linear[j])) % 2).tolist()
+        self.linear[j] = (self.linear[i]+ self.linear[j]) % 2
         self.shift[j] = (self.shift[i] + self.shift[j]) % 2
 
     def phase(self, k, i):
@@ -667,7 +667,7 @@ def decompose_cnotdihedral(elem):
     shift = elem.shift
 
     # CS subgroup
-    if linear == [[1, 0], [0, 1]]:
+    if (linear == [[1, 0], [0, 1]]).all():
         [xpow0, xpow1] = shift
 
         # Dihedral class
@@ -747,7 +747,7 @@ def decompose_cnotdihedral(elem):
             circuit.u1(7 * np.pi / 4, 0)
 
     # CX01-like class
-    if linear == [[1, 0], [1, 1]]:
+    if (linear == [[1, 0], [1, 1]]).all():
         xpow0 = shift[0]
         xpow1 = (shift[1] + xpow0) % 2
         if xpow0 == xpow1:
@@ -771,7 +771,7 @@ def decompose_cnotdihedral(elem):
             circuit.u1(m * np.pi / 4, 1)
 
     # CX10-like class
-    if linear == [[1, 1], [0, 1]]:
+    if (linear == [[1, 1], [0, 1]]).all():
         xpow1 = shift[1]
         xpow0 = (shift[0] + xpow1) % 2
         if xpow0 == xpow1:
@@ -795,7 +795,7 @@ def decompose_cnotdihedral(elem):
             circuit.u1(m * np.pi / 4, 0)
 
     # CX01*CX10-like class
-    if linear == [[0, 1], [1, 1]]:
+    if (linear == [[0, 1], [1, 1]]).all():
         xpow1 = shift[0]
         xpow0 = (shift[1] + xpow1) % 2
         if xpow0 == xpow1:
@@ -820,7 +820,7 @@ def decompose_cnotdihedral(elem):
             circuit.u1(m * np.pi / 4, 1)
 
     # CX10*CX01-like class
-    if linear == [[1, 1], [1, 0]]:
+    if (linear == [[1, 1], [1, 0]]).all():
         xpow0 = shift[1]
         xpow1 = (shift[0] + xpow0) % 2
         if xpow0 == xpow1:
@@ -845,7 +845,7 @@ def decompose_cnotdihedral(elem):
             circuit.u1(m * np.pi / 4, 0)
 
     # CX01*CX10*CX01-like class
-    if linear == [[0, 1], [1, 0]]:
+    if (linear == [[0, 1], [1, 0]]).all():
         xpow0 = shift[1]
         xpow1 = shift[0]
         if xpow0 == xpow1:
@@ -908,7 +908,7 @@ def random_cnotdihedral(num_qubits, seed=None):
     while det == 0:
         linear = rng.randint(2, size=(num_qubits, num_qubits))
         det = np.linalg.det(linear) % 2
-    elem.linear = linear.tolist()
+    elem.linear = linear
 
     # Random shift
     shift = rng.randint(2, size=num_qubits)
