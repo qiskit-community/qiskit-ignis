@@ -35,6 +35,7 @@ SEED = 42
 def create_depolarizing_noise_model():
     """
     create noise model of depolarizing error
+    
     Returns:
         NoiseModel: depolarizing error noise model
 
