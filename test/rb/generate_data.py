@@ -32,9 +32,25 @@ from qiskit.providers.aer.noise.errors.standard_errors import depolarizing_error
 SEED = 42
 
 
+def create_depolarizing_noise_model():
+    """
+    create noise model of depolarizing error
+    Returns:
+        NoiseModel: depolarizing error noise model
+
+    """
+    noise_model = NoiseModel()
+    p1q = 0.002
+    p2q = 0.01
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1q, 1), 'u3')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
+    return noise_model
+
+
 def rb_circuit_execution(rb_opts: dict, shots: int):
     """
-    Create rb circuits with depolarizing error and simulates them
+    Create rb circuits with depolarizing error and simulate them
 
     Args:
         rb_opts: the options for the rb circuits
@@ -51,12 +67,7 @@ def rb_circuit_execution(rb_opts: dict, shots: int):
 
     rb_circs, xdata = rb.randomized_benchmarking_seq(**rb_opts)
 
-    noise_model = NoiseModel()
-    p1q = 0.002
-    p2q = 0.01
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1q, 1), 'u3')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
+    noise_model = create_depolarizing_noise_model()
 
     results = []
     for circuit in rb_circs:
@@ -70,7 +81,7 @@ def rb_circuit_execution(rb_opts: dict, shots: int):
 
 def rb_circuit_execution_2(rb_opts: dict, shots: int):
     """
-        Create rb circuits with T1 and T2 errors and simulates them
+        Create rb circuits with T1 and T2 errors and simulate them
 
         Args:
             rb_opts: the options for the rb circuits
@@ -112,7 +123,7 @@ def rb_circuit_execution_2(rb_opts: dict, shots: int):
 
 def rb_interleaved_execution(rb_opts: dict, shots: int):
     """
-        Create interleaved rb circuits with depolarizing error and simulates them
+        Create interleaved rb circuits with depolarizing error and simulate them
         Args:
             rb_opts: the options for the rb circuits
             shots: number of shots for each circuit simulation
@@ -129,12 +140,7 @@ def rb_interleaved_execution(rb_opts: dict, shots: int):
 
     rb_original_circs, xdata, rb_interleaved_circs = rb.randomized_benchmarking_seq(**rb_opts)
 
-    noise_model = NoiseModel()
-    p1q = 0.002
-    p2q = 0.01
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1q, 1), 'u3')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
+    noise_model = create_depolarizing_noise_model()
 
     results = []
     for circuit in rb_original_circs:
@@ -154,7 +160,7 @@ def rb_interleaved_execution(rb_opts: dict, shots: int):
 
 def rb_cnotdihedral_execution(rb_opts: dict, shots: int):
     """
-        Create cnot-dihedral rb circuits with depolarizing errors and simulates them
+        Create cnot-dihedral rb circuits with depolarizing errors and simulate them
 
         Args:
             rb_opts: the options for the rb circuits
@@ -173,13 +179,7 @@ def rb_cnotdihedral_execution(rb_opts: dict, shots: int):
     rb_cnotdihedral_z_circs, xdata, rb_cnotdihedral_x_circs = \
         rb.randomized_benchmarking_seq(**rb_opts)
 
-    # Add depolarizing noise to the simulation
-    noise_model = NoiseModel()
-    p1q = 0.002
-    p2q = 0.01
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1q, 1), 'u3')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
+    noise_model = create_depolarizing_noise_model()
 
     cnotdihedral_x_results = []
     for circuit in rb_cnotdihedral_x_circs:
@@ -199,7 +199,7 @@ def rb_cnotdihedral_execution(rb_opts: dict, shots: int):
 
 def rb_purity_circuit_execution(rb_opts: dict, shots: int):
     """
-        Create purity rb circuits with depolarizing errors and simulates them
+        Create purity rb circuits with depolarizing errors and simulate them
 
         Args:
             rb_opts: the options for the rb circuits
@@ -218,13 +218,7 @@ def rb_purity_circuit_execution(rb_opts: dict, shots: int):
 
     rb_purity_circs, xdata, npurity = rb.randomized_benchmarking_seq(**rb_opts)
 
-    # Add depolarizing noise to the simulation
-    noise_model = NoiseModel()
-    p1q = 0.002
-    p2q = 0.01
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1q, 1), 'u3')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
+    noise_model = create_depolarizing_noise_model()
 
     # coherent noise
     err_unitary = np.zeros([2, 2], dtype=complex)
@@ -250,6 +244,7 @@ def rb_purity_circuit_execution(rb_opts: dict, shots: int):
                                                  noise_model=noise_model,
                                                  seed_simulator=SEED).result())
             # coherent purity results
+            # THE FILTER IS NOT TESTED YET
             coherent_results.append(qiskit.execute(current_circ, backend=backend,
                                                    basis_gates=basis_gates,
                                                    shots=shots,
@@ -533,6 +528,7 @@ def generate_purity_data(results_file_path_purity: str,
 
     # save the results
     save_results_as_json(rb_purity_results, results_file_path_purity)
+    # coherent filter IS NOT TESTED YET
     save_results_as_json(rb_coherent_results, results_file_path_coherent)
 
     # generate also the expected results of the fitter
@@ -561,6 +557,7 @@ def generate_purity_data(results_file_path_purity: str,
     coherent_fit = convert_ndarray_to_list_in_data(coherent_fit)
 
     coherent_expected_result = {"ydata": coherent_ydata, "fit": coherent_fit}
+    # coherent filter IS NOT TESTED YET
     with open(expected_results_file_path_coherent, "w") as expected_results_file:
         json.dump(coherent_expected_result, expected_results_file)
 
