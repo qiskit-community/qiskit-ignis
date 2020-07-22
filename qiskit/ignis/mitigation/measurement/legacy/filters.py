@@ -26,7 +26,7 @@ import numpy as np
 import qiskit
 from qiskit import QiskitError
 from qiskit.tools import parallel_map
-from ...verification.tomography import count_keys
+from qiskit.ignis.verification.tomography import count_keys
 
 
 class MeasurementFilter():

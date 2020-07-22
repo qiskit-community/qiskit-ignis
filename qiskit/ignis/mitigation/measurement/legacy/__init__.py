@@ -11,10 +11,14 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
+
 """
-Measurement error mitigation module
+Measurement correction module
+
 """
 
-# Legacy Measurement Error mitigation
-from .legacy import (complete_meas_cal, tensored_meas_cal, MeasurementFilter,
-                     TensoredFilter, CompleteMeasFitter, TensoredMeasFitter)
+# Measurement correction functions
+from .circuits import complete_meas_cal, tensored_meas_cal
+from .filters import MeasurementFilter, TensoredFilter
+from .fitters import CompleteMeasFitter, TensoredMeasFitter
