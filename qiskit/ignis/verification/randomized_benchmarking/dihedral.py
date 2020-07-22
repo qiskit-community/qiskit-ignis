@@ -35,6 +35,7 @@ Example:
 """
 
 import itertools
+from itertools import combinations
 import copy
 from functools import reduce
 from operator import mul
@@ -63,9 +64,9 @@ class SpecialPolynomial():
         self.nc2 = int(n_vars * (n_vars-1) / 2)
         self.nc3 = int(n_vars * (n_vars-1) * (n_vars-2) / 6)
         self.weight_0 = 0
-        self.weight_1 = n_vars * [0]
-        self.weight_2 = self.nc2 * [0]
-        self.weight_3 = self.nc3 * [0]
+        self.weight_1 = np.zeros(n_vars, dtype=np.int8)
+        self.weight_2 = np.zeros(self.nc2, dtype=np.int8)
+        self.weight_3 = np.zeros(self.nc3, dtype=np.int8)
 
     def mul_monomial(self, indices):
         """Multiply by a monomial given by indices.
@@ -74,48 +75,41 @@ class SpecialPolynomial():
         """
         length = len(indices)
         assert length < 4, "no term!"
-        assert True not in [x < 0 or x >= self.n_vars for x in indices], \
+        indices_arr = np.array(indices)
+        assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
             "indices out of bounds!"
-        assert False not in [indices[i] < indices[i+1]
-                             for i in range(length-1)], \
-            "indices non-increasing!"
+        if length > 1:
+            assert (np.diff(indices_arr) > 0).all(), "indices non-increasing!"
         result = SpecialPolynomial(self.n_vars)
         if length == 0:
             result = copy.deepcopy(self)
         else:
             terms0 = [[]]
-            terms1 = [[i] for i in range(self.n_vars)]
-            terms2 = [[i, j] for i in range(self.n_vars-1)
-                      for j in range(i+1, self.n_vars)]
-            terms3 = [[i, j, k] for i in range(self.n_vars-2)
-                      for j in range(i+1, self.n_vars-1)
-                      for k in range(j+1, self.n_vars)]
+            terms1 = list(combinations(range(self.n_vars), r=1))
+            terms2 = list(combinations(range(self.n_vars), r=2))
+            terms3 = list(combinations(range(self.n_vars), r=3))
             for term in terms0 + terms1 + terms2 + terms3:
                 value = self.get_term(term)
                 new_term = list(set(term).union(set(indices)))
-                result.set_term(new_term, (result.get_term(new_term) +
-                                           value) % 8)
+                result.set_term(new_term, (result.get_term(new_term) + value) % 8)
         return result
 
     def __mul__(self, other):
         """Multiply two polynomials."""
-        assert isinstance(other, (SpecialPolynomial, int)), \
-            "other isn't poly or int!: %s" % str(other)
+        if not isinstance(other, SpecialPolynomial):
+            other = int(other)
         result = SpecialPolynomial(self.n_vars)
         if isinstance(other, int):
             result.weight_0 = (self.weight_0 * other) % 8
-            result.weight_1 = [(x * other) % 8 for x in self.weight_1]
-            result.weight_2 = [(x * other) % 8 for x in self.weight_2]
-            result.weight_3 = [(x * other) % 8 for x in self.weight_3]
+            result.weight_1 = (self.weight_1 * other) % 8
+            result.weight_2 = (self.weight_2 * other) % 8
+            result.weight_3 = (self.weight_3 * other) % 8
         else:
             assert self.n_vars == other.n_vars, "different n_vars!"
             terms0 = [[]]
-            terms1 = [[i] for i in range(self.n_vars)]
-            terms2 = [[i, j] for i in range(self.n_vars-1)
-                      for j in range(i+1, self.n_vars)]
-            terms3 = [[i, j, k] for i in range(self.n_vars-2)
-                      for j in range(i+1, self.n_vars-1)
-                      for k in range(j+1, self.n_vars)]
+            terms1 = list(combinations(range(self.n_vars), r=1))
+            terms2 = list(combinations(range(self.n_vars), r=2))
+            terms3 = list(combinations(range(self.n_vars), r=3))
             for term in terms0 + terms1 + terms2 + terms3:
                 value = other.get_term(term)
                 if value != 0:
@@ -138,12 +132,9 @@ class SpecialPolynomial():
         assert self.n_vars == other.n_vars, "different n_vars!"
         result = SpecialPolynomial(self.n_vars)
         result.weight_0 = (self.weight_0 + other.weight_0) % 8
-        result.weight_1 = [(x[0] + x[1]) % 8
-                           for x in zip(self.weight_1, other.weight_1)]
-        result.weight_2 = [(x[0] + x[1]) % 8
-                           for x in zip(self.weight_2, other.weight_2)]
-        result.weight_3 = [(x[0] + x[1]) % 8
-                           for x in zip(self.weight_3, other.weight_3)]
+        result.weight_1 = (self.weight_1 + other.weight_1) % 8
+        result.weight_2 = (self.weight_2 + other.weight_2) % 8
+        result.weight_3 = (self.weight_3 + other.weight_3) % 8
         return result
 
     def evaluate(self, xval):
@@ -155,23 +146,19 @@ class SpecialPolynomial():
         """
         assert len(xval) == self.n_vars, "wrong number of variables!"
         check_int = list(map(lambda x: isinstance(x, int), xval))
-        check_poly = list(map(lambda x: isinstance(x, SpecialPolynomial),
-                              xval))
+        check_poly = list(map(lambda x: isinstance(x, SpecialPolynomial), xval))
         assert False not in check_int or False not in check_poly, "wrong type!"
         is_int = (False not in check_int)
         if not is_int:
             assert False not in [i.n_vars == self.n_vars for i in xval], \
                 "incompatible polynomials!"
         else:
-            xval = [x % 2 for x in xval]
+            xval = xval % 2
         # Examine each term of this polynomial
         terms0 = [[]]
-        terms1 = [[i] for i in range(self.n_vars)]
-        terms2 = [[i, j] for i in range(self.n_vars-1)
-                  for j in range(i+1, self.n_vars)]
-        terms3 = [[i, j, k] for i in range(self.n_vars-2)
-                  for j in range(i+1, self.n_vars-1)
-                  for k in range(j+1, self.n_vars)]
+        terms1 = list(combinations(range(self.n_vars), r=1))
+        terms2 = list(combinations(range(self.n_vars), r=2))
+        terms3 = list(combinations(range(self.n_vars), r=3))
         # Set the initial result and start for each term
         if is_int:
             result = 0
@@ -195,15 +182,16 @@ class SpecialPolynomial():
 
         p_J(x) := sum_{a subseteq J,|a| neq 0} (-2)^{|a|-1}x^a
         """
-        assert True not in [x < 0 or x >= self.n_vars for x in indices], \
+        indices_arr = np.array(indices)
+        assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
             "indices out of bounds!"
         indices = sorted(indices)
         subsets_2 = itertools.combinations(indices, 2)
         subsets_3 = itertools.combinations(indices, 3)
         self.weight_0 = 0
-        self.weight_1 = self.n_vars * [0]
-        self.weight_2 = self.nc2 * [0]
-        self.weight_3 = self.nc3 * [0]
+        self.weight_1 = np.zeros(self.n_vars)
+        self.weight_2 = np.zeros(self.nc2)
+        self.weight_3 = np.zeros(self.nc3)
         for j in indices:
             self.set_term([j], 1)
         for j in subsets_2:
@@ -225,11 +213,11 @@ class SpecialPolynomial():
         """
         length = len(indices)
         assert length < 4, "no term!"
-        assert True not in [x < 0 or x >= self.n_vars for x in indices], \
+        indices_arr = np.array(indices)
+        assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
             "indices out of bounds!"
-        assert False not in [indices[i] < indices[i+1]
-                             for i in range(length-1)], \
-            "indices non-increasing!"
+        if length > 1:
+            assert (np.diff(indices_arr) > 0).all(), "indices non-increasing!"
         if length == 0:
             return self.weight_0
         if length == 1:
@@ -267,11 +255,11 @@ class SpecialPolynomial():
         """
         length = len(indices)
         assert length < 4, "no term!"
-        assert True not in [x < 0 or x >= self.n_vars for x in indices], \
+        indices_arr = np.array(indices)
+        assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
             "indices out of bounds!"
-        assert False not in [indices[i] < indices[i+1]
-                             for i in range(length-1)], \
-            "indices non-increasing!"
+        if length > 1:
+            assert (np.diff(indices_arr) > 0).all(), "indices non-increasing!"
         value = value % 8
         if length == 0:
             self.weight_0 = value
@@ -348,28 +336,18 @@ class CNOTDihedral():
         # phase polynomial
         self.poly = SpecialPolynomial(num_qubits)
         # n x n invertible matrix over Z_2
-        self.linear = [[int(r == c) for c in range(num_qubits)]
-                       for r in range(num_qubits)]
+        self.linear = np.eye(num_qubits, dtype=np.int8)
         # binary shift, n coefficients in Z_2
-        self.shift = num_qubits * [0]
+        self.shift = np.zeros(num_qubits, dtype=np.int8)
 
     def _z2matmul(self, left, right):
         """Compute product of two n x n z2 matrices."""
-        prod = [[0 for col in range(self.num_qubits)]
-                for row in range(self.num_qubits)]
-        for i in range(self.num_qubits):
-            for j in range(self.num_qubits):
-                for k in range(self.num_qubits):
-                    prod[i][j] = (prod[i][j] +
-                                  left[i][k]*right[k][j]) % 2
+        prod = np.mod(np.dot(left, right), 2)
         return prod
 
     def _z2matvecmul(self, mat, vec):
         """Compute mat*vec of n x n z2 matrix and vector."""
-        prod = [0 for row in range(self.num_qubits)]
-        for i in range(self.num_qubits):
-            for j in range(self.num_qubits):
-                prod[i] = (prod[i] + mat[i][j] * vec[j]) % 2
+        prod = np.mod(np.dot(mat, vec), 2)
         return prod
 
     def __mul__(self, other):
@@ -377,14 +355,12 @@ class CNOTDihedral():
         assert self.num_qubits == other.num_qubits, "not same num_qubits!"
         result = CNOTDihedral(self.num_qubits)
         result.shift = [(x[0] + x[1]) % 2
-                        for x in zip(self._z2matvecmul(self.linear,
-                                                       other.shift),
-                                     self.shift)]
+                        for x in zip(self._z2matvecmul(self.linear, other.shift), self.shift)]
         result.linear = self._z2matmul(self.linear, other.linear)
         # Compute x' = B1*x + c1 using the p_j identity
         new_vars = []
         for i in range(self.num_qubits):
-            support = [j for j, e in enumerate(other.linear[i]) if e != 0]
+            support = np.arange(self.num_qubits)[np.nonzero(other.linear[i])]
             poly = SpecialPolynomial(self.num_qubits)
             poly.set_pj(support)
             if other.shift[i] == 1:
@@ -407,7 +383,7 @@ class CNOTDihedral():
         # Compute x' = B1*x + c1 using the p_j identity
         new_vars = []
         for i in range(self.num_qubits):
-            support = [j for j, e in enumerate(self.linear[i]) if e != 0]
+            support = np.arange(self.num_qubits)[np.nonzero(self.linear[i])]
             poly = SpecialPolynomial(self.num_qubits)
             poly.set_pj(support)
             if other.shift[i] == 1:
@@ -433,28 +409,23 @@ class CNOTDihedral():
         """Apply a CNOT gate to this element.
         Left multiply the element by CNOT_{i,j}.
         """
-        assert i >= 0, "i negative!"
-        assert j >= 0, "j negative!"
-        assert i < self.num_qubits, "i too big!"
-        assert j < self.num_qubits, "j too big!"
-        assert i != j, "i == j!"
-        self.linear[j] = [(self.linear[i][k] + self.linear[j][k]) % 2
-                          for k in range(self.num_qubits)]
+        assert (0 <= i < self.num_qubits) and (0 <= j < self.num_qubits) \
+               and (i != j), "cnot qubits out of bounds!"
+        self.linear[j] = (self.linear[i] + self.linear[j]) % 2
         self.shift[j] = (self.shift[i] + self.shift[j]) % 2
 
     def phase(self, k, i):
         """Apply an k-th power of T to this element.
         Left multiply the element by T_i^k.
         """
-        assert i >= 0, "i negative!"
-        assert i < self.num_qubits, "i too big!"
+        assert 0 <= i < self.num_qubits, "phase qubit out of bounds!"
         # If the kth bit is flipped, conjugate this gate
         if self.shift[i] == 1:
             k = (7*k) % 8
         # Take all subsets \alpha of the support of row i
         # of weight up to 3 and add k*(-2)**(|\alpha| - 1) mod 8
         # to the corresponding term.
-        support = [j for j, e in enumerate(self.linear[i]) if e != 0]
+        support = np.arange(self.num_qubits)[np.nonzero(self.linear[i])]
         subsets_2 = itertools.combinations(support, 2)
         subsets_3 = itertools.combinations(support, 3)
         for j in support:
@@ -471,8 +442,7 @@ class CNOTDihedral():
         """Apply X to this element.
         Left multiply the element by X_i.
         """
-        assert i >= 0, "i negative!"
-        assert i < self.num_qubits, "i too big!"
+        assert 0 <= i < self.num_qubits, "flip qubit out of bounds!"
         self.shift[i] = (self.shift[i] + 1) % 2
 
     def __str__(self):
@@ -697,7 +667,7 @@ def decompose_cnotdihedral(elem):
     shift = elem.shift
 
     # CS subgroup
-    if linear == [[1, 0], [0, 1]]:
+    if (linear == [[1, 0], [0, 1]]).all():
         [xpow0, xpow1] = shift
 
         # Dihedral class
@@ -777,7 +747,7 @@ def decompose_cnotdihedral(elem):
             circuit.u1(7 * np.pi / 4, 0)
 
     # CX01-like class
-    if linear == [[1, 0], [1, 1]]:
+    if (linear == [[1, 0], [1, 1]]).all():
         xpow0 = shift[0]
         xpow1 = (shift[1] + xpow0) % 2
         if xpow0 == xpow1:
@@ -801,7 +771,7 @@ def decompose_cnotdihedral(elem):
             circuit.u1(m * np.pi / 4, 1)
 
     # CX10-like class
-    if linear == [[1, 1], [0, 1]]:
+    if (linear == [[1, 1], [0, 1]]).all():
         xpow1 = shift[1]
         xpow0 = (shift[0] + xpow1) % 2
         if xpow0 == xpow1:
@@ -825,7 +795,7 @@ def decompose_cnotdihedral(elem):
             circuit.u1(m * np.pi / 4, 0)
 
     # CX01*CX10-like class
-    if linear == [[0, 1], [1, 1]]:
+    if (linear == [[0, 1], [1, 1]]).all():
         xpow1 = shift[0]
         xpow0 = (shift[1] + xpow1) % 2
         if xpow0 == xpow1:
@@ -850,7 +820,7 @@ def decompose_cnotdihedral(elem):
             circuit.u1(m * np.pi / 4, 1)
 
     # CX10*CX01-like class
-    if linear == [[1, 1], [1, 0]]:
+    if (linear == [[1, 1], [1, 0]]).all():
         xpow0 = shift[1]
         xpow1 = (shift[0] + xpow0) % 2
         if xpow0 == xpow1:
@@ -875,7 +845,7 @@ def decompose_cnotdihedral(elem):
             circuit.u1(m * np.pi / 4, 0)
 
     # CX01*CX10*CX01-like class
-    if linear == [[0, 1], [1, 0]]:
+    if (linear == [[0, 1], [1, 0]]).all():
         xpow0 = shift[1]
         xpow1 = shift[0]
         if xpow0 == xpow1:
@@ -938,7 +908,7 @@ def random_cnotdihedral(num_qubits, seed=None):
     while det == 0:
         linear = rng.randint(2, size=(num_qubits, num_qubits))
         det = np.linalg.det(linear) % 2
-    elem.linear = linear.tolist()
+    elem.linear = linear
 
     # Random shift
     shift = rng.randint(2, size=num_qubits)
