@@ -14,6 +14,10 @@
 """
 CTMP measurement error mitigation.
 """
+
+from .ctmp_mitigator import CTMPMeasMitigator
+from .ctmp_fitter import fit_ctmp_meas_mitigator
+
 from .calibration import (
     MeasurementCalibrator,
     StandardCalibrationCircuitSet,
