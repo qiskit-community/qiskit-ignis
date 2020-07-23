@@ -27,4 +27,7 @@ from .complete_method import (CompleteMeasMitigator,
 from .tensored_method import (TensoredMeasMitigator,
                               fit_tensored_meas_mitigator)
 
+from .ctmp_method import (CTMPMeasMitigator,
+                          fit_ctmp_meas_mitigator)
+
 from .meas_mit_utils import counts_expectation_value, counts_probability_vector
