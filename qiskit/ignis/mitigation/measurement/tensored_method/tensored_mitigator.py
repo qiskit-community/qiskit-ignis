@@ -49,7 +49,17 @@ class TensoredMeasMitigator(BaseMeasMitigator):
             self._mitigation_mats[i] = ainv
 
     def mitigation_matrix(self, qubits: List[int] = None) -> np.ndarray:
-        """Return the mitigation matrix for specified qubits."""
+        r"""Return the measurement mitigation matrix for the specified qubits.
+
+        The mitigation matrix :math:`A^{-1}` is defined as the inverse of the
+        :meth:`assignment_matrix` :math:`A`.
+
+        Args:
+            qubits: Optional, qubits being measured for operator expval.
+
+        Returns:
+            np.ndarray: the measurement error mitigation matrix :math:`A^{-1}`.
+        """
         if qubits is None:
             qubits = list(range(self._num_qubits))
         if isinstance(qubits, int):
@@ -60,7 +70,18 @@ class TensoredMeasMitigator(BaseMeasMitigator):
         return mat
 
     def assignment_matrix(self, qubits: List[int] = None) -> np.ndarray:
-        """Return the measure assignment matrix for specified qubits."""
+        r"""Return the measurement assignment matrix for specified qubits.
+
+        The assignment matrix is the stochastic matrix :math:`A` which assigns
+        a noisy measurement probability distribution to an ideal input
+        measurement distribution: :math:`P(i|j) = \langle i | A | j \rangle`.
+
+        Args:
+            qubits: Optional, qubits being measured for operator expval.
+
+        Returns:
+            np.ndarray: the assignment matrix A.
+        """
         if qubits is None:
             qubits = list(range(self._num_qubits))
         if isinstance(qubits, int):
