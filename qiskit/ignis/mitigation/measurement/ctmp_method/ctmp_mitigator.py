@@ -285,6 +285,12 @@ class CTMPMeasMitigator(BaseMeasMitigator):
         if self._g_mat is None:
             self._compute_g_mat()
         g_mat = -self._g_mat.tocoo()
+
+        # Check ideal case
+        if g_mat.row.size == 0:
+            self._gamma = 0
+            return
+
         gamma = np.max(g_mat.data[g_mat.row == g_mat.col])
         if gamma < 0:
             raise QiskitError(
@@ -297,7 +303,10 @@ class CTMPMeasMitigator(BaseMeasMitigator):
             self._compute_g_mat()
         if self._gamma is None:
             self._compute_little_gamma()
-        b_mat = sps.eye(2**self._num_qubits) + self._g_mat / self._gamma
+
+        b_mat = sps.eye(2**self._num_qubits)
+        if self._gamma != 0:
+            b_mat = b_mat + self._g_mat / self._gamma
         self._b_mat = b_mat.tocsc()
 
     @staticmethod
