@@ -19,6 +19,7 @@ from typing import Dict, Optional, List, Tuple, Union
 from collections import Counter
 
 import numpy as np
+import scipy.linalg as la
 import scipy.sparse as sps
 
 from qiskit.exceptions import QiskitError
@@ -113,6 +114,61 @@ class CTMPMeasMitigator(BaseMeasMitigator):
         exp_vals = np.array(exp_vals) * norm_c1 / shots * len(exp_vals)
         mean = np.mean(exp_vals)
         return mean
+
+    def mitigation_matrix(self, qubits: List[int] = None) -> np.ndarray:
+        r"""Return the measurement mitigation matrix for the specified qubits.
+
+        The mitigation matrix :math:`A^{-1}` is defined as the inverse of the
+        :meth:`assignment_matrix` :math:`A`.
+
+        Args:
+            qubits: Optional, qubits being measured for operator expval.
+
+        Returns:
+            np.ndarray: the measurement error mitigation matrix :math:`A^{-1}`.
+
+        Raises:
+            NotImplementedError: if qubits kwarg is used.
+        """
+        # TODO: This method needs to be updated to compute reduced G-matrix
+        # on subsets of qubit to exponentiate to make the A-matrix.
+        if qubits is not None:
+            raise NotImplementedError(
+                'qubits kwarg is not yet implemented for CTMP method.')
+
+        # NOTE: the matrix definition of G is somehow flipped in both row and
+        # columns compared to the canonical ordering for the A-matrix used
+        # in the Complete and Tensored methods
+        gmat = np.flip(self._g_mat.todense())
+        return la.expm(-gmat)
+
+    def assignment_matrix(self, qubits: List[int] = None) -> np.ndarray:
+        r"""Return the measurement assignment matrix for specified qubits.
+
+        The assignment matrix is the stochastic matrix :math:`A` which assigns
+        a noisy measurement probability distribution to an ideal input
+        measurement distribution: :math:`P(i|j) = \langle i | A | j \rangle`.
+
+        Args:
+            qubits: Optional, qubits being measured for operator expval.
+
+        Returns:
+            np.ndarray: the assignment matrix A.
+
+        Raises:
+            NotImplementedError: if qubits kwarg is used.
+        """
+        # TODO: This method needs to be updated to compute reduced G-matrix
+        # on subsets of qubit to exponentiate to make the A-matrix.
+        if qubits is not None:
+            raise NotImplementedError(
+                'qubits kwarg is not yet implemented for CTMP method.')
+
+        # NOTE: the matrix definition of G is somehow flipped in both row and
+        # columns compared to the canonical ordering for the A-matrix used
+        # in the Complete and Tensored methods
+        gmat = np.flip(self._g_mat.todense())
+        return la.expm(gmat)
 
     def _compute_gamma(self, qubits=None):
         """Compute gamma for N-qubit mitigation"""
