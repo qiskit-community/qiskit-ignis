@@ -23,7 +23,7 @@ from qiskit.exceptions import QiskitError
 from qiskit.result import Result
 from .ctmp_mitigator import CTMPMeasMitigator
 from .ctmp_generator_set import Generator, standard_generator_set
-from ..meas_mit_utils import filter_calibration_data
+from ..meas_mit_utils import calibration_data, assignment_matrix
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def fit_ctmp_meas_mitigator(result: Result,
         Measurement error mitigator object.
     """
     # Filter mitigation calibration data
-    cal_data, num_qubits = filter_calibration_data(result, metadata)
+    cal_data, num_qubits = calibration_data(result, metadata)
     if generators is None:
         generators = standard_generator_set(num_qubits)
 
@@ -118,49 +118,13 @@ def _get_ctmp_error_rate(gen: Generator,
     return rate
 
 
-def _local_a_matrix(j: int, k: int,
-                    cal_data: Dict[str, Dict[str, int]],
-                    num_qubits: int) -> np.array:
-    """Computes the local A(j,k) matrix for qubits i,k."""
-    if j == k:
-        raise QiskitError('Qubits j, k must be distinct')
-
-    # Compute masks
-    mask_j = 1 << j
-    mask_k = 1 << k
-
-    mask_other = 0
-    other_qubits = set(range(num_qubits)) - set([j, k])
-    for i in other_qubits:
-        mask_other += 1 << i
-
-    # Construct a matrix
-    amat = np.zeros((4, 4), dtype=float)
-    for cal, counts in cal_data.items():
-        x = int(cal, 2)
-        x_out = x & mask_other
-        x_j = (x & mask_j) >> j
-        x_k = (x & mask_k) >> k
-        ind_x = (x_j << 1) + x_k
-        col = amat[:, ind_x]
-        for key, val in counts.items():
-            y = int(key, 2)
-            y_out = y & mask_other
-            if x_out == y_out:
-                y_j = (y & mask_j) >> j
-                y_k = (y & mask_k) >> k
-                ind_y = (y_j << 1) + y_k
-                col[ind_y] += val
-    return amat / amat.sum(axis=0, keepdims=True)
-
-
 def _local_g_matrix(gen: Generator,
-                    cal_data: Dict[str, Dict[str, int]],
+                    cal_data: Dict[int, Dict[int, int]],
                     num_qubits: int) -> np.array:
     """Computes the G(j,k) matrix in the basis [00, 01, 10, 11]."""
     _, _, c = gen
     j, k = c
-    a_mat = _local_a_matrix(j, k, cal_data, num_qubits)
+    a_mat = assignment_matrix(cal_data, num_qubits, [j, k])
     g = la.logm(a_mat)
     if np.linalg.norm(np.imag(g)) > 1e-3:
         raise QiskitError('Encountered complex entries in G_i={}'.format(g))

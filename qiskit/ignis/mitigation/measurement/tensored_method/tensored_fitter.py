@@ -15,12 +15,9 @@
 Tensor-product matrix measurement error mitigation generator.
 """
 from typing import List, Dict
-import numpy as np
 
 from qiskit.result import Result
-from qiskit.exceptions import QiskitError
-from qiskit.ignis.verification.tomography import marginal_counts, combine_counts
-from ..meas_mit_utils import counts_probability_vector, filter_calibration_data
+from ..meas_mit_utils import calibration_data, assignment_matrix
 from .tensored_mitigator import TensoredMeasMitigator
 
 
@@ -43,25 +40,12 @@ def fit_tensored_meas_mitigator(
         Measurement error mitigator object.
     """
     # Filter mitigation calibration data
-    cal_data, num_qubits = filter_calibration_data(result, metadata)
+    cal_data, num_qubits = calibration_data(result, metadata)
 
     # Construct single-qubit A-matrices from calibration data
     amats = []
     for qubit in range(num_qubits):
-        counts0 = {}
-        counts1 = {}
-        # Marginalize counts
-        for label, counts in cal_data.items():
-            m_counts = marginal_counts(counts, meas_qubits=[qubit])
-            m_label = label[-1 - qubit]
-            if m_label == '0':
-                counts0 = combine_counts(counts0, m_counts)
-            elif m_label == '1':
-                counts1 = combine_counts(counts1, m_counts)
-            else:
-                raise QiskitError('Invalid calibration label')
-        amat = np.array([counts_probability_vector(counts0),
-                         counts_probability_vector(counts1)]).T
+        amat = assignment_matrix(cal_data, num_qubits, [qubit])
         amats.append(amat)
 
     return TensoredMeasMitigator(amats)

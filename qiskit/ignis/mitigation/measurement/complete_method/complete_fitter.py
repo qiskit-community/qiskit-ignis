@@ -15,10 +15,9 @@
 Full-matrix measurement error mitigation generator.
 """
 from typing import List, Dict
-import numpy as np
 
 from qiskit.result import Result
-from ..meas_mit_utils import counts_probability_vector, filter_calibration_data
+from ..meas_mit_utils import calibration_data, assignment_matrix
 from .complete_mitigator import CompleteMeasMitigator
 
 # NOTE: This is a temporary fitter function and should be replaced with a
@@ -38,13 +37,9 @@ def fit_complete_meas_mitigator(
         Measurement error mitigator object.
     """
     # Filter mitigation calibration data
-    cal_data, num_qubits = filter_calibration_data(result, metadata)
+    cal_data, num_qubits = calibration_data(result, metadata)
 
     # Construct A-matrix from calibration data
-    amat = np.zeros(2 * [2 ** num_qubits], dtype=float)
-    for key, counts in cal_data.items():
-        vec = counts_probability_vector(counts)
-        index = int(key, 2)
-        amat[:, index] = vec
+    amat = assignment_matrix(cal_data, num_qubits)
 
     return CompleteMeasMitigator(amat)

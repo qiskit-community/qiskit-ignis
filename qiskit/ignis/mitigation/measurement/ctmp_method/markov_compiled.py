@@ -11,35 +11,14 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-"""Simulate Markov processes.
-"""
+"""Simulate Markov processes."""
 
-import logging
 import random
 from typing import List, Union
 
 import numpy as np
 from scipy import sparse
-
-logger = logging.getLogger(__name__)
-
-try:
-    import numba
-
-    USE_NUMBA = True
-except ImportError:
-    USE_NUMBA = False
-    logger.info('Numba not installed, for faster mitigation install numba'
-                'https://pypi.org/project/numba/')
-
-
-def jit_fallback(func):
-    """Decorator to try to apply numba JIT compilation.
-    """
-    if USE_NUMBA:
-        return numba.jit(nopython=True)(func)
-    else:
-        return func
+from qiskit.ignis.numba import jit_fallback
 
 
 @jit_fallback
