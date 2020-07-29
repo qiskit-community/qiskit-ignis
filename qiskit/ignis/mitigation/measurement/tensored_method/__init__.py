@@ -14,6 +14,4 @@
 """
 Tensor-product measurement error mitigation.
 """
-
-from .tensored_fitter import fit_tensored_meas_mitigator
 from .tensored_mitigator import TensoredMeasMitigator

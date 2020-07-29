@@ -20,14 +20,8 @@ from .legacy import (complete_meas_cal, tensored_meas_cal, MeasurementFilter,
                      TensoredFilter, CompleteMeasFitter, TensoredMeasFitter)
 
 from .meas_mit_generator import MeasMitigatorGenerator
-
-from .complete_method import (CompleteMeasMitigator,
-                              fit_complete_meas_mitigator)
-
-from .tensored_method import (TensoredMeasMitigator,
-                              fit_tensored_meas_mitigator)
-
-from .ctmp_method import (CTMPMeasMitigator,
-                          fit_ctmp_meas_mitigator)
-
+from .meas_mit_fitter import MeasMitigatorFitter
+from .complete_method import CompleteMeasMitigator
+from .tensored_method import TensoredMeasMitigator
+from .ctmp_method import CTMPMeasMitigator
 from .meas_mit_utils import counts_expectation_value, counts_probability_vector

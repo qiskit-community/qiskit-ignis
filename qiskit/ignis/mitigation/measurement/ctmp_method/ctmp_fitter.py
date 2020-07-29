@@ -23,26 +23,24 @@ from qiskit.exceptions import QiskitError
 from qiskit.result import Result
 from .ctmp_mitigator import CTMPMeasMitigator
 from .ctmp_generator_set import Generator, standard_generator_set
-from ..meas_mit_utils import calibration_data, assignment_matrix
+from ..meas_mit_utils import assignment_matrix
 
 logger = logging.getLogger(__name__)
 
 
-def fit_ctmp_meas_mitigator(result: Result,
-                            metadata: List[Dict[str, any]],
+def fit_ctmp_meas_mitigator(cal_data: Dict[int, Dict[int, int]],
+                            num_qubits: int,
                             generators: List[Generator] = None) -> CTMPMeasMitigator:
     """Return FullMeasureErrorMitigator from result data.
 
     Args:
-        result: Qiskit result object.
-        metadata: mitigation generator metadata.
+        cal_data: calibration dataset.
+        num_qubits: the number of qubits for the calibation dataset.
         generators: Optional, input generator set.
 
     Returns:
         Measurement error mitigator object.
     """
-    # Filter mitigation calibration data
-    cal_data, num_qubits = calibration_data(result, metadata)
     if generators is None:
         generators = standard_generator_set(num_qubits)
 
