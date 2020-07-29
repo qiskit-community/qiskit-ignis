@@ -14,5 +14,4 @@
 """
 Full-matrix measurement error mitigation.
 """
-from .complete_fitter import fit_complete_meas_mitigator
 from .complete_mitigator import CompleteMeasMitigator
