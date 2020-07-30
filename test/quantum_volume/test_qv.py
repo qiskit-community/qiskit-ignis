@@ -19,9 +19,58 @@ Run through Quantum volume
 """
 
 import unittest
-import os
-from test.utils import load_results_from_json
+
+import qiskit
 import qiskit.ignis.verification.quantum_volume as qv
+from qiskit.providers.aer.noise import NoiseModel
+from qiskit.providers.aer.noise.errors.standard_errors import depolarizing_error
+
+SEED = 42
+
+
+def qv_circuit_execution(qubit_lists: list, ntrials: int, shots: int):
+    """
+    create quantum volume circuits, simulate the ideal state and run a noisy simulation
+    Args:
+        qubit_lists (list): list of lists of qubits to apply qv circuits to
+        ntrials (int): number of iterations (number of circuits)
+        shots (int): number of shots per simulation
+
+    Returns:
+        tuple: a tuple of 2 lists:
+            list of Results of the ideal statevector simulations
+            list of Results of the noisy circuits simulations
+
+    """
+    # create the qv circuit
+    qv_circs, qv_circs_nomeas = qv.qv_circuits(qubit_lists, ntrials)
+    # get the ideal state
+    statevector_backend = qiskit.Aer.get_backend('statevector_simulator')
+    ideal_results = []
+    for trial in range(ntrials):
+        ideal_results.append(qiskit.execute(qv_circs_nomeas[trial],
+                                            backend=statevector_backend).result())
+
+    # define noise_model
+    noise_model = NoiseModel()
+    p1q = 0.002
+    p2q = 0.02
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1q, 1), 'u3')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
+
+    # get the noisy results
+    backend = qiskit.Aer.get_backend('qasm_simulator')
+    basis_gates = ['u1', 'u2', 'u3', 'cx']  # use U,CX for now
+    exp_results = []
+    for trial in range(ntrials):
+        exp_results.append(
+            qiskit.execute(qv_circs[trial], basis_gates=basis_gates, backend=backend,
+                           noise_model=noise_model, shots=shots,
+                           seed_simulator=SEED,
+                           backend_options={'max_parallel_experiments': 0}).result())
+
+    return ideal_results, exp_results
 
 
 class TestQV(unittest.TestCase):
@@ -44,16 +93,14 @@ class TestQV(unittest.TestCase):
                          "number of specified qubit lists")
 
     def test_qv_fitter(self):
-
-        """ Test the fitter with some result data pre-saved as json"""
-
-        ideal_results = load_results_from_json(os.path.join(os.path.dirname(__file__),
-                                                            'qv_ideal_results.json'))
-        exp_results = load_results_from_json(os.path.join(os.path.dirname(__file__),
-                                                          'qv_exp_results.json'))
-
+        """ Test the fitter"""
         qubit_lists = [[0, 1, 3], [0, 1, 3, 5], [0, 1, 3, 5, 7],
                        [0, 1, 3, 5, 7, 10]]
+        ntrials = 5
+
+        ideal_results, exp_results = qv_circuit_execution(qubit_lists,
+                                                          ntrials,
+                                                          shots=1024)
 
         qv_fitter = qv.QVFitter(qubit_lists=qubit_lists)
         qv_fitter.add_statevectors(ideal_results)
