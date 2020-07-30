@@ -27,7 +27,7 @@ from qiskit.circuit.quantumcircuit import QuantumCircuit
 
 
 def qv_circuits(qubit_lists, ntrials=1,
-                qr=None, cr=None, num_qubits=None, seed=None):
+                qr=None, cr=None, seed=None):
     """
     Return a list of square quantum volume circuits (depth=width)
 
@@ -60,17 +60,16 @@ def qv_circuits(qubit_lists, ntrials=1,
                       "and will be removed in a future release. This argument "
                       "never had any effect.",
                       DeprecationWarning)
-    if qubit_lists:
-        for qubit_list in qubit_lists:
-            count = itertools.count(qubit_list[0])
-            for qubit in qubit_list:
-                if qubit != next(count):
-                    warnings.warn("Using a qubit list to map a virtual circuit to "
-                                  "a physical layout is deprecated and will be "
-                                  "removed in a future release. Instead use "
-                                  "''qiskit.transpile' with the "
-                                  "'initial_layout' parameter")
-        depth_list = [len(qubit_list) for qubit_list in qubit_lists]
+    for qubit_list in qubit_lists:
+        count = itertools.count(qubit_list[0])
+        for qubit in qubit_list:
+            if qubit != next(count):
+                warnings.warn("Using a qubit list to map a virtual circuit to "
+                              "a physical layout is deprecated and will be "
+                              "removed in a future release. Instead use "
+                              "''qiskit.transpile' with the "
+                              "'initial_layout' parameter")
+    depth_list = [len(qubit_list) for qubit_list in qubit_lists]
 
     circuits = [[] for e in range(ntrials)]
     circuits_nomeas = [[] for e in range(ntrials)]
