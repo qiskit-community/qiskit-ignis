@@ -92,6 +92,26 @@ class TestQV(unittest.TestCase):
                          "Error: Not enough circuits for the "
                          "number of specified qubit lists")
 
+    def test_qv_circuits_with_seed(self):
+        """Ensure seed is propogated to QuantumVolme objects."""
+        qubit_lists = [list(range(5))]
+        qv_circs, qv_circs_no_meas = qv.qv_circuits(qubit_lists, seed=3)
+        meas_name = qv_circs[0][0].data[0][0].name
+        no_meas_name = qv_circs_no_meas[0][0].data[0][0].name
+
+        self.assertEqual(int(meas_name.split(',')[-1].rstrip(']')), 3)
+        self.assertEqual(int(no_meas_name.split(',')[-1].rstrip(']')), 3)
+
+    def test_measurements_in_circuits(self):
+        """Ensure measurements are set or not on output circuits."""
+        qubit_lists = [list(range(4))]
+        qv_circs, qv_circs_no_meas = qv.qv_circuits(qubit_lists)
+        qv_circs_measure_qubits = [
+            x[1][0].index for x in qv_circs[0][0].data if x[0].name == 'measure']
+        self.assertNotIn('measure',
+                         [x[0].name for x in qv_circs_no_meas[0][0].data])
+        self.assertEqual([0, 1, 2, 3], qv_circs_measure_qubits)
+
     def test_qv_fitter(self):
         """ Test the fitter"""
         qubit_lists = [[0, 1, 3], [0, 1, 3, 5], [0, 1, 3, 5, 7],
