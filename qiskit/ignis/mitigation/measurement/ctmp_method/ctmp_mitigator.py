@@ -24,23 +24,25 @@ import scipy.sparse as sps
 
 from qiskit.exceptions import QiskitError
 from qiskit.ignis.verification.tomography import marginal_counts
+from qiskit.ignis.numba import jit_fallback
 
 from ..base_meas_mitigator import BaseMeasMitigator
+from ..meas_mit_utils import counts_probability_vector
 from .ctmp_generator_set import Generator
-from .markov_compiled import markov_chain_int
 
 logger = logging.getLogger(__name__)
 
 
 class CTMPMeasMitigator(BaseMeasMitigator):
     """Measurement error mitigator via full N-qubit mitigation."""
-
-    def __init__(self, generators: List[Generator],
+    def __init__(self,
+                 generators: List[Generator],
                  rates: List[float],
                  num_qubits: Optional[int] = None):
         """Initialize a TensorMeasurementMitigator"""
         if num_qubits is None:
-            self._num_qubits = 1 + max([max([max(gen[2]) for gen in generators])])
+            self._num_qubits = 1 + max(
+                [max([max(gen[2]) for gen in generators])])
         # Filter non-zero rates for generator
         nz_rates = []
         nz_generators = []
@@ -55,7 +57,7 @@ class CTMPMeasMitigator(BaseMeasMitigator):
         self._g_mat = None
         self._b_mat = None
         self._gamma = None
-        self._compute_b_mat()  # Also computes gamma and g_mat
+        self._rng = np.random.default_rng()
 
     def expectation_value(self,
                           counts: Dict,
@@ -91,29 +93,55 @@ class CTMPMeasMitigator(BaseMeasMitigator):
             which physical qubits these bit-values correspond to as
             ``circuit.measure(qubits, clbits)``.
         """
-        if qubits is not None or diagonal is not None:
+        if qubits is not None:
             raise NotImplementedError(
                 "qubits kwarg is not yet implemented for CTMP method.")
+
         if clbits is not None:
             counts = marginal_counts(counts, meas_qubits=clbits)
-        plus_dict, minus_dict = self._ctmp_a_inverse(counts)
 
-        norm_c1 = np.exp(2 * self._gamma)
+        # Ensure diagonal is a numpy vector so we can use fancy indexing
+        if diagonal is None:
+            diagonal = self._z_diagonal(2**self._num_qubits)
+        diagonal = np.asarray(diagonal)
 
-        shots = np.sum(list(plus_dict.values())) + np.sum(
-            list(minus_dict.values()))
+        # Get arrays from CSC sparse matrix format
+        # TODO: To use qubits kwarg we should compute the B-matrix and gamma
+        # for the specified qubit subsystem
+        if self._gamma is None:
+            self._compute_little_gamma()
+        if self._b_mat is None:
+            self._compute_b_mat()
+        gamma = self._gamma
+        bmat = self._b_mat
+        values = bmat.data
+        indices = np.asarray(bmat.indices, dtype=np.int)
+        indptrs = np.asarray(bmat.indptr, dtype=np.int)
 
-        exp_vals = []
-        if len(plus_dict) > 0:
-            for key, val in plus_dict.items():
-                exp_vals.append(+(-1)**(key.count('1')) * val)
-        if len(minus_dict) > 0:
-            for key, val in minus_dict.items():
-                exp_vals.append(-(-1)**(key.count('1')) * val)
+        # Set a minimum number of CTMP samples
+        min_delta = 0.05
+        shots_delta = max(4 / (min_delta**2), np.sum(list(counts.values())))
+        num_samples = int(np.ceil(shots_delta * np.exp(2 * self._gamma)))
 
-        exp_vals = np.array(exp_vals) * norm_c1 / shots * len(exp_vals)
-        mean = np.mean(exp_vals)
-        return mean
+        # Convert counts to probs
+        probs = counts_probability_vector(counts)
+
+        # Break total number of samples up into steps of a max number
+        # of samples
+        expval = 0
+        batch_size = 50000
+        samples_set = (num_samples // batch_size) * [batch_size] + [
+            num_samples % batch_size]
+        for shots in samples_set:
+            # Apply sampling
+            samples, sample_signs = self._ctmp_inverse(
+                shots, probs, gamma, values, indices, indptrs, self._rng)
+
+            # Compute expectation value
+            expval += diagonal[samples[sample_signs == 0]].sum()
+            expval -= diagonal[samples[sample_signs == 1]].sum()
+
+        return (np.exp(2 * gamma) / num_samples) * expval
 
     def mitigation_matrix(self, qubits: List[int] = None) -> np.ndarray:
         r"""Return the measurement mitigation matrix for the specified qubits.
@@ -170,93 +198,58 @@ class CTMPMeasMitigator(BaseMeasMitigator):
         gmat = np.flip(self._g_mat.todense())
         return la.expm(gmat)
 
+    def seed(self, value=None):
+        """Set the seed for the quantum state RNG."""
+        if isinstance(value, np.random.Generator):
+            self._rng = value
+        else:
+            self._rng = np.random.default_rng(value)
+
     def _compute_gamma(self, qubits=None):
         """Compute gamma for N-qubit mitigation"""
         if qubits is not None:
             raise NotImplementedError(
                 "qubits kwarg is not yet implemented for CTMP method.")
+        if self._gamma is None:
+            self._compute_little_gamma()
         return np.exp(2 * self._gamma)
 
-    def _ctmp_a_inverse(self,
-                        counts: Dict[str, int],
-                        return_bitstrings: bool = False,
-                        min_delta: float = 0.05) -> Tuple[Dict[str, int], Dict[str, int]]:
-        """Apply CTMP algorithm to input counts dictionary, return
-        sampled counts and associated shots. Equivalent to Algorithm 1 in
-        Bravyi et al.
-
-        This is a wrapper for `core_ctmp_a_inverse`.
-
-        Args:
-            counts: Counts dictionary to mitigate.
-            return_bitstrings: If `True`, return
-                the data as `(shots, signs)`, so similar to `core_ctmp_a_inverse`.
-            min_delta: Optional, min error tolerance for sampling.
-
-        Returns:
-            Tuple[Dict[str, int], Dict[str, int]]: Output dictionaries corresponding
-            to sampled values associated with +1 and -1 results. When re-combining
-            to take expectation values of an operator, these dicts correspond to
-            `<O>_{plus_dict} - <O>_{minus_dict}`.
-        """
-        # Set a minimum number of CTMP samples
-        shots_delta = max(4 / (min_delta ** 2), np.sum(list(counts.values())))
-        shots = int(np.ceil(shots_delta * np.exp(2 * self._gamma)))
-
-        shots, signs = self._core_ctmp_a_inverse(counts, shots)
-        signs = [-1 if s == 1 else +1 for s in signs]
-        shots = [
-            np.binary_repr(shot, width=self._num_qubits) for shot in shots
-        ]
-        if return_bitstrings:
-            return shots, signs
-
-        plus_dict = dict(
-            Counter(
-                map(lambda x: x[0],
-                    filter(lambda x: x[1] == +1, zip(shots, signs)))))
-        minus_dict = dict(
-            Counter(
-                map(lambda x: x[0],
-                    filter(lambda x: x[1] == -1, zip(shots, signs)))))
-
-        return plus_dict, minus_dict
-
     @staticmethod
-    def _sample_shot(counts: Dict[Union[int, str], int], num_samples: int):
-        """Re-sample a counts dictionary.
-
-        Args:
-            counts: Original counts dictionary.
-            num_samples: Number of times to sample.
-
-        Returns:
-            np.array: Re-sampled counts dictionary.
-        """
-        shots = np.sum(list(counts.values()))
-        probs = np.array(list(counts.values())) / shots
-        bits = np.array(list(counts.keys()))
-        return np.random.choice(bits, size=num_samples, p=probs)
-
-    def _core_ctmp_a_inverse(self, counts: Dict[str, int],
-                             n_samples: int) -> Tuple[Tuple[int], Tuple[int]]:
+    def _ctmp_inverse(
+            n_samples: int,
+            probs: np.ndarray,
+            gamma: float,
+            csc_data: np.ndarray,
+            csc_indices: np.ndarray,
+            csc_indptrs: np.ndarray,
+            rng: np.random.Generator) -> Tuple[Tuple[int], Tuple[int]]:
         """Apply CTMP algorithm to input counts dictionary, return
         sampled counts and associated shots. Equivalent to Algorithm 1 in
         Bravyi et al.
 
         Args:
-            counts (Dict[str, int]): Counts dictionary to mitigate.
-            n_samples (int): Number of times to sample in CTMP algorithm.
+            n_samples: Number of times to sample in CTMP algorithm.
+            probs: probability vector constructed from counts.
+            gamma: noise strength parameter
+            csc_data: Sparse CSC matrix data array (`csc_matrix.data`).
+            csc_indices: Sparse CSC matrix indices array (`csc_matrix.indices`).
+            csc_indptrs: Sparse CSC matrix indices array (`csc_matrix.indptrs`).
+            rng: RNG generator object.
 
         Returns:
             Tuple[Tuple[int], Tuple[int]]: Resulting list of shots and associated
             signs from the CTMP algorithm.
         """
-        counts_ints = {int(bits, 2): freq for bits, freq in counts.items()}
-        times = np.random.poisson(lam=self._gamma, size=n_samples)
-        signs = np.mod(times, 2)
-        x_vals = self._sample_shot(counts_ints, num_samples=n_samples)
-        y_vals = markov_chain_int(trans_mat=self._b_mat, x=x_vals, alpha=times)
+        alphas = rng.poisson(lam=gamma, size=n_samples)
+        signs = np.mod(alphas, 2)
+        x_vals = rng.choice(len(probs), size=n_samples, p=probs)
+
+        # Apply CTMP sampling
+        r_vals = rng.random(size=alphas.sum())
+        y_vals = np.zeros(x_vals.size, dtype=np.int)
+        _markov_chain_compiled(y_vals, x_vals, r_vals, alphas, csc_data, csc_indices,
+                               csc_indptrs)
+
         return y_vals, signs
 
     def _compute_g_mat(self):
@@ -351,3 +344,57 @@ class CTMPMeasMitigator(BaseMeasMitigator):
         res += self._tensor_list(ba_mats[::-1])
         res -= self._tensor_list(aa_mats[::-1])
         return res
+
+
+@jit_fallback
+def _choice(inds: np.ndarray, probs: np.ndarray, r_val: float) -> int:
+    """Choise a random array element from specified distribution.
+
+    Given a list and associated probabilities for each element of the list,
+    return a random choice. This function is required since Numpy
+    random.choice cannot be compiled with Numba.
+
+    Args:
+        inds (List[int]): List of indices to choose from.
+        probs (List[float]): List of probabilities for indices.
+        r_val: float: pre-generated random number in [0, 1).
+
+    Returns:
+        int: Randomly sampled index from list.
+    """
+    probs = np.cumsum(probs)
+    n_probs = len(probs)
+    for i in range(n_probs):
+        if r_val < probs[i]:
+            return inds[i]
+    return inds[-1]
+
+
+@jit_fallback
+def _markov_chain_compiled(y_vals: np.ndarray, x_vals: np.ndarray,
+                           r_vals: np.ndarray, alpha_vals: np.ndarray,
+                           csc_vals: np.ndarray, csc_indices: np.ndarray,
+                           csc_indptrs: np.ndarray):
+    """Simulate the Markov process for the transition matrix `trans_mat`.
+
+    Args:
+        y_vals: array to store sampled values.
+        x_vals: array of initial state values.
+        r_vals: pre-generated array of random numbers [0, 1) to use in sampling.
+        alpha_vals: array of Markov step values for sampling.
+        csc_vals: Sparse CSC matrix data array (`csc_matrix.data`).
+        csc_indices: Sparse CSC matrix indices array (`csc_matrix.indices`).
+        csc_indptrs: Sparse CSC matrix indices array (`csc_matrix.indptrs`).
+    """
+    num_samples = y_vals.size
+    r_pos = 0
+    for i in range(num_samples):
+        y = x_vals[i]
+        for _ in range(alpha_vals[i]):
+            begin_slice = csc_indptrs[y]
+            end_slice = csc_indptrs[y + 1]
+            probs = csc_vals[begin_slice:end_slice]
+            inds = csc_indices[begin_slice:end_slice]
+            y = _choice(inds, probs, r_vals[r_pos])
+            r_pos += 1
+        y_vals[i] = y
