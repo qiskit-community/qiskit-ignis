@@ -113,6 +113,7 @@ class TestQV(unittest.TestCase):
         self.assertEqual([0, 1, 2, 3], qv_circs_measure_qubits)
 
     def test_measurements_in_circuits_qubit_list_gap(self):
+        """Test that there are no measurement instructions in output nomeas circuits."""
         qubit_lists = [[1, 3, 5, 7]]
         qv_circs, qv_circs_no_meas = qv.qv_circuits(qubit_lists)
         qv_circs_measure_qubits = [
@@ -120,7 +121,6 @@ class TestQV(unittest.TestCase):
         self.assertNotIn('measure',
                          [x[0].name for x in qv_circs_no_meas[0][0].data])
         self.assertEqual([1, 3, 5, 7], qv_circs_measure_qubits)
-
 
     def test_qv_fitter(self):
         """ Test the fitter"""
