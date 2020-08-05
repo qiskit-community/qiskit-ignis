@@ -68,8 +68,14 @@ def qv_circuits(qubit_lists, ntrials=1,
                               "a physical layout is deprecated and will be "
                               "removed in a future release. Instead use "
                               "''qiskit.transpile' with the "
-                              "'initial_layout' parameter")
+                              "'initial_layout' parameter",
+                              DeprecationWarning)
     depth_list = [len(qubit_list) for qubit_list in qubit_lists]
+
+    if seed:
+        rng = np.random.default_rng(seed)
+    else:
+        _seed = None
 
     circuits = [[] for e in range(ntrials)]
     circuits_nomeas = [[] for e in range(ntrials)]
@@ -77,16 +83,17 @@ def qv_circuits(qubit_lists, ntrials=1,
     for trial in range(ntrials):
         for depthidx, depth in enumerate(depth_list):
             n_q_max = np.max(qubit_lists[depthidx])
-            qv_circ = QuantumVolume(depth, depth, seed=seed)
+            if seed:
+                _seed = rng.integers(1000)
+            qv_circ = QuantumVolume(depth, depth, seed=_seed)
+            qc2 = copy.deepcopy(qv_circ)
             # TODO: Remove this when we remove support for doing pseudo-layout
             # via qubit lists
             if n_q_max != depth:
                 qc = QuantumCircuit(int(n_q_max + 1))
-                qc2 = copy.copy(qv_circ)
                 qc.compose(qv_circ, qubit_lists[depthidx], inplace=True)
             else:
                 qc = qv_circ
-                qc2 = copy.copy(qc)
             qc.measure_active()
             qc.name = 'qv_depth_%d_trial_%d' % (depth, trial)
             qc2.name = qc.name
