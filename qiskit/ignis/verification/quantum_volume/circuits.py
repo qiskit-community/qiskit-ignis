@@ -72,13 +72,20 @@ def qv_circuits(qubit_lists, ntrials=1,
                               DeprecationWarning)
     depth_list = [len(qubit_list) for qubit_list in qubit_lists]
 
+    if seed:
+        rng = np.random.default_rng(seed)
+    else:
+        _seed = None
+
     circuits = [[] for e in range(ntrials)]
     circuits_nomeas = [[] for e in range(ntrials)]
 
     for trial in range(ntrials):
         for depthidx, depth in enumerate(depth_list):
             n_q_max = np.max(qubit_lists[depthidx])
-            qv_circ = QuantumVolume(depth, depth, seed=seed)
+            if seed:
+                _seed = rng.integers(1000)
+            qv_circ = QuantumVolume(depth, depth, seed=_seed)
             qc2 = copy.deepcopy(qv_circ)
             # TODO: Remove this when we remove support for doing pseudo-layout
             # via qubit lists

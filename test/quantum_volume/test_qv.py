@@ -99,8 +99,8 @@ class TestQV(unittest.TestCase):
         meas_name = qv_circs[0][0].data[0][0].name
         no_meas_name = qv_circs_no_meas[0][0].data[0][0].name
 
-        self.assertEqual(int(meas_name.split(',')[-1].rstrip(']')), 3)
-        self.assertEqual(int(no_meas_name.split(',')[-1].rstrip(']')), 3)
+        self.assertEqual(int(meas_name.split(',')[-1].rstrip(']')), 811)
+        self.assertEqual(int(no_meas_name.split(',')[-1].rstrip(']')), 811)
 
     def test_measurements_in_circuits(self):
         """Ensure measurements are set or not on output circuits."""
