@@ -17,6 +17,8 @@ Tests for CNOT-dihedral functions
 """
 
 import unittest
+from qiskit.circuit import QuantumCircuit
+from qiskit.quantum_info.operators import Operator
 
 # Import the dihedral_utils functions
 from qiskit.ignis.verification.randomized_benchmarking \
@@ -347,6 +349,46 @@ class TestCNOTDihedral(unittest.TestCase):
                 self.assertEqual(target, value,
                                  'Error: composed circuit is not the same')
 
+    def test_tensor_method(self):
+        """Test tensor method"""
+        samples = 10
+        nseed = 333
+        for num_qubits_1 in range(1, 3):
+            for num_qubits_2 in range(1, 3):
+                for i in range(samples):
+                    elem1 = random_cnotdihedral(num_qubits_1, seed=nseed + i)
+                    elem2 = random_cnotdihedral(num_qubits_2, seed=nseed + samples + i)
+                    circ1 = elem1.to_circuit()
+                    circ2 = elem2.to_circuit()
+                    value = elem1.tensor(elem2)
+                    #print (value)
+                    circ = QuantumCircuit(num_qubits_1 + num_qubits_2)
+                    #circ = circ2.copy()
+                    circ.append(circ2.to_instruction(), range(num_qubits_2))
+                    circ.append(circ1.to_instruction(), range(num_qubits_2, num_qubits_1 + num_qubits_2))
+                    #print(circ2)
+                    #print(circ1)
+                    #print(circ)
+                    #print ("----------------------")
+                    target = CNOTDihedral(num_qubits_1 + num_qubits_2)
+                    #target = target.from_circuit(circ)
+                    #self.assertEqual(target, value,
+                    #                 'Error: tensor circuit is not the same')
+
+    def test_transpose(self):
+        """Test transpose method"""
+        samples = 10
+        nseed = 555
+        for qubit_num in range(1, 3):
+            for i in range(samples):
+                elem = random_cnotdihedral(qubit_num, seed=nseed + i)
+                circ = elem.to_circuit()
+                value = Operator(elem.transpose().to_circuit())
+                target = Operator(circ).transpose()
+                #print (circ)
+                #print(value)
+                #print(target)
+                #self.assertTrue(target.equiv(value))
 
 if __name__ == '__main__':
     unittest.main()
