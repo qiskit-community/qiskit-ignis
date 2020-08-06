@@ -21,7 +21,7 @@ import copy
 import qiskit.pulse as pulse
 import qiskit.pulse.library as pulse_lib
 from qiskit.exceptions import QiskitError
-from qiskit.scheduler import measure
+from qiskit.pulse.macros import measure
 
 
 def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
