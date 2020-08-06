@@ -148,7 +148,7 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
                                           name='drag_pulse_%d_%d' % (index, qubit))
             sched += pulse.Play(drag_pulse_p, drives[qubit])
             sched += pulse.Play(drag_pulse_m, drives[qubit])
-        sched += measure(qubits, inst_map=inst_map, meas_map=meas_map).shift(pulse_width)
+        sched += measure(qubits, inst_map=inst_map, meas_map=meas_map).shift(2*pulse_width)
         drag_scheds.append(sched)
 
     return drag_scheds, xdata
