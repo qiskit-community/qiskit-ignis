@@ -1,4 +1,7 @@
 ---
+prelude:
+    Refactor Randomized Benchmarking code to integrate the updated Clifford class
+    :class:`~qiskit.quantum_info.Clifford` and improve the CNOT-Dihedral class.
 features:
   - |
     The :func:`qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq`
