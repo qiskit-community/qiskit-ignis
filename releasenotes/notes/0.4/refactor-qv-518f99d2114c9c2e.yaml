@@ -10,7 +10,7 @@ deprecations:
     The kwargs ``qr`` and ``cr`` for the
     :func:`qiskit.ignis.verification.qv_circuits` function have been deprecated
     and will be removed in a future release. These kwargs were documented as
-    being used for specifing a :class:`qiskit.circuit.QuantumRegister` and
+    being used for specifying a :class:`qiskit.circuit.QuantumRegister` and
     :class:`qiskit.circuit.ClassicalRegister` to use in the generated Quantum
     Volume circuits instead of creating new ones. However, the parameters were
     never actually respected and a new Register would always be created
