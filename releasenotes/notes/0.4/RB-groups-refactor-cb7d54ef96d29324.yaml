@@ -3,7 +3,7 @@ features:
   - |
     The :func:`qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq`
     function was refactored to use the updated Clifford class :class:`~qiskit.quantum_info.Clifford`,
-    to allow efficient Randomized Benchmarknig (RB) on Clifford sequences with more than 2 qubits.
+    to allow efficient Randomized Benchmarking (RB) on Clifford sequences with more than 2 qubits.
     In addition, the code of the CNOT-Dihedral class
     :class:`qiskit.ignis.verification.randomized_benchmarking.CNOTDihedral`
     was refactored to make it more efficient, by using numpy arrays, as well not using pre-generated
@@ -15,7 +15,7 @@ deprecations:
   - |
     The kwarg ``interleaved_gates`` for the
     :func:`qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq`
-    function has been depreacted and will be removed in a future release.
+    function has been deprecated and will be removed in a future release.
     It is superseded by ``interleaved_elem``.
     The helper functions :class:`qiskit.ignis.verification.randomized_benchmarking.BasicUtils`,
     :class:`qiskit.ignis.verification.randomized_benchmarking.CliffordUtils` and
@@ -29,6 +29,6 @@ upgrade:
     The :func:`qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq`
     function is now using the updated Clifford class :class:`~qiskit.quantum_info.Clifford`
     and the updated CNOT-Dihedral class :class:`qiskit.ignis.verification.randomized_benchmarking.CNOTDihedral`
-    to construct its output instead of using pre-generaed group tables for the Clifford and CNOT-Dihedral
+    to construct its output instead of using pre-generated group tables for the Clifford and CNOT-Dihedral
     group elements, which were stored in pickle files.
     This may result in subtle differences from the output from the previous version.
