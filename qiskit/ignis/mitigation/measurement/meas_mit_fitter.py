@@ -75,7 +75,7 @@ class MeasMitigatorFitter:
                 amats.append(amat)
             self._mitigator = TensoredMeasMitigator(amats)
 
-        elif method == 'CTMP':
+        elif method == 'CTMP' or method == 'ctmp':
             self._mitigator = fit_ctmp_meas_mitigator(self._cal_data, self._num_qubits, generators)
 
         return self._mitigator

@@ -41,6 +41,8 @@ def fit_ctmp_meas_mitigator(cal_data: Dict[int, Dict[int, int]],
     Returns:
         Measurement error mitigator object.
     """
+    if not isinstance(num_qubits, int):
+        raise ValueError('Number of qubits must be an int')
     if generators is None:
         generators = standard_generator_set(num_qubits)
 
