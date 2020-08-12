@@ -41,8 +41,9 @@ class CTMPMeasMitigator(BaseMeasMitigator):
                  num_qubits: Optional[int] = None):
         """Initialize a TensorMeasurementMitigator"""
         if num_qubits is None:
-            self._num_qubits = 1 + max(
-                [max([max(gen[2]) for gen in generators])])
+            self._num_qubits = 1 + max([max([max(gen[2]) for gen in generators])])
+        else:
+            self._num_qubits = num_qubits
         # Filter non-zero rates for generator
         nz_rates = []
         nz_generators = []

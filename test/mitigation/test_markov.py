@@ -18,15 +18,14 @@ CTMP markov sampling tests
 import unittest
 
 import scipy as sp
-from qiskit.ignis.mitigation.measurement.ctmp_method.markov_compiled import (
-    markov_chain_int
-)
-from qiskit.ignis.mitigation.measurement.ctmp_method.calibration import (
-    StandardGeneratorSet, MeasurementCalibrator
-)
+from qiskit.ignis.mitigation.measurement.ctmp_method.markov_compiled import markov_chain_int
+from qiskit.ignis.mitigation.measurement import CTMPMeasMitigator
 
 
 def statistical_test(num_tests: int, fraction_passes: float):
+    """Wrapper for statistical test that should be run multiple times and pass
+    at least a certain fraction of times.
+    """
     # pylint: disable=bare-except
     def stat_test(func):
         def wrapper_func(*args, **kwargs):
@@ -52,11 +51,10 @@ def statistical_test(num_tests: int, fraction_passes: float):
 
 
 class TestMarkov(unittest.TestCase):
+    """Test the (un)compiled markov process simulator
+    """
 
     def setUp(self):
-        self.lo = 0.1
-        self.hi = 1.0 - self.lo
-
         self.r_dict = {
             # (final, start, qubits)
             ('0', '1', (0,)): 1e-3,
@@ -69,31 +67,39 @@ class TestMarkov(unittest.TestCase):
             ('01', '10', (0, 1)): 1e-3,
             ('10', '01', (0, 1)): 1e-3
         }
-        gen_set = StandardGeneratorSet.from_num_qubits(2)
 
-        self.G = MeasurementCalibrator(None, gen_set).total_g_matrix(self.r_dict).toarray()
-        self.B = sp.linalg.expm(self.G)
+        mitigator = CTMPMeasMitigator(
+            generators=self.r_dict.keys(),
+            rates=self.r_dict.values(),
+            num_qubits=2
+            )
+        mitigator._compute_g_mat()
+        self.trans_mat = sp.linalg.expm(mitigator._g_mat)
 
         self.num_steps = 100
 
     @statistical_test(50, 0.7)
     def test_markov_chain_int_0(self):
-        y = markov_chain_int(self.B, 0, self.num_steps)
+        """Test markov process starting at specific state"""
+        y = markov_chain_int(self.trans_mat, 0, self.num_steps)
         self.assertEqual(y, 3)
 
     @statistical_test(50, 0.7)
     def test_markov_chain_int_1(self):
-        y = markov_chain_int(self.B, 1, self.num_steps)
+        """Test markov process starting at specific state"""
+        y = markov_chain_int(self.trans_mat, 1, self.num_steps)
         self.assertEqual(y, 3)
 
     @statistical_test(50, 0.7)
     def test_markov_chain_int_2(self):
-        y = markov_chain_int(self.B, 2, self.num_steps)
+        """Test markov process starting at specific state"""
+        y = markov_chain_int(self.trans_mat, 2, self.num_steps)
         self.assertEqual(y, 3)
 
     @statistical_test(50, 0.7)
     def test_markov_chain_int_3(self):
-        y = markov_chain_int(self.B, 3, self.num_steps)
+        """Test markov process starting at specific state"""
+        y = markov_chain_int(self.trans_mat, 3, self.num_steps)
         self.assertEqual(y, 3)
 
 
