@@ -1,0 +1,50 @@
+name: Tests
+on: [push, pull_request]
+jobs:
+  tests:
+    name: tests-python${{ matrix.python-version }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.5, 3.6, 3.7, 3.8]
+        os: ["macOS-latest", "ubuntu-latest", "windows-latest"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Deps
+        run: python -m pip install -U tox
+      - name: Install and Run Tests
+        run: tox -e py
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Deps
+        run: python -m pip install -U tox
+      - name: Install and Run Tests
+        run: tox -elint
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Deps
+        run: python -m pip install -U tox
+      - name: Install and Run Tests
+        run: tox -edocs
+      - uses: actions/upload-artifact@v2
+        with:
+          name: html_docs
+          path: docs/_build/html
