@@ -25,9 +25,11 @@ jobs:
         if: runner.os != 'Windows'
       - name: Install and Run Tests
         run: |
+          set -e
           tox -e py --notest
           .tox/*/Scripts/pip install -U cvxopt
           tox - epy
+        shell: bash
         if: runner.os == 'Windows'
   lint:
     name: lint
