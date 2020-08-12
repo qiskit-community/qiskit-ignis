@@ -23,12 +23,11 @@ jobs:
       - name: Install and Run Tests
         run: tox -e py
   windows-tests:
-    name: tests-python${{ matrix.python-version }}-${{ matrix.os }}
+    name: tests-python${{ matrix.python-version }}-windows
     runs-on: windows-latest
     strategy:
       matrix:
         python-version: [3.5, 3.6, 3.7, 3.8]
-        os: ["macOS-latest", "ubuntu-latest"]
     steps:
       - uses: actions/checkout@v2
       - uses: goanpeca/setup-miniconda@v1
@@ -36,9 +35,7 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
       - name: Install cvxopt
-        run: conda install cvxopt -y
-      - name: Install Deps
-        run: python -m pip install -U tox
+        run: conda install tox cvxopt -y
       - name: Install and Run Tests
         run: tox --sitepackages -e py
   lint:
