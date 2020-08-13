@@ -23,7 +23,7 @@ import numpy as np
 import qiskit
 import qiskit.ignis.verification.randomized_benchmarking as rb
 from qiskit.ignis.verification.randomized_benchmarking import \
-    RBFitter, InterleavedRBFitter, PurityRBFitter, CNOTDihedralRBFitter
+    RBFitter, InterleavedRBFitter, PurityRBFitter, CNOTDihedralRBFitter, CorrelatedRBFitter
 from qiskit.providers.aer.noise import NoiseModel
 from qiskit.providers.aer.noise.errors.standard_errors import depolarizing_error,\
     thermal_relaxation_error, coherent_unitary_error
@@ -257,6 +257,46 @@ def rb_purity_circuit_execution(rb_opts: dict, shots: int):
                                                    seed_simulator=SEED).result())
 
     return purity_results, xdata, npurity, coherent_results
+
+
+def rb_correlated_circuit_execution(rb_opts: dict, shots: int):
+    """
+    Create correlated rb circuits with coherent weight 2 error and simulates them
+
+    Args:
+        rb_opts: the options for the rb circuits
+        shots: number of shots for each circuit simulation
+
+    Returns:
+        list: list of Results of the circuits simulations
+        list: the xdata of the rb circuit
+
+    """
+    # Load simulator
+    backend = qiskit.Aer.get_backend('qasm_simulator')
+    basis_gates = ['u1', 'u2', 'u3', 'cx']
+
+    rb_circs, xdata = rb.randomized_benchmarking_seq(**rb_opts)
+
+    # creating the noise
+    noise_model = NoiseModel()
+    unitary = np.eye(2 ** 2, dtype=complex)
+    for i in range(4):
+        unitary[i, 3 - i] = 1j
+    unitary *= (1 / np.sqrt(2))
+    error = coherent_unitary_error(unitary)
+    noise_model.add_nonlocal_quantum_error(error, basis_gates, [0], [0, 2])
+    noise_model.add_nonlocal_quantum_error(error, basis_gates, [2], [2, 0])
+
+    results = []
+    for circuit in rb_circs:
+        results.append(qiskit.execute(circuit, backend=backend,
+                                      basis_gates=basis_gates,
+                                      shots=shots,
+                                      noise_model=noise_model,
+                                      seed_simulator=SEED).result())
+
+    return results, xdata
 
 
 def generate_fitter_data_1(results_file_path: str, expected_results_file_path: str):
@@ -553,6 +593,55 @@ def generate_purity_data(results_file_path_purity: str,
         json.dump(coherent_expected_result, expected_results_file)
 
 
+def generate_correlated_fitter_data(results_file_path: str, expected_results_file_path: str):
+    """
+    Create correlated rb circuits with coherent weight 2 error and simulate them,
+    then write the results in a json file.
+    also creates fitter for the data results,
+    and also write the fitter results in another json file.
+
+    The simulation results file will contain a list of Result objects in a dictionary format.
+    The fitter data file will contain dictionary with the following keys:
+    - 'ydata', value is stored in the form of list of dictionaries with keys of:
+        - mean, list of integers
+        - std, list of integers
+    - 'alphas', value is stored in the form of dictionary of ints with keys of subsystems
+    - 'epsilon_opt_cost', int
+    - 'epsilon', value is stored in the form of dictionary of lists with keys of subsystems.
+        each list contains 2 items -
+        - epsilon, int
+        - est_err of that epsilon, int
+
+    Args:
+        results_file_path: path of the json file of the simulation results file
+        expected_results_file_path: path of the json file of the fitter results file
+    """
+
+    rb_opts = {}
+    shots = 1024
+    rb_opts['nseeds'] = 5
+    rb_opts['rb_pattern'] = [[0], [1], [2]]
+    rb_opts['length_vector'] = list(np.arange(1, 200, 20))
+
+    rb_results, xdata = rb_correlated_circuit_execution(rb_opts, shots)
+    save_results_as_json(rb_results, results_file_path)
+
+    # generate also the expected results of the fitter
+    rb_fit = CorrelatedRBFitter(rb_results, xdata, rb_opts['rb_pattern'])
+
+    ydata = rb_fit.ydata
+    alphas = rb_fit.fit_alphas
+    epsilon_opt_cost = rb_fit.fit_alphas_to_epsilon()
+    epsilon = rb_fit.fit_epsilon
+    # convert ndarray to list
+    ydata = convert_ndarray_to_list_in_data(ydata)
+
+    expected_result = {"ydata": ydata, "alphas": alphas, "epsilon_opt_cost": epsilon_opt_cost,
+                       "epsilon": epsilon}
+    with open(expected_results_file_path, "w") as expected_results_file:
+        json.dump(expected_result, expected_results_file)
+
+
 if __name__ == '__main__':
     DIRNAME = os.path.dirname(os.path.abspath(__file__))
     for rb_type in sys.argv[1:]:
@@ -582,5 +671,11 @@ if __name__ == '__main__':
                                  os.path.join(DIRNAME, 'test_fitter_purity_expected_results.json'),
                                  os.path.join(DIRNAME,
                                               'test_fitter_coherent_purity_expected_results.json'))
+        elif rb_type == 'correlated':
+            generate_correlated_fitter_data(os.path.join(DIRNAME, 'test_fitter_correlated'
+                                                                  '_results.json'),
+                                            os.path.join(DIRNAME,
+                                                         'test_fitter_correlated'
+                                                         '_expected_results.json'))
         else:
             print('Skipping unknown argument ' + rb_type)

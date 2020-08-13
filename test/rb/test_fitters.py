@@ -26,7 +26,7 @@ import json
 import numpy as np
 
 from qiskit.ignis.verification.randomized_benchmarking import \
-    RBFitter, InterleavedRBFitter, PurityRBFitter, CNOTDihedralRBFitter
+    RBFitter, InterleavedRBFitter, PurityRBFitter, CNOTDihedralRBFitter, CorrelatedRBFitter
 
 
 class TestFitters(unittest.TestCase):
@@ -42,7 +42,7 @@ class TestFitters(unittest.TestCase):
                                       + str(tst_index))
                 else:
                     # check if the zip function is needed
-                    if isinstance(data[i][key], np.ndarray):
+                    if isinstance(data[i][key], np.ndarray) or isinstance(data[i][key], list):
                         self.assertTrue(all(np.isclose(a, b) for a, b in
                                             zip(data[i][key], expect_data[key])),
                                         'Incorrect ' + str(key) + ' in test no. ' + str(tst_index))
@@ -271,6 +271,56 @@ class TestFitters(unittest.TestCase):
                                                tst_cnotdihedral_expected_results['joint_fit'],
                                                tst_index)
 
+
+    def test_correlated_fitters(self):
+        """ Test the correlated rb fitters """
+        # Use json results files
+        tests_settings = [
+            {
+                'rb_opts': {
+                    'xdata': np.array([[1, 21, 41, 61, 81, 101, 121, 141, 161, 181],
+                                       [1, 21, 41, 61, 81, 101, 121, 141, 161, 181],
+                                       [1, 21, 41, 61, 81, 101, 121, 141, 161, 181]]),
+                    'rb_pattern': [[0], [1], [2]],
+                    'shots': 1024},
+                'correlated_results_file':
+                    os.path.join(os.path.dirname(__file__), 'test_fitter_correlated_results.json'),
+                'correlated_expected_results_file':
+                    os.path.join(os.path.dirname(__file__),
+                                 'test_fitter_correlated_expected_results.json')
+            }
+        ]
+
+        for tst_index, tst_settings in enumerate(tests_settings):
+            correlated_result = load_results_from_json(
+                tst_settings['correlated_results_file'])
+            with open(tst_settings['correlated_expected_results_file'], "r") \
+                    as expected_results_file:
+                tst_correlated_expected_results = json.load(expected_results_file)
+
+            # CorrelatedRBFitter class
+            rb_fit = CorrelatedRBFitter(
+                correlated_result,
+                tst_settings['rb_opts']['xdata'],
+                tst_settings['rb_opts']['rb_pattern'])
+
+            ydata = rb_fit.ydata
+            alphas = rb_fit.fit_alphas
+            epsilon_opt_cost = rb_fit.fit_alphas_to_epsilon()
+            epsilon = rb_fit.fit_epsilon
+
+            self.compare_results_and_excpected(ydata,
+                                               tst_correlated_expected_results['ydata'],
+                                               tst_index)
+            self.compare_results_and_excpected([alphas],
+                                               [tst_correlated_expected_results['alphas']],
+                                               tst_index)
+            self.assertTrue(np.isclose(epsilon_opt_cost,
+                                       tst_correlated_expected_results['epsilon_opt_cost']),
+                            'Incorrect epsilon_opt_cost in test no. ' + str(tst_index))
+            self.compare_results_and_excpected([epsilon],
+                                               [tst_correlated_expected_results['epsilon']],
+                                               tst_index)
 
 if __name__ == '__main__':
     unittest.main()
