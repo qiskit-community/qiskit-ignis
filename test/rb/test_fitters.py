@@ -42,7 +42,7 @@ class TestFitters(unittest.TestCase):
                                       + str(tst_index))
                 else:
                     # check if the zip function is needed
-                    if isinstance(data[i][key], np.ndarray) or isinstance(data[i][key], list):
+                    if isinstance(data[i][key], (list, np.ndarray)):
                         self.assertTrue(all(np.isclose(a, b) for a, b in
                                             zip(data[i][key], expect_data[key])),
                                         'Incorrect ' + str(key) + ' in test no. ' + str(tst_index))
