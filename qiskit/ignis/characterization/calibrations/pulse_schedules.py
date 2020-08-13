@@ -19,9 +19,9 @@ Pulse Schedule Generation for calibration experiments
 import copy
 
 import qiskit.pulse as pulse
-import qiskit.pulse.pulse_lib as pulse_lib
+import qiskit.pulse.library as pulse_lib
 from qiskit.exceptions import QiskitError
-from qiskit.scheduler import measure
+from qiskit.pulse.macros import measure
 
 
 def rabi_schedules(amp_list, qubits, pulse_width, pulse_sigma=None,
@@ -148,7 +148,7 @@ def drag_schedules(beta_list, qubits, pulse_amp, pulse_width,
                                           name='drag_pulse_%d_%d' % (index, qubit))
             sched += pulse.Play(drag_pulse_p, drives[qubit])
             sched += pulse.Play(drag_pulse_m, drives[qubit])
-        sched += measure(qubits, inst_map=inst_map, meas_map=meas_map).shift(pulse_width)
+        sched += measure(qubits, inst_map=inst_map, meas_map=meas_map).shift(2*pulse_width)
         drag_scheds.append(sched)
 
     return drag_scheds, xdata

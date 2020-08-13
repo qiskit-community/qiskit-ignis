@@ -28,13 +28,30 @@ from qiskit.providers.aer.noise import NoiseModel
 from qiskit.providers.aer.noise.errors.standard_errors import depolarizing_error,\
     thermal_relaxation_error, coherent_unitary_error
 
-# fixed seed for simulations
+# fixed seed for simulations and for rb random seed
 SEED = 42
+
+
+def create_depolarizing_noise_model():
+    """
+    create noise model of depolarizing error
+
+    Returns:
+        NoiseModel: depolarizing error noise model
+
+    """
+    noise_model = NoiseModel()
+    p1q = 0.002
+    p2q = 0.01
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1q, 1), 'u3')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
+    return noise_model
 
 
 def rb_circuit_execution(rb_opts: dict, shots: int):
     """
-    Create rb circuits with depolarizing error and simulates them
+    Create rb circuits with depolarizing error and simulate them
 
     Args:
         rb_opts: the options for the rb circuits
@@ -51,12 +68,7 @@ def rb_circuit_execution(rb_opts: dict, shots: int):
 
     rb_circs, xdata = rb.randomized_benchmarking_seq(**rb_opts)
 
-    noise_model = NoiseModel()
-    p1q = 0.002
-    p2q = 0.01
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1q, 1), 'u3')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
+    noise_model = create_depolarizing_noise_model()
 
     results = []
     for circuit in rb_circs:
@@ -70,7 +82,7 @@ def rb_circuit_execution(rb_opts: dict, shots: int):
 
 def rb_circuit_execution_2(rb_opts: dict, shots: int):
     """
-        Create rb circuits with T1 and T2 errors and simulates them
+        Create rb circuits with T1 and T2 errors and simulate them
 
         Args:
             rb_opts: the options for the rb circuits
@@ -112,7 +124,7 @@ def rb_circuit_execution_2(rb_opts: dict, shots: int):
 
 def rb_interleaved_execution(rb_opts: dict, shots: int):
     """
-        Create interleaved rb circuits with depolarizing error and simulates them
+        Create interleaved rb circuits with depolarizing error and simulate them
         Args:
             rb_opts: the options for the rb circuits
             shots: number of shots for each circuit simulation
@@ -129,12 +141,7 @@ def rb_interleaved_execution(rb_opts: dict, shots: int):
 
     rb_original_circs, xdata, rb_interleaved_circs = rb.randomized_benchmarking_seq(**rb_opts)
 
-    noise_model = NoiseModel()
-    p1q = 0.002
-    p2q = 0.01
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1q, 1), 'u3')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
+    noise_model = create_depolarizing_noise_model()
 
     results = []
     for circuit in rb_original_circs:
@@ -154,7 +161,7 @@ def rb_interleaved_execution(rb_opts: dict, shots: int):
 
 def rb_cnotdihedral_execution(rb_opts: dict, shots: int):
     """
-        Create cnot-dihedral rb circuits with depolarizing errors and simulates them
+        Create cnot-dihedral rb circuits with depolarizing errors and simulate them
 
         Args:
             rb_opts: the options for the rb circuits
@@ -173,13 +180,7 @@ def rb_cnotdihedral_execution(rb_opts: dict, shots: int):
     rb_cnotdihedral_z_circs, xdata, rb_cnotdihedral_x_circs = \
         rb.randomized_benchmarking_seq(**rb_opts)
 
-    # Add depolarizing noise to the simulation
-    noise_model = NoiseModel()
-    p1q = 0.002
-    p2q = 0.01
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1q, 1), 'u3')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
+    noise_model = create_depolarizing_noise_model()
 
     cnotdihedral_x_results = []
     for circuit in rb_cnotdihedral_x_circs:
@@ -199,7 +200,7 @@ def rb_cnotdihedral_execution(rb_opts: dict, shots: int):
 
 def rb_purity_circuit_execution(rb_opts: dict, shots: int):
     """
-        Create purity rb circuits with depolarizing errors and simulates them
+        Create purity rb circuits with depolarizing errors and simulate them
 
         Args:
             rb_opts: the options for the rb circuits
@@ -218,13 +219,7 @@ def rb_purity_circuit_execution(rb_opts: dict, shots: int):
 
     rb_purity_circs, xdata, npurity = rb.randomized_benchmarking_seq(**rb_opts)
 
-    # Add depolarizing noise to the simulation
-    noise_model = NoiseModel()
-    p1q = 0.002
-    p2q = 0.01
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1q, 1), 'u3')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
+    noise_model = create_depolarizing_noise_model()
 
     # coherent noise
     err_unitary = np.zeros([2, 2], dtype=complex)
@@ -250,6 +245,7 @@ def rb_purity_circuit_execution(rb_opts: dict, shots: int):
                                                  noise_model=noise_model,
                                                  seed_simulator=SEED).result())
             # coherent purity results
+            # THE FITTER IS NOT TESTED YET
             coherent_results.append(qiskit.execute(current_circ, backend=backend,
                                                    basis_gates=basis_gates,
                                                    shots=shots,
@@ -328,6 +324,7 @@ def generate_fitter_data_1(results_file_path: str, expected_results_file_path: s
     rb_opts['rb_pattern'] = [[0, 1], [2]]
     rb_opts['length_multiplier'] = [1, 2]
     rb_opts['length_vector'] = np.arange(1, 200, 20)
+    rb_opts['rand_seed'] = SEED
 
     rb_results, xdata = rb_circuit_execution(rb_opts, shots)
     save_results_as_json(rb_results, results_file_path)
@@ -372,6 +369,7 @@ def generate_fitter_data_2(results_file_path: str, expected_results_file_path: s
     rb_opts['nseeds'] = 5
     rb_opts['rb_pattern'] = [[0]]
     rb_opts['length_vector'] = np.arange(1, 200, 20)
+    rb_opts['rand_seed'] = SEED
 
     rb_results, xdata = rb_circuit_execution_2(rb_opts, shots)
     save_results_as_json(rb_results, results_file_path)
@@ -431,7 +429,15 @@ def generate_interleaved_data(results_file_path_original: str,
     rb_opts['rb_pattern'] = [[0, 2], [1]]
     rb_opts['length_vector'] = np.arange(1, 100, 10)
     rb_opts['length_multiplier'] = [1, 3]
-    rb_opts['interleaved_gates'] = [['x 0', 'x 1', 'cx 0 1'], ['x 0']]
+    # create interleaved elem of the form [['x 0', 'x 1', 'cx 0 1'], ['x 0']]
+    qc1 = qiskit.QuantumCircuit(2)
+    qc1.x(0)
+    qc1.x(1)
+    qc1.cx(0, 1)
+    qc2 = qiskit.QuantumCircuit(1)
+    qc2.x(0)
+    rb_opts["interleaved_elem"] = [qc1, qc2]
+    rb_opts['rand_seed'] = SEED
 
     results, xdata, interleaved_results = rb_interleaved_execution(rb_opts, shots)
     save_results_as_json(results, results_file_path_original)
@@ -492,6 +498,7 @@ def generate_cnotdihedral_data(results_file_path_cnotdihedral_x: str,
     rb_opts['length_vector'] = np.arange(1, 200, 20)
     rb_opts['length_multiplier'] = [1, 3]
     rb_opts['group_gates'] = 'CNOT-Dihedral'
+    rb_opts['rand_seed'] = SEED
 
     cnotdihedral_x_results, xdata, cnotdihedral_z_results = \
         rb_cnotdihedral_execution(rb_opts, shots)
@@ -503,8 +510,8 @@ def generate_cnotdihedral_data(results_file_path_cnotdihedral_x: str,
                                         rb_opts['rb_pattern'])
 
     joint_fit = joint_rb_fit.fit_cnotdihedral
-    cnotdihedral_x_ydata = joint_rb_fit.ydata[0]
-    cnotdihedral_z_ydata = joint_rb_fit.ydata[1]
+    cnotdihedral_z_ydata = joint_rb_fit.ydata[0]
+    cnotdihedral_x_ydata = joint_rb_fit.ydata[1]
     # convert ndarray to list
     cnotdihedral_x_ydata = convert_ndarray_to_list_in_data(cnotdihedral_x_ydata)
     cnotdihedral_z_ydata = convert_ndarray_to_list_in_data(cnotdihedral_z_ydata)
@@ -555,12 +562,14 @@ def generate_purity_data(results_file_path_purity: str,
     rb_opts['rb_pattern'] = [[0, 1]]
     rb_opts['length_vector'] = np.arange(1, 200, 20)
     rb_opts['is_purity'] = True
+    rb_opts['rand_seed'] = SEED
 
     rb_purity_results, xdata, npurity, rb_coherent_results = \
         rb_purity_circuit_execution(rb_opts, shots)
 
     # save the results
     save_results_as_json(rb_purity_results, results_file_path_purity)
+    # COHERENT FITTER IS NOT TESTED YET
     save_results_as_json(rb_coherent_results, results_file_path_coherent)
 
     # generate also the expected results of the fitter
@@ -589,6 +598,7 @@ def generate_purity_data(results_file_path_purity: str,
     coherent_fit = convert_ndarray_to_list_in_data(coherent_fit)
 
     coherent_expected_result = {"ydata": coherent_ydata, "fit": coherent_fit}
+    # COHERENT FITTER IS NOT TESTED YET
     with open(expected_results_file_path_coherent, "w") as expected_results_file:
         json.dump(coherent_expected_result, expected_results_file)
 
@@ -622,6 +632,7 @@ def generate_correlated_fitter_data(results_file_path: str, expected_results_fil
     rb_opts['nseeds'] = 5
     rb_opts['rb_pattern'] = [[0], [1], [2]]
     rb_opts['length_vector'] = list(np.arange(1, 200, 20))
+    rb_opts['rand_seed'] = SEED
 
     rb_results, xdata = rb_correlated_circuit_execution(rb_opts, shots)
     save_results_as_json(rb_results, results_file_path)

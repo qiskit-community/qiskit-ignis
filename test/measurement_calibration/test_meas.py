@@ -32,10 +32,12 @@ expected (equally distributed) result
 import unittest
 import os
 import json
+from test.measurement_calibration.generate_data \
+    import tensored_calib_circ_creation, meas_calib_circ_creation
 import numpy as np
 import qiskit
 from qiskit.result.result import Result
-from qiskit import QuantumCircuit, ClassicalRegister, Aer
+from qiskit import Aer
 from qiskit.ignis.mitigation.measurement \
      import (CompleteMeasFitter, TensoredMeasFitter,
              complete_meas_cal, tensored_meas_cal,
@@ -178,15 +180,8 @@ class TestMeasCal(unittest.TestCase):
         """Test an execution on a circuit."""
         print("Testing measurement calibration on a circuit")
 
-        # Choose 3 qubits
-        q1 = 1
-        q2 = 2
-        q3 = 3
-
-        # Generate the quantum register according to the pattern
         # Generate the calibration circuits
-        meas_calibs, state_labels = \
-            complete_meas_cal(qubit_list=[1, 2, 3], qr=5)
+        meas_calibs, state_labels, ghz = meas_calib_circ_creation()
 
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
@@ -198,15 +193,6 @@ class TestMeasCal(unittest.TestCase):
         meas_cal = CompleteMeasFitter(cal_results, state_labels)
         # Calculate the fidelity
         fidelity = meas_cal.readout_fidelity()
-
-        # Make a 3Q GHZ state
-        ghz = QuantumCircuit(5, 3)
-        ghz.h(q1)
-        ghz.cx(q1, q2)
-        ghz.cx(q2, q3)
-        ghz.measure(q1, 0)
-        ghz.measure(q2, 1)
-        ghz.measure(q3, 2)
 
         job = qiskit.execute([ghz], backend=backend,
                              shots=self.shots)
@@ -353,11 +339,8 @@ class TestMeasCal(unittest.TestCase):
     def test_tensored_meas_cal_on_circuit(self):
         """Test an execution on a circuit."""
 
-        mit_pattern = [[2], [4, 1]]
-
-        qr = qiskit.QuantumRegister(5)
         # Generate the calibration circuits
-        meas_calibs, _ = tensored_meas_cal(mit_pattern, qr=qr)
+        meas_calibs, mit_pattern, ghz = tensored_calib_circ_creation()
 
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
@@ -369,16 +352,6 @@ class TestMeasCal(unittest.TestCase):
                                       mit_pattern=mit_pattern)
         # Calculate the fidelity
         fidelity = meas_cal.readout_fidelity(0)*meas_cal.readout_fidelity(1)
-
-        # Make a 3Q GHZ state
-        cr = ClassicalRegister(3)
-        ghz = QuantumCircuit(qr, cr)
-        ghz.h(qr[2])
-        ghz.cx(qr[2], qr[4])
-        ghz.cx(qr[2], qr[1])
-        ghz.measure(qr[2], cr[0])
-        ghz.measure(qr[4], cr[1])
-        ghz.measure(qr[1], cr[2])
 
         results = qiskit.execute([ghz], backend=backend,
                                  shots=self.shots).result()
