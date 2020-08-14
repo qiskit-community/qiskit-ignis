@@ -74,8 +74,7 @@ class TestMarkov(unittest.TestCase):
             rates=self.r_dict.values(),
             num_qubits=2
             )
-        mitigator._compute_g_mat()
-        self.trans_mat = sp.linalg.expm(mitigator._g_mat).tocsc()
+        self.trans_mat = sp.linalg.expm(mitigator.generator_matrix()).tocsc()
         self.num_steps = 100
 
     def markov_chain_int(self, x):
