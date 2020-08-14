@@ -48,49 +48,6 @@ class TensoredMeasMitigator(BaseMeasMitigator):
                 ainv = np.linalg.pinv(mat)
             self._mitigation_mats[i] = ainv
 
-    def mitigation_matrix(self, qubits: List[int] = None) -> np.ndarray:
-        r"""Return the measurement mitigation matrix for the specified qubits.
-
-        The mitigation matrix :math:`A^{-1}` is defined as the inverse of the
-        :meth:`assignment_matrix` :math:`A`.
-
-        Args:
-            qubits: Optional, qubits being measured for operator expval.
-
-        Returns:
-            np.ndarray: the measurement error mitigation matrix :math:`A^{-1}`.
-        """
-        if qubits is None:
-            qubits = list(range(self._num_qubits))
-        if isinstance(qubits, int):
-            qubits = [qubits]
-        mat = self._mitigation_mats[qubits[0]]
-        for i in qubits[1:]:
-            mat = np.kron(self._mitigation_mats[qubits[i]], mat)
-        return mat
-
-    def assignment_matrix(self, qubits: List[int] = None) -> np.ndarray:
-        r"""Return the measurement assignment matrix for specified qubits.
-
-        The assignment matrix is the stochastic matrix :math:`A` which assigns
-        a noisy measurement probability distribution to an ideal input
-        measurement distribution: :math:`P(i|j) = \langle i | A | j \rangle`.
-
-        Args:
-            qubits: Optional, qubits being measured for operator expval.
-
-        Returns:
-            np.ndarray: the assignment matrix A.
-        """
-        if qubits is None:
-            qubits = list(range(self._num_qubits))
-        if isinstance(qubits, int):
-            qubits = [qubits]
-        mat = self._assignment_mats[qubits[0]]
-        for i in qubits[1:]:
-            mat = np.kron(self._assignment_mats[qubits[i]], mat)
-        return mat
-
     def expectation_value(self,
                           counts: Dict,
                           diagonal: Optional[np.ndarray] = None,
@@ -146,6 +103,72 @@ class TensoredMeasMitigator(BaseMeasMitigator):
         coeffs = np.einsum(*einsum_args).ravel()
 
         return _expval_with_stddev(coeffs, probs, shots)
+
+    def mitigation_matrix(self, qubits: List[int] = None) -> np.ndarray:
+        r"""Return the measurement mitigation matrix for the specified qubits.
+
+        The mitigation matrix :math:`A^{-1}` is defined as the inverse of the
+        :meth:`assignment_matrix` :math:`A`.
+
+        Args:
+            qubits: Optional, qubits being measured for operator expval.
+
+        Returns:
+            np.ndarray: the measurement error mitigation matrix :math:`A^{-1}`.
+        """
+        if qubits is None:
+            qubits = list(range(self._num_qubits))
+        if isinstance(qubits, int):
+            qubits = [qubits]
+        mat = self._mitigation_mats[qubits[0]]
+        for i in qubits[1:]:
+            mat = np.kron(self._mitigation_mats[qubits[i]], mat)
+        return mat
+
+    def assignment_matrix(self, qubits: List[int] = None) -> np.ndarray:
+        r"""Return the measurement assignment matrix for specified qubits.
+
+        The assignment matrix is the stochastic matrix :math:`A` which assigns
+        a noisy measurement probability distribution to an ideal input
+        measurement distribution: :math:`P(i|j) = \langle i | A | j \rangle`.
+
+        Args:
+            qubits: Optional, qubits being measured for operator expval.
+
+        Returns:
+            np.ndarray: the assignment matrix A.
+        """
+        if qubits is None:
+            qubits = list(range(self._num_qubits))
+        if isinstance(qubits, int):
+            qubits = [qubits]
+        mat = self._assignment_mats[qubits[0]]
+        for i in qubits[1:]:
+            mat = np.kron(self._assignment_mats[qubits[i]], mat)
+        return mat
+
+    def assignment_fidelity(self, qubits: Optional[List[int]] = None) -> float:
+        r"""Return the measurement assignment fidelity on the specified qubits.
+
+        The assignment fidelity on N-qubits is defined as
+        :math:`\sum_{x\in\{0, 1\}^n} P(x|x) / 2^n`, where
+        :math:`P(x|x) = \rangle x|A|x\langle`, and :math:`A` is the
+        :meth:`assignment_matrix`.
+
+        Args:
+            qubits: Optional, qubits being measured for operator expval.
+
+        Returns:
+            float: the assignment fidelity.
+        """
+        if qubits is None:
+            qubits = list(range(self._num_qubits))
+        if isinstance(qubits, int):
+            qubits = [qubits]
+        fid = 1.0
+        for i in qubits:
+            fid *= np.mean(self._assignment_mats[i].diagonal())
+        return fid
 
     def _compute_gamma(self, qubits=None):
         """Compute gamma for N-qubit mitigation"""
