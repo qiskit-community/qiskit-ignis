@@ -15,15 +15,13 @@
 CTMP expectation value measurement error mitigator.
 """
 import logging
-from typing import Dict, Optional, List, Tuple, Union
-from collections import Counter
+from typing import Dict, Optional, List, Tuple
 
 import numpy as np
 import scipy.linalg as la
 import scipy.sparse as sps
 
 from qiskit.exceptions import QiskitError
-from qiskit.ignis.verification.tomography import marginal_counts
 from qiskit.ignis.numba import jit_fallback
 
 from ..base_meas_mitigator import BaseMeasMitigator
@@ -54,10 +52,13 @@ class CTMPMeasMitigator(BaseMeasMitigator):
                 nz_generators.append(gen)
         self._generators = nz_generators
         self._rates = np.array(nz_rates, dtype=float)
+
         # Parameters to be initialized from generators and rates
-        self._g_mat = None
-        self._b_mat = None
-        self._gamma = None
+        self._generator_mats = {}
+        self._noise_strengths = {}
+        self._sampling_mats = {}
+
+        # RNG for CTMP sampling
         self._rng = np.random.default_rng()
 
     def expectation_value(self,
@@ -96,27 +97,24 @@ class CTMPMeasMitigator(BaseMeasMitigator):
             which physical qubits these bit-values correspond to as
             ``circuit.measure(qubits, clbits)``.
         """
-        if qubits is not None:
-            raise NotImplementedError(
-                "qubits kwarg is not yet implemented for CTMP method.")
+        if qubits is None:
+            qubits = list(range(self._num_qubits))
 
-        if clbits is not None:
-            counts = marginal_counts(counts, meas_qubits=clbits)
+        # Convert counts to probs
+        probs, shots = counts_probability_vector(
+            counts, clbits=clbits, qubits=qubits,
+            num_qubits=len(qubits), return_shots=True)
 
         # Ensure diagonal is a numpy vector so we can use fancy indexing
         if diagonal is None:
-            diagonal = self._z_diagonal(2**self._num_qubits)
-        diagonal = np.asarray(diagonal)
+            diagonal = self._z_diagonal(2**len(qubits))
+        diagonal = np.asarray(diagonal, dtype=probs.dtype)
 
         # Get arrays from CSC sparse matrix format
         # TODO: To use qubits kwarg we should compute the B-matrix and gamma
         # for the specified qubit subsystem
-        if self._gamma is None:
-            self._compute_little_gamma()
-        if self._b_mat is None:
-            self._compute_b_mat()
-        gamma = self._gamma
-        bmat = self._b_mat
+        gamma = self.noise_strength(qubits)
+        bmat = self._sampling_matrix(qubits)
         values = bmat.data
         indices = np.asarray(bmat.indices, dtype=np.int)
         indptrs = np.asarray(bmat.indptr, dtype=np.int)
@@ -125,10 +123,7 @@ class CTMPMeasMitigator(BaseMeasMitigator):
         shots = sum(counts.values())
         min_delta = 0.05
         shots_delta = max(4 / (min_delta**2), shots)
-        num_samples = int(np.ceil(shots_delta * np.exp(2 * self._gamma)))
-
-        # Convert counts to probs
-        probs = counts_probability_vector(counts)
+        num_samples = int(np.ceil(shots_delta * np.exp(2 * gamma)))
 
         # Break total number of samples up into steps of a max number
         # of samples
@@ -153,6 +148,37 @@ class CTMPMeasMitigator(BaseMeasMitigator):
         stddev = np.exp(2 * gamma) / np.sqrt(shots)
         return expval, stddev
 
+    def generator_matrix(self, qubits: List[int] = None) -> sps.coo_matrix:
+        r"""Return the generator matrix on the specified qubits.
+
+        The generator matrix :math:`G` is given by :math:`\sum_i r_i G_i`
+        where the sum is taken over all :math:`G_i` acting on the specified
+        qubits subset.
+
+        Args:
+            qubits: Optional, qubit subset for the generators.
+
+        Returns:
+            sps.coo_matrix: the generator matrix :math:`G`.
+        """
+        if qubits is None:
+            qubits = tuple(range(self._num_qubits))
+        else:
+            qubits = tuple(sorted(qubits))
+
+        if qubits not in self._generator_mats:
+            # Construct G from subset generators
+            qubits_set = set(qubits)
+            g_mat = sps.coo_matrix(2 * (2**len(qubits),), dtype=np.float)
+            for gen, rate in zip(self._generators, self._rates):
+                if qubits_set.issuperset(gen[2]):
+                    # Keep generator
+                    g_mat += rate * self._generator_to_coo_matrix(gen, qubits)
+
+            # Add generator matrix to cache
+            self._generator_mats[qubits] = sps.coo_matrix(g_mat)
+        return self._generator_mats[qubits]
+
     def mitigation_matrix(self, qubits: List[int] = None) -> np.ndarray:
         r"""Return the measurement mitigation matrix for the specified qubits.
 
@@ -164,22 +190,12 @@ class CTMPMeasMitigator(BaseMeasMitigator):
 
         Returns:
             np.ndarray: the measurement error mitigation matrix :math:`A^{-1}`.
-
-        Raises:
-            NotImplementedError: if qubits kwarg is used.
         """
-        # TODO: This method needs to be updated to compute reduced G-matrix
-        # on subsets of qubit to exponentiate to make the A-matrix.
-        if qubits is not None:
-            raise NotImplementedError(
-                'qubits kwarg is not yet implemented for CTMP method.')
-
         # NOTE: the matrix definition of G is somehow flipped in both row and
         # columns compared to the canonical ordering for the A-matrix used
         # in the Complete and Tensored methods
-        if self._g_mat is None:
-            self._compute_g_mat()
-        gmat = np.flip(self._g_mat.todense())
+        gmat = self.generator_matrix(qubits)
+        gmat = np.flip(gmat.todense())
         return la.expm(-gmat)
 
     def assignment_matrix(self, qubits: List[int] = None) -> np.ndarray:
@@ -194,23 +210,34 @@ class CTMPMeasMitigator(BaseMeasMitigator):
 
         Returns:
             np.ndarray: the assignment matrix A.
-
-        Raises:
-            NotImplementedError: if qubits kwarg is used.
         """
-        # TODO: This method needs to be updated to compute reduced G-matrix
-        # on subsets of qubit to exponentiate to make the A-matrix.
-        if qubits is not None:
-            raise NotImplementedError(
-                'qubits kwarg is not yet implemented for CTMP method.')
-
         # NOTE: the matrix definition of G is somehow flipped in both row and
         # columns compared to the canonical ordering for the A-matrix used
         # in the Complete and Tensored methods
-        if self._g_mat is None:
-            self._compute_g_mat()
-        gmat = np.flip(self._g_mat.todense())
+        gmat = self.generator_matrix(qubits)
+        gmat = np.flip(gmat.todense())
         return la.expm(gmat)
+
+    def noise_strength(self, qubits: Optional[int] = None) -> float:
+        """Return the noise strength :math:`gamma` on the specified qubits"""
+        if qubits is None:
+            qubits = tuple(range(self._num_qubits))
+        else:
+            qubits = tuple(sorted(qubits))
+
+        if qubits not in self._noise_strengths:
+            # Compute gamma and cache
+            g_mat = self.generator_matrix(qubits)
+            # Check ideal case
+            if g_mat.row.size == 0:
+                gamma = 0
+            else:
+                gamma = np.max(-g_mat.data[g_mat.row == g_mat.col])
+            if gamma < 0:
+                raise QiskitError(
+                    'gamma should be non-negative, found gamma={}'.format(gamma))
+            self._noise_strengths[qubits] = gamma
+        return self._noise_strengths[qubits]
 
     def seed(self, value=None):
         """Set the seed for the quantum state RNG."""
@@ -224,9 +251,8 @@ class CTMPMeasMitigator(BaseMeasMitigator):
         if qubits is not None:
             raise NotImplementedError(
                 "qubits kwarg is not yet implemented for CTMP method.")
-        if self._gamma is None:
-            self._compute_little_gamma()
-        return np.exp(2 * self._gamma)
+        gamma = self.noise_strength(qubits)
+        return np.exp(2 * gamma)
 
     @staticmethod
     def _ctmp_inverse(
@@ -266,55 +292,23 @@ class CTMPMeasMitigator(BaseMeasMitigator):
 
         return y_vals, signs
 
-    def _compute_g_mat(self):
-        """Compute the total `G` matrix given the coefficients `r_i` and the generators `G_i`.
-        """
-        g_mat = sps.coo_matrix((2**self._num_qubits, 2**self._num_qubits),
-                               dtype=np.float)
+    def _sampling_matrix(self, qubits: Optional[int] = None) -> sps.csc_matrix:
+        """Compute the B matrix for CTMP sampling"""
+        if qubits is None:
+            qubits = tuple(range(self._num_qubits))
+        else:
+            qubits = tuple(sorted(qubits))
 
-        logger.info('Computing sparse G matrix')
-        for gen, rate in zip(self._generators, self._rates):
-            g_mat += rate * self._generator_to_coo_matrix(gen)
-        num_elts = g_mat.shape[0]**2
-        try:
-            nnz = g_mat.nnz
-            if nnz == num_elts:
-                sparsity = '+inf'
-            else:
-                sparsity = nnz / (num_elts - nnz)
-            logger.info('Computed sparse G matrix with sparsity %d', sparsity)
-        except AttributeError:
-            pass
-        self._g_mat = g_mat
+        if qubits not in self._sampling_mats:
+            # Compute matrix and cache
+            gmat = self.generator_matrix(qubits)
+            gamma = self.noise_strength(qubits)
+            bmat = sps.eye(2**len(qubits))
+            if gamma != 0:
+                bmat = bmat + gmat / gamma
+            self._sampling_mats[qubits] = bmat.tocsc()
 
-    def _compute_little_gamma(self):
-        """Compute the factor `gamma` for a given generator matrix."""
-        if self._g_mat is None:
-            self._compute_g_mat()
-        g_mat = -self._g_mat.tocoo()
-
-        # Check ideal case
-        if g_mat.row.size == 0:
-            self._gamma = 0
-            return
-
-        gamma = np.max(g_mat.data[g_mat.row == g_mat.col])
-        if gamma < 0:
-            raise QiskitError(
-                'gamma should be non-negative, found gamma={}'.format(gamma))
-        self._gamma = gamma
-
-    def _compute_b_mat(self):
-        """Compute B matrix"""
-        if self._g_mat is None:
-            self._compute_g_mat()
-        if self._gamma is None:
-            self._compute_little_gamma()
-
-        b_mat = sps.eye(2**self._num_qubits)
-        if self._gamma != 0:
-            b_mat = b_mat + self._g_mat / self._gamma
-        self._b_mat = b_mat.tocsc()
+        return self._sampling_mats[qubits]
 
     @staticmethod
     def _tensor_list(parts: List[np.ndarray]) -> np.ndarray:
@@ -324,7 +318,7 @@ class CTMPMeasMitigator(BaseMeasMitigator):
             res = sps.kron(res, mat)
         return res
 
-    def _generator_to_coo_matrix(self, gen: Generator) -> sps.coo_matrix:
+    def _generator_to_coo_matrix(self, gen: Generator, qubits: Tuple[int]) -> sps.coo_matrix:
         """Compute the matrix form of a generator.
 
         Generators are uniquely determined by two bitstrings,
@@ -334,6 +328,7 @@ class CTMPMeasMitigator(BaseMeasMitigator):
 
         Args:
             gen: Generator to use.
+            qubits: Qubit subset for generator matrix
 
         Returns:
             sps.coo_matrix: Sparse representation of generator.
@@ -344,19 +339,20 @@ class CTMPMeasMitigator(BaseMeasMitigator):
             '10': np.array([[0, 0], [1, 0]]),
             '11': np.array([[0, 0], [0, 1]])
         }
-        s_b, s_a, qubits = gen
-        shape = (2**self._num_qubits, ) * 2
-        res = sps.coo_matrix(shape, dtype=float)
+        s_b, s_a, gen_qubits = gen
+        num_qubits = len(qubits)
         # pylint: disable=unnecessary-lambda
         ba_strings = list(map(lambda x: ''.join(x), list(zip(*[s_b, s_a]))))
         aa_strings = list(map(lambda x: ''.join(x), list(zip(*[s_a, s_a]))))
-        ba_mats = [sps.eye(2, 2).tocoo()] * self._num_qubits
-        aa_mats = [sps.eye(2, 2).tocoo()] * self._num_qubits
-        for qubit, s_ba, s_aa in zip(qubits, ba_strings, aa_strings):
-            ba_mats[qubit] = ket_bra_dict[s_ba]
-            aa_mats[qubit] = ket_bra_dict[s_aa]
-        res += self._tensor_list(ba_mats[::-1])
-        res -= self._tensor_list(aa_mats[::-1])
+        ba_mats = [sps.eye(2, 2).tocoo()] * num_qubits
+        aa_mats = [sps.eye(2, 2).tocoo()] * num_qubits
+        for qubit, s_ba, s_aa in zip(gen_qubits, ba_strings, aa_strings):
+            idx = qubits.index(qubit)
+            ba_mats[idx] = ket_bra_dict[s_ba]
+            aa_mats[idx] = ket_bra_dict[s_aa]
+
+        res = sps.coo_matrix(2 * (2**num_qubits, ), dtype=float)
+        res = res + self._tensor_list(ba_mats[::-1]) - self._tensor_list(aa_mats[::-1])
         return res
 
 
