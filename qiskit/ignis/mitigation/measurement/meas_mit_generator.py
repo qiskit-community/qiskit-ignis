@@ -81,7 +81,7 @@ class MeasMitigatorGenerator:
             backend: Optional, transpile circuits for a specific backend.
 ​
         Returns:
-            tuple: (circuits, metadata, run_config)        
+            tuple: (circuits, metadata, run_config)
         """
         circuits = self.circuits(qubits=qubits,
                                  backend=backend)
