@@ -16,7 +16,7 @@ Full A-matrix measurement migitation generator.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 import numpy as np
 
 try:
@@ -32,9 +32,10 @@ class BaseMeasMitigator(ABC):
     @abstractmethod
     def expectation_value(self,
                           counts: Dict,
+                          diagonal: Optional[np.ndarray] = None,
                           clbits: Optional[List[int]] = None,
-                          qubits: Optional[List[int]] = None,
-                          diagonal: Optional[np.ndarray] = None) -> float:
+                          qubits: Optional[List[int]] = None
+                          ) -> Tuple[float, float]:
         r"""Compute the mitigated expectation value of a diagonal observable.
 
         This computes the mitigated estimator of
@@ -44,12 +45,13 @@ class BaseMeasMitigator(ABC):
 
         Args:
             counts: counts object
-            clbits: Optional, marginalize counts to just these bits.
-            qubits: qubits the count bitstrings correspond to.
             diagonal: Optional, values of the diagonal observable. If None the
                       observable is set to :math:`Z^\otimes n`.
+            clbits: Optional, marginalize counts to just these bits.
+            qubits: qubits the count bitstrings correspond to.
+
         Returns:
-            float: expval.
+            (float, float): the expectation value and standard deviation.
 
         Additional Information:
             The observable :math:`O` is input using the ``diagonal`` kwarg as a
@@ -223,9 +225,9 @@ class BaseMeasMitigator(ABC):
         return ax
 
     @staticmethod
-    def _z_diagonal(dim):
+    def _z_diagonal(dim, dtype=float):
         r"""Return the diagonal for the operator :math:`Z^\otimes n`"""
-        parity = np.zeros(dim, dtype=np.int)
+        parity = np.zeros(dim, dtype=dtype)
         for i in range(dim):
             parity[i] = bin(i)[2:].count('1')
         return (-1)**np.mod(parity, 2)

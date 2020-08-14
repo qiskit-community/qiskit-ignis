@@ -14,11 +14,11 @@
 """
 Full-matrix measurement error mitigation generator.
 """
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 import numpy as np
 
 from qiskit.exceptions import QiskitError
-from ..meas_mit_utils import counts_probability_vector
+from ..meas_mit_utils import (counts_probability_vector, _expval_with_stddev)
 from ..base_meas_mitigator import BaseMeasMitigator
 
 
@@ -37,9 +37,10 @@ class CompleteMeasMitigator(BaseMeasMitigator):
 
     def expectation_value(self,
                           counts: Dict,
+                          diagonal: Optional[np.ndarray] = None,
                           clbits: Optional[List[int]] = None,
-                          qubits: Optional[List[int]] = None,
-                          diagonal: Optional[np.ndarray] = None) -> float:
+                          qubits: Optional[List[int]] = None
+                          ) -> Tuple[float, float]:
         r"""Compute the mitigated expectation value of a diagonal observable.
 
         This computes the mitigated estimator of
@@ -49,12 +50,13 @@ class CompleteMeasMitigator(BaseMeasMitigator):
 
         Args:
             counts: counts object
-            clbits: Optional, marginalize counts to just these bits.
-            qubits: qubits the count bitstrings correspond to.
             diagonal: Optional, values of the diagonal observable. If None the
                       observable is set to :math:`Z^\otimes n`.
+            clbits: Optional, marginalize counts to just these bits.
+            qubits: qubits the count bitstrings correspond to.
+
         Returns:
-            float: expval.
+            (float, float): the expectation value and standard deviation.
 
         Additional Information:
             The observable :math:`O` is input using the ``diagonal`` kwarg as a
@@ -67,7 +69,8 @@ class CompleteMeasMitigator(BaseMeasMitigator):
             ``circuit.measure(qubits, clbits)``.
         """
         # Get probability vector
-        probs = counts_probability_vector(counts, clbits=clbits, qubits=qubits)
+        probs, shots = counts_probability_vector(
+            counts, clbits=clbits, qubits=qubits, return_shots=True)
         num_qubits = int(np.log2(probs.shape[0]))
 
         # Get qubit mitigation matrix and mitigate probs
@@ -75,12 +78,15 @@ class CompleteMeasMitigator(BaseMeasMitigator):
             qubits = tuple(range(num_qubits))
         if len(qubits) != num_qubits:
             raise QiskitError("Num qubits does not match number of clbits.")
-        mit_probs = self.mitigation_matrix(qubits).dot(probs)
+        mit_mat = self.mitigation_matrix(qubits)
 
-        # Compute mitigated expval
+        # Get operator coeffs
         if diagonal is None:
             diagonal = self._z_diagonal(2 ** num_qubits)
-        return mit_probs.dot(diagonal)
+        # Apply transpose of mitigation matrix
+        coeffs = mit_mat.T.dot(diagonal)
+
+        return _expval_with_stddev(coeffs, probs, shots)
 
     def mitigation_matrix(self, qubits: List[int] = None) -> np.ndarray:
         r"""Return the measurement mitigation matrix for the specified qubits.

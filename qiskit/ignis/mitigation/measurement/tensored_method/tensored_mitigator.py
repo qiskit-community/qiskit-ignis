@@ -14,10 +14,10 @@
 """
 Single-qubit tensor-product measurement error mitigation generator.
 """
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 import numpy as np
 
-from ..meas_mit_utils import counts_probability_vector
+from ..meas_mit_utils import (counts_probability_vector, _expval_with_stddev)
 from ..base_meas_mitigator import BaseMeasMitigator
 
 
@@ -93,9 +93,10 @@ class TensoredMeasMitigator(BaseMeasMitigator):
 
     def expectation_value(self,
                           counts: Dict,
+                          diagonal: Optional[np.ndarray] = None,
                           clbits: Optional[List[int]] = None,
                           qubits: Optional[List[int]] = None,
-                          diagonal: Optional[np.ndarray] = None) -> float:
+                          ) -> Tuple[float, float]:
         r"""Compute the mitigated expectation value of a diagonal observable.
 
         This computes the mitigated estimator of
@@ -105,12 +106,13 @@ class TensoredMeasMitigator(BaseMeasMitigator):
 
         Args:
             counts: counts object
-            clbits: Optional, marginalize counts to just these bits.
-            qubits: qubits the count bitstrings correspond to.
             diagonal: Optional, values of the diagonal observable. If None the
                       observable is set to :math:`Z^\otimes n`.
+            clbits: Optional, marginalize counts to just these bits.
+            qubits: qubits the count bitstrings correspond to.
+
         Returns:
-            float: expval.
+            (float, float): the expectation value and standard deviation.
 
         Additional Information:
             The observable :math:`O` is input using the ``diagonal`` kwarg as a
@@ -123,7 +125,8 @@ class TensoredMeasMitigator(BaseMeasMitigator):
             ``circuit.measure(qubits, clbits)``.
         """
         # Get expectation value on specified qubits
-        probs = counts_probability_vector(counts, clbits=clbits)
+        probs, shots = counts_probability_vector(
+            counts, clbits=clbits, return_shots=True)
         num_qubits = int(np.log2(probs.shape[0]))
 
         if qubits is not None:
@@ -131,16 +134,18 @@ class TensoredMeasMitigator(BaseMeasMitigator):
         else:
             ainvs = self._mitigation_mats
 
-        probs = np.reshape(probs, num_qubits * [2])
-        einsum_args = [probs, list(range(num_qubits))]
-        for i, ainv in enumerate(reversed(ainvs)):
-            einsum_args += [ainv, [num_qubits + i, i]]
-        einsum_args += [list(range(num_qubits, 2 * num_qubits))]
-
-        probs_mit = np.einsum(*einsum_args).ravel()
+        # Get operator coeffs
         if diagonal is None:
             diagonal = self._z_diagonal(2 ** num_qubits)
-        return probs_mit.dot(diagonal)
+        # Apply transpose of mitigation matrix
+        coeffs = np.reshape(diagonal, num_qubits * [2])
+        einsum_args = [coeffs, list(range(num_qubits))]
+        for i, ainv in enumerate(reversed(ainvs)):
+            einsum_args += [ainv.T, [num_qubits + i, i]]
+        einsum_args += [list(range(num_qubits, 2 * num_qubits))]
+        coeffs = np.einsum(*einsum_args).ravel()
+
+        return _expval_with_stddev(coeffs, probs, shots)
 
     def _compute_gamma(self, qubits=None):
         """Compute gamma for N-qubit mitigation"""
