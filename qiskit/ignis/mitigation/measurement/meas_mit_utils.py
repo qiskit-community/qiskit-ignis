@@ -15,6 +15,7 @@
 Measurement error mitigation utility functions.
 """
 
+import logging
 from functools import partial
 from typing import Optional, List, Dict, Tuple
 import numpy as np
@@ -24,12 +25,59 @@ from qiskit.result import Counts, Result
 from qiskit.ignis.verification.tomography import marginal_counts, combine_counts
 from qiskit.ignis.numba import jit_fallback
 
+logger = logging.getLogger(__name__)
+
+
+def expectation_value(counts: Counts,
+                      diagonal: Optional[np.ndarray] = None,
+                      clbits: Optional[List[int]] = None,
+                      mitigator: Optional = None,
+                      mitigator_qubits: Optional[List[int]] = None) -> Tuple[float, float]:
+    r"""Compute the expectation value of a diagonal operator from counts.
+
+    Args:
+        counts: counts object.
+        diagonal: Optional, values of the diagonal observable. If None the
+                  observable is set to :math:`Z^\otimes n`.
+        clbits: Optional, marginalize counts to just these bits.
+        mitigator: Optional, a measurement mitigator to apply mitigation.
+        mitigator_qubits: Optional, qubits the count bitstrings correspond to.
+                          Only required if applying mitigation with clbits arg.
+
+    Returns:
+        (float, float): the expectation value and standard deviation.
+    """
+    if mitigator is not None:
+        # Use mitigator expectation value method
+        return mitigator.expectation_value(
+            counts, diagonal=diagonal, clbits=clbits, qubits=mitigator_qubits)
+
+    # Marginalize counts
+    if clbits is not None:
+        counts = marginal_counts(counts, meas_qubits=clbits)
+
+    # Get counts shots and probabilities
+    probs = np.array(list(counts.values()))
+    shots = probs.sum()
+    probs = probs / shots
+
+    # Get diagonal operator coefficients
+    if diagonal:
+        keys = [int(key, 2) for key in counts.keys()]
+        coeffs = diagonal[keys].asarray(dtype=probs.dtype)
+    else:
+        coeffs = np.array([(-1) ** (key.count('1') % 2)
+                           for key in counts.keys()], dtype=probs.dtype)
+
+    return _expval_with_stddev(coeffs, probs, shots)
+
 
 def counts_probability_vector(
         counts: Counts,
         clbits: Optional[List[int]] = None,
         qubits: Optional[List[int]] = None,
-        num_qubits: Optional[int] = None) -> np.ndarray:
+        num_qubits: Optional[int] = None,
+        return_shots: Optional[bool] = False) -> np.ndarray:
     """Compute mitigated expectation value.
 
     Args:
@@ -37,6 +85,7 @@ def counts_probability_vector(
         clbits: Optional, marginalize counts to just these bits.
         qubits: qubits the count bitstrings correspond to.
         num_qubits: the total number of qubits.
+        return_shots: return the number of shots.
 
     Raises:
         QiskitError: if qubit and clbit kwargs are not valid.
@@ -67,39 +116,9 @@ def counts_probability_vector(
         axes = [num_qubits - 1 - i for i in reversed(np.argsort(qubits))]
         vec = np.reshape(vec,
                          num_qubits * [2]).transpose(axes).reshape(vec.shape)
-
+    if return_shots:
+        return vec, shots
     return vec
-
-
-def counts_expectation_value(counts: Counts,
-                             clbits: Optional[List[int]] = None,
-                             diagonal: Optional[np.ndarray] = None) -> float:
-    r"""Convert counts to a probability vector.
-
-    Args:
-        counts: counts object.
-        clbits: Optional, marginalize counts to just these bits.
-        diagonal: Optional, values of the diagonal observable. If None the
-                      observable is set to :math:`Z^\otimes n`.
-
-    Returns:
-        float: expectation value.
-    """
-    # Marginalize counts
-    if clbits is not None:
-        counts = marginal_counts(counts, meas_qubits=clbits)
-
-    # Compute expval via reduction
-    expval = 0
-    shots = 0
-    for key, val in counts.items():
-        shots += val
-        if diagonal is None:
-            coeff = (-1) ** (key.count('1') % 2)
-        else:
-            coeff = diagonal[int(key, 2)]
-        expval += coeff * val
-    return expval / shots
 
 
 def calibration_data(result: Result,
@@ -175,6 +194,35 @@ def assignment_matrix(cal_data: Dict[int, Dict[int, int]],
             'Insufficient calibration data to fit assignment matrix'
             ' on qubits {}'.format(qubits.tolist()))
     return amat / renorm
+
+
+def _expval_with_stddev(coeffs: np.ndarray,
+                        probs: np.ndarray,
+                        shots: int) -> Tuple[float, float]:
+    """Compute expectation value and standard deviation.
+
+    Args:
+        coeffs: array of diagonal operator coefficients.
+        probs: array of measurement probabilities.
+        shots: total number of shots to obtain probabilities.
+
+    Returns:
+        tuple: (expval, stddev) expectation value and standard deviation.
+    """
+    # Compute expval
+    expval = coeffs.dot(probs)
+
+    # Compute variance
+    sq_expval = (coeffs ** 2).dot(probs)
+    variance = (sq_expval - expval ** 2) / shots
+
+    # Compute standard deviation
+    if variance < 0 and not np.isclose(variance, 0):
+        logger.warning(
+            'Encountered a negative variance in expectation value calculation.'
+            '(%f). Setting standard deviation of result to 0.', variance)
+    stddev = np.sqrt(variance) if variance > 0 else 0.0
+    return expval, stddev
 
 
 @jit_fallback

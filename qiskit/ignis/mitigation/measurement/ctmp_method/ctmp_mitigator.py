@@ -62,9 +62,10 @@ class CTMPMeasMitigator(BaseMeasMitigator):
 
     def expectation_value(self,
                           counts: Dict,
+                          diagonal: Optional[np.ndarray] = None,
                           clbits: Optional[List[int]] = None,
-                          qubits: Optional[List[int]] = None,
-                          diagonal: Optional[np.ndarray] = None) -> float:
+                          qubits: Optional[List[int]] = None
+                          ) -> Tuple[float, float]:
         r"""Compute the mitigated expectation value of a diagonal observable.
 
         This computes the mitigated estimator of
@@ -74,12 +75,13 @@ class CTMPMeasMitigator(BaseMeasMitigator):
 
         Args:
             counts: counts object
-            clbits: Optional, marginalize counts to just these bits.
-            qubits: qubits the count bitstrings correspond to.
             diagonal: Optional, values of the diagonal observable. If None the
                       observable is set to :math:`Z^\otimes n`.
+            clbits: Optional, marginalize counts to just these bits.
+            qubits: qubits the count bitstrings correspond to.
+
         Returns:
-            float: expval.
+            (float, float): the expectation value and standard deviation.
 
         Raises:
             NotImplementedError: if qubits or diagonal kwargs are used.
@@ -120,8 +122,9 @@ class CTMPMeasMitigator(BaseMeasMitigator):
         indptrs = np.asarray(bmat.indptr, dtype=np.int)
 
         # Set a minimum number of CTMP samples
+        shots = sum(counts.values())
         min_delta = 0.05
-        shots_delta = max(4 / (min_delta**2), np.sum(list(counts.values())))
+        shots_delta = max(4 / (min_delta**2), shots)
         num_samples = int(np.ceil(shots_delta * np.exp(2 * self._gamma)))
 
         # Convert counts to probs
@@ -133,16 +136,22 @@ class CTMPMeasMitigator(BaseMeasMitigator):
         batch_size = 50000
         samples_set = (num_samples // batch_size) * [batch_size] + [
             num_samples % batch_size]
-        for shots in samples_set:
+        for sample_shots in samples_set:
             # Apply sampling
             samples, sample_signs = self._ctmp_inverse(
-                shots, probs, gamma, values, indices, indptrs, self._rng)
+                sample_shots, probs, gamma, values, indices, indptrs, self._rng)
 
             # Compute expectation value
             expval += diagonal[samples[sample_signs == 0]].sum()
             expval -= diagonal[samples[sample_signs == 1]].sum()
 
-        return (np.exp(2 * gamma) / num_samples) * expval
+        expval = (np.exp(2 * gamma) / num_samples) * expval
+
+        # TODO: calculate exact standard deviation
+        # For now we return the upper bound: stddev <= Gamma / sqrt(shots)
+        # using Gamma ~ exp(2 * gamma)
+        stddev = np.exp(2 * gamma) / np.sqrt(shots)
+        return expval, stddev
 
     def mitigation_matrix(self, qubits: List[int] = None) -> np.ndarray:
         r"""Return the measurement mitigation matrix for the specified qubits.
@@ -168,6 +177,8 @@ class CTMPMeasMitigator(BaseMeasMitigator):
         # NOTE: the matrix definition of G is somehow flipped in both row and
         # columns compared to the canonical ordering for the A-matrix used
         # in the Complete and Tensored methods
+        if self._g_mat is None:
+            self._compute_g_mat()
         gmat = np.flip(self._g_mat.todense())
         return la.expm(-gmat)
 
@@ -196,6 +207,8 @@ class CTMPMeasMitigator(BaseMeasMitigator):
         # NOTE: the matrix definition of G is somehow flipped in both row and
         # columns compared to the canonical ordering for the A-matrix used
         # in the Complete and Tensored methods
+        if self._g_mat is None:
+            self._compute_g_mat()
         gmat = np.flip(self._g_mat.todense())
         return la.expm(gmat)
 

@@ -24,4 +24,4 @@ from .meas_mit_fitter import MeasMitigatorFitter
 from .complete_method import CompleteMeasMitigator
 from .tensored_method import TensoredMeasMitigator
 from .ctmp_method import CTMPMeasMitigator
-from .meas_mit_utils import counts_expectation_value, counts_probability_vector
+from .meas_mit_utils import expectation_value, counts_probability_vector
