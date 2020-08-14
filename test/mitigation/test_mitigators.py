@@ -61,7 +61,8 @@ class NoisySimulationTest(unittest.TestCase):
 
     tolerance = 0.05
 
-    def execute_circs(self, qc_list: List[QuantumCircuit], noise_model = None) -> Result:
+    def execute_circs(self, qc_list: List[QuantumCircuit],
+                      noise_model=None) -> Result:
         """Run circuits with the readout noise defined in this class
         """
         return execute(

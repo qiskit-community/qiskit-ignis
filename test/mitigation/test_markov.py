@@ -27,7 +27,7 @@ def statistical_test(num_tests: int, fraction_passes: float):
     """Wrapper for statistical test that should be run multiple times and pass
     at least a certain fraction of times.
     """
-    # pylint: disable=bare-except
+    # pylint: disable=broad-except
     def stat_test(func):
         def wrapper_func(*args, **kwargs):
 
@@ -37,7 +37,7 @@ def statistical_test(num_tests: int, fraction_passes: float):
                 try:
                     func(*args, **kwargs)
                     num_passes += 1
-                except:
+                except Exception:
                     num_failures += 1
             if num_passes / num_tests < fraction_passes:
                 raise ValueError('Passed {} out of {} trials, needed {}%'.format(
