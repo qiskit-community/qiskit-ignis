@@ -27,7 +27,7 @@ from qiskit.providers.aer import QasmSimulator, noise
 from qiskit.ignis.mitigation.measurement import (
     MeasMitigatorGenerator,
     MeasMitigatorFitter,
-    counts_expectation_value
+    expectation_value
 )
 
 
@@ -94,7 +94,7 @@ class TestExpVals(NoisySimulationTest):
         counts_target = result_targ.get_counts(0)
         self.counts_noise = result_nois.get_counts(0)
 
-        self.exp_targ = counts_expectation_value(counts_target)
+        self.exp_targ, _ = expectation_value(counts_target)
 
         self.method = None
 
@@ -115,7 +115,7 @@ class TestExpVals(NoisySimulationTest):
         result_cal = self.execute_circs(circs, noise_model=self.noise_model)
         mitigator = MeasMitigatorFitter(result_cal, meta).fit(method=self.method)
 
-        expval = mitigator.expectation_value(self.counts_noise)
+        expval, _ = mitigator.expectation_value(self.counts_noise)
 
         self.assertLess(abs(self.exp_targ - expval), self.tolerance)
 
@@ -160,13 +160,13 @@ class TestPartialExpVals(NoisySimulationTest):
         counts_targ = result_targ.get_counts(0)
         counts_nois = result_nois.get_counts(0)
 
-        exp_targ = counts_expectation_value(counts_targ)
+        exp_targ, _ = expectation_value(counts_targ)
 
         circs, meta, _ = MeasMitigatorGenerator(self.num_qubits, method=method).run()
         result_cal = self.execute_circs(circs, noise_model=self.noise_model)
         mitigator = MeasMitigatorFitter(result_cal, meta).fit(method=method)
 
-        expval = mitigator.expectation_value(counts_nois, qubits=qubits)
+        expval, _ = mitigator.expectation_value(counts_nois, qubits=qubits)
 
         self.assertLess(abs(exp_targ - expval), self.tolerance)
         return None

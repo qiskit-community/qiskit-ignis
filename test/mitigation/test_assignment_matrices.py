@@ -29,7 +29,7 @@ from qiskit.ignis.mitigation.measurement import (
     MeasMitigatorFitter
 )
 
-from test_mitigators import NoisySimulationTest
+from .test_mitigators import NoisySimulationTest
 
 
 _QUBIT_SUBSETS = [(1, 0, 2), (3, 0), (2,), (0, 3, 1, 2)]
@@ -114,7 +114,7 @@ class TestMatrices(NoisySimulationTest):
 
         counts = self.execute_circs(qc, noise_model=self.noise_model).get_counts(0)
 
-        exp_val_mit = mitigator.expectation_value(
+        exp_val_mit, _ = mitigator.expectation_value(
             counts=counts,
             clbits=qubits,
             qubits=qubits
