@@ -36,7 +36,31 @@ of another experiment of interest.
    CompleteMeasFitter
    TensoredMeasFitter
 
+Expectation Value Measurement
+=============================
+
+The following classes allow mitigation of measurement errors
+in expectation value computations.
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   expectation_value
+   counts_probability_vector
+   MeasMitigatorGenerator
+   MeasMitigatorFitter
+   CTMPMeasMitigator
+   CompleteMeasMitigator
 """
+
 from .measurement import (complete_meas_cal, tensored_meas_cal,
                           MeasurementFilter, TensoredFilter,
                           CompleteMeasFitter, TensoredMeasFitter)
+
+from .measurement import (expectation_value,
+                          counts_probability_vector,
+                          MeasMitigatorGenerator,
+                          MeasMitigatorFitter,
+                          CompleteMeasMitigator,
+                          TensoredMeasMitigator,
+                          CTMPMeasMitigator)

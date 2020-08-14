@@ -389,7 +389,7 @@ def _markov_chain_compiled(y_vals: np.ndarray, x_vals: np.ndarray,
                            r_vals: np.ndarray, alpha_vals: np.ndarray,
                            csc_vals: np.ndarray, csc_indices: np.ndarray,
                            csc_indptrs: np.ndarray):
-    """Simulate the Markov process for the transition matrix `trans_mat`.
+    """Simulate the Markov process for a CSC transition matrix.
 
     Args:
         y_vals: array to store sampled values.
