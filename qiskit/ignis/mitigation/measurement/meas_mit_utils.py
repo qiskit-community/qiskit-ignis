@@ -62,12 +62,12 @@ def expectation_value(counts: Counts,
     probs = probs / shots
 
     # Get diagonal operator coefficients
-    if diagonal:
-        keys = [int(key, 2) for key in counts.keys()]
-        coeffs = diagonal[keys].asarray(dtype=probs.dtype)
-    else:
+    if diagonal is None:
         coeffs = np.array([(-1) ** (key.count('1') % 2)
                            for key in counts.keys()], dtype=probs.dtype)
+    else:
+        keys = [int(key, 2) for key in counts.keys()]
+        coeffs = np.asarray(diagonal[keys], dtype=probs.dtype)        
 
     return _expval_with_stddev(coeffs, probs, shots)
 
