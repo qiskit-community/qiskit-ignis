@@ -503,6 +503,7 @@ class CNOTDihedral():
 
     def compose(self, other):
         """Return the composed operator.
+
         Args:
             other (CNOTDihedral): an operator object.
         Returns:
@@ -524,6 +525,7 @@ class CNOTDihedral():
 
     def dot(self, other):
         """Return the right multiplied operator self * other.
+
         Args:
             other (CNOTDihedral): an operator object.
         Returns:
