@@ -1427,6 +1427,7 @@ class CNOTDihedralRBFitter(RBFitterBase):
         if show_plt:
             plt.show()
 
+
 class CorrelatedRBFitter(RBFitterBase):
     """
         Class for fitters for correlated randomized benchmarking
@@ -1443,9 +1444,9 @@ class CorrelatedRBFitter(RBFitterBase):
             max_weight: maximum weight to fit (-1 fit all)
         """
 
-        #WARNING: Haven't implemented max_weight, max_distance yet!!
+        # WARNING: Haven't implemented max_weight, max_distance yet!!
 
-        #calculate all possible subsystem strings
+        # calculate all possible subsystem strings
         self._n_partitions = len(rb_pattern)
         self._n_subsystems = 2**self._n_partitions-1
         self._subsystems = []
@@ -1453,7 +1454,7 @@ class CorrelatedRBFitter(RBFitterBase):
         for i in range(self._n_subsystems):
             # this gives the correlator in the subsystem
             # representation
-            self._subsystems.append(("{0:0%db}"%self._n_partitions).format(i+1))
+            self._subsystems.append(("{0:0%db}" % self._n_partitions).format(i+1))
 
             # expand into the full qubit representation
             # and save as an integer
@@ -1466,26 +1467,23 @@ class CorrelatedRBFitter(RBFitterBase):
 
         self._r_coeff = None
 
-        #clifford_lengths need to be the same in all patterns
+        # clifford_lengths need to be the same in all patterns
         self._cliff_lengths = cliff_lengths
 
         self._rb_pattern = rb_pattern
         self._nq = sum([len(i) for i in rb_pattern])
 
-        statedict = {("{0:0%db}"%self._nq).format(i): 1 for i in range(2**self._nq)}
+        statedict = {("{0:0%db}" % self._nq).format(i): 1 for i in range(2**self._nq)}
 
         self._zdict_ops = []
         for subind, subsys in enumerate(self._subsystems):
             self._zdict_ops.append(statedict.copy())
             for i in range(2**self._nq):
-                #if the operator (expressed as an integer) and the state
-                #overlap is even then the z operator is '1'
-                #otherwise it's -1
+                # if the operator (expressed as an integer) and the state
+                # overlap is even then the z operator is '1'
+                # otherwise it's -1
                 if bin(i & self._subsystems2[subind]).count('1') % 2 != 0:
-                    self._zdict_ops[-1][("{0:0%db}"%self._nq).format(i)] = -1
-
-
-
+                    self._zdict_ops[-1][("{0:0%db}" % self._nq).format(i)] = -1
 
         self._raw_data = []
         self._ydata = []
@@ -1642,7 +1640,6 @@ class CorrelatedRBFitter(RBFitterBase):
 
                     self._raw_data[-1][seedidx].append(zcorr)
 
-
     def calc_statistics(self):
         """
         Extract averages and std dev from the raw data (self._raw_data).
@@ -1720,8 +1717,6 @@ class CorrelatedRBFitter(RBFitterBase):
         """
 
         for sub_ind, _ in enumerate(self._subsystems):
-
-
             fit_guess = [0.95, 0.99, 0.0]
             fit_guess[0] = self._ydata[sub_ind]['mean'][0]
             # Should decay to 1/2^n
@@ -1785,7 +1780,7 @@ class CorrelatedRBFitter(RBFitterBase):
 
         ax.set_xlabel('Clifford Length', fontsize=16)
         ax.set_ylabel('Ground State Population', fontsize=16)
-        ax.set_title('Plotting %s Correlator'%self._subsystems[sub_index])
+        ax.set_title('Plotting %s Correlator' % self._subsystems[sub_index])
         ax.grid(True)
 
         if add_label:
@@ -1808,8 +1803,8 @@ class CorrelatedRBFitter(RBFitterBase):
         alpha_k  = Prod_j (1 + R_kj * eps_j)
         """
 
-        #precompute the a matrix of coefficients for calculating the rauli's
-        #from this matrix alpha_k = prod[1-rauli_matrix_coeff*e] where e is the error vector
+        # precompute the a matrix of coefficients for calculating the rauli's
+        # from this matrix alpha_k = prod[1-rauli_matrix_coeff*e] where e is the error vector
         self._r_coeff = np.zeros([len(self._subsystems), len(self._subsystems)], dtype=float)
         for (ii, subspace1) in enumerate(self._subsystems):
             for (kk, subspace2) in enumerate(self._subsystems):
@@ -1848,8 +1843,6 @@ class CorrelatedRBFitter(RBFitterBase):
 
         return rauli
 
-
-
     def _calc_alphas(self, eps_list):
         """
         Calculate the alpha from the fixed weight depolarizing errors
@@ -1867,7 +1860,6 @@ class CorrelatedRBFitter(RBFitterBase):
             for jj in range(len(eps_list)):
                 alpha_calc[ii] *= (1.0+self._r_coeff[jj, ii]*eps_list[jj])
         return alpha_calc
-
 
     def _alpha_diff_func(self, eps_list):
         """
@@ -1898,9 +1890,8 @@ class CorrelatedRBFitter(RBFitterBase):
         """
 
         if self._r_coeff is None:
-            #precalculate
+            # precalculate
             self._precalc_r_coeff()
-
 
         if init_guess is None:
             init_guess = 0.01*np.ones(len(self.fit_alphas.keys()), dtype=float)
@@ -1918,7 +1909,6 @@ class CorrelatedRBFitter(RBFitterBase):
             self._epsilons[j] = [optm_results.x[i], est_err[i]]
 
         return optm_results.cost
-
 
     def plot_epsilon(self, ax=None):
         """
@@ -1956,7 +1946,7 @@ class CorrelatedRBFitter(RBFitterBase):
         for ii, jj in enumerate(corr_list):
             point_weight = jj.count('1')
             if prev_weight != point_weight:
-                legend_label = 'Weight %d'%point_weight
+                legend_label = 'Weight %d' % point_weight
                 prev_weight = point_weight
             else:
                 legend_label = '_nolegend_'
@@ -1965,7 +1955,6 @@ class CorrelatedRBFitter(RBFitterBase):
                         label=legend_label, linestyle='none',
                         marker='.', markersize=20,
                         color=color_list[point_weight-1])
-
 
         ax.legend(fontsize=16)
         ax.set_xlim([0, len(corr_weight)+1])
