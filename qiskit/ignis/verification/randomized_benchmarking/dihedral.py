@@ -477,6 +477,10 @@ class CNOTDihedral():
         """
         return decompose_cnotdihedral(self)
 
+    def to_instruction(self):
+        """Return a Gate instruction implementing the CNOTDihedral object."""
+        return self.to_circuit().to_gate()
+
     def from_circuit(self, circuit):
         """Initialize from a QuantumCircuit or Instruction.
 
