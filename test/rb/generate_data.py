@@ -257,7 +257,8 @@ def rb_purity_circuit_execution(rb_opts: dict, shots: int):
 
 def rb_correlated_circuit_execution(rb_opts: dict, shots: int):
     """
-    Create correlated rb circuits with coherent weight 2 error and simulates them
+    Create correlated rb circuits with coherent weight 2 error and
+     thermal relaxation error and simulate them
 
     Args:
         rb_opts: the options for the rb circuits
@@ -276,13 +277,21 @@ def rb_correlated_circuit_execution(rb_opts: dict, shots: int):
 
     # creating the noise
     noise_model = NoiseModel()
-    unitary = np.eye(2 ** 2, dtype=complex)
-    for i in range(4):
-        unitary[i, 3 - i] = 1j
-    unitary *= (1 / np.sqrt(2))
-    error = coherent_unitary_error(unitary)
-    noise_model.add_nonlocal_quantum_error(error, basis_gates, [0], [0, 2])
-    noise_model.add_nonlocal_quantum_error(error, basis_gates, [2], [2, 0])
+    zz_unitary = np.eye(4, dtype=complex)
+    zz_unitary[3, 3] = -1
+    error = coherent_unitary_error(zz_unitary)
+    noise_model.add_nonlocal_quantum_error(error, basis_gates, [2], [2, 3])
+    noise_model.add_nonlocal_quantum_error(error, basis_gates, [3], [3, 2])
+
+    # Add T1/T2 noise to the simulation
+    t_1 = 50
+    t_2 = 90
+    gate1q = 0.1
+    gate2q = 0.5
+    noise_model.add_all_qubit_quantum_error(thermal_relaxation_error(t_1, t_2, gate1q), 'u2')
+    noise_model.add_all_qubit_quantum_error(thermal_relaxation_error(t_1, t_2, 2 * gate1q), 'u3')
+    noise_model.add_all_qubit_quantum_error(thermal_relaxation_error(t_1, t_2, gate2q).tensor(
+        thermal_relaxation_error(t_1, t_2, gate2q)), 'cx')
 
     results = []
     for circuit in rb_circs:
@@ -605,7 +614,8 @@ def generate_purity_data(results_file_path_purity: str,
 
 def generate_correlated_fitter_data(results_file_path: str, expected_results_file_path: str):
     """
-    Create correlated rb circuits with coherent weight 2 error and simulate them,
+    Create correlated rb circuits with coherent weight 2 error and thermal relaxation error
+    and simulate them,
     then write the results in a json file.
     also creates fitter for the data results,
     and also write the fitter results in another json file.
@@ -630,8 +640,8 @@ def generate_correlated_fitter_data(results_file_path: str, expected_results_fil
     rb_opts = {}
     shots = 1024
     rb_opts['nseeds'] = 5
-    rb_opts['rb_pattern'] = [[0], [1], [2]]
-    rb_opts['length_vector'] = list(np.arange(1, 200, 20))
+    rb_opts['rb_pattern'] = [[0], [1], [2], [3]]
+    rb_opts['length_vector'] = list(np.arange(1, 1200, 75))
     rb_opts['rand_seed'] = SEED
 
     rb_results, xdata = rb_correlated_circuit_execution(rb_opts, shots)

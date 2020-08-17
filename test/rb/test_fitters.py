@@ -271,17 +271,19 @@ class TestFitters(unittest.TestCase):
                                                tst_cnotdihedral_expected_results['joint_fit'],
                                                tst_index)
 
-
     def test_correlated_fitters(self):
         """ Test the correlated rb fitters """
         # Use json results files
         tests_settings = [
             {
                 'rb_opts': {
-                    'xdata': np.array([[1, 21, 41, 61, 81, 101, 121, 141, 161, 181],
-                                       [1, 21, 41, 61, 81, 101, 121, 141, 161, 181],
-                                       [1, 21, 41, 61, 81, 101, 121, 141, 161, 181]]),
-                    'rb_pattern': [[0], [1], [2]],
+                    'xdata': np.array([[1, 76, 151, 226, 301, 376, 451, 526, 601, 676, 751,
+                                        826, 901, 976, 1051, 1126],
+                                       [1, 76, 151, 226, 301, 376, 451, 526, 601, 676, 751,
+                                        826, 901, 976, 1051, 1126],
+                                       [1, 76, 151, 226, 301, 376, 451, 526, 601, 676, 751,
+                                        826, 901, 976, 1051, 1126]]),
+                    'rb_pattern': [[0], [1], [2], [3]],
                     'shots': 1024},
                 'correlated_results_file':
                     os.path.join(os.path.dirname(__file__), 'test_fitter_correlated_results.json'),
@@ -321,6 +323,7 @@ class TestFitters(unittest.TestCase):
             self.compare_results_and_excpected([epsilon],
                                                [tst_correlated_expected_results['epsilon']],
                                                tst_index)
+
 
 if __name__ == '__main__':
     unittest.main()
