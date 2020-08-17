@@ -43,7 +43,7 @@ import numpy as np
 from numpy.random import RandomState
 
 from qiskit.exceptions import QiskitError
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, Instruction
 
 
 class SpecialPolynomial():
@@ -468,21 +468,33 @@ class CNOTDihedral():
         return out
 
     def to_circuit(self):
-        """Return a QuantumCircuit implementing the CNOT-Dihedral element."""
+        """Return a QuantumCircuit implementing the CNOT-Dihedral element.
+
+        Return:
+            QuantumCircuit: a circuit implementation of the CNOTDihedral object.
+        Remark:
+            Decompose 1 and 2-qubit CNOTDihedral elements.
+        """
         return decompose_cnotdihedral(self)
 
     def from_circuit(self, circuit):
-        """Initialize from a QuantumCircuit.
+        """Initialize from a QuantumCircuit or Instruction.
+
         Args:
-            circuit (QuantumCircuit): instruction to initialize.
+            circuit (QuantumCircuit or ~qiskit.circuit.Instruction):
+                instruction to initialize.
         Returns:
-            Clifford: the Clifford object for the circuit.
+            CNOTDihedral: the CNOTDihedral object for the circuit.
         Raises:
-            QiskitError: if the input instruction is non-Clifford or contains
-                         classical register instruction.
+            QiskitError: if the input instruction is not CNOTDihedral or contains
+                classical register instruction.
         """
-        if not isinstance(circuit, (QuantumCircuit)):
-            raise QiskitError("Input must be a QuantumCircuit")
+        if not isinstance(circuit, (QuantumCircuit, Instruction)):
+            raise QiskitError("Input must be a QuantumCircuit or Instruction")
+
+        # Convert circuit to an instruction
+        if isinstance(circuit, QuantumCircuit):
+            circuit = circuit.to_instruction()
 
         # Initialize an identity CNOTDihedral object
         elem = CNOTDihedral(self.num_qubits)
@@ -593,7 +605,7 @@ def append_circuit(elem, circuit, qargs=None):
 
     Args:
         elem (CNOTDihedral): the CNOTDihedral element to update.
-        circuit (QuantumCircuit): the gates to apply.
+        circuit (QuantumCircuit or Instruction): the gate or composite gate to apply.
         qargs (list or None): The qubits to apply gates to.
     Returns:
         CNOTDihedral: the updated CNOTDihedral.
@@ -604,19 +616,33 @@ def append_circuit(elem, circuit, qargs=None):
     if qargs is None:
         qargs = list(range(elem.num_qubits))
 
-    gate = circuit.to_instruction()
+    if isinstance(circuit, QuantumCircuit):
+        gate = circuit.to_instruction()
+    else:
+        gate = circuit
 
     for instr, qregs, _ in gate.definition:
         # Get the integer position of the flat register
         new_qubits = [qargs[tup.index] for tup in qregs]
-        if instr.name == 'x':
+
+        if (instr.name == 'x' or gate.name == 'x'):
+            if len(new_qubits) != 1:
+                raise QiskitError("Invalid qubits for 1-qubit gate x.")
             elem.flip(new_qubits[0])
-        elif instr.name == 'u1':
+
+        elif (instr.name == 'u1' or gate.name == 'u1'):
+            if (len(new_qubits) != 1 or len(instr.params) != 1):
+                raise QiskitError("Invalid qubits or params for 1-qubit gate u1.")
             elem.phase(int(4 * instr.params[0] / np.pi), new_qubits[0])
-        elif instr.name == 'cx':
+
+        elif (instr.name == 'cx' or gate.name == 'cx'):
+            if len(new_qubits) != 2:
+                raise QiskitError("Invalid qubits for 2-qubit gate cx.")
             elem.cnot(new_qubits[0], new_qubits[1])
-        elif instr.name == 'id':
+
+        elif (instr.name == 'id' or gate.name == 'id'):
             pass
+
         else:
             raise QiskitError('Not a CNOT-Dihedral gate: {}'.format(gate.name))
 
