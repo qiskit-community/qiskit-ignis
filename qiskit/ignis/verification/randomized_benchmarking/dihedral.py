@@ -487,7 +487,7 @@ class CNOTDihedral():
             CNOTDihedral: the CNOTDihedral object for the circuit.
         Raises:
             QiskitError: if the input instruction is not CNOTDihedral or contains
-                classical register instruction.
+                         classical register instruction.
         """
         if not isinstance(circuit, (QuantumCircuit, Instruction)):
             raise QiskitError("Input must be a QuantumCircuit or Instruction")
@@ -903,7 +903,7 @@ def random_cnotdihedral(num_qubits, seed=None):
     """Return a random CNOTDihedral element.
 
     Args:
-        num_qubits (int): the number of qubits for the Clifford
+        num_qubits (int): the number of qubits for the CNOTDihedral object.
         seed (int or RandomState): Optional. Set a fixed seed or
                                    generator for RNG.
     Returns:
