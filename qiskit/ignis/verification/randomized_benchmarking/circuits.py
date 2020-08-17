@@ -81,7 +81,7 @@ def check_pattern(pattern, is_purity=False, interleaved_elem=None):
     Args:
         pattern (list): RB pattern
         is_purity (bool): True only for purity rb (default is False)
-        interleaved_elem (Optional[Union[List[QuantumCircuit], List[Instruction],
+        interleaved_elem: (Optional[Union[List[QuantumCircuit], List[Instruction],
             List[qiskit.quantum_info.operators.symplectic.Clifford], List[CNOTDihedral]]]):
             not None only for interleaved RB
 
@@ -125,8 +125,8 @@ def check_pattern(pattern, is_purity=False, interleaved_elem=None):
 def handle_interleaved_elem(interleaved_elem, rb_group):
     """ Handle the various types of the interleaved element
 
-        Args:
-        interleaved_elem (Optional[Union[List[QuantumCircuit], List[Instruction],
+    Args:
+        interleaved_elem: (Optional[Union[List[QuantumCircuit], List[Instruction],
             List[qiskit.quantum_info.operators.symplectic.Clifford], List[CNOTDihedral]]]):
             not None only for interleaved RB
         rb_group (RBgroup): the relevant RBgroup class object
