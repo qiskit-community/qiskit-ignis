@@ -1449,7 +1449,7 @@ class CorrelatedRBFitter(RBFitterBase):
         self._n_partitions = len(rb_pattern)
         self._n_subsystems = 2**self._n_partitions-1
         self._subsystems = []
-        self._subsystems2 = [] # int representation
+        self._subsystems2 = []  # int representation
         for i in range(self._n_subsystems):
             # this gives the correlator in the subsystem representation
             self._subsystems.append(("{0:0%db}" % self._n_partitions).format(i+1))
