@@ -280,8 +280,8 @@ def rb_correlated_circuit_execution(rb_opts: dict, shots: int):
     zz_unitary = np.eye(4, dtype=complex)
     zz_unitary[3, 3] = -1
     error = coherent_unitary_error(zz_unitary)
-    noise_model.add_nonlocal_quantum_error(error, basis_gates, [2], [2, 3])
-    noise_model.add_nonlocal_quantum_error(error, basis_gates, [3], [3, 2])
+    noise_model.add_nonlocal_quantum_error(error, basis_gates, [1], [1, 2])
+    noise_model.add_nonlocal_quantum_error(error, basis_gates, [2], [2, 1])
 
     # Add T1/T2 noise to the simulation
     t_1 = 50
