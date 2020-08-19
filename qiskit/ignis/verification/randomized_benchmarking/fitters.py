@@ -1455,10 +1455,7 @@ class CorrelatedRBFitter(RBFitterBase):
             self._subsystems.append(("{0:0%db}" % self._n_partitions).format(i+1))
 
             # expand into the full qubit representation and save as an integer
-            tmplist = []
-            for ii in range(self._n_partitions):
-                tmplist = list(self._subsystems[-1])
-
+            tmplist = list(self._subsystems[-1])
             self._subsystems2.append(int(''.join(tmplist), base=2))
 
         self._r_coeff = None
