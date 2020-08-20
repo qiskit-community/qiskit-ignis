@@ -612,13 +612,15 @@ def generate_purity_data(results_file_path_purity: str,
         json.dump(coherent_expected_result, expected_results_file)
 
 
-def generate_correlated_fitter_data(results_file_path: str, expected_results_file_path: str):
+def generate_correlated_fitter_data(results_1_file_path: str, expected_results_1_file_path: str,
+                                    results_2_file_path: str, expected_results_2_file_path: str):
     """
     Create correlated rb circuits with coherent weight 2 error and thermal relaxation error
     and simulate them,
     then write the results in a json file.
     also creates fitter for the data results,
     and also write the fitter results in another json file.
+    run 2 tests - with different rb_pattern
 
     The simulation results file will contain a list of Result objects in a dictionary format.
     The fitter data file will contain dictionary with the following keys:
@@ -633,8 +635,13 @@ def generate_correlated_fitter_data(results_file_path: str, expected_results_fil
         - est_err of that epsilon, int
 
     Args:
-        results_file_path: path of the json file of the simulation results file
-        expected_results_file_path: path of the json file of the fitter results file
+        results_1_file_path: path of the json file of the simulation results file of the first test
+        expected_results_1_file_path: path of the json file of the fitter results file of the
+         first test
+        results_2_file_path: path of the json file of the simulation results file  of the
+         second test
+        expected_results_2_file_path: path of the json file of the fitter results file of the
+         second test
     """
 
     rb_opts = {}
@@ -644,23 +651,29 @@ def generate_correlated_fitter_data(results_file_path: str, expected_results_fil
     rb_opts['length_vector'] = list(np.arange(1, 1200, 75))
     rb_opts['rand_seed'] = SEED
 
-    rb_results, xdata = rb_correlated_circuit_execution(rb_opts, shots)
-    save_results_as_json(rb_results, results_file_path)
+    results_file_paths = [results_1_file_path, results_2_file_path]
+    expected_results_paths = [expected_results_1_file_path, expected_results_2_file_path]
 
-    # generate also the expected results of the fitter
-    rb_fit = CorrelatedRBFitter(rb_results, xdata, rb_opts['rb_pattern'])
+    for test_ind, results_file_path in enumerate(results_file_paths):
+        if test_ind == 1:  # change the pattern for the second test
+            rb_opts['rb_pattern'] = [[0, 1], [2], [3]]
+        rb_results, xdata = rb_correlated_circuit_execution(rb_opts, shots)
+        save_results_as_json(rb_results, results_file_path)
 
-    ydata = rb_fit.ydata
-    alphas = rb_fit.fit_alphas
-    epsilon_opt_cost = rb_fit.fit_alphas_to_epsilon()
-    epsilon = rb_fit.fit_epsilon
-    # convert ndarray to list
-    ydata = convert_ndarray_to_list_in_data(ydata)
+        # generate also the expected results of the fitter
+        rb_fit = CorrelatedRBFitter(rb_results, xdata, rb_opts['rb_pattern'])
 
-    expected_result = {"ydata": ydata, "alphas": alphas, "epsilon_opt_cost": epsilon_opt_cost,
-                       "epsilon": epsilon}
-    with open(expected_results_file_path, "w") as expected_results_file:
-        json.dump(expected_result, expected_results_file)
+        ydata = rb_fit.ydata
+        alphas = rb_fit.fit_alphas
+        epsilon_opt_cost = rb_fit.fit_alphas_to_epsilon()
+        epsilon = rb_fit.fit_epsilon
+        # convert ndarray to list
+        ydata = convert_ndarray_to_list_in_data(ydata)
+
+        expected_result = {"ydata": ydata, "alphas": alphas, "epsilon_opt_cost": epsilon_opt_cost,
+                           "epsilon": epsilon}
+        with open(expected_results_paths[test_ind], "w") as expected_results_file:
+            json.dump(expected_result, expected_results_file)
 
 
 if __name__ == '__main__':
@@ -694,9 +707,14 @@ if __name__ == '__main__':
                                               'test_fitter_coherent_purity_expected_results.json'))
         elif rb_type == 'correlated':
             generate_correlated_fitter_data(os.path.join(DIRNAME, 'test_fitter_correlated'
-                                                                  '_results.json'),
+                                                                  '_results_1.json'),
                                             os.path.join(DIRNAME,
                                                          'test_fitter_correlated'
-                                                         '_expected_results.json'))
+                                                         '_expected_results_1.json'),
+                                            os.path.join(DIRNAME, 'test_fitter_correlated'
+                                                                  '_results_2.json'),
+                                            os.path.join(DIRNAME,
+                                                         'test_fitter_correlated'
+                                                         '_expected_results_2.json'))
         else:
             print('Skipping unknown argument ' + rb_type)

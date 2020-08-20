@@ -286,10 +286,28 @@ class TestFitters(unittest.TestCase):
                     'rb_pattern': [[0], [1], [2], [3]],
                     'shots': 1024},
                 'correlated_results_file':
-                    os.path.join(os.path.dirname(__file__), 'test_fitter_correlated_results.json'),
+                    os.path.join(os.path.dirname(__file__),
+                                 'test_fitter_correlated_results_1.json'),
                 'correlated_expected_results_file':
                     os.path.join(os.path.dirname(__file__),
-                                 'test_fitter_correlated_expected_results.json')
+                                 'test_fitter_correlated_expected_results_1.json')
+            },
+            {
+                'rb_opts': {
+                    'xdata': np.array([[1, 76, 151, 226, 301, 376, 451, 526, 601, 676, 751,
+                                        826, 901, 976, 1051, 1126],
+                                       [1, 76, 151, 226, 301, 376, 451, 526, 601, 676, 751,
+                                        826, 901, 976, 1051, 1126],
+                                       [1, 76, 151, 226, 301, 376, 451, 526, 601, 676, 751,
+                                        826, 901, 976, 1051, 1126]]),
+                    'rb_pattern': [[0, 1], [2], [3]],
+                    'shots': 1024},
+                'correlated_results_file':
+                    os.path.join(os.path.dirname(__file__),
+                                 'test_fitter_correlated_results_2.json'),
+                'correlated_expected_results_file':
+                    os.path.join(os.path.dirname(__file__),
+                                 'test_fitter_correlated_expected_results_2.json')
             }
         ]
 
