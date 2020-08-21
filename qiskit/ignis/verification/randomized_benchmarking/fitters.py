@@ -139,13 +139,14 @@ class RBFitter(RBFitterBase):
     """
 
     def __init__(self, backend_result, cliff_lengths,
-                 rb_pattern=None):
+                 rb_pattern=None, leakage=False):
         """
         Args:
             backend_result (Result): list of results (qiskit.Result).
             cliff_lengths (list): the Clifford lengths, 2D list i x j where i is the
                 number of patterns, j is the number of cliffords lengths.
             rb_pattern (list): the pattern for the RB sequences.
+            leakage (bool): True only for leakage rb.
         """
         if rb_pattern is None:
             rb_pattern = [[0]]
@@ -157,6 +158,7 @@ class RBFitter(RBFitterBase):
         self._fit = [{} for e in rb_pattern]
         self._nseeds = []
         self._circ_name_type = ''
+        self._leakage = leakage
 
         self._result_list = []
         self.add_data(backend_result)
@@ -362,6 +364,8 @@ class RBFitter(RBFitterBase):
            exponent.
          * ``err`` - the error limits of the parameters.
          * ``epc`` - error per Clifford.
+         * ``leakage_rate`` - only for leakage rb.
+         * ``seapage_rate`` - only for leakage rb.
         """
 
         lens = self._cliff_lengths[patt_ind]
@@ -391,6 +395,14 @@ class RBFitter(RBFitterBase):
         self._fit[patt_ind] = {'params': params, 'params_err': params_err,
                                'epc': epc, 'epc_err': epc_err}
 
+        if self._leakage:
+            A_coeff = params[0] # A coefficient
+            leakage_rate = (1 - A_coeff) * (1 - alpha)
+            seepage_rate = A_coeff * (1 - alpha)
+            self._fit[patt_ind].update({'leakage_rate': leakage_rate,
+                                        'seepage_rate': seepage_rate})
+
+
     def fit_data(self):
         """Fit the RB results to an exponential curve.
 
@@ -404,7 +416,8 @@ class RBFitter(RBFitterBase):
            exponent.
          * ``err`` - the error limits of the parameters.
          * ``epc`` - error per Clifford.
-
+         * ``leakage_rate`` - only for leakage rb.
+         * ``seapage_rate`` - only for leakage rb.
         """
 
         for patt_ind, _ in enumerate(self._rb_pattern):
