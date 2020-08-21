@@ -396,12 +396,11 @@ class RBFitter(RBFitterBase):
                                'epc': epc, 'epc_err': epc_err}
 
         if self._leakage:
-            A_coeff = params[0] # A coefficient
+            A_coeff = params[0]  # A coefficient
             leakage_rate = (1 - A_coeff) * (1 - alpha)
             seepage_rate = A_coeff * (1 - alpha)
             self._fit[patt_ind].update({'leakage_rate': leakage_rate,
                                         'seepage_rate': seepage_rate})
-
 
     def fit_data(self):
         """Fit the RB results to an exponential curve.
