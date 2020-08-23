@@ -523,7 +523,7 @@ class LeakageRBFitter(RBFitter):
         """Update the list of fit dictionaries where each dictionary
         corresponds to a pattern and add fields:
          * ``leakage_rate`` - leakage rate for leakage rb.
-         * ``seapage_rate`` - seapage rate for leakage rb.
+         * ``seepage_rate`` - seepage rate for leakage rb.
         """
         for patt_ind, _ in enumerate(self._rb_pattern):
             A_coeff = self._fit.params[0]  # A coefficient
