@@ -512,27 +512,19 @@ class LeakageRBFitter(RBFitter):
         self._fit = [{} for e in rb_pattern]
         self._result_list = []
         RBFitter.__init__(self, backend_result, cliff_lengths, rb_pattern)
-        self.add_data(backend_result)
-        self.fit_data()
+        self.fit_leakage_data()
 
     @property
     def fit(self):
         """Return fit."""
         return self._fit
 
-    def fit_data(self):
-        """Fit the RB results to an exponential curve.
-        Fit each of the patterns. Use the data to construct guess values
-        for the fits.
-        Puts the results into a list of fit dictionaries where each dictionary
-        corresponds to a pattern and has fields:
-         * ``params`` - three parameters of rb_fit_fun. The middle one is the exponent.
-         * ``err`` - the error limits of the parameters.
-         * ``epc`` - error per Clifford.
+    def fit_leakage_data(self):
+        """Update the list of fit dictionaries where each dictionary
+        corresponds to a pattern and add fields:
          * ``leakage_rate`` - leakage rate for leakage rb.
          * ``seapage_rate`` - seapage rate for leakage rb.
         """
-        self.fit_data()
         for patt_ind, _ in enumerate(self._rb_pattern):
             A_coeff = self._fit.params[0]  # A coefficient
             alpha = self._fit.params[1]  # exponent
