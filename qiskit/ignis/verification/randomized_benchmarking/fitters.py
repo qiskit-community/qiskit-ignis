@@ -511,8 +511,9 @@ class LeakageRBFitter(RBFitter):
         self._rb_pattern = rb_pattern
         self._fit = [{} for e in rb_pattern]
         self._result_list = []
-        self._rbfit_original = RBFitter(
-            backend_result, cliff_lengths, rb_pattern)
+        RBFitter.__init__(self, backend_result, cliff_lengths, rb_pattern)
+        self.add_data(backend_result)
+        self.fit_data()
 
     @property
     def fit(self):
