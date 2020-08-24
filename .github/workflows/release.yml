@@ -1,8 +1,8 @@
 name: Release Artifacts
 on:
-  push:
-    tags:
-      - '*'
+#  push:
+#    tags:
+#      - '*'
 jobs:
   wheel-build:
     name: Build and Publish Release Artifacts
@@ -16,8 +16,8 @@ jobs:
         run: pip install -U twine
       - name: Build Artifacts
         run: python3 setup.py sdist bdist_wheel
-      - name: Publish to PyPi
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: qiskit
-        run: twine upload dist/qiskit*
+#      - name: Publish to PyPi
+#       env:
+#          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+#          TWINE_USERNAME: qiskit
+#        run: twine upload dist/qiskit*
