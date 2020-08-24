@@ -34,8 +34,15 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
+        if: matrix.python_version == '3.8'
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+        if: matrix.python_version ! '3.8'
       - name: Install cvxopt
         run: conda install -c conda-forge tox cvxopt scs -y
+        if: matrix.python_version == '3.8'
       - name: Install and Run Tests
         run: tox --sitepackages -e py
   lint:
