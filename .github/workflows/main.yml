@@ -48,6 +48,15 @@ jobs:
         if: matrix.python_version != '3.8'
       - name: Install and Run Tests
         run: tox --sitepackages -e py
+        if: matrix.python_version == '3.8'
+      - name: Install and Run Tests
+        run: |
+          set -e
+          tox -epy --notest
+          .tox\py\Scripts\python -m pip install -U cvxopt
+          tox -e py
+        shell: bash
+        if: matrix.python_version != '3.8'
   lint:
     name: lint
     runs-on: ubuntu-latest
