@@ -332,7 +332,7 @@ class QVFitter:
     def calc_z_value(self, mean, sigma):
         """
         Calculate z value using mean and sigma
-        
+
         Args:
             mean (float): mean
             sigma (float): standard deviation
@@ -361,7 +361,7 @@ class QVFitter:
         """
 
         confidence_level = 0.5 * (1 + math.erf(z_value/2**0.5))
-        
+
         return confidence_level
 
     def quantum_volume(self):
