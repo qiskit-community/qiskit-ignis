@@ -318,14 +318,12 @@ class QVFitter:
             success_list.append([False, 0.0])
             hmean = self._ydata[0][depth_ind]
             sigma = self._ydata[1][depth_ind]
+            z_value = self.calc_z_value(hmean, sigma)
+            confidence_level = self.calc_confidence_level(z_value)
+            success_list[-1][1] = confidence_level
 
-            if hmean > 2/3:
-                z_value = self.calc_z_value(hmean, sigma)
-                confidence_level = self.calc_confidence_level(z_value)
-                success_list[-1][1] = confidence_level
-
-                if confidence_level > confidence_level_threshold:
-                    success_list[-1][0] = True
+            if (hmean > 2/3 and confidence_level > confidence_level_threshold):
+                success_list[-1][0] = True
 
         return success_list
 
@@ -341,7 +339,7 @@ class QVFitter:
             float: z_value in standard normal distibution.
         """
 
-        z_value = (mean-2/3)/sigma
+        z_value = (mean - 2/3) / sigma
 
         return z_value
 
