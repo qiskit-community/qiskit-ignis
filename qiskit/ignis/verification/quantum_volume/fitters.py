@@ -302,31 +302,67 @@ class QVFitter:
             plt.show()
 
     def qv_success(self):
-        """Return whether each depth was successful (>2/3 with confidence
-        greater than 97.5) and the confidence
+        """Return whether each depth was successful (> 2/3 with confidence
+        level > 0.977 corresponding to z_value = 2) and the confidence level
 
         Returns:
             list: List of lenth depth with eact element a 3 list with
             - success True/False
-            - confidence
+            - confidence level
         """
 
         success_list = []
+        confidence_level_threshold = self.calc_confidence_level(z_value=2)
 
         for depth_ind, _ in enumerate(self._depths):
             success_list.append([False, 0.0])
             hmean = self._ydata[0][depth_ind]
-            if hmean > 2/3:
-                cfd = 0.5 * (1 +
-                             math.erf((hmean - 2/3)
-                                      / (1e-10 +
-                                         self._ydata[1][depth_ind])/2**0.5))
-                success_list[-1][1] = cfd
+            sigma = self._ydata[1][depth_ind]
 
-                if cfd > 0.975:
+            if hmean > 2/3:
+                z_value = self.calc_z_value(hmean, sigma)
+                confidence_level = self.calc_confidence_level(z_value)
+                success_list[-1][1] = confidence_level
+
+                if confidence_level > confidence_level_threshold:
                     success_list[-1][0] = True
 
         return success_list
+
+    def calc_z_value(self, mean, sigma):
+        """
+        Calculate z value using mean and sigma
+        
+        Args:
+            mean (float): mean
+            sigma (float): standard deviation
+
+        Returns:
+            float: z_value in standard normal distibution.
+        """
+
+        z_value = (mean-2/3)/sigma
+
+        return z_value
+
+    def calc_confidence_level(self, z_value):
+        """
+        Calculate confidence level using mean and sigma.
+
+        Accumulative probability for standard normal distribution
+        in [-z, +infinity] is 1/2 (1 + erf(z/sqrt(2))),
+        where z = (X - mu)/sigma = (hmean - 2/3)/sigma
+
+        Args:
+            z_value (float): z value in in standard normal distibution.
+
+        Returns:
+            float: confidence level in decimal (not percentage).
+        """
+
+        confidence_level = 0.5 * (1 + math.erf(z_value/2**0.5))
+        
+        return confidence_level
 
     def quantum_volume(self):
         """Return the volume for each depth.
