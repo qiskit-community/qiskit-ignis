@@ -44,6 +44,8 @@ from qiskit.ignis.mitigation.measurement \
              MeasurementFilter)
 from qiskit.ignis.verification.tomography import count_keys
 
+# fixed seed for tests
+SEED = 42
 
 class TestMeasCal(unittest.TestCase):
     # TODO: after terra 0.8, derive test case like this
@@ -186,7 +188,8 @@ class TestMeasCal(unittest.TestCase):
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
         job = qiskit.execute(meas_calibs, backend=backend,
-                             shots=self.shots)
+                             shots=self.shots,
+                             seed_simulator=SEED)
         cal_results = job.result()
 
         # Make a calibration matrix
@@ -195,7 +198,8 @@ class TestMeasCal(unittest.TestCase):
         fidelity = meas_cal.readout_fidelity()
 
         job = qiskit.execute([ghz], backend=backend,
-                             shots=self.shots)
+                             shots=self.shots,
+                             seed_simulator=SEED)
         results = job.result()
 
         # Predicted equally distributed results
@@ -345,7 +349,8 @@ class TestMeasCal(unittest.TestCase):
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
         cal_results = qiskit.execute(meas_calibs, backend=backend,
-                                     shots=self.shots).result()
+                                     shots=self.shots,
+                                     seed_simulator=SEED).result()
 
         # Make a calibration matrix
         meas_cal = TensoredMeasFitter(cal_results,
@@ -354,7 +359,8 @@ class TestMeasCal(unittest.TestCase):
         fidelity = meas_cal.readout_fidelity(0)*meas_cal.readout_fidelity(1)
 
         results = qiskit.execute([ghz], backend=backend,
-                                 shots=self.shots).result()
+                                 shots=self.shots,
+                                 seed_simulator=SEED).result()
 
         # Predicted equally distributed results
         predicted_results = {'000': 0.5,
