@@ -335,9 +335,15 @@ class QVFitter:
             mean (float): mean
             sigma (float): standard deviation
 
+        Raises:
+            ValueError: If sigma is zero.
+
         Returns:
             float: z_value in standard normal distibution.
         """
+
+        if sigma == 0:
+            raise ValueError('Standard deviation sigma should not be zero.')
 
         z_value = (mean - 2/3) / sigma
 
