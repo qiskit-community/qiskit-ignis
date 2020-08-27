@@ -222,7 +222,10 @@ class QVFitter:
         Convert the heavy outputs in the different trials into mean and error
         for plotting.
 
-        Here we assume the error is due to a binomial distribution
+        Here we assume the error is due to a binomial distribution.
+        Error (standard deviation) for binomial distribution is sqrt(np(1-p)),
+        where n is the number of trials (self._ntrials) and
+        p is the success probability (self._ydata[0][depthidx]/self._ntrials).
         """
 
         self._ydata = np.zeros([4, len(self._depths)], dtype=float)
@@ -240,10 +243,13 @@ class QVFitter:
                 exp_shots += self._circ_shots[cname]
                 ideal_vals[trialidx] = self._heavy_output_prob_ideal[cname]
 
+            # Calculate mean and error for experimental data
             self._ydata[0][depthidx] = np.sum(exp_vals)/np.sum(exp_shots)
             self._ydata[1][depthidx] = (self._ydata[0][depthidx] *
                                         (1.0-self._ydata[0][depthidx])
                                         / self._ntrials)**0.5
+
+            # Calculate mean and error for ideal data
             self._ydata[2][depthidx] = np.mean(ideal_vals)
             self._ydata[3][depthidx] = (self._ydata[2][depthidx] *
                                         (1.0-self._ydata[2][depthidx])
