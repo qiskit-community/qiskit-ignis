@@ -29,6 +29,9 @@ from ddt import ddt, data, unpack
 import qiskit
 import qiskit.ignis.verification.randomized_benchmarking as rb
 from qiskit import QiskitError
+from qiskit.circuit.library import (IGate, XGate, YGate, ZGate, HGate,
+                                    SGate, TGate, SdgGate, CXGate, CZGate,
+                                    SwapGate)
 
 
 @ddt
@@ -555,7 +558,7 @@ class TestRB(unittest.TestCase):
             rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs = \
                 rb.randomized_benchmarking_seq(**rb_opts_cnotdihedral)
             # Non-Clifford interleaved cnot-dihedral RB sequences:
-            # (thses circuits will not be executed to save time)
+            # (these circuits will not be executed to save time)
             _, _, _, _, _ = \
                 rb.randomized_benchmarking_seq(**rb_opts_cnotdihedral_interleaved)
         # Purity RB sequences:
@@ -725,6 +728,56 @@ class TestRB(unittest.TestCase):
         if is_purity:
             self.assertEqual(circ_index, len(rb_purity_circs),
                              "Error: additional purity circuits exist")
+
+    def test_interleavd_rb(self):
+        # Other interleaved RB sequences that will not be executed
+        # only to check the generator function doesn't error
+        # 1Q Clifford gates
+        for gate in [HGate(), SGate(), SdgGate(), XGate(), YGate(), ZGate()]:
+            _, _, _ = rb.randomized_benchmarking_seq(
+                1, [5], rb_pattern=[[0]], interleaved_elem=[gate])
+        # 2Q clifford gates
+        for gate in [SwapGate(), CXGate(), CZGate()]:
+            _, _, _ = rb.randomized_benchmarking_seq(
+                1, [5], rb_pattern=[[0, 1]], interleaved_elem=[gate])
+
+        # 1Q cnot-dihedral gates
+        for gate in [XGate(), TGate()]:
+            _, _, _, _, _ = rb.randomized_benchmarking_seq(
+                1, [5], rb_pattern=[[0]], interleaved_elem=[gate],
+                group_gates='CNOT-Dihedral')
+        # 2Q cnot_dihedral gates
+        gate = CXGate()
+        _, _, _, _, _ = rb.randomized_benchmarking_seq(
+            1, [5], rb_pattern=[[0, 1]], interleaved_elem=[gate],
+            group_gates='CNOT-Dihedral')
+
+        # Random cliffords
+        for num_qubits in [1, 2, 3]:
+            clifford = qiskit.quantum_info.random_clifford(num_qubits)
+            test_circ = clifford.to_circuit()
+            test_gates = clifford.to_instruction()
+            _, _, _ = rb.randomized_benchmarking_seq(
+                1, [5], rb_pattern=[list(range(num_qubits))], interleaved_elem=[clifford])
+            _, _, _ = rb.randomized_benchmarking_seq(
+                1, [5], rb_pattern=[list(range(num_qubits))], interleaved_elem=[test_circ])
+            _, _, _ = rb.randomized_benchmarking_seq(
+                1, [5], rb_pattern=[list(range(num_qubits))], interleaved_elem=[test_gates])
+
+        # Random cnot-dihedral elements
+        for num_qubits in [1, 2]:
+            elem = rb.random_cnotdihedral(num_qubits)
+            test_circ = elem.to_circuit()
+            test_gates = elem.to_instruction()
+            _, _, _, _, _ = rb.randomized_benchmarking_seq(
+                1, [5], rb_pattern=[list(range(num_qubits))], interleaved_elem=[elem],
+                group_gates='CNOT-Dihedral')
+            _, _, _, _, _ = rb.randomized_benchmarking_seq(
+                1, [5], rb_pattern=[list(range(num_qubits))], interleaved_elem=[test_circ],
+                group_gates='CNOT-Dihedral')
+            _, _, _, _, _ = rb.randomized_benchmarking_seq(
+                1, [5], rb_pattern=[list(range(num_qubits))], interleaved_elem=[test_gates],
+                group_gates='CNOT-Dihedral')
 
 
 class TestRBUtils(unittest.TestCase):
