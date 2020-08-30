@@ -20,8 +20,8 @@ randomized model circuits", arXiv:1811.12926
 """
 
 import math
-import numpy as np
 import warnings
+import numpy as np
 from qiskit import QiskitError
 from ...utils import build_counts_dict_from_list
 
