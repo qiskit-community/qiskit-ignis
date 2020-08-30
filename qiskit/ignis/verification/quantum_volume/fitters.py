@@ -310,10 +310,10 @@ class QVFitter:
 
     def qv_success(self):
         """Return whether each depth was successful (> 2/3 with confidence
-        level > 0.977 corresponding to z_value = 2) and the confidence level
+        level > 0.977 corresponding to z_value = 2) and the confidence level.
 
         Returns:
-            list: List of lenth depth with eact element a 3 list with
+            list: List of list of 2 elements for each depth:
             - success True/False
             - confidence level
         """
@@ -355,7 +355,7 @@ class QVFitter:
         return z_value
 
     def calc_confidence_level(self, z_value):
-        """Calculate confidence level using mean and sigma.
+        """Calculate confidence level using z value.
 
         Accumulative probability for standard normal distribution
         in [-z, +infinity] is 1/2 (1 + erf(z/sqrt(2))),
