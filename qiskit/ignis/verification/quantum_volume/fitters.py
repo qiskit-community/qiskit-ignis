@@ -347,7 +347,7 @@ class QVFitter:
 
         if sigma == 0:
             # assign a small value for sigma if sigma = 0
-            sigma = 2e-10
+            sigma = 1e-10
             warnings.warn('Standard deviation sigma should not be zero.')
 
         z_value = (mean - 2/3) / sigma
