@@ -355,7 +355,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             interleaved_elem = [qc_cx, qc_x, qc_h]
 
             # or as gate objects:
-            interleaved_elem = [CXGate(0,1), XGate(0), HGate(0)]
+            interleaved_elem = [CXGate(), XGate(), HGate()]
 
         Interleave the 2-qubit gate ``cx`` on qubits Q0 and Q3,
         a 1-qubit gate ``x`` on qubit Q2,
