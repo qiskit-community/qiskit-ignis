@@ -47,6 +47,7 @@ from qiskit.ignis.verification.tomography import count_keys
 # fixed seed for tests
 SEED = 42
 
+
 class TestMeasCal(unittest.TestCase):
     # TODO: after terra 0.8, derive test case like this
     # class TestMeasCal(QiskitTestCase):
