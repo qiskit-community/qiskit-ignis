@@ -642,6 +642,20 @@ def append_circuit(elem, circuit, qargs=None):
     else:
         gate = circuit
 
+    # Handle cx since it is a basic gate, and cannot be decomposed,
+    # so gate.definition = None
+    if gate.name == 'cx':
+        if len(qargs) != 2:
+            raise QiskitError("Invalid qubits for 2-qubit gate cx.")
+        elem.cnot(qargs[0], qargs[1])
+        return (elem)
+
+    if gate.definition is None:
+        raise QiskitError('Cannot apply Instruction: {}'.format(gate.name))
+    if not isinstance(gate.definition, QuantumCircuit):
+        raise QiskitError('{} instruction definition is {}; expected QuantumCircuit'.format(
+            gate.name, type(gate.definition)))
+
     for instr, qregs, _ in gate.definition:
         # Get the integer position of the flat register
         new_qubits = [qargs[tup.index] for tup in qregs]
