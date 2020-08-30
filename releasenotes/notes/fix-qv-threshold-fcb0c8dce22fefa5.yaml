@@ -1,0 +1,13 @@
+---
+features:
+  - |
+    Add two methods to :class:`qiskit.ignis.verification.quantum_volume.QVFitter`.
+    * :meth:`qiskit.ignis.verification.quantum_volume.QVFitter.calc_z_value` to calculate z value in standard normal distribution using mean and standard deviation sigma. If sigma = 0, it raises a warning and assigns a small value (1e-10) for sigma so that the code still runs.
+    * :meth:`qiskit.ignis.verification.quantum_volume.QVFitter.calc_confidence_level` to calculate confidence level using z value.
+  - |
+    Store confidence level even when hmean < 2/3 in :meth:`qiskit.ignis.verification.quantum_volume.QVFitter.qv_success`.
+  - |
+    Add explanations for how to calculate statistics based on binomial distribution in :meth:`qiskit.ignis.verification.quantum_volume.QVFitter.calc_statistics`.
+fixes:
+  - |
+    Fix the confidence level threshold for :meth:`qiskit.ignis.verification.quantum_volume.QVFitter.qv_success` to 0.977 corresponding to z = 2 as defined by the QV paper Algorithm 1.
