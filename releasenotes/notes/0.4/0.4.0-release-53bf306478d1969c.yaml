@@ -1,0 +1,5 @@
+---
+prelude: >
+    The main change made in this release is a refactor of the Randomized Benchmarking code to
+    integrate the updated Clifford class :class:`qiskit.quantum_info.Clifford` from Terra and to
+    improve the CNOT-Dihedral class.

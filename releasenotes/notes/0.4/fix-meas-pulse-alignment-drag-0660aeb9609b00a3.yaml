@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fix a bug of the position of measurement pulses inserted by
+    py:func:`qiskit.ignis.characterization.calibrations.pulse_schedules.drag_schedules`.
+    Fixes `#465 <https://github.com/Qiskit/qiskit-ignis/issues/465>`__

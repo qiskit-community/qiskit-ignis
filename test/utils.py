@@ -15,6 +15,9 @@
 """Functions of general purpose utility for Ignis."""
 import random
 from typing import List
+import json
+import numpy as np
+from qiskit.result.result import Result
 
 
 def qubit_shot(i_mean: float, q_mean: float, i_std: float, q_std: float):
@@ -55,3 +58,55 @@ def create_shots(i_mean: float, q_mean: float, i_std: float, q_std: float,
         data.append(shot)
 
     return data
+
+
+def save_results_as_json(results_list: List[Result], json_path: str):
+    """
+    saves the list of Results in json format at the given path
+    Args:
+        results_list: list of run results
+        json_path: the path to save the json file
+    """
+    results_json = [result.to_dict() for result in results_list]
+    with open(json_path, "w") as results_file:
+        json.dump(results_json, results_file)
+
+
+def load_results_from_json(json_path: str):
+    """
+    loads run results from json file
+    Args:
+        json_path: the path of the json file to load the results from
+
+    Returns:
+        list: results object that was saved in the json file (list of qiskit Results)
+    """
+    with open(json_path, "r") as results_file:
+        results_json = json.load(results_file)
+    return [Result.from_dict(result) for result in results_json]
+
+
+def convert_ndarray_to_list_in_data(data: np.ndarray):
+    """
+    converts ndarray format into list format (keeps all the dicts in the array)
+    also convert inner ndarrays into lists (recursively)
+    Args:
+        data: ndarray containing dicts or ndarrays in it
+
+    Returns:
+        list: same array, converted to list format (in order to save it as json)
+
+    """
+    new_data = []
+    for item in data:
+        if isinstance(item, np.ndarray):
+            new_item = convert_ndarray_to_list_in_data(item)
+        elif isinstance(item, dict):
+            new_item = {}
+            for key, value in item.items():
+                new_item[key] = value.tolist()
+        else:
+            new_item = item
+        new_data.append(new_item)
+
+    return new_data
