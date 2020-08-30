@@ -21,6 +21,7 @@ randomized model circuits", arXiv:1811.12926
 
 import math
 import numpy as np
+import warnings
 from qiskit import QiskitError
 from ...utils import build_counts_dict_from_list
 
@@ -334,30 +335,27 @@ class QVFitter:
         return success_list
 
     def calc_z_value(self, mean, sigma):
-        """
-        Calculate z value using mean and sigma
+        """Calculate z value using mean and sigma.
 
         Args:
             mean (float): mean
             sigma (float): standard deviation
-
-        Raises:
-            ValueError: If sigma is zero.
 
         Returns:
             float: z_value in standard normal distibution.
         """
 
         if sigma == 0:
-            raise ValueError('Standard deviation sigma should not be zero.')
+            # assign a small value for sigma if sigma = 0
+            sigma = 2e-10
+            warnings.warn('Standard deviation sigma should not be zero.')
 
         z_value = (mean - 2/3) / sigma
 
         return z_value
 
     def calc_confidence_level(self, z_value):
-        """
-        Calculate confidence level using mean and sigma.
+        """Calculate confidence level using mean and sigma.
 
         Accumulative probability for standard normal distribution
         in [-z, +infinity] is 1/2 (1 + erf(z/sqrt(2))),
