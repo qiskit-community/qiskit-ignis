@@ -44,7 +44,7 @@ from qiskit.ignis.mitigation.measurement \
              MeasurementFilter)
 from qiskit.ignis.verification.tomography import count_keys
 
-# fixed seed for tests
+# fixed seed for tests - for both simulator and transpiler
 SEED = 42
 
 
