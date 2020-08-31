@@ -76,7 +76,7 @@ jobs:
             source activate qiskit-ignis
             conda config --add channels conda-forge
             conda install cvxopt -y
-            python -m pip install -c constraints.txt --upgrade pip virtualenv setuptools
+            python -m pip install -c constraints.txt --upgrade pip virtualenv 'setuptools<50'
             pip install -c constraints.txt -U tox
             tox --sitepackages
           displayName: 'Install dependencies and run tests'
