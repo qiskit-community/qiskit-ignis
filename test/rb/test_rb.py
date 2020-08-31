@@ -29,8 +29,8 @@ from ddt import ddt, data, unpack
 import qiskit
 import qiskit.ignis.verification.randomized_benchmarking as rb
 from qiskit import QiskitError
-from qiskit.circuit.library import (IGate, XGate, YGate, ZGate, HGate,
-                                    SGate, TGate, SdgGate, CXGate, CZGate,
+from qiskit.circuit.library import (XGate, YGate, ZGate, HGate, TGate,
+                                    SGate, SdgGate, CXGate, CZGate,
                                     SwapGate)
 
 
@@ -730,8 +730,10 @@ class TestRB(unittest.TestCase):
                              "Error: additional purity circuits exist")
 
     def test_interleavd_rb(self):
-        # Other interleaved RB sequences that will not be executed
+        """Further tests for interleaved RB."""
+        # The interleaved RB sequences will not be executed
         # only to check the generator function doesn't error
+
         # 1Q Clifford gates
         for gate in [HGate(), SGate(), SdgGate(), XGate(), YGate(), ZGate()]:
             _, _, _ = rb.randomized_benchmarking_seq(
