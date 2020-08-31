@@ -190,7 +190,8 @@ class TestMeasCal(unittest.TestCase):
         backend = Aer.get_backend('qasm_simulator')
         job = qiskit.execute(meas_calibs, backend=backend,
                              shots=self.shots,
-                             seed_simulator=SEED)
+                             seed_simulator=SEED,
+                             seed_transpiler=SEED)
         cal_results = job.result()
 
         # Make a calibration matrix
@@ -200,7 +201,8 @@ class TestMeasCal(unittest.TestCase):
 
         job = qiskit.execute([ghz], backend=backend,
                              shots=self.shots,
-                             seed_simulator=SEED)
+                             seed_simulator=SEED,
+                             seed_transpiler=SEED)
         results = job.result()
 
         # Predicted equally distributed results
@@ -351,7 +353,8 @@ class TestMeasCal(unittest.TestCase):
         backend = Aer.get_backend('qasm_simulator')
         cal_results = qiskit.execute(meas_calibs, backend=backend,
                                      shots=self.shots,
-                                     seed_simulator=SEED).result()
+                                     seed_simulator=SEED,
+                                     seed_transpiler=SEED).result()
 
         # Make a calibration matrix
         meas_cal = TensoredMeasFitter(cal_results,
@@ -361,7 +364,8 @@ class TestMeasCal(unittest.TestCase):
 
         results = qiskit.execute([ghz], backend=backend,
                                  shots=self.shots,
-                                 seed_simulator=SEED).result()
+                                 seed_simulator=SEED,
+                                 seed_transpiler=SEED).result()
 
         # Predicted equally distributed results
         predicted_results = {'000': 0.5,
