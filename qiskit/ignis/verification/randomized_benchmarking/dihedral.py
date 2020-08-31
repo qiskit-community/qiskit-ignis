@@ -648,7 +648,7 @@ def append_circuit(elem, circuit, qargs=None):
         if len(qargs) != 2:
             raise QiskitError("Invalid qubits for 2-qubit gate cx.")
         elem.cnot(qargs[0], qargs[1])
-        return (elem)
+        return elem
 
     if gate.definition is None:
         raise QiskitError('Cannot apply Instruction: {}'.format(gate.name))
