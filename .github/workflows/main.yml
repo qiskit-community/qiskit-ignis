@@ -32,31 +32,16 @@ jobs:
       - uses: actions/checkout@v2
       - uses: goanpeca/setup-miniconda@v1
         with:
-          auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-        if: matrix.python-version == '3.8'
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-        if: matrix.python-version != '3.8'
+      - name: add conda forge
+        run: conda config --add channels conda-forge
+        shell: pwsh
       - name: Install cvxopt
-        run: conda install -c conda-forge tox cvxopt scs -y
-        if: matrix.python-version == '3.8'
-      - name: Install tox
-        run: python -m pip install -U tox setuptools
-        if: matrix.python-version != '3.8'
+        run: conda install tox cvxopt -y
+        shell: pwsh
       - name: Install and Run Tests
-        run: tox --sitepackages -e py
-        if: matrix.python-version == '3.8'
-      - name: Install and Run Tests
-        run: |
-          set -e
-          tox -epy --notest
-          .tox/py/Scripts/python -m pip install -U cvxopt
-          tox -e py
-        shell: bash
-        if: matrix.python-version != '3.8'
+        run: tox --sitepackages -epy
+        shell: pwsh
   lint:
     name: lint
     runs-on: ubuntu-latest
