@@ -1,0 +1,8 @@
+---
+upgrade:
+  - |
+    The deprecated support for running qiskit-ignis with Python 3.5 has
+    been removed. To use qiskit-ignis >=0.5.0 you will now need at
+    least Python 3.6. If you are using Python 3.5 the last version which will
+    work is qiskit-ignis 0.4.x.
+
