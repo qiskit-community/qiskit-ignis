@@ -1,5 +1,9 @@
 name: Release Artifacts
 on:
+  push:
+    branches: [ master, 'stable/*' ]
+  pull_request:
+    branches: [ master, 'stable/*' ]
 #  push:
 #    tags:
 #      - '*'
