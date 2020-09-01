@@ -24,6 +24,9 @@ jobs:
           python setup.py sdist
           python setup.py bdist_wheel
         shell: bash
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./dist/qiskit*
 #      - name: Publish to PyPi
 #       env:
 #          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
