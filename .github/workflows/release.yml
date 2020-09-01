@@ -20,7 +20,10 @@ jobs:
       - name: Install Deps
         run: pip install -U twine
       - name: Build Artifacts
-        run: python3 setup.py sdist bdist_wheel
+        run: |
+          python setup.py sdist
+          python setup.py bdist_wheel
+        shell: bash
 #      - name: Publish to PyPi
 #       env:
 #          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
