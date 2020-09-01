@@ -22,6 +22,12 @@ jobs:
         run: python -m pip install -U tox setuptools virtualenv wheel
       - name: Install and Run Tests
         run: tox -e py
+        if: runner.os != 'macOS' || matrix.python-version != '3.8'
+      - name: Install and Run Tests
+        env:
+          QISKIT_IN_PARALLEL: TRUE
+        run: tox -e py
+        if: runner.os == 'macOS' && matrix.python-version == '3.8'
   windows-tests:
     name: tests-python${{ matrix.python-version }}-windows
     runs-on: windows-latest
