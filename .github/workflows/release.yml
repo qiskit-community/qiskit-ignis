@@ -1,12 +1,8 @@
 name: Release Artifacts
 on:
   push:
-    branches: [ master, 'stable/*' ]
-  pull_request:
-    branches: [ master, 'stable/*' ]
-#  push:
-#    tags:
-#      - '*'
+    tags:
+      - '*'
 jobs:
   wheel-build:
     name: Build and Publish Release Artifacts
@@ -27,8 +23,8 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: ./dist/qiskit*
-#      - name: Publish to PyPi
-#       env:
-#          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-#          TWINE_USERNAME: qiskit
-#        run: twine upload dist/qiskit*
+      - name: Publish to PyPi
+        env:
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+          TWINE_USERNAME: qiskit
+        run: twine upload dist/qiskit*
