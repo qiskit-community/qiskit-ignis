@@ -22,9 +22,9 @@ and that it returns the identity
 import itertools
 import random
 import unittest
+from test import combine
 
 import numpy as np
-from test import combine
 from ddt import ddt, data, unpack
 
 import qiskit
@@ -830,7 +830,7 @@ class TestRB(unittest.TestCase):
                          'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
 
-        rb_original_circs, _, rb_interleaved_circ = rb.randomized_benchmarking_seq(
+        rb_original_circs, _, rb_interleaved_circs = rb.randomized_benchmarking_seq(
             1, [5], rb_pattern=[list(range(num_qubits))], interleaved_elem=[test_gates])
         self.assertEqual(rb_original_circs[seed][circ_index].name,
                          'rb_length_%d_seed_%d' % (circ_index, seed),
