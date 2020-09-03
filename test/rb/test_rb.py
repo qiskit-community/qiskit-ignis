@@ -22,7 +22,6 @@ and that it returns the identity
 import itertools
 import random
 import unittest
-from test import combine
 
 import numpy as np
 from ddt import ddt, data, unpack
@@ -730,7 +729,7 @@ class TestRB(unittest.TestCase):
             self.assertEqual(circ_index, len(rb_purity_circs),
                              "Error: additional purity circuits exist")
 
-    @combine(gate=(HGate(), SGate(), SdgGate(), XGate(), YGate(), ZGate()))
+    @data(HGate(), SGate(), SdgGate(), XGate(), YGate(), ZGate())
     def test_interleaved_randomized_benchmarking_seq_1q_clifford_gates(self, gate):
         """interleaved 1Q Clifford gates in RB"""
         rb_original_circs, _, rb_interleaved_circs = rb.randomized_benchmarking_seq(
@@ -745,7 +744,7 @@ class TestRB(unittest.TestCase):
                          'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
 
-    @combine(gate=(SwapGate(), CXGate(), CZGate()))
+    @data(SwapGate(), CXGate(), CZGate())
     def test_interleaved_randomized_benchmarking_seq_2q_clifford_gates(self, gate):
         """interleaved 2Q Clifford gates in RB"""
         rb_original_circs, _, rb_interleaved_circs = rb.randomized_benchmarking_seq(
@@ -759,7 +758,7 @@ class TestRB(unittest.TestCase):
                          'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
 
-    @combine(gate=(TGate(), XGate()))
+    @data(TGate(), XGate())
     def test_interleaved_randomized_benchmarking_seq_1q_cnotdihedral_gates(self, gate):
         """interleaved 1Q CNOT-Dihedral gates in RB"""
         rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs, \
@@ -803,7 +802,7 @@ class TestRB(unittest.TestCase):
                          'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
 
-    @combine(num_qubits=(1, 2, 3))
+    @data(1, 2, 3)
     def test_interleaved_randomized_benchmarking_seq_random_clifford_gates(self, num_qubits):
         """interleaved random Clifford gates in RB"""
         clifford = qiskit.quantum_info.random_clifford(num_qubits)
@@ -839,7 +838,7 @@ class TestRB(unittest.TestCase):
                          'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
 
-    @combine(num_qubits=(1, 2))
+    @data(1, 2)
     def test_interleaved_randomized_benchmarking_seq_random_cnotdihedral_gates(self, num_qubits):
         """interleaved random CNOT-Dihedral gates in RB"""
         elem = rb.random_cnotdihedral(num_qubits)
