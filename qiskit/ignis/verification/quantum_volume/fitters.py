@@ -20,6 +20,7 @@ randomized model circuits", arXiv:1811.12926
 """
 
 import math
+import warnings
 import numpy as np
 from qiskit import QiskitError
 from ...utils import build_counts_dict_from_list
@@ -222,7 +223,10 @@ class QVFitter:
         Convert the heavy outputs in the different trials into mean and error
         for plotting.
 
-        Here we assume the error is due to a binomial distribution
+        Here we assume the error is due to a binomial distribution.
+        Error (standard deviation) for binomial distribution is sqrt(np(1-p)),
+        where n is the number of trials (self._ntrials) and
+        p is the success probability (self._ydata[0][depthidx]/self._ntrials).
         """
 
         self._ydata = np.zeros([4, len(self._depths)], dtype=float)
@@ -240,10 +244,13 @@ class QVFitter:
                 exp_shots += self._circ_shots[cname]
                 ideal_vals[trialidx] = self._heavy_output_prob_ideal[cname]
 
+            # Calculate mean and error for experimental data
             self._ydata[0][depthidx] = np.sum(exp_vals)/np.sum(exp_shots)
             self._ydata[1][depthidx] = (self._ydata[0][depthidx] *
                                         (1.0-self._ydata[0][depthidx])
                                         / self._ntrials)**0.5
+
+            # Calculate mean and error for ideal data
             self._ydata[2][depthidx] = np.mean(ideal_vals)
             self._ydata[3][depthidx] = (self._ydata[2][depthidx] *
                                         (1.0-self._ydata[2][depthidx])
@@ -302,31 +309,68 @@ class QVFitter:
             plt.show()
 
     def qv_success(self):
-        """Return whether each depth was successful (>2/3 with confidence
-        greater than 97.5) and the confidence
+        """Return whether each depth was successful (> 2/3 with confidence
+        level > 0.977 corresponding to z_value = 2) and the confidence level.
 
         Returns:
-            list: List of lenth depth with eact element a 3 list with
+            list: List of list of 2 elements for each depth:
             - success True/False
-            - confidence
+            - confidence level
         """
 
         success_list = []
+        confidence_level_threshold = self.calc_confidence_level(z_value=2)
 
         for depth_ind, _ in enumerate(self._depths):
             success_list.append([False, 0.0])
             hmean = self._ydata[0][depth_ind]
-            if hmean > 2/3:
-                cfd = 0.5 * (1 +
-                             math.erf((hmean - 2/3)
-                                      / (1e-10 +
-                                         self._ydata[1][depth_ind])/2**0.5))
-                success_list[-1][1] = cfd
+            sigma = self._ydata[1][depth_ind]
+            z_value = self.calc_z_value(hmean, sigma)
+            confidence_level = self.calc_confidence_level(z_value)
+            success_list[-1][1] = confidence_level
 
-                if cfd > 0.975:
-                    success_list[-1][0] = True
+            if (hmean > 2/3 and confidence_level > confidence_level_threshold):
+                success_list[-1][0] = True
 
         return success_list
+
+    def calc_z_value(self, mean, sigma):
+        """Calculate z value using mean and sigma.
+
+        Args:
+            mean (float): mean
+            sigma (float): standard deviation
+
+        Returns:
+            float: z_value in standard normal distibution.
+        """
+
+        if sigma == 0:
+            # assign a small value for sigma if sigma = 0
+            sigma = 1e-10
+            warnings.warn('Standard deviation sigma should not be zero.')
+
+        z_value = (mean - 2/3) / sigma
+
+        return z_value
+
+    def calc_confidence_level(self, z_value):
+        """Calculate confidence level using z value.
+
+        Accumulative probability for standard normal distribution
+        in [-z, +infinity] is 1/2 (1 + erf(z/sqrt(2))),
+        where z = (X - mu)/sigma = (hmean - 2/3)/sigma
+
+        Args:
+            z_value (float): z value in in standard normal distibution.
+
+        Returns:
+            float: confidence level in decimal (not percentage).
+        """
+
+        confidence_level = 0.5 * (1 + math.erf(z_value/2**0.5))
+
+        return confidence_level
 
     def quantum_volume(self):
         """Return the volume for each depth.
