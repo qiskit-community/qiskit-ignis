@@ -730,7 +730,6 @@ class TestRB(unittest.TestCase):
             self.assertEqual(circ_index, len(rb_purity_circs),
                              "Error: additional purity circuits exist")
 
-
     @combine(gate=(HGate(), SGate(), SdgGate(), XGate(), YGate(), ZGate()))
     def test_interleaved_randomized_benchmarking_seq_1q_clifford_gates(self, gate):
         """interleaved 1Q Clifford gates in RB"""
@@ -740,12 +739,11 @@ class TestRB(unittest.TestCase):
         seed = 0
         circ_index = 0
         self.assertEqual(rb_original_circs[seed][circ_index].name,
-            'rb_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_interleaved_circs[seed][circ_index].name,
-            'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
-
 
     @combine(gate=(SwapGate(), CXGate(), CZGate()))
     def test_interleaved_randomized_benchmarking_seq_2q_clifford_gates(self, gate):
@@ -755,35 +753,33 @@ class TestRB(unittest.TestCase):
         seed = 0
         circ_index = 0
         self.assertEqual(rb_original_circs[seed][circ_index].name,
-            'rb_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_interleaved_circs[seed][circ_index].name,
-            'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
-
 
     @combine(gate=(TGate(), XGate()))
     def test_interleaved_randomized_benchmarking_seq_1q_cnotdihedral_gates(self, gate):
         """interleaved 1Q CNOT-Dihedral gates in RB"""
-        rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs,  \
+        rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs, \
         rb_cnotdihedral_interleaved_Z_circs, rb_cnotdihedral_interleaved_X_circs = \
             rb.randomized_benchmarking_seq(1, [5], rb_pattern=[[0]], interleaved_elem=[gate],
                                            group_gates='CNOT-Dihedral')
         seed = 0
         circ_index = 0
         self.assertEqual(rb_cnotdihedral_Z_circs[seed][circ_index].name,
-            'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_X_circs[seed][circ_index].name,
-            'rb_cnotdihedral_X_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_interleaved_Z_circs[seed][circ_index].name,
-            'rb_cnotdihedral_interleaved_Z_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_interleaved_Z_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_interleaved_X_circs[seed][circ_index].name,
-            'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
-
 
     def test_interleaved_randomized_benchmarking_seq_2q_cnotdihedral_gates(self):
         """interleaved 2Q CNOT-Dihedral gates in RB"""
@@ -795,18 +791,17 @@ class TestRB(unittest.TestCase):
         seed = 0
         circ_index = 0
         self.assertEqual(rb_cnotdihedral_Z_circs[seed][circ_index].name,
-            'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_X_circs[seed][circ_index].name,
-            'rb_cnotdihedral_X_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_interleaved_Z_circs[seed][circ_index].name,
-            'rb_cnotdihedral_interleaved_Z_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_interleaved_Z_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_interleaved_X_circs[seed][circ_index].name,
-            'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
-
 
     @combine(num_qubits = (1, 2, 3))
     def test_interleaved_randomized_benchmarking_seq_random_clifford_gates(self, num_qubits):
@@ -820,30 +815,32 @@ class TestRB(unittest.TestCase):
         rb_original_circs, _, rb_interleaved_circs = rb.randomized_benchmarking_seq(
             1, [5], rb_pattern=[list(range(num_qubits))], interleaved_elem=[clifford])
         self.assertEqual(rb_original_circs[seed][circ_index].name,
-            'rb_length_%d_seed_%d' % (circ_index, seed), 'Error: incorrect circuit name')
+                         'rb_length_%d_seed_%d' % (circ_index, seed), 'Error: incorrect circuit name')
         self.assertEqual(rb_interleaved_circs[seed][circ_index].name,
-            'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
 
         rb_original_circs, _, rb_interleaved_circs = rb.randomized_benchmarking_seq(
             1, [5], rb_pattern=[list(range(num_qubits))], interleaved_elem=[test_circ])
         self.assertEqual(rb_original_circs[seed][circ_index].name,
-            'rb_length_%d_seed_%d' % (circ_index, seed), 'Error: incorrect circuit name')
+                         'rb_length_%d_seed_%d' % (circ_index, seed),
+                         'Error: incorrect circuit name')
         self.assertEqual(rb_interleaved_circs[seed][circ_index].name,
-            'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
 
         rb_original_circs, _, rb_interleaved_circ = rb.randomized_benchmarking_seq(
             1, [5], rb_pattern=[list(range(num_qubits))], interleaved_elem=[test_gates])
         self.assertEqual(rb_original_circs[seed][circ_index].name,
-            'rb_length_%d_seed_%d' % (circ_index, seed), 'Error: incorrect circuit name')
+                         'rb_length_%d_seed_%d' % (circ_index, seed),
+                         'Error: incorrect circuit name')
         self.assertEqual(rb_interleaved_circs[seed][circ_index].name,
-            'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
 
     @combine(num_qubits = (1, 2))
     def test_interleaved_randomized_benchmarking_seq_random_cnotdihedral_gates(self, num_qubits):
-        """interleaved random Clifford gates in RB"""
+        """interleaved random CNOT-Dihedral gates in RB"""
         elem = rb.random_cnotdihedral(num_qubits)
         test_circ = elem.to_circuit()
         test_gates = elem.to_instruction()
@@ -856,16 +853,16 @@ class TestRB(unittest.TestCase):
                                            interleaved_elem=[elem],
                                            group_gates='CNOT-Dihedral')
         self.assertEqual(rb_cnotdihedral_Z_circs[seed][circ_index].name,
-            'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_X_circs[seed][circ_index].name,
-            'rb_cnotdihedral_X_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_interleaved_Z_circs[seed][circ_index].name,
-            'rb_cnotdihedral_interleaved_Z_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_interleaved_Z_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_interleaved_X_circs[seed][circ_index].name,
-            'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
 
         rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs, \
@@ -874,16 +871,16 @@ class TestRB(unittest.TestCase):
                                            interleaved_elem=[test_circ],
                                            group_gates='CNOT-Dihedral')
         self.assertEqual(rb_cnotdihedral_Z_circs[seed][circ_index].name,
-            'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_X_circs[seed][circ_index].name,
-            'rb_cnotdihedral_X_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_interleaved_Z_circs[seed][circ_index].name,
-            'rb_cnotdihedral_interleaved_Z_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_interleaved_Z_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_interleaved_X_circs[seed][circ_index].name,
-            'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
 
         rb_cnotdihedral_Z_circs, _, rb_cnotdihedral_X_circs, \
@@ -892,16 +889,16 @@ class TestRB(unittest.TestCase):
                                            interleaved_elem=[test_gates],
                                            group_gates='CNOT-Dihedral')
         self.assertEqual(rb_cnotdihedral_Z_circs[seed][circ_index].name,
-            'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_X_circs[seed][circ_index].name,
-            'rb_cnotdihedral_X_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_interleaved_Z_circs[seed][circ_index].name,
-            'rb_cnotdihedral_interleaved_Z_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_interleaved_Z_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         self.assertEqual(rb_cnotdihedral_interleaved_X_circs[seed][circ_index].name,
-            'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
+                         'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
 
 
