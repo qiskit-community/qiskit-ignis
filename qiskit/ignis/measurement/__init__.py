@@ -31,8 +31,13 @@ The discriminators are used to to discriminate level one data into level two cou
    QuadraticIQDiscriminator
    SklearnIQDiscriminator
 """
-from .discriminator import (DiscriminationFilter,
-                            IQDiscriminationFitter,
-                            LinearIQDiscriminator,
-                            QuadraticIQDiscriminator,
-                            SklearnIQDiscriminator)
+# from .discriminator import (DiscriminationFilter,
+#                             IQDiscriminationFitter,
+#                             LinearIQDiscriminator,
+#                             QuadraticIQDiscriminator,
+#                             SklearnIQDiscriminator)
+
+from .discriminator.filters import DiscriminationFilter
+from .discriminator.iq_discriminator_fitter import IQDiscriminationFitter
+from .discriminator.fitters.lda_discriminator_fitter import LDADiscriminator
+from .discriminator.fitters.qda_discriminator_fitter import QDADiscriminator

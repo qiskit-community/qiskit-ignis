@@ -15,7 +15,7 @@
 # pylint: disable=invalid-name
 
 """
-IQ Discriminator module to discriminate date in the IQ Plane.
+IQ Discriminator module to discriminate date in the IQ Plane using PCA.
 """
 from abc import abstractmethod
 from typing import Union, List
@@ -37,7 +37,7 @@ except ImportError:
     HAS_MATPLOTLIB = False
 
 
-class IQDiscriminationFitter(BaseDiscriminationFitter):
+class PCADiscriminationFitter(BaseDiscriminationFitter):
     """
     Abstract discriminator that implements the data formatting for IQ
     level 1 data.

@@ -15,7 +15,6 @@ Measurement discriminators
 """
 
 from .filters import DiscriminationFilter
-from .iq_discriminators import (IQDiscriminationFitter,
-                                LinearIQDiscriminator,
-                                QuadraticIQDiscriminator,
-                                SklearnIQDiscriminator)
+from .iq_discriminator_fitter import IQDiscriminationFitter
+from .fitters.lda_discriminator_fitter import LDADiscriminator
+from .fitters.qda_discriminator_fitter import QDADiscriminator

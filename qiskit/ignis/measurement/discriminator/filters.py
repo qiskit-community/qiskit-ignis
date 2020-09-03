@@ -22,7 +22,7 @@ from copy import deepcopy
 from typing import List
 
 from qiskit.exceptions import QiskitError
-from qiskit.ignis.measurement.discriminator.discriminators import \
+from qiskit.ignis.measurement.discriminator.base_discriminator_fitter import \
     BaseDiscriminationFitter
 from qiskit.result.result import Result
 from qiskit.result.models import ExperimentResultData
