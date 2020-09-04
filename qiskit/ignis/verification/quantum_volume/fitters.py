@@ -320,9 +320,15 @@ class QVFitter:
             matplotlib.Figure:
                 A figure for histogram of ideal and experiment probabilities.
         """
-        ideal_data = self._all_output_prob_ideal[f"qv_depth_{depth}_trial_{trial_index}"]
-        exp_data = self._circ_counts[f"qv_depth_{depth}_trial_{trial_index}"]
+        circ_name = f"qv_depth_{depth}_trial_{trial_index}"
+        ideal_data = self._all_output_prob_ideal[circ_name]
+        exp_data = self._circ_counts[circ_name]
+
         fig = plot_histogram([ideal_data, exp_data], legend=['ideal', 'exp'])
+        ax = fig.gca()
+        fig.text(0.02, 0.95,\
+            f'heavy~{self._heavy_output_prob_exp[circ_name]:.3f}',\
+            transform=ax.transAxes)
 
         return fig
 
