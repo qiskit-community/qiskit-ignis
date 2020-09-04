@@ -316,6 +316,7 @@ class QVFitter:
         Args:
             depth(int): circuit depth
             trial_index(int): trial index
+            figsize (tuple): Figure size in inches.
 
         Returns:
             matplotlib.Figure:
