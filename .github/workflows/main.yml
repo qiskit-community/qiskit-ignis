@@ -80,3 +80,35 @@ jobs:
         with:
           name: html_docs
           path: docs/_build/html
+  tutorials:
+    name: tutorials
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Setup tutorials job
+        run: |
+          set -e
+          git clone https://github.com/Qiskit/qiskit-tutorials --depth=1
+          python -m pip install --upgrade pip
+          pip install -U -r requirements-dev.txt -c constraints.txt
+          pip install -c constraints.txt git+https://github.com/Qiskit/qiskit-terra
+          pip install -c constraints.txt -e .
+          pip install -U "qiskit-ibmq-provider" "qiskit-aer" "z3-solver" "qiskit-ignis" "qiskit-aqua" "pyscf<1.7.4" "matplotlib<3.3.0" pylatexenc sphinx nbsphinx sphinx_rtd_theme cvxpy -c constraints.txt
+          python setup.py build_ext --inplace
+          sudo apt install -y graphviz pandoc
+          pip check
+        shell: bash
+      - name: Run Tutorials
+        run: |
+          set -e
+          cd qiskit-tutorials
+          rm -rf tutorials/chemistry tutorials/circuits tutorials/circuits_advanced tutorials/finance tutorials/optimization tutorials/simulators
+          sphinx-build -b html . _build/html
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tutorials_html
+          path: qiskit-tutorials/_build/html
