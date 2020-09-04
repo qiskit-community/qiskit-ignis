@@ -133,9 +133,9 @@ class QVFitter:
                 qstate = result.get_statevector(circ_name)
                 pvector = np.multiply(qstate, qstate.conjugate())
                 format_spec = "{0:0%db}" % depth
-                self._all_output_prob_ideal[circ_name] = {format_spec.format(b):
-                        float(np.real(pvector[b]))
-                        for b in range(2**depth)}
+                self._all_output_prob_ideal[circ_name] = \
+                    {format_spec.format(b): float(np.real(pvector[b])) for b in range(2**depth)}
+
                 median_prob = self._median_probabilities([self._all_output_prob_ideal[circ_name]])
                 self._heavy_outputs[circ_name] = \
                     self._heavy_strings(self._all_output_prob_ideal[circ_name], median_prob[0])
@@ -223,8 +223,7 @@ class QVFitter:
 
                 # calculate the experimental heavy output probability
                 self._heavy_output_prob_exp[circ_name] = \
-                    self._heavy_output_counts[circ_name]/\
-                        self._circ_shots[circ_name]
+                    self._heavy_output_counts[circ_name]/self._circ_shots[circ_name]
 
     def calc_statistics(self):
         """
@@ -350,7 +349,7 @@ class QVFitter:
         ax.axhline(median_prob, color='r', linestyle='dashed', linewidth=1, label='median')
         ax.legend()
 
-        plt.close(fig) # close additional figure
+        plt.close(fig)  # close additional figure
 
         return fig
 
