@@ -328,19 +328,18 @@ class QVFitter:
         fig = plt.figure(figsize=figsize)
         ax = plt.gca()
 
-        # plot ideal histogram
-        plot_histogram(ideal_data, legend=['ideal'], bar_labels=False, ax=ax)
+        # plot experimental histogram
+        plot_histogram(exp_data, legend=['exp'], ax=ax)
+
+        # plot idea histogram overlap with experimental values
+        plot_histogram(ideal_data, legend=['ideal'], bar_labels=False, ax=ax, color='r')
 
         # get ideal histograms and change to unfilled
         bars = [r for r in ax.get_children() if type(r)==Rectangle]
-        for i in range(len(bars)-1):
+        for i in range(int(len(bars)/2), len(bars)-1):
             bars[i].fill = False
             # set non-black edge color to increase bar labels legibility
             bars[i].set_edgecolor('saddlebrown')
-            bars[i].set_zorder(3) # plot ideal histogram on top of exp histogram
-
-        # plot experimental histogram overlap with ideal values
-        plot_histogram(exp_data, legend=['exp'], ax=fig.gca())
 
         # show experimental heavy output probability on the top left corner
         fig.text(0.02, 0.95,\
