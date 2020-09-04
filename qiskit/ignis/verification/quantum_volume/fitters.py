@@ -352,6 +352,8 @@ class QVFitter:
         ax.axhline(median_prob, color='r', linestyle='dashed', linewidth=1, label='median')
         ax.legend()
 
+        plt.close(fig) # close additional figure
+
         return fig
 
     def qv_success(self):
