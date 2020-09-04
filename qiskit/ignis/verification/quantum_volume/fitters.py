@@ -341,10 +341,8 @@ class QVFitter:
             # set non-black edge color to increase bar labels legibility
             bars[i].set_edgecolor('saddlebrown')
 
-        # show experimental heavy output probability on the top left corner
-        fig.text(0.02, 0.95,\
-            f'heavy~{self._heavy_output_prob_exp[circ_name]:.3f}',\
-            transform=ax.transAxes)
+        # show experimental heavy output probability to the legend
+        ax.plot([], [], ' ', label=f'heavy~{self._heavy_output_prob_exp[circ_name]:.3f}')
 
         # plot median probability
         median_prob = self._median_probabilities([self._all_output_prob_ideal[circ_name]])
