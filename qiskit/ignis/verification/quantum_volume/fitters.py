@@ -27,6 +27,7 @@ from ...utils import build_counts_dict_from_list
 
 try:
     from matplotlib import pyplot as plt
+    from matplotlib.patches import Rectangle
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
@@ -324,8 +325,22 @@ class QVFitter:
         ideal_data = self._all_output_prob_ideal[circ_name]
         exp_data = self._circ_counts[circ_name]
 
-        fig = plot_histogram([ideal_data, exp_data], legend=['ideal', 'exp'])
+        # plot ideal histogram
+        fig = plot_histogram(ideal_data, legend=['ideal'], bar_labels=False)
         ax = fig.gca()
+
+        # get ideal histograms and change to unfilled
+        bars = [r for r in ax.get_children() if type(r)==Rectangle]
+        for i in range(len(bars)-1):
+            bars[i].fill = False
+            # set non-black edge color to increase bar labels legibility
+            bars[i].set_edgecolor('saddlebrown')
+            bars[i].set_zorder(3) # plot ideal histogram on top of exp histogram
+
+        # plot experimental histogram overlap with ideal values
+        plot_histogram(exp_data, legend=['exp'], ax=fig.gca())
+
+        # show experimental heavy output probability on the top left corner
         fig.text(0.02, 0.95,\
             f'heavy~{self._heavy_output_prob_exp[circ_name]:.3f}',\
             transform=ax.transAxes)
