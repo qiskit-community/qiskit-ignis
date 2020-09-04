@@ -335,7 +335,7 @@ class QVFitter:
         plot_histogram(ideal_data, legend=['ideal'], bar_labels=False, ax=ax, color='r')
 
         # get ideal histograms and change to unfilled
-        bars = [r for r in ax.get_children() if type(r)==Rectangle]
+        bars = [r for r in ax.get_children() if isinstance(r, Rectangle)]
         for i in range(int(len(bars)/2), len(bars)-1):
             bars[i].fill = False
             # set non-black edge color to increase bar labels legibility
