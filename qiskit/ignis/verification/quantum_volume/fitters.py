@@ -310,7 +310,7 @@ class QVFitter:
         if show_plt:
             plt.show()
 
-    def plot_qv_trial(self, depth, trial_index):
+    def plot_qv_trial(self, depth, trial_index, figsize=(7, 5)):
         """Plot individual trial.
 
         Args:
@@ -325,9 +325,11 @@ class QVFitter:
         ideal_data = self._all_output_prob_ideal[circ_name]
         exp_data = self._circ_counts[circ_name]
 
+        fig = plt.figure(figsize=figsize)
+        ax = plt.gca()
+
         # plot ideal histogram
-        fig = plot_histogram(ideal_data, legend=['ideal'], bar_labels=False)
-        ax = fig.gca()
+        plot_histogram(ideal_data, legend=['ideal'], bar_labels=False, ax=ax)
 
         # get ideal histograms and change to unfilled
         bars = [r for r in ax.get_children() if type(r)==Rectangle]
@@ -347,7 +349,8 @@ class QVFitter:
 
         # plot median probability
         median_prob = self._median_probabilities([self._all_output_prob_ideal[circ_name]])
-        ax.axhline(median_prob, color='r', linestyle='dashed', linewidth=1)
+        ax.axhline(median_prob, color='r', linestyle='dashed', linewidth=1, label='median')
+        ax.legend()
 
         return fig
 
