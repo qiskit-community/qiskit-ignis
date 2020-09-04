@@ -330,6 +330,10 @@ class QVFitter:
             f'heavy~{self._heavy_output_prob_exp[circ_name]:.3f}',\
             transform=ax.transAxes)
 
+        # plot median probability
+        median_prob = self._median_probabilities([self._all_output_prob_ideal[circ_name]])
+        ax.axhline(median_prob, color='r', linestyle='dashed', linewidth=1)
+
         return fig
 
     def qv_success(self):
