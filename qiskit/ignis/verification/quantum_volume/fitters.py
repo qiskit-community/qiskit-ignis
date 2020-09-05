@@ -53,6 +53,7 @@ class QVFitter:
         self._heavy_output_counts = {}
         self._circ_shots = {}
         self._heavy_output_prob_ideal = {}
+        self._heavy_output_prob_exp = {}
         self._ydata = []
         self._heavy_outputs = {}
         self.add_statevectors(statevector_result)
@@ -212,11 +213,16 @@ class QVFitter:
                 self._circ_shots[circ_name] = \
                     sum(circ_counts[circ_name].values())
 
-                # calculate the heavy output probability
+                # calculate the experimental heavy output counts
                 self._heavy_output_counts[circ_name] = \
                     self._subset_probability(
                         self._heavy_outputs[circ_name],
                         circ_counts[circ_name])
+
+                # calculate the experimental heavy output probability
+                self._heavy_output_prob_exp[circ_name] = \
+                    self._heavy_output_counts[circ_name]/\
+                        self._circ_shots[circ_name]
 
     def calc_statistics(self):
         """
