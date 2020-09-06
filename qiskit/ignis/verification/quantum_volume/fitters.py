@@ -367,6 +367,8 @@ class QVFitter:
         ax1.set_xlabel('Number of Trials', fontsize=14)
         ax1.set_ylabel('Heavy Output Probability', fontsize=14)
 
+        ax1.set_title(f'Quantum Volume {2**depth} Trials', fontsize=14)
+
         # re-arrange legend order
         handles, labels = ax1.get_legend_handles_labels()
         handles = [handles[1], handles[2], handles[0], handles[3]]
