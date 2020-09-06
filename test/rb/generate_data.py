@@ -175,7 +175,7 @@ def rb_cnotdihedral_execution(rb_opts: dict, shots: int):
         """
     # Load simulator
     backend = qiskit.Aer.get_backend('qasm_simulator')
-    basis_gates = ['u1', 'u2', 'u3', 'cx']
+    basis_gates = ['u1', 'u2', 'u3', 'cx', 'id']
 
     rb_cnotdihedral_z_circs, xdata, rb_cnotdihedral_x_circs = \
         rb.randomized_benchmarking_seq(**rb_opts)

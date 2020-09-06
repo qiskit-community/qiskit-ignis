@@ -434,6 +434,9 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
 
                 for _ in range(length_multiplier[rb_pattern_index]):
+                    # make the seed unique for each element
+                    if rand_seed:
+                        rand_seed += (seed + 1)
                     new_elmnt = rb_group.random(rb_q_num, rand_seed)
                     Elmnts[rb_pattern_index] = rb_group.compose(
                         Elmnts[rb_pattern_index], new_elmnt)
