@@ -678,8 +678,7 @@ def generate_correlated_fitter_data(results_1_file_path: str, expected_results_1
 
 if __name__ == '__main__':
     DIRNAME = os.path.dirname(os.path.abspath(__file__))
-    types = ['correlated']
-    for rb_type in types:#sys.argv[1:]:
+    for rb_type in sys.argv[1:]:
         if rb_type == 'standard':
             generate_fitter_data_1(os.path.join(DIRNAME, 'test_fitter_results_1.json'),
                                    os.path.join(DIRNAME, 'test_fitter_expected_results_1.json'))
