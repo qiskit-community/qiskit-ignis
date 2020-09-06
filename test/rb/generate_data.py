@@ -278,14 +278,14 @@ def rb_correlated_circuit_execution(rb_opts: dict, shots: int):
     # creating the noise
     noise_model = NoiseModel()
     zz_unitary = np.eye(4, dtype=complex)
-    zz_unitary[3, 3] = -1
+    zz_unitary[3, 3] = np.exp(0.5j * (np.pi / 5))
     error = coherent_unitary_error(zz_unitary)
     noise_model.add_nonlocal_quantum_error(error, basis_gates, [1], [1, 2])
     noise_model.add_nonlocal_quantum_error(error, basis_gates, [2], [2, 1])
 
     # Add T1/T2 noise to the simulation
-    t_1 = 50
-    t_2 = 90
+    t_1 = 10
+    t_2 = 20
     gate1q = 0.1
     gate2q = 0.5
     noise_model.add_all_qubit_quantum_error(thermal_relaxation_error(t_1, t_2, gate1q), 'u2')
@@ -646,7 +646,7 @@ def generate_correlated_fitter_data(results_1_file_path: str, expected_results_1
 
     rb_opts = {}
     shots = 1024
-    rb_opts['nseeds'] = 5
+    rb_opts['nseeds'] = 20
     rb_opts['rb_pattern'] = [[0], [1], [2], [3]]
     rb_opts['length_vector'] = list(np.arange(1, 1200, 75))
     rb_opts['rand_seed'] = SEED
@@ -678,7 +678,8 @@ def generate_correlated_fitter_data(results_1_file_path: str, expected_results_1
 
 if __name__ == '__main__':
     DIRNAME = os.path.dirname(os.path.abspath(__file__))
-    for rb_type in sys.argv[1:]:
+    types = ['correlated']
+    for rb_type in types:#sys.argv[1:]:
         if rb_type == 'standard':
             generate_fitter_data_1(os.path.join(DIRNAME, 'test_fitter_results_1.json'),
                                    os.path.join(DIRNAME, 'test_fitter_expected_results_1.json'))
