@@ -221,8 +221,7 @@ class QVFitter:
 
                 # calculate the experimental heavy output probability
                 self._heavy_output_prob_exp[circ_name] = \
-                    self._heavy_output_counts[circ_name]/\
-                        self._circ_shots[circ_name]
+                    self._heavy_output_counts[circ_name] / self._circ_shots[circ_name]
 
     def calc_statistics(self):
         """
@@ -348,12 +347,12 @@ class QVFitter:
             hop_list.append(self._heavy_output_prob_exp[circ_name])
 
         hop_accumulative = np.cumsum(hop_list) / np.arange(1, self._ntrials+1)
-        two_sigma = 2 * (hop_accumulative * (1 - hop_accumulative) / \
-            np.arange(1, self._ntrials+1))**0.5
+        two_sigma = 2 * (hop_accumulative * (1 - hop_accumulative) /
+                         np.arange(1, self._ntrials+1))**0.5
 
         # plot two-sigma shaded area
-        ax1.errorbar(trial_list, hop_accumulative, fmt="none", yerr=two_sigma, ecolor='lightgray', \
-            elinewidth=20, capsize=0, alpha=0.5, label='2$\sigma$')
+        ax1.errorbar(trial_list, hop_accumulative, fmt="none", yerr=two_sigma, ecolor='lightgray',
+                     elinewidth=20, capsize=0, alpha=0.5, label='2$\sigma$')
         # plot accumulative HOP
         ax1.plot(trial_list, hop_accumulative, color='r', label='Cumulative HOP')
         # plot inidivual HOP as scatter
