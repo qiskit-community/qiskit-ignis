@@ -314,6 +314,69 @@ class QVFitter:
         if show_plt:
             plt.show()
 
+    def plot_hop_accumulative(self, depth, ax=None, figsize=(7, 5)):
+        """Plot individual and accumulative heavy output probability (HOP)
+        as a function of number of trials
+
+        Args:
+            depth (int): depth of QV circuits
+            ax (Axes or None): plot axis (if passed in).
+            figsize (tuple): figure size in inches.
+
+        Raises:
+            ImportError: If matplotlib is not installed.
+
+        Returns:
+            matplotlib.Figure:
+                A figure of individual and accumulative HOP as a function of number of trials,
+                with 2-sigma confidence interval and 2/3 threshold.
+        """
+
+        if not HAS_MATPLOTLIB:
+            raise ImportError('The function plot_hop_accumulative needs matplotlib. '
+                              'Run "pip install matplotlib" before.')
+
+        if ax is None:
+            fig = plt.figure(figsize=figsize)
+            ax1 = plt.gca()
+
+        trial_list = np.arange(self._ntrials)  # x data
+        hop_list = []  # y data
+
+        for trial_index in range(self._ntrials):
+            circ_name = f'qv_depth_{depth}_trial_{trial_index}'
+            hop_list.append(self._heavy_output_prob_exp[circ_name])
+
+        hop_accumulative = np.cumsum(hop_list) / np.arange(1, self._ntrials+1)
+        two_sigma = 2 * (hop_accumulative * (1 - hop_accumulative) / \
+            np.arange(1, self._ntrials+1))**0.5
+
+        # plot two-sigma shaded area
+        ax1.errorbar(trial_list, hop_accumulative, fmt="none", yerr=two_sigma, ecolor='lightgray', \
+            elinewidth=20, capsize=0, alpha=0.5, label='2$\sigma$')
+        # plot accumulative HOP
+        ax1.plot(trial_list, hop_accumulative, color='r', label='Cumulative HOP')
+        # plot inidivual HOP as scatter
+        ax1.scatter(trial_list, hop_list, s=3, zorder=3, label='Individual HOP')
+        # plot 2/3 success threshold
+        ax1.axhline(2/3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
+
+        ax1.set_xlim(0, self._ntrials)
+        ax1.set_ylim(hop_accumulative[-1]-4*two_sigma[-1], hop_accumulative[-1]+4*two_sigma[-1])
+
+        ax1.set_xlabel('Number of Trials', fontsize=14)
+        ax1.set_ylabel('Heavy Output Probability', fontsize=14)
+
+        # re-arrange legend order
+        handles, labels = ax1.get_legend_handles_labels()
+        handles = [handles[1], handles[2], handles[0], handles[3]]
+        labels = [labels[1], labels[2], labels[0], labels[3]]
+        ax1.legend(handles, labels)
+
+        plt.close(fig)  # close additional figure
+
+        return fig
+
     def qv_success(self):
         """Return whether each depth was successful (> 2/3 with confidence
         level > 0.977 corresponding to z_value = 2) and the confidence level.
