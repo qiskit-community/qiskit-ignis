@@ -263,6 +263,7 @@ class QVFitter:
         Args:
             ax (Axes or None): plot axis (if passed in).
             show_plt (bool): display the plot.
+            figsize (tuple): Figure size in inches.
 
         Raises:
             ImportError: If matplotlib is not installed.
@@ -285,17 +286,17 @@ class QVFitter:
 
         # Plot the experimental data with error bars
         ax1.errorbar(xdata, self._ydata[0],
-                    yerr=self._ydata[1]*2,
-                    color='r', marker='o',
-                    markersize=6, capsize=5,
-                    elinewidth=2, label='Exp')
+                     yerr=self._ydata[1]*2,
+                     color='r', marker='o',
+                     markersize=6, capsize=5,
+                     elinewidth=2, label='Exp')
 
         # Plot the ideal data with error bars
         ax1.errorbar(xdata, self._ydata[2],
-                    yerr=self._ydata[3]*2,
-                    color='b', marker='v',
-                    markersize=6, capsize=5,
-                    elinewidth=2, label='Ideal')
+                     yerr=self._ydata[3]*2,
+                     color='b', marker='v',
+                     markersize=6, capsize=5,
+                     elinewidth=2, label='Ideal')
 
         # Plot the threshold
         ax1.axhline(2/3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
