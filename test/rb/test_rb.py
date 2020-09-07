@@ -234,7 +234,7 @@ class TestRB(unittest.TestCase):
             op_index: int, updated index
         """
         gatelist = []
-        while (ops[op_index][0].name != stop_gate):
+        while ops[op_index][0].name != stop_gate:
             gate = ops[op_index][0].name
             params = ops[op_index][0].params
             if gate == 'u1':
