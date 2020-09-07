@@ -348,6 +348,7 @@ class QVFitter:
         median_prob = self._median_probabilities([self._all_output_prob_ideal[circ_name]])
         ax1.axhline(median_prob, color='r', linestyle='dashed', linewidth=1, label='median')
         ax1.legend()
+        ax1.set_title(f'Quantum Volume {2**depth}, Trial #{trial_index}', fontsize=14)
 
         plt.close(fig)  # close additional figure
 
