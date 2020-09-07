@@ -289,7 +289,7 @@ class QVFitter:
         # Plot the ideal data with error bars
         ax.errorbar(xdata, self._ydata[2],
                     yerr=self._ydata[3],
-                    color='b', linestyle=None, marker='o',
+                    color='b', linestyle=None, marker='v',
                     markersize=8, capsize=5, elinewidth=2,
                     label='Ideal')
 
