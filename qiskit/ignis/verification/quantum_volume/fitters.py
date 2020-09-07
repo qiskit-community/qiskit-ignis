@@ -300,8 +300,8 @@ class QVFitter:
         ax.set_xticks(xdata)
         ax.set_xticklabels(self._qubit_lists, rotation=45)
 
-        ax.set_xlabel('Qubit Subset', fontsize=16)
-        ax.set_ylabel('Heavy Probability', fontsize=16)
+        ax.set_xlabel('Qubit Subset', fontsize=14)
+        ax.set_ylabel('Heavy Output Probability', fontsize=14)
         ax.grid(True)
 
         ax.legend()
