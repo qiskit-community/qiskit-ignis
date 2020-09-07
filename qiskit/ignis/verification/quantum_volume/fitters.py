@@ -283,14 +283,14 @@ class QVFitter:
         ax.errorbar(xdata, self._ydata[0],
                     yerr=self._ydata[1]*2,
                     color='r', marker='o',
-                    markersize=8, capsize=5,
+                    markersize=6, capsize=5,
                     elinewidth=2, label='Exp')
 
         # Plot the ideal data with error bars
         ax.errorbar(xdata, self._ydata[2],
                     yerr=self._ydata[3]*2,
                     color='b', marker='v',
-                    markersize=8, capsize=5,
+                    markersize=6, capsize=5,
                     elinewidth=2, label='Ideal')
 
         # Plot the threshold
