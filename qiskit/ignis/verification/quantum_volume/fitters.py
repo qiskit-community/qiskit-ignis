@@ -280,30 +280,32 @@ class QVFitter:
 
         # Plot the experimental data with error bars
         ax.errorbar(xdata, self._ydata[0],
-                    yerr=self._ydata[1],
-                    color='r', linestyle=None, marker='o', markersize=5,
-                    label='Exp')
+                    yerr=self._ydata[1]*2,
+                    color='r', marker='o',
+                    markersize=6, capsize=5,
+                    elinewidth=2, label='Exp')
 
         # Plot the ideal data with error bars
         ax.errorbar(xdata, self._ydata[2],
-                    yerr=self._ydata[3],
-                    color='b', linestyle=None, marker='o', markersize=5,
-                    label='Ideal')
+                    yerr=self._ydata[3]*2,
+                    color='b', marker='v',
+                    markersize=6, capsize=5,
+                    elinewidth=2, label='Ideal')
 
         # Plot the threshold
-        ax.plot(xdata,
-                np.ones(len(xdata))*2.0/3.0,
-                color='black', linestyle='--', linewidth=2, label='Threshold')
-        ax.tick_params(labelsize=14)
+        ax.axhline(2/3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
 
         ax.set_xticks(xdata)
         ax.set_xticklabels(self._qubit_lists, rotation=45)
 
-        ax.set_xlabel('Qubit Subset', fontsize=16)
-        ax.set_ylabel('Heavy Probability', fontsize=16)
+        ax.set_xlabel('Qubit Subset', fontsize=14)
+        ax.set_ylabel('Heavy Output Probability', fontsize=14)
         ax.grid(True)
 
         ax.legend()
+
+        ax.set_title(f'Quantum Volume for up to {len(self._qubit_lists[-1])} Qubits \
+and {self._ntrials} Trials')
 
         if show_plt:
             plt.show()
