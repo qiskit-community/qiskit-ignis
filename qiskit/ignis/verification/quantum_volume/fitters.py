@@ -305,6 +305,9 @@ class QVFitter:
 
         ax.legend()
 
+        ax.set_title(f'Quantum Volume for up to {len(self._qubit_lists[-1])} Qubits \
+and {self._ntrials} Trials')
+
         if show_plt:
             plt.show()
 
