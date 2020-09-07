@@ -256,7 +256,7 @@ class QVFitter:
                                         (1.0-self._ydata[2][depthidx])
                                         / self._ntrials)**0.5
 
-    def plot_qv_data(self, ax=None, show_plt=True):
+    def plot_qv_data(self, ax=None, show_plt=True, figsize=(7, 5)):
         """
         Plot the qv data as a function of depth
 
@@ -266,6 +266,11 @@ class QVFitter:
 
         Raises:
             ImportError: If matplotlib is not installed.
+
+        Returns:
+            matplotlib.Figure:
+                A figure of Quantum Volume data (heavy output probability)
+                with two-sigma error bar as a function of circuit depth
         """
 
         if not HAS_MATPLOTLIB:
@@ -273,42 +278,44 @@ class QVFitter:
                               'Run "pip install matplotlib" before.')
 
         if ax is None:
-            plt.figure()
-            ax = plt.gca()
+            fig = plt.figure(figsize=figsize)
+            ax1 = plt.gca()
 
         xdata = range(len(self._depths))
 
         # Plot the experimental data with error bars
-        ax.errorbar(xdata, self._ydata[0],
+        ax1.errorbar(xdata, self._ydata[0],
                     yerr=self._ydata[1]*2,
                     color='r', marker='o',
                     markersize=6, capsize=5,
                     elinewidth=2, label='Exp')
 
         # Plot the ideal data with error bars
-        ax.errorbar(xdata, self._ydata[2],
+        ax1.errorbar(xdata, self._ydata[2],
                     yerr=self._ydata[3]*2,
                     color='b', marker='v',
                     markersize=6, capsize=5,
                     elinewidth=2, label='Ideal')
 
         # Plot the threshold
-        ax.axhline(2/3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
+        ax1.axhline(2/3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
 
-        ax.set_xticks(xdata)
-        ax.set_xticklabels(self._qubit_lists, rotation=45)
+        ax1.set_xticks(xdata)
+        ax1.set_xticklabels(self._qubit_lists, rotation=45)
 
-        ax.set_xlabel('Qubit Subset', fontsize=14)
-        ax.set_ylabel('Heavy Output Probability', fontsize=14)
-        ax.grid(True)
+        ax1.set_xlabel('Qubit Subset', fontsize=14)
+        ax1.set_ylabel('Heavy Output Probability', fontsize=14)
+        ax1.grid(True)
 
-        ax.legend()
+        ax1.legend()
 
-        ax.set_title(f'Quantum Volume for up to {len(self._qubit_lists[-1])} Qubits \
+        ax1.set_title(f'Quantum Volume for up to {len(self._qubit_lists[-1])} Qubits \
 and {self._ntrials} Trials')
 
         if show_plt:
             plt.show()
+
+        return fig
 
     def qv_success(self):
         """Return whether each depth was successful (> 2/3 with confidence
