@@ -731,11 +731,12 @@ class TestRB(unittest.TestCase):
             self.assertEqual(circ_index, len(rb_purity_circs),
                              "Error: additional purity circuits exist")
 
-    @data(HGate(), SGate(), SdgGate(), XGate(), YGate(), ZGate())
+    @data([HGate(), ['h 0']], [SGate(), ['s 0']], [SdgGate(), ['s 0', 'z 0']],
+          [XGate(), ['x 0']], [YGate(), ['y 0']], [ZGate(), ['z 0']])
     def test_interleaved_randomized_benchmarking_seq_1q_clifford_gates(self, gate):
         """interleaved 1Q Clifford gates in RB"""
         rb_original_circs, _, rb_interleaved_circs = rb.randomized_benchmarking_seq(
-            nseeds=1, length_vector=[5], rb_pattern=[[0]], interleaved_elem=[gate])
+            nseeds=1, length_vector=[5], rb_pattern=[[0]], interleaved_elem=[gate[0]])
         # Verify the generated sequences
         rb_opts = {}
         rb_opts['nseeds'] = 1
@@ -743,7 +744,7 @@ class TestRB(unittest.TestCase):
         vec_len = 5
         rb_opts['length_vector'] = [vec_len]
         rb_opts['length_multiplier'] = 1
-        rb_opts['interleaved_elem'] = [gate]
+        rb_opts['interleaved_elem'] = [gate[0]]
         seed = 0
         circ_index = 0
 
@@ -755,7 +756,7 @@ class TestRB(unittest.TestCase):
                          'Error: incorrect circuit name')
         self.compare_interleaved_circuit(rb_original_circs[seed][circ_index],
                                          rb_interleaved_circs[seed][circ_index],
-                                         1, rb_opts, None, vec_len)
+                                         1, rb_opts, [gate[1]], vec_len)
 
     @data(SwapGate(), CXGate(), CZGate())
     def test_interleaved_randomized_benchmarking_seq_2q_clifford_gates(self, gate):
@@ -855,7 +856,7 @@ class TestRB(unittest.TestCase):
                          'Error: incorrect circuit name')
         self.compare_interleaved_circuit(rb_cnotdihedral_Z_circs[seed][circ_index],
                                          rb_cnotdihedral_interleaved_Z_circs[seed][circ_index],
-                                         2, rb_opts, None, vec_len)
+                                         2, rb_opts, [['cx 0 1']], vec_len)
         self.compare_cnotdihedral_circuit(rb_cnotdihedral_Z_circs[seed][circ_index],
                                           rb_cnotdihedral_X_circs[seed][circ_index],
                                           2, rb_opts, vec_len)
