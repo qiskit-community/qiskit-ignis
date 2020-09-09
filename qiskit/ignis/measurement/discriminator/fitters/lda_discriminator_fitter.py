@@ -42,7 +42,7 @@ class LDADiscriminator(BaseDiscriminationFitter):
                  qubit_mask: List[int], expected_states: List[str] = None,
                  standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None,
-                 discriminator_parameters: dict = None):
+                 discriminator_parameters: dict = None,**serialized_dict):
         """
         Args:
             cal_results (Union[Result, List[Result]]): calibration results,
@@ -70,7 +70,7 @@ class LDADiscriminator(BaseDiscriminationFitter):
         store_cov = discriminator_parameters.get('store_covariance', False)
         tol = discriminator_parameters.get('tol', 1.0e-4)
 
-        self._lda = LinearDiscriminantAnalysis(solver=solver, shrinkage=shrink,
+        self._classifier = LinearDiscriminantAnalysis(solver=solver, shrinkage=shrink,
                                                store_covariance=store_cov,
                                                tol=tol)
 
@@ -79,7 +79,7 @@ class LDADiscriminator(BaseDiscriminationFitter):
                                                expected_states, standardize,
                                                schedules)
 
-        self._description = 'Linear IQ discriminator for measurement level 1.'
+        self._description = 'LDA discriminator for measurement level 1.'
 
         self.fit()
 
@@ -87,7 +87,7 @@ class LDADiscriminator(BaseDiscriminationFitter):
         """Fits the discriminator using self._xdata and self._ydata."""
         if len(self._xdata) == 0:
             return
-        self._lda.fit(self._xdata, self._ydata)
+        self._classifier.fit(self._xdata, self._ydata)
         self._fitted = True
 
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
@@ -100,16 +100,4 @@ class LDADiscriminator(BaseDiscriminationFitter):
         Returns:
             The discriminated x_data as a list of labels.
         """
-        return self._lda.predict(x_data)
-
-    def count(self, x_data: List[List[float]]) -> Dict:
-        """Applies the discriminator to x_data.
-
-        Args:
-            x_data (List[List[float]]): list of features. Each feature is
-                                        itself a list.
-
-        Returns:
-            The discriminated x_data as a dictionary of counts.
-        """
-        return Counter(self._lda.predict(x_data))
+        return self._classifier.predict(x_data)

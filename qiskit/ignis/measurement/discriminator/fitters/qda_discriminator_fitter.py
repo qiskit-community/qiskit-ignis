@@ -43,7 +43,7 @@ class QDADiscriminator(BaseDiscriminationFitter):
                  qubit_mask: List[int], expected_states: List[str] = None,
                  standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None,
-                 discriminator_parameters: dict = None):
+                 discriminator_parameters: dict = None,**serialized_dict):
         """
         Args:
             cal_results (Union[Result, List[Result]]): calibration results,
@@ -69,7 +69,7 @@ class QDADiscriminator(BaseDiscriminationFitter):
         store_cov = discriminator_parameters.get('store_covariance', False)
         tol = discriminator_parameters.get('tol', 1.0e-4)
 
-        self._qda = QuadraticDiscriminantAnalysis(store_covariance=store_cov,
+        self._classifier = QuadraticDiscriminantAnalysis(store_covariance=store_cov,
                                                   tol=tol)
 
         # Also sets the x and y data.
@@ -77,7 +77,7 @@ class QDADiscriminator(BaseDiscriminationFitter):
                                                expected_states, standardize,
                                                schedules)
 
-        self._description = 'Quadratic IQ discriminator for measurement ' \
+        self._description = 'QDA discriminator for measurement ' \
                             'level 1.'
 
         self.fit()
@@ -87,7 +87,7 @@ class QDADiscriminator(BaseDiscriminationFitter):
         if len(self._xdata) == 0:
             return
 
-        self._qda.fit(self._xdata, self._ydata)
+        self._classifier.fit(self._xdata, self._ydata)
         self._fitted = True
 
     def discriminate(self, x_data: List[List[float]]) -> List[str]:
@@ -100,4 +100,4 @@ class QDADiscriminator(BaseDiscriminationFitter):
         Returns:
             The discriminated x_data as a list of labels.
         """
-        return self._qda.predict(x_data)
+        return self._classifier.predict(x_data)

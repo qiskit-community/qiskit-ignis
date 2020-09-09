@@ -19,10 +19,17 @@ from abc import ABC, abstractmethod
 import re
 from typing import Union, List
 import numpy as np
+import copy
 
+from qiskit.pulse import PulseError
 from qiskit.exceptions import QiskitError
 from qiskit.result import Result
 from qiskit.pulse.schedule import Schedule
+try:
+    from matplotlib import pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
 
 
 class BaseDiscriminationFitter(ABC):
@@ -35,7 +42,8 @@ class BaseDiscriminationFitter(ABC):
     def __init__(self, cal_results: Union[Result, List[Result]],
                  qubit_mask: List[int], expected_states: List[str] = None,
                  standardize: bool = False,
-                 schedules: Union[List[str], List[Schedule]] = None):
+                 schedules: Union[List[str], List[Schedule]] = None,
+                 **serialized_dict):
         """
         Args:
             cal_results: calibration results, Result or list of Result used to
@@ -51,7 +59,9 @@ class BaseDiscriminationFitter(ABC):
                        to train the discriminator. The user may also pass the name
                        of the schedules instead of the schedules. If schedules is None,
                        then all the schedules in cal_results are used.
+            **serialized_dict: Additional parameters from serialized input.
         """
+
         # Regex pattern used to identify calibration schedules
         self._cal_pattern = r'cal_\d+$'
 
@@ -382,50 +392,6 @@ class BaseDiscriminationFitter(ABC):
                     pass
 
         return ydata
-    #
-    # @abstractmethod
-    # def get_xdata(self, results: Union[Result, List[Result]],
-    #               schedule_type_to_get: int,
-    #               schedules: Union[List[str], List[Schedule]] = None) \
-    #         -> List[List[float]]:
-    #     """
-    #     Retrieves feature data (xdata) for the discriminator.
-    #
-    #     Args:
-    #         results: the get_memory() method is used to retrieve the level 1 data.
-    #                  If result is a list of Result, then the first Result in the
-    #                  list that returns the data of schedule
-    #                  (through get_memory(schedule)) is used.
-    #         schedule_type_to_get: use to specify if we should return data corresponding to
-    #                               (``0``) calibration data only
-    #                               (``1``) non-calibration data
-    #                               (``2``) both calibration and non-calibration data
-    #         schedules: Either the names of the schedules or the schedules themselves.
-    #
-    #     Returns:
-    #         The xdata as a list of features. Each feature is a list.
-    #     """
-    #
-    # @abstractmethod
-    # def get_ydata(self, results: Union[Result, List[Result]],
-    #               schedule_type_to_get: int,
-    #               schedules: Union[List[str], List[Schedule]] = None) \
-    #         -> List[str]:
-    #     """
-    #     Retrieves the expected states (ydata) for the discriminator.
-    #
-    #     Args:
-    #         results: results for which to retrieve the y data (i.e. expected states).
-    #         schedule_type_to_get: use to specify if we should return data corresponding to
-    #                               (``0``) calibration data only
-    #                               (``1``) non-calibration data
-    #                               (``2``) both calibration and non-calibration data
-    #         schedules: Either the names of the schedules or the schedules themselves.
-    #
-    #     Returns:
-    #         The y data, i.e. expected states. get_ydata is designed to produce
-    #         y data with the same length as the x data.
-    #     """
 
     @abstractmethod
     def fit(self):
@@ -449,7 +415,7 @@ class BaseDiscriminationFitter(ABC):
              show_fitting_data: bool = True,
              flag_misclassified: bool = False,
              qubits_to_plot: list = None,
-             title: bool = True):
+             title: str = None):
         """
         Creates a plot of the data used to fit the discriminator.
 
@@ -520,7 +486,7 @@ class BaseDiscriminationFitter(ABC):
         if show_boundary and len(self._qubit_mask) == 1:
             try:
                 xx, yy = self._get_iq_grid(x_data)
-                zz = self.discriminate(np.c_[xx.ravel(), yy.ravel()])
+                zz = self.discriminate_state(np.c_[xx.ravel(), yy.ravel()])
                 zz = np.array(zz).astype(float).reshape(xx.shape)
                 axs[0].contourf(xx, yy, zz, alpha=.2)
 
@@ -561,15 +527,31 @@ class BaseDiscriminationFitter(ABC):
 
                 ax.legend(frameon=True)
 
-        if title:
+        if title is None:
             for idx, q in enumerate(qubits_to_plot):
                 axs[idx].set_title('Qubit %i' % q)
+        else:
+            for idx, q in enumerate(qubits_to_plot):
+                axs[idx].set_title('%s Qubit %i' % (title, q))
 
         for ax in axs:
             ax.set_xlabel('I (arb. units)')
             ax.set_ylabel('Q (arb. units)')
 
         return axs, fig
+
+    def discriminate_state(self, x_data: List[List[float]]) -> List[str]:
+        """Applies the discriminator to x_data.
+
+        Args:
+            x_data (List[List[float]]): list of features. Each feature is
+                                        itself a list.
+
+        Returns:
+            The discriminated x_data as a list of 0 or 1.
+        """
+        labels = self.discriminate(x_data)
+        return [self._schedules.index(i) for i in labels]
 
     def plot_xdata(self, axs,
                    results: Union[Result, List[Result]], color: str = None):
@@ -643,57 +625,140 @@ class BaseDiscriminationFitter(ABC):
 
         return xdata
 
-    #
-    # @abstractmethod
-    # def plot(self, axs=None,
-    #          show_boundary: bool = False,
-    #          show_fitting_data: bool = True,
-    #          flag_misclassified: bool = False,
-    #          qubits_to_plot: list = None,
-    #          title: bool = True):
-    #     """
-    #     Creates a plot of the data used to fit the discriminator.
-    #
-    #     Args:
-    #         axs (Union[ndarray, axes]): the axis to use for the plot. If it
-    #             is none, the plot method will create its own axis instance. If
-    #             the number of axis instances provided is less than the number
-    #             of qubits then only the data for the first len(axs) qubits will
-    #             be plotted.
-    #         show_boundary (bool): plot the decision regions if true. Some
-    #             discriminators may put additional constraints on whether the
-    #             decision regions are plotted or not.
-    #         show_fitting_data (bool): if True the x data and labels used to
-    #             fit the discriminator are shown in the plot.
-    #         flag_misclassified (bool): plot the misclassified training data
-    #             points if true.
-    #         qubits_to_plot (list): each qubit in this list will receive its
-    #             own plot. The qubits in qubits to plot must be in the qubit
-    #             mask. If qubits_to_plot is None then the qubit mask will be
-    #             used.
-    #         title (bool): adds a title to each subplot with the number of
-    #             the qubit.
-    #
-    #     Returns: (Union[List[axes], axes], figure):
-    #         the axes object used for the plot as well as the figure handle.
-    #         The figure handle returned is not ``None`` only when the figure
-    #         handle is created by the discriminator's plot method.
-    #     """
-    #
-    # @abstractmethod
-    # def plot_xdata(self, axs,
-    #                results: Union[Result, List[Result]], color: str = None):
-    #     """
-    #     Add the relevant IQ data from the Qiskit Result, or list thereof, to
-    #     the given axes as a scatter plot.
-    #
-    #     Args:
-    #         axs (Union[ndarray, axes]): the axis to use for the plot. If
-    #             the number of axis instances provided is less than the number
-    #             of qubits then only the data for the first len(axs) qubits will
-    #             be plotted.
-    #         results (Union[Result, List[Result]]): the discriminators
-    #             get_xdata will be used to retrieve the x data from the Result
-    #             or list of Results.
-    #         color (str): color of the IQ points in the scatter plot.
-    #     """
+    def _get_iq_grid(self, x_data: np.array) -> (np.meshgrid, np.meshgrid):
+        """
+        Create mesh grids used to plot the decision boundary.
+        Args:
+            x_data (np.array): IQ data.
+        Returns:
+            xx (np.meshgrid): xx meshgrid for plotting discriminator boundary
+            yy (np.meshgrid): yy meshgrid for plotting discriminator boundary
+        """
+        max_i = np.max(x_data[:, 0])
+        min_i = np.min(x_data[:, 0])
+        max_q = np.max(x_data[:, 1])
+        min_q = np.min(x_data[:, 1])
+
+        spacing = (max_i - min_i) / 100.0
+        xx, yy = np.meshgrid(
+            np.arange(min_i - 10 * spacing, max_i + 10 * spacing, spacing),
+            np.arange(min_q - 10 * spacing, max_q + 10 * spacing, spacing))
+
+        return xx, yy
+
+    @classmethod
+    def from_dict(cls, serialized_dict):
+        """Deserialize an acquire from a dictionary output by :meth:`to_dict`.
+
+        Args:
+            serialized_dict (Dict): Serialized input dict.
+
+        Returns:
+            Discriminator
+        """
+        serialized_dict = copy.copy(serialized_dict)
+        cal_results = serialized_dict.pop('backend_result_list')
+        if cal_results is None:
+            cal_results = []
+        qubit_mask = serialized_dict.pop('qubit_mask')
+        if qubit_mask is None:
+            raise QiskitError("Expected qubit mask in serialized input.")
+        standardize = serialized_dict.pop('standardize')
+        schedules = serialized_dict.pop('schedules')
+        return cls(cal_results=cal_results,
+                   qubit_mask=qubit_mask,
+                   standardize=standardize,
+                   schedules=schedules,
+                   **serialized_dict)
+
+    def to_dict(self):
+        """Serialize Acquire as a dict that may be dumped to serialization formats.
+
+        Returns:
+            dict: A dictionary of all discriminator parameters.
+        """
+
+        serialized_dict = {
+            "expected_state": self._expected_state,
+            "description": self._description,
+            "standardize": self._standardize,
+            "scaler": self._scaler,
+            "qubit_mask": self._qubit_mask,
+            "schedules": self._schedules,
+            "backend_result_list": self._backend_result_list,
+            "fitted": self._fitted,
+            "xdata": self._xdata,
+            "ydata": self._ydata
+        }
+
+        if self._fitted is True:
+            serialized_dict['classifier_params'] = self._classifier.get_params()
+        return serialized_dict
+
+    def count(self, raw_data: Result) -> Result:
+        """Outputs raw counts.
+        """
+        new_results = copy.deepcopy(raw_data)
+
+        to_be_discriminated = []
+
+        # Extract all the meas level 1 data from the Result.
+        shots_per_experiment_result = []
+        for result in new_results.results:
+            if result.meas_level == 1:
+                shots_per_experiment_result.append(result.shots)
+                to_be_discriminated.append(result)
+
+        new_results.results = to_be_discriminated
+
+        x_data = self.get_xdata(new_results, 2)
+        y_data = self.discriminate_state(x_data)
+
+        raw_counts = {}
+        for cnt in y_data:
+            cnt = str(cnt)
+            cnt_hex = hex(int(cnt, self.get_base(self._expected_state)))
+            if cnt_hex in raw_counts:
+                raw_counts[cnt_hex] += 1
+            else:
+                raw_counts[cnt_hex] = 1
+        return raw_counts
+
+    def get_base(self, expected_states: dict):
+        """
+        Returns the base inferred from expected_states.
+
+        The intent is to allow users to discriminate states higher than 0/1.
+
+        DiscriminationFilter infers the basis from the expected states to allow
+        users to discriminate states outside of the computational sub-space.
+        For example, if the discriminated states are 00, 01, 02, 10, 11, ...,
+        22 the basis will be 3.
+
+        With this implementation the basis can be at most 10.
+
+        Args:
+            expected_states:
+
+        Returns:
+            int: the base inferred from the expected states
+
+        Raises:
+            QiskitError: if there is an invalid input in the expected states
+        """
+        base = 0
+        # TODO - fix this
+        expected_states['ground state'] = '0'
+        expected_states['excited state'] = '1'
+
+        for key in expected_states:
+            for char in expected_states[key]:
+                try:
+                    value = int(char)
+                except ValueError:
+                    raise QiskitError('Cannot parse character in ' +
+                                      expected_states[key])
+
+                base = base if base > value else value
+
+        return base+1

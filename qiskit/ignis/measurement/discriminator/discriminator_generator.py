@@ -51,7 +51,6 @@ class DiscriminatorGenerator:
 
         raise QiskitError("Unrecognized method {}".format(method))
 
-
     def run(self,
             qubits: Optional[List[int]] = None,
             backend: Optional[BaseBackend] = None
@@ -130,6 +129,7 @@ class DiscriminatorGenerator:
 
     def run_config(self,
                    qubits: Optional[List[int]] = None,
+                   shots: Optional[int] = 1024,
                    backend: Optional[BaseBackend] = None) -> dict:
         """Generate any backend config needed for execution.
         Args:
@@ -139,8 +139,7 @@ class DiscriminatorGenerator:
         Returns:
             dict: Runconfig
         """
-        # pylint: disable=unused-argument
-        return {}
+        return {"shots": shots, "meas_level": 1, "meas_return": "single"}
 
     @staticmethod
     def _calibration_circuit(num_qubits: int, label: str) -> QuantumCircuit:
@@ -157,3 +156,21 @@ class DiscriminatorGenerator:
                 circ.x(i)
         circ.measure_all()
         return circ
+
+
+def _program(num_qubits: int, label: str):
+        """TODO: pulse version of calibration."""
+        gnd_schedule = pulse.Schedule(name="ground state")
+        gnd_schedule += measure
+
+        # Excited state schedule
+        exc_schedule = pulse.Schedule(name="excited state")
+        exc_schedule += Play(backend_defaults.qubit_freq_est[qubit], drive_chan)
+        exc_schedule += measure << exc_schedule.duration
+
+        gnd_exc_program = assemble([gnd_schedule, exc_schedule],
+                           backend=backend,
+                           meas_level=1,
+                           meas_return='single',
+                           shots=num_shots,
+                           schedule_los=[{drive_chan: rough_qubit_frequency}] * 2)
