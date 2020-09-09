@@ -22,6 +22,7 @@ from typing import List, Union
 
 from fitters.lda_discriminator_fitter import LDADiscriminator
 from fitters.qda_discriminator_fitter import QDADiscriminator
+from fitters.pca_discriminator_fitter import PCADiscriminator
 
 from qiskit.exceptions import QiskitError
 from qiskit.pulse import PulseError

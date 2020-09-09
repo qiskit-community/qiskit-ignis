@@ -73,9 +73,9 @@ class QDADiscriminator(BaseDiscriminationFitter):
                                                   tol=tol)
 
         # Also sets the x and y data.
-        IQDiscriminationFitter.__init__(self, cal_results, qubit_mask,
-                                        expected_states, standardize,
-                                        schedules)
+        super(QDADiscriminator, self).__init__(cal_results, qubit_mask,
+                                               expected_states, standardize,
+                                               schedules)
 
         self._description = 'Quadratic IQ discriminator for measurement ' \
                             'level 1.'
