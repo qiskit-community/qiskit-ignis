@@ -99,8 +99,6 @@ Results without mitigation: {'000': 181, '001': 83, '010': 59, '011': 65, '100':
 Results with mitigation: {'000': 421, '001': 2, '011': 1, '100': 53, '110': 13, '111': 510}
 ```
 
-## Contribution guidelines
-
 ## Contribution Guidelines
 
 If you'd like to contribute to Qiskit Ignis, please take a look at our
