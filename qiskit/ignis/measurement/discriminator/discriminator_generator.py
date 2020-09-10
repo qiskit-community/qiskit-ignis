@@ -157,20 +157,20 @@ class DiscriminatorGenerator:
         circ.measure_all()
         return circ
 
+    def _program(num_qubits: int, label: str):
+            """TODO: pulse version of calibration."""
+            gnd_schedule = pulse.Schedule(name="ground state")
+            gnd_schedule += measure
 
-def _program(num_qubits: int, label: str):
-        """TODO: pulse version of calibration."""
-        gnd_schedule = pulse.Schedule(name="ground state")
-        gnd_schedule += measure
+            # Excited state schedule
+            exc_schedule = pulse.Schedule(name="excited state")
+            exc_schedule += Play(backend_defaults.qubit_freq_est[qubit], drive_chan)
+            exc_schedule += measure << exc_schedule.duration
 
-        # Excited state schedule
-        exc_schedule = pulse.Schedule(name="excited state")
-        exc_schedule += Play(backend_defaults.qubit_freq_est[qubit], drive_chan)
-        exc_schedule += measure << exc_schedule.duration
-
-        gnd_exc_program = assemble([gnd_schedule, exc_schedule],
-                           backend=backend,
-                           meas_level=1,
-                           meas_return='single',
-                           shots=num_shots,
-                           schedule_los=[{drive_chan: rough_qubit_frequency}] * 2)
+            gnd_exc_program = assemble([gnd_schedule, exc_schedule],
+                               backend=backend,
+                               meas_level=1,
+                               meas_return='single',
+                               shots=num_shots,
+                               schedule_los=[{drive_chan: rough_qubit_frequency}] * 2)
+            return gnd_exc_program

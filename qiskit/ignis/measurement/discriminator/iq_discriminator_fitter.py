@@ -23,6 +23,7 @@ from typing import List, Union
 from fitters.lda_discriminator_fitter import LDADiscriminator
 from fitters.qda_discriminator_fitter import QDADiscriminator
 from fitters.pca_discriminator_fitter import PCADiscriminator
+from fitters.sklearn_discriminator_fitter import SklearnDiscriminator
 
 from qiskit.exceptions import QiskitError
 from qiskit.pulse import PulseError
@@ -72,7 +73,7 @@ class IQDiscriminationFitter:
             raise QiskitError("Discriminator has not been fitted. Run `fit` first.")
         return self._discriminator
 
-    def fit(self, method):
+    def fit(self, method, classifier=None):
         """Fits the discriminator using self._xdata and self._ydata."""
         if method == "LDA":
             self._discriminator = LDADiscriminator(self._cal_results, self._qubit_mask)
@@ -80,6 +81,8 @@ class IQDiscriminationFitter:
             self._discriminator = QDADiscriminator(self._cal_results, self._qubit_mask)
         elif method == "PCA":
             self._discriminator = PCADiscriminator(self._cal_results, self._qubit_mask)
+        elif method == "sklearn":
+            self._discriminator = SklearnDiscriminator(self._cal_results, self._qubit_mask, classifier)
         else:
             raise ValueError("Invalid method specified.")
         return self._discriminator

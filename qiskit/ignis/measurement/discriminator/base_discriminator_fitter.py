@@ -696,7 +696,13 @@ class BaseDiscriminationFitter(ABC):
         return serialized_dict
 
     def count(self, raw_data: Result) -> Result:
-        """Outputs raw counts.
+        """Outputs raw counts given level 1 input data.
+
+        Args:
+            raw_data (Result): Level 1 data result from experiment.
+
+        Returns:
+            raw counts after discrimination.
         """
         new_results = copy.deepcopy(raw_data)
 
