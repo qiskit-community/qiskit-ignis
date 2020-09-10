@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    fix a bug at func:`qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq`
+    which caused all the subsystems with the same size in the given rb_pattern to have the same gates
+    when a 'rand_seed' parameter was given to the function.
