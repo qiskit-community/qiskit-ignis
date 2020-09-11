@@ -25,3 +25,10 @@ from .expval import (expectation_value,
                      ExpectationValueExperiment,
                      ExpectationValueGenerator,
                      ExpectationValueAnalysis)
+
+from .mitigator import (MeasMitigatorExperiment,
+                        MeasMitigatorGenerator,
+                        MeasMitigatorAnalysis,
+                        TensoredMeasMitigator,
+                        CompleteMeasMitigator,
+                        CTMPMeasMitigator)
