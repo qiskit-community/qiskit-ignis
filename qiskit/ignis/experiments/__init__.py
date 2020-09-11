@@ -19,3 +19,9 @@ Experiments (:mod:`qiskit.ignis.experiments`)
 """
 
 from .base import (Analysis, ConstantGenerator, Experiment)
+
+from .expval import (expectation_value,
+                     pauli_diagonal,
+                     ExpectationValueExperiment,
+                     ExpectationValueGenerator,
+                     ExpectationValueAnalysis)
