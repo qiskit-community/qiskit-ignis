@@ -329,10 +329,10 @@ class QVFitter:
         ax1 = plt.gca()
 
         # plot experimental histogram
-        plot_histogram(exp_data, legend=['exp'], ax=ax1)
+        plot_histogram(exp_data, legend=['Exp'], ax=ax1)
 
         # plot idea histogram overlap with experimental values
-        plot_histogram(ideal_data, legend=['ideal'], bar_labels=False, ax=ax1, color='r')
+        plot_histogram(ideal_data, legend=['Ideal'], bar_labels=False, ax=ax1, color='r')
 
         # get ideal histograms and change to unfilled
         bars = [r for r in ax1.get_children() if isinstance(r, Rectangle)]
@@ -342,11 +342,11 @@ class QVFitter:
             bars[i].set_edgecolor('saddlebrown')
 
         # show experimental heavy output probability to the legend
-        ax1.plot([], [], ' ', label=f'heavy~{self._heavy_output_prob_exp[circ_name]:.3f}')
+        ax1.plot([], [], ' ', label=f'HOP~{self._heavy_output_prob_exp[circ_name]:.3f}')
 
         # plot median probability
         median_prob = self._median_probabilities([self._all_output_prob_ideal[circ_name]])
-        ax1.axhline(median_prob, color='r', linestyle='dashed', linewidth=1, label='median')
+        ax1.axhline(median_prob, color='r', linestyle='dashed', linewidth=1, label='Median')
         ax1.legend()
         ax1.set_title(f'Quantum Volume {2**depth}, Trial #{trial_index}', fontsize=14)
 
