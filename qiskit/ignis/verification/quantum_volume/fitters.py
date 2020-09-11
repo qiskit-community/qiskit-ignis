@@ -338,6 +338,8 @@ class QVFitter:
         if ax is None:
             fig = plt.figure(figsize=figsize)
             ax1 = plt.gca()
+        else:
+            ax1 = ax
 
         trial_list = np.arange(self._ntrials)  # x data
         hop_list = []  # y data
