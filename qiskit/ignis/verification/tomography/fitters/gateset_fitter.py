@@ -56,16 +56,16 @@ class GatesetTomographyFitter:
             and the gateset basis used when collecting the data.
 
         Example:
-            >> gate = HGate()
-            >> basis = default_gateset_basis()
-            >> basis.add_gate(gate)
-            >> backend = ...
-            >> circuits = gateset_tomography_circuits(gateset_basis=basis)
-            >> qobj = assemble(circuits, shots=10000)
-            >> result = backend.run(qobj).result()
-            >> fitter = GatesetTomographyFitter(result, circuits, basis)
-            >> result_gates = fitter.fit()
-            >> result_gate = result_gates[gate.name]
+            >>> gate = HGate()
+            >>> basis = default_gateset_basis()
+            >>> basis.add_gate(gate)
+            >>> backend = ...
+            >>> circuits = gateset_tomography_circuits(gateset_basis=basis)
+            >>> qobj = assemble(circuits, shots=10000)
+            >>> result = backend.run(qobj).result()
+            >>> fitter = GatesetTomographyFitter(result, circuits, basis)
+            >>> result_gates = fitter.fit()
+            >>> result_gate = result_gates[gate.name]
         """
         self.gateset_basis = gateset_basis
         if gateset_basis == 'default':

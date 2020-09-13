@@ -62,9 +62,11 @@ Tomography
 
    state_tomography_circuits
    process_tomography_circuits
+   gateset_tomography_circuits
    basis
    StateTomographyFitter
    ProcessTomographyFitter
+   GatesetTomographyFitter
    TomographyFitter
    marginal_counts
    combine_counts
@@ -109,9 +111,11 @@ from .topological_codes import (RepetitionCode, GraphDecoder,
                                 lookuptable_decoding,
                                 postselection_decoding)
 from .tomography import (state_tomography_circuits,
-                         process_tomography_circuits, basis,
+                         process_tomography_circuits,
+                         gateset_tomography_circuits, basis,
                          StateTomographyFitter,
                          ProcessTomographyFitter,
+                         GatesetTomographyFitter,
                          TomographyFitter,
                          marginal_counts, combine_counts,
                          expectation_counts, count_keys)
