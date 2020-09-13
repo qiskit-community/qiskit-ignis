@@ -20,6 +20,7 @@ import unittest
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators import Operator
 
+import qiskit
 # Import the dihedral_utils functions
 from qiskit.ignis.verification.randomized_benchmarking \
     import CNOTDihedral, random_cnotdihedral
@@ -316,6 +317,19 @@ class TestCNOTDihedral(unittest.TestCase):
                     self.assertEqual(elem, test_elem,
                                      'Error: decomposed circuit is not equal '
                                      'to the original circuit')
+
+                    test_gates = elem.to_instruction()
+                    self.assertIsInstance(test_gates, qiskit.circuit.Gate,
+                                          'Error: cannot decompose a random '
+                                          'CNOTDihedral element to a Gate')
+                    self.assertEqual(test_gates.num_qubits, test_circ.num_qubits,
+                                     'Error: wrong num_qubits in decomposed gates')
+                    new_elem1 = CNOTDihedral(qubit_num)
+                    test_elem1 = new_elem1.from_circuit(test_gates)
+                    # Test of to_instruction and from_circuit methods
+                    self.assertEqual(elem, test_elem1,
+                                     'Error: decomposed gates are not equal '
+                                     'to the original gates')
 
     def test_compose_method(self):
         """Test compose method"""

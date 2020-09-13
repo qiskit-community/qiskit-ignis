@@ -69,7 +69,6 @@ setuptools.setup(
         "Operating System :: MacOS",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
@@ -83,6 +82,6 @@ setuptools.setup(
     },
     install_requires=requirements,
     include_package_data=True,
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     zip_safe=False
 )
