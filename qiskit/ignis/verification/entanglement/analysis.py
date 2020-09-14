@@ -196,7 +196,7 @@ class Plotter:
         return None
 
 
-def rho_to_fidelity(rho):
+def rho_to_fidelity(rho: float) -> float:
     """
     Get fidelity given rho
     """
