@@ -55,7 +55,7 @@ def composite_pauli_z(qn: int) -> np.array:
     return composite_sigma_z
 
 
-def composite_pauli_z_expvalue(counts_dictionary, qn) -> float:
+def composite_pauli_z_expvalue(counts_dictionary: Dict, qn: int) -> float:
     """
     Generates expectation value of n tensored pauli matrix
     upon input of qubit number and composite pauli matrix
