@@ -22,8 +22,8 @@ def ordered_list_generator(counts_dictionary: Dict, qn: int) -> np.array:
     in bitwise binary order to compute dot products more easily
 
     Args:
-            counts_dictionary: The counts
-            qn: Number of qubits
+        counts_dictionary: The counts
+        qn: Number of qubits
 
     Returns:
         The counts rearrangement
@@ -101,6 +101,13 @@ class Plotter:
                     ):
         """
         Make sin plot of counts in both mqc and po exps.
+        Args:
+            x: Phase series
+            y: Counts series
+            y_m: Mitigated counts series
+
+        Raises:
+            ImportError: If matplotlib is not present
         """
         if not HAS_MATPLOTLIB:
             raise ImportError("matplotlib needs to be installed and properly "
@@ -129,6 +136,17 @@ class Plotter:
                          ) -> Dict:
         """
         Get fourier trans. data/plot of both mqc and po exps.
+        Args:
+            qn: Number of qubits
+            x: Phase series
+            y: Counts series
+            y_m: Mitigated counts series
+            p_dict: probabilities dictionary
+        Returns:
+            The fourier transform data
+        Raises:
+            ImportError: If matplotlib is not present
+            Exception: If y_m or p_dict are not provided
         """
         if not HAS_MATPLOTLIB:
             raise ImportError("matplotlib needs to be installed and properly "
@@ -199,6 +217,10 @@ class Plotter:
 def rho_to_fidelity(rho: float) -> float:
     """
     Get fidelity given rho
+    Args:
+            rho: The density matrix
+    Returns:
+        The fidelity value for rho
     """
     return np.abs((rho[0, 0] + rho[-1, -1] + np.abs(rho[0, -1])
                    + np.abs(rho[-1, 0]))/2)
