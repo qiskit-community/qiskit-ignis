@@ -562,13 +562,20 @@ class CNOTDihedral(BaseOperator):
         return other
 
     def tensor(self, other):
-        """Return the tensor product operator self tensor other.
+        """Return the tensor product operator: self tensor other.
+
          Args:
-             other (Clifford): a operator subclass object.
+             other (Clifford): an operator subclass object.
          Returns:
-             Clifford: the tensor product operator self tensor other.
+             Clifford: the tensor product operator: self tensor other.
          """
+
         result = CNOTDihedral(self.num_qubits + other.num_qubits)
+        linear = np.block([[self.linear, np.zeros((self.num_qubits, other.num_qubits))],
+                           [np.zeros((other.num_qubits, self.num_qubits)), other.linear]])
+        result.linear = linear
+        shift = np.block([self.shift, other.shift])
+        result.shift = shift
         return result
 
     def expand(self, other):
