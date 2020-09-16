@@ -1,0 +1,13 @@
+---
+fixes:
+  - |
+    Improve :meth:`qiskit.ignis.verification.quantum_volume.QVFitter.plot_qv_data`.
+    * Change Y axis label to "heavy output probability".
+    * Set figure default title inside the method rather than setting outside like the tutorial and textbook chapter.
+    * Change error bar to 2-sigma (success confidence interval requirement) instead of 1-sigma.
+    * Add caps to error bars to increase readbility when ideal and experimental values overlaps.
+    * Use different markers for ideal and experimental values.
+    * Return `matplotlib.Figure` similar to :meth:`qiskit.visualization.plot_histogram` in Qiskit Terra..
+
+
+
