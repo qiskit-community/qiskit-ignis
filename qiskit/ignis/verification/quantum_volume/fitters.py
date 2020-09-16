@@ -269,9 +269,10 @@ class QVFitter:
             ImportError: If matplotlib is not installed.
 
         Returns:
-            matplotlib.Figure: A figure of Quantum Volume data (heavy
-                output probability) with two-sigma error bar as a function
-                of circuit depth
+            matplotlib.Figure:
+                A figure of Quantum Volume data (heavy
+                output probability) with two-sigma error
+                bar as a function of circuit depth.
         """
 
         if not HAS_MATPLOTLIB:
