@@ -310,8 +310,9 @@ class QVFitter:
         ax.grid(True)
 
         ax.legend()
-        ax.set_title(f'Quantum Volume for up to {len(self._qubit_lists[-1])} Qubits \
-and {self._ntrials} Trials')
+        ax.set_title(
+            f'Quantum Volume for up to {len(self._qubit_lists[-1])} Qubits and '
+            f'and {self._ntrials} Trials')
         plt.close(fig)  # close additional figure
 
         if show_plt:
