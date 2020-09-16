@@ -279,8 +279,9 @@ class QVFitter:
                               'Run "pip install matplotlib" before.')
 
         if ax is None:
-            fig = plt.figure(figsize=figsize)
-            ax = plt.gca()
+            fig, ax = plt.subplots(figsize=figsize)
+        else:
+            fig = None
 
         xdata = range(len(self._depths))
 
