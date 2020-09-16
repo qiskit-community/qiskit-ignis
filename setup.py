@@ -58,7 +58,7 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     url="https://github.com/Qiskit/qiskit-ignis",
     author="Qiskit Development Team",
-    author_email="qiskit@qiskit.org",
+    author_email="hello@qiskit.org",
     license="Apache 2.0",
     classifiers=[
         "Environment :: Console",
