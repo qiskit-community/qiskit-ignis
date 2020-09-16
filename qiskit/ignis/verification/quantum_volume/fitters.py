@@ -257,8 +257,7 @@ class QVFitter:
                                         / self._ntrials)**0.5
 
     def plot_qv_data(self, ax=None, show_plt=True, figsize=(7, 5)):
-        """
-        Plot the qv data as a function of depth
+        """Plot the qv data as a function of depth
 
         Args:
             ax (Axes or None): plot axis (if passed in).
