@@ -336,10 +336,9 @@ class QVFitter:
                               'Run "pip install matplotlib" before.')
 
         if ax is None:
-            fig = plt.figure(figsize=figsize)
-            ax1 = plt.gca()
+            fig, ax = plt.subplots(figsize=figsize)
         else:
-            ax1 = ax
+            fig = None
 
         trial_list = np.arange(self._ntrials)  # x data
         hop_list = []  # y data
@@ -353,28 +352,28 @@ class QVFitter:
                          np.arange(1, self._ntrials+1))**0.5
 
         # plot two-sigma shaded area
-        ax1.errorbar(trial_list, hop_accumulative, fmt="none", yerr=two_sigma, ecolor='lightgray',
-                     elinewidth=20, capsize=0, alpha=0.5, label='2$\sigma$')
+        ax.errorbar(trial_list, hop_accumulative, fmt="none", yerr=two_sigma, ecolor='lightgray',
+                    elinewidth=20, capsize=0, alpha=0.5, label='2$\sigma$')
         # plot accumulative HOP
-        ax1.plot(trial_list, hop_accumulative, color='r', label='Cumulative HOP')
+        ax.plot(trial_list, hop_accumulative, color='r', label='Cumulative HOP')
         # plot inidivual HOP as scatter
-        ax1.scatter(trial_list, hop_list, s=3, zorder=3, label='Individual HOP')
+        ax.scatter(trial_list, hop_list, s=3, zorder=3, label='Individual HOP')
         # plot 2/3 success threshold
-        ax1.axhline(2/3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
+        ax.axhline(2/3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
 
-        ax1.set_xlim(0, self._ntrials)
-        ax1.set_ylim(hop_accumulative[-1]-4*two_sigma[-1], hop_accumulative[-1]+4*two_sigma[-1])
+        ax.set_xlim(0, self._ntrials)
+        ax.set_ylim(hop_accumulative[-1]-4*two_sigma[-1], hop_accumulative[-1]+4*two_sigma[-1])
 
-        ax1.set_xlabel('Number of Trials', fontsize=14)
-        ax1.set_ylabel('Heavy Output Probability', fontsize=14)
+        ax.set_xlabel('Number of Trials', fontsize=14)
+        ax.set_ylabel('Heavy Output Probability', fontsize=14)
 
-        ax1.set_title(f'Quantum Volume {2**depth} Trials', fontsize=14)
+        ax.set_title(f'Quantum Volume {2**depth} Trials', fontsize=14)
 
         # re-arrange legend order
-        handles, labels = ax1.get_legend_handles_labels()
+        handles, labels = ax.get_legend_handles_labels()
         handles = [handles[1], handles[2], handles[0], handles[3]]
         labels = [labels[1], labels[2], labels[0], labels[3]]
-        ax1.legend(handles, labels)
+        ax.legend(handles, labels)
 
         plt.close(fig)  # close additional figure
 
