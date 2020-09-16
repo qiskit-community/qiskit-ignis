@@ -571,11 +571,35 @@ class CNOTDihedral(BaseOperator):
          """
 
         result = CNOTDihedral(self.num_qubits + other.num_qubits)
-        linear = np.block([[self.linear, np.zeros((self.num_qubits, other.num_qubits))],
-                           [np.zeros((other.num_qubits, self.num_qubits)), other.linear]])
+        linear = np.block([[self.linear,
+                            np.zeros((self.num_qubits, other.num_qubits), dtype=np.int8)],
+                           [np.zeros((other.num_qubits, self.num_qubits), dtype=np.int8),
+                            other.linear]])
         result.linear = linear
         shift = np.block([self.shift, other.shift])
         result.shift = shift
+
+        for i in range(self.num_qubits):
+            value = self.poly.get_term([i])
+            result.poly.set_term([i], value)
+            for j in range(i):
+                value = self.poly.get_term([j, i])
+                result.poly.set_term([j, i], value)
+                for k in range(j):
+                    value = self.poly.get_term([k, j, i])
+                    result.poly.set_term([k, j, i], value)
+
+        for i in range(other.num_qubits):
+            value = other.poly.get_term([i])
+            result.poly.set_term([i + self.num_qubits], value)
+            for j in range(i):
+                value = other.poly.get_term([j, i])
+                result.poly.set_term([j + self.num_qubits, i + self.num_qubits], value)
+                for k in range(j):
+                    value = other.poly.get_term([k, j, i])
+                    result.poly.set_term([k + self.num_qubits, j + self.num_qubits,
+                                          i + self.num_qubits], value)
+
         return result
 
     def expand(self, other):

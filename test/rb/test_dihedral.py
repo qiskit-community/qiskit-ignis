@@ -375,28 +375,19 @@ class TestCNOTDihedral(unittest.TestCase):
                     circ1 = elem1.to_instruction()
                     circ2 = elem2.to_instruction()
                     value = elem1.tensor(elem2)
-                    #print (value)
                     circ = QuantumCircuit(num_qubits_1 + num_qubits_2)
-                    qargs = list(range(num_qubits_2))
-                    for instr, qregs, _ in circ2.definition:
-                        new_qubits = [qargs[tup.index] for tup in qregs]
-                        circ.append(instr, new_qubits)
-                    qargs = list(range(num_qubits_2, num_qubits_1 + num_qubits_2))
+                    qargs = list(range(num_qubits_1))
                     for instr, qregs, _ in circ1.definition:
                         new_qubits = [qargs[tup.index] for tup in qregs]
                         circ.append(instr, new_qubits)
-                    #print(circ2)
-                    #print(circ1)
-                    #print(circ)
-                    #print (elem1)
-                    #print (elem2)
+                    qargs = list(range(num_qubits_1, num_qubits_1 + num_qubits_2))
+                    for instr, qregs, _ in circ2.definition:
+                        new_qubits = [qargs[tup.index] for tup in qregs]
+                        circ.append(instr, new_qubits)
                     target = CNOTDihedral(num_qubits_1 + num_qubits_2)
                     target = target.from_circuit(circ)
-                    #print (target)
-                    #print("----------------------")
-                    self.assertEqual((target.linear).all(), (value.linear).all(),
-                                     'Error: tensor circuit is not the same')
-                    self.assertEqual((target.shift).all(), (value.shift).all(),
+
+                    self.assertEqual(target, value,
                                      'Error: tensor circuit is not the same')
 
     def test_transpose(self):
