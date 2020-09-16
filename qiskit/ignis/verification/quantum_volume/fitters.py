@@ -280,36 +280,36 @@ class QVFitter:
 
         if ax is None:
             fig = plt.figure(figsize=figsize)
-            ax1 = plt.gca()
+            ax = plt.gca()
 
         xdata = range(len(self._depths))
 
         # Plot the experimental data with error bars
-        ax1.errorbar(xdata, self._ydata[0],
+        ax.errorbar(xdata, self._ydata[0],
                      yerr=self._ydata[1]*2,
                      color='r', marker='o',
                      markersize=6, capsize=5,
                      elinewidth=2, label='Exp')
 
         # Plot the ideal data with error bars
-        ax1.errorbar(xdata, self._ydata[2],
+        ax.errorbar(xdata, self._ydata[2],
                      yerr=self._ydata[3]*2,
                      color='b', marker='v',
                      markersize=6, capsize=5,
                      elinewidth=2, label='Ideal')
 
         # Plot the threshold
-        ax1.axhline(2/3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
+        ax.axhline(2/3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
 
-        ax1.set_xticks(xdata)
-        ax1.set_xticklabels(self._qubit_lists, rotation=45)
+        ax.set_xticks(xdata)
+        ax.set_xticklabels(self._qubit_lists, rotation=45)
 
-        ax1.set_xlabel('Qubit Subset', fontsize=14)
-        ax1.set_ylabel('Heavy Output Probability', fontsize=14)
-        ax1.grid(True)
+        ax.set_xlabel('Qubit Subset', fontsize=14)
+        ax.set_ylabel('Heavy Output Probability', fontsize=14)
+        ax.grid(True)
 
-        ax1.legend()
-        ax1.set_title(f'Quantum Volume for up to {len(self._qubit_lists[-1])} Qubits \
+        ax.legend()
+        ax.set_title(f'Quantum Volume for up to {len(self._qubit_lists[-1])} Qubits \
 and {self._ntrials} Trials')
         plt.close(fig)  # close additional figure
 
