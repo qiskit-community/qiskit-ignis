@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Add :meth:`qiskit.ignis.verification.quantum_volume.QVFitter.plot_qv_trial` for plotting individual trails leveraging on :meth:`qiskit.visualization.plot_histogram` from Qiskit Terra.
+    * Ideal and experimental values are plotted in an overlapping way as suggested by David McKay.
+    * Experimental heavy output probability are shown on the legend.
+    * Median probability is plotted as red dashed line.
+    * Use figsize kwarg to control figure size. It's useful for showing results for larger QV circuits.
