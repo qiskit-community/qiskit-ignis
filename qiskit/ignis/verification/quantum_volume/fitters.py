@@ -353,7 +353,7 @@ class QVFitter:
 
         # plot two-sigma shaded area
         ax.errorbar(trial_list, hop_accumulative, fmt="none", yerr=two_sigma, ecolor='lightgray',
-                    elinewidth=20, capsize=0, alpha=0.5, label='2$\sigma$')
+                    elinewidth=20, capsize=0, alpha=0.5, label='2$\\sigma$')
         # plot accumulative HOP
         ax.plot(trial_list, hop_accumulative, color='r', label='Cumulative HOP')
         # plot inidivual HOP as scatter
