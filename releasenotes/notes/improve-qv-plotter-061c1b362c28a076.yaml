@@ -13,7 +13,6 @@ features:
     The success criteria of Quantum Volume benchmarking requires heavy output probability > 2/3 with
     one-sided two-sigma confidence (~97.7%). Changing error bars to represent two-sigma confidence
     intervals allows easily identification of success in the figure.
-
   - |
     A new kwarg, ``figsize`` has been added to the
     :class:`qiskit.ignis.verification.QVFitter` method
