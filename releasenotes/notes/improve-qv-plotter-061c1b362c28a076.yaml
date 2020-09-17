@@ -4,7 +4,7 @@ features:
     The :class:`qiskit.ignis.verification.QVFitter` method
     :meth:`~qiskit.ignis.verification.QVFitter.plot_qv_data` has been updated to return a
     ``matplotlib.Figure`` object. Previously, it would not return anything. By returning a figure
-     this makes it easier to integrate the visualizations into a larger ``matplotlib`` workflow.
+    this makes it easier to integrate the visualizations into a larger ``matplotlib`` workflow.
   - |
     The error bars in the figure produced by the
     :class:`qiskit.ignis.verification.QVFitter` method
