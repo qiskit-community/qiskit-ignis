@@ -1,13 +1,13 @@
 ---
-fixes:
+features:
   - |
-    Improve :meth:`qiskit.ignis.verification.quantum_volume.QVFitter.plot_qv_data`.
-    * Change Y axis label to "heavy output probability".
-    * Set figure default title inside the method rather than setting outside like the tutorial and textbook chapter.
-    * Change error bar to 2-sigma (success confidence interval requirement) instead of 1-sigma.
-    * Add caps to error bars to increase readbility when ideal and experimental values overlaps.
-    * Use different markers for ideal and experimental values.
-    * Return `matplotlib.Figure` similar to :meth:`qiskit.visualization.plot_histogram` in Qiskit Terra..
-
-
-
+    The :class:`qiskit.ignis.verification.QVFitter` method
+    :meth:`~qiskit.ignis.verification.QVFitter.plot_qv_data` has been updated to return a
+    ``matplotlib.Figure`` object. Previously, it would not return anything. By returning a figure
+     this makes it easier to integrate the visualizations into a larger ``matplotlib`` workflow.
+  - |
+    A new kwarg, ``figsize`` has been added to the
+    :class:`qiskit.ignis.verification.QVFitter` method
+    :meth:`qiskit.ignis.verification.QVFitter.plot_qv_data`. This kwarg takes in a tuple of the
+    form ``(x, y)`` where ``x`` and ``y`` are the dimension in inches to make the generated
+    plot.
