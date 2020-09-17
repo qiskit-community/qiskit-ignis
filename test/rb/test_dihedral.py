@@ -390,6 +390,33 @@ class TestCNOTDihedral(unittest.TestCase):
                     self.assertEqual(target, value,
                                      'Error: tensor circuit is not the same')
 
+    def test_expand_method(self):
+        """Test tensor method"""
+        samples = 10
+        nseed = 444
+        for num_qubits_1 in range(1, 3):
+            for num_qubits_2 in range(1, 3):
+                for i in range(samples):
+                    elem1 = random_cnotdihedral(num_qubits_1, seed=nseed + i)
+                    elem2 = random_cnotdihedral(num_qubits_2, seed=nseed + samples + i)
+                    circ1 = elem1.to_instruction()
+                    circ2 = elem2.to_instruction()
+                    value = elem2.expand(elem1)
+                    circ = QuantumCircuit(num_qubits_1 + num_qubits_2)
+                    qargs = list(range(num_qubits_1))
+                    for instr, qregs, _ in circ1.definition:
+                        new_qubits = [qargs[tup.index] for tup in qregs]
+                        circ.append(instr, new_qubits)
+                    qargs = list(range(num_qubits_1, num_qubits_1 + num_qubits_2))
+                    for instr, qregs, _ in circ2.definition:
+                        new_qubits = [qargs[tup.index] for tup in qregs]
+                        circ.append(instr, new_qubits)
+                    target = CNOTDihedral(num_qubits_1 + num_qubits_2)
+                    target = target.from_circuit(circ)
+
+                    self.assertEqual(target, value,
+                                     'Error: expand circuit is not the same')
+
     def test_transpose(self):
         """Test transpose method"""
         samples = 10
@@ -404,6 +431,7 @@ class TestCNOTDihedral(unittest.TestCase):
                 #print(value)
                 #print(target)
                 #self.assertTrue(target.equiv(value))
+
 
 if __name__ == '__main__':
     unittest.main()

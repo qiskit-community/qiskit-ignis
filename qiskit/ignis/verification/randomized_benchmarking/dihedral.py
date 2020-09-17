@@ -561,49 +561,82 @@ class CNOTDihedral(BaseOperator):
         other.poly.weight_0 = 0  # set global phase
         return other
 
+    def _tensor_product(self, other, reverse=False):
+        """Returns the tensor product operator.
+
+         Args:
+             other (CNOTDihedral): another operator subclass object.
+             reverse (bool): If False return self tensor other,
+                            if True return other tensor self [Default: False].
+         Returns:
+             CNOTDihedral: the tensor product operator: self tensor other.
+         Raises:
+             QiskitError: if other cannot be converted into an CNOTDihderal object.
+        """
+
+        if not isinstance(other, CNOTDihedral):
+            raise QiskitError("Tensored element is not a CNOTDihderal object.")
+
+        if reverse:
+            elem0 = self
+            elem1 = other
+        else:
+            elem0 = other
+            elem1 = self
+
+        result = CNOTDihedral(elem0.num_qubits + elem1.num_qubits)
+        linear = np.block([[elem0.linear,
+                            np.zeros((elem0.num_qubits, elem1.num_qubits), dtype=np.int8)],
+                           [np.zeros((elem1.num_qubits, elem0.num_qubits), dtype=np.int8),
+                            elem1.linear]])
+        result.linear = linear
+        shift = np.block([elem0.shift, elem1.shift])
+        result.shift = shift
+
+        for i in range(elem0.num_qubits):
+            value = elem0.poly.get_term([i])
+            result.poly.set_term([i], value)
+            for j in range(i):
+                value = elem0.poly.get_term([j, i])
+                result.poly.set_term([j, i], value)
+                for k in range(j):
+                    value = elem0.poly.get_term([k, j, i])
+                    result.poly.set_term([k, j, i], value)
+
+        for i in range(elem1.num_qubits):
+            value = elem1.poly.get_term([i])
+            result.poly.set_term([i + elem0.num_qubits], value)
+            for j in range(i):
+                value = elem1.poly.get_term([j, i])
+                result.poly.set_term([j + elem0.num_qubits, i + elem0.num_qubits], value)
+                for k in range(j):
+                    value = elem1.poly.get_term([k, j, i])
+                    result.poly.set_term([k + elem0.num_qubits, j + elem0.num_qubits,
+                                          i + elem0.num_qubits], value)
+
+        return result
+
     def tensor(self, other):
         """Return the tensor product operator: self tensor other.
 
          Args:
-             other (Clifford): an operator subclass object.
+             other (CNOTDihedral): an operator subclass object.
          Returns:
-             Clifford: the tensor product operator: self tensor other.
+             CNOTDihedral: the tensor product operator: self tensor other.
          """
 
-        result = CNOTDihedral(self.num_qubits + other.num_qubits)
-        linear = np.block([[self.linear,
-                            np.zeros((self.num_qubits, other.num_qubits), dtype=np.int8)],
-                           [np.zeros((other.num_qubits, self.num_qubits), dtype=np.int8),
-                            other.linear]])
-        result.linear = linear
-        shift = np.block([self.shift, other.shift])
-        result.shift = shift
-
-        for i in range(self.num_qubits):
-            value = self.poly.get_term([i])
-            result.poly.set_term([i], value)
-            for j in range(i):
-                value = self.poly.get_term([j, i])
-                result.poly.set_term([j, i], value)
-                for k in range(j):
-                    value = self.poly.get_term([k, j, i])
-                    result.poly.set_term([k, j, i], value)
-
-        for i in range(other.num_qubits):
-            value = other.poly.get_term([i])
-            result.poly.set_term([i + self.num_qubits], value)
-            for j in range(i):
-                value = other.poly.get_term([j, i])
-                result.poly.set_term([j + self.num_qubits, i + self.num_qubits], value)
-                for k in range(j):
-                    value = other.poly.get_term([k, j, i])
-                    result.poly.set_term([k + self.num_qubits, j + self.num_qubits,
-                                          i + self.num_qubits], value)
-
-        return result
+        return self._tensor_product(other, reverse=True)
 
     def expand(self, other):
-        pass
+        """Return the tensor product operator: other tensor self.
+
+         Args:
+             other (CNOTDihedral): an operator subclass object.
+         Returns:
+             CNOTDihedral: the tensor product operator: other tensor other.
+         """
+
+        return self._tensor_product(other, reverse=False)
 
     def conjugate(self):
         pass
