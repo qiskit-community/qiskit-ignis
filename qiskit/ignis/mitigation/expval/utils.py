@@ -33,7 +33,7 @@ def expectation_value(counts: Counts,
                       clbits: Optional[List[int]] = None,
                       meas_mitigator: Optional = None,
                       meas_mitigator_qubits: Optional[List[int]] = None
-    ) -> Tuple[float, float]:
+                      ) -> Tuple[float, float]:
     r"""Compute the expectation value of a diagonal operator from counts.
 
     Args:
@@ -138,17 +138,20 @@ def calibration_data(result: Result,
     # Filter mitigation calibration data
     cal_data = {}
     num_qubits = None
+    method = None
     for i, meta in enumerate(metadata):
         if meta.get('experiment') == 'meas_mit':
             if num_qubits is None:
                 num_qubits = len(meta['cal'])
+            if method is None:
+                method = meta.get('method', None)
             key = int(meta['cal'], 2)
             counts = result.get_counts(i).int_outcomes()
             if key not in cal_data:
                 cal_data[key] = counts
             else:
                 cal_data[key] = combine_counts(cal_data[key], counts)
-    return cal_data, num_qubits
+    return cal_data, num_qubits, method
 
 
 def assignment_matrix(cal_data: Dict[int, Dict[int, int]],

@@ -23,7 +23,6 @@ from qiskit.exceptions import QiskitError
 from .utils import calibration_data, assignment_matrix
 from .complete_mitigator import CompleteExpvalMeasMitigator
 from .tensored_mitigator import TensoredExpvalMeasMitigator
-from .ctmp_mitigator import CTMPExpvalMeasMitigator
 from .ctmp_fitter import fit_ctmp_meas_mitigator
 from .ctmp_generator_set import Generator
 
@@ -46,7 +45,8 @@ class ExpvalMeasMitigatorFitter:
         self._num_qubits = None
         self._cal_data = None
         self._mitigator = None
-        self._cal_data, self._num_qubits = calibration_data(result, metadata)
+        self._cal_data, self._num_qubits, self._method = calibration_data(
+            result, metadata)
 
     @property
     def mitigator(self):
@@ -55,9 +55,12 @@ class ExpvalMeasMitigatorFitter:
             raise QiskitError("Mitigator has not been fitted. Run `fit` first.")
         return self._mitigator
 
-    def fit(self, method: str = 'CTMP',
+    def fit(self, method: Optional[str] = None,
             generators: Optional[List[Generator]] = None):
         """Fit and return the Mitigator object from the calibration data."""
+
+        if method is None:
+            method = self._method
 
         if method == 'complete':
             # Construct A-matrix from calibration data
@@ -73,6 +76,9 @@ class ExpvalMeasMitigatorFitter:
             self._mitigator = TensoredExpvalMeasMitigator(amats)
 
         elif method == 'CTMP' or method == 'ctmp':
-            self._mitigator = fit_ctmp_meas_mitigator(self._cal_data, self._num_qubits, generators)
-
+            self._mitigator = fit_ctmp_meas_mitigator(
+                self._cal_data, self._num_qubits, generators)
+        else:
+            raise QiskitError(
+                "Invalid expval measurement error mitigation method {}".format(method))
         return self._mitigator

@@ -67,6 +67,7 @@ class ExpvalMeasMitigatorCircuits:
             self._metadata.append({
                 'experiment': 'meas_mit',
                 'cal': label,
+                'method': method,
             })
             self._circuits.append(self._calibration_circuit(num_qubits, label))
 
