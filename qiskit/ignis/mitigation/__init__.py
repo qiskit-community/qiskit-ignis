@@ -47,10 +47,10 @@ in expectation value computations.
 
    expectation_value
    counts_probability_vector
-   MeasMitigatorGenerator
-   MeasMitigatorFitter
-   CTMPMeasMitigator
-   CompleteMeasMitigator
+   expval_meas_mitigator_circuits
+   ExpvalMeasMitigatorFitter
+   CTMPExpvalMeasMitigator
+   CompleteExpvalMeasMitigator
 """
 
 from .measurement import (complete_meas_cal, tensored_meas_cal,
@@ -59,8 +59,8 @@ from .measurement import (complete_meas_cal, tensored_meas_cal,
 
 from .expval import (expectation_value,
                      counts_probability_vector,
-                     MeasMitigatorGenerator,
-                     MeasMitigatorFitter,
-                     CompleteMeasMitigator,
-                     TensoredMeasMitigator,
-                     CTMPMeasMitigator)
+                     expval_meas_mitigator_circuits,
+                     ExpvalMeasMitigatorFitter,
+                     CompleteExpvalMeasMitigator,
+                     TensoredExpvalMeasMitigator,
+                     CTMPExpvalMeasMitigator)

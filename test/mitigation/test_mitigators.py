@@ -24,9 +24,9 @@ from ddt import ddt, unpack, data
 from qiskit import execute, QuantumCircuit
 from qiskit.result import Result
 from qiskit.providers.aer import QasmSimulator, noise
-from qiskit.ignis.mitigation.measurement import (
-    MeasMitigatorGenerator,
-    MeasMitigatorFitter,
+from qiskit.ignis.mitigation import (
+    expval_meas_mitigator_circuits,
+    ExpvalMeasMitigatorFitter,
     expectation_value
 )
 
@@ -76,7 +76,7 @@ class NoisySimulationTest(unittest.TestCase):
 
 
 class TestExpVals(NoisySimulationTest):
-    """Test the expectation values of all the MeasMitigator* classes
+    """Test the expectation values of all the ExpvalMeasMitigator* classes
     and compare against the exact results.
     """
 
@@ -112,9 +112,9 @@ class TestExpVals(NoisySimulationTest):
         self.method = 'tensored'
 
     def tearDown(self):
-        circs, meta, _ = MeasMitigatorGenerator(self.num_qubits, method=self.method).run()
+        circs, meta = expval_meas_mitigator_circuits(self.num_qubits, method=self.method)
         result_cal = self.execute_circs(circs, noise_model=self.noise_model)
-        mitigator = MeasMitigatorFitter(result_cal, meta).fit(method=self.method)
+        mitigator = ExpvalMeasMitigatorFitter(result_cal, meta).fit(method=self.method)
 
         expval, _ = mitigator.expectation_value(self.counts_noise)
 
@@ -163,9 +163,9 @@ class TestPartialExpVals(NoisySimulationTest):
 
         exp_targ, _ = expectation_value(counts_targ)
 
-        circs, meta, _ = MeasMitigatorGenerator(self.num_qubits, method=method).run()
+        circs, meta = expval_meas_mitigator_circuits(self.num_qubits, method=method)
         result_cal = self.execute_circs(circs, noise_model=self.noise_model)
-        mitigator = MeasMitigatorFitter(result_cal, meta).fit(method=method)
+        mitigator = ExpvalMeasMitigatorFitter(result_cal, meta).fit(method=method)
 
         expval, _ = mitigator.expectation_value(counts_nois, qubits=qubits)
 

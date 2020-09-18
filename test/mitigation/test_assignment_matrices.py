@@ -24,9 +24,9 @@ from ddt import ddt, unpack, data
 import numpy as np
 
 from qiskit import QuantumCircuit
-from qiskit.ignis.mitigation.measurement import (
-    MeasMitigatorGenerator,
-    MeasMitigatorFitter
+from qiskit.ignis.mitigation import (
+    expval_meas_mitigator_circuits,
+    ExpvalMeasMitigatorFitter
 )
 
 from .test_mitigators import NoisySimulationTest
@@ -50,9 +50,9 @@ class TestMatrices(NoisySimulationTest):
     def get_mitigator(self, method: str, noise_model: bool):
         """Return the mitigator for the given parameters.
         """
-        circs, meta, _ = MeasMitigatorGenerator(self.num_qubits, method=method).run()
+        circs, meta = expval_meas_mitigator_circuits(self.num_qubits, method=method)
         cal_res = self.execute_circs(circs, noise_model=self.noise_model if noise_model else None)
-        mitigator = MeasMitigatorFitter(cal_res, meta).fit(method=method)
+        mitigator = ExpvalMeasMitigatorFitter(cal_res, meta).fit(method=method)
         return mitigator
 
     @data(*_PAIRINGS)

@@ -17,11 +17,11 @@ Single-qubit tensor-product measurement error mitigation generator.
 from typing import Optional, List, Dict, Tuple
 import numpy as np
 
-from ..meas_mit_utils import (counts_probability_vector, _expval_with_stddev)
-from ..base_meas_mitigator import BaseMeasMitigator
+from ..utils import (counts_probability_vector, _expval_with_stddev)
+from ..base_meas_mitigator import BaseExpvalMeasMitigator
 
 
-class TensoredMeasMitigator(BaseMeasMitigator):
+class TensoredExpvalMeasMitigator(BaseExpvalMeasMitigator):
     """Measurement error mitigator via 1-qubit tensor product mitigation."""
 
     def __init__(self, amats: List[np.ndarray]):

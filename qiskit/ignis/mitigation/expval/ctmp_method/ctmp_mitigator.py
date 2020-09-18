@@ -24,14 +24,14 @@ import scipy.sparse as sps
 from qiskit.exceptions import QiskitError
 from qiskit.ignis.numba import jit_fallback
 
-from ..base_meas_mitigator import BaseMeasMitigator
-from ..meas_mit_utils import counts_probability_vector
+from ..base_meas_mitigator import BaseExpvalMeasMitigator
+from ..utils import counts_probability_vector
 from .ctmp_generator_set import Generator
 
 logger = logging.getLogger(__name__)
 
 
-class CTMPMeasMitigator(BaseMeasMitigator):
+class CTMPExpvalMeasMitigator(BaseExpvalMeasMitigator):
     """Measurement error mitigator via full N-qubit mitigation."""
     def __init__(self,
                  generators: List[Generator],

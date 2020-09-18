@@ -2,7 +2,7 @@
 
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019, 2020.
+# (C) Copyright IBM 2020.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -26,7 +26,7 @@ except ImportError:
     _HAS_MATPLOTLIB = False
 
 
-class BaseMeasMitigator(ABC):
+class BaseExpvalMeasMitigator(ABC):
     """Base measurement error mitigator class."""
 
     @abstractmethod
@@ -255,7 +255,7 @@ class BaseMeasMitigator(ABC):
         """
         dim = len(mat)
         num_qubits = int(np.log2(dim))
-        bit_labels = [BaseMeasMitigator._int_to_bitstring(i, num_qubits) for i in range(dim)]
+        bit_labels = [BaseExpvalMeasMitigator._int_to_bitstring(i, num_qubits) for i in range(dim)]
 
         ax.set_xticks(np.arange(dim))
         ax.set_yticks(np.arange(dim))

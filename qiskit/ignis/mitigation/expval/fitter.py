@@ -2,7 +2,7 @@
 
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019, 2020.
+# (C) Copyright IBM 2020.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -20,19 +20,16 @@ from typing import Optional, Dict, List
 from qiskit.result import Result
 from qiskit.exceptions import QiskitError
 
-from .meas_mit_utils import calibration_data, assignment_matrix
-from .complete_method.complete_mitigator import CompleteMeasMitigator
-from .tensored_method.tensored_mitigator import TensoredMeasMitigator
-from .ctmp_method.ctmp_mitigator import CTMPMeasMitigator
+from .utils import calibration_data, assignment_matrix
+from .complete_method.complete_mitigator import CompleteExpvalMeasMitigator
+from .tensored_method.tensored_mitigator import TensoredExpvalMeasMitigator
+from .ctmp_method.ctmp_mitigator import CTMPExpvalMeasMitigator
 from .ctmp_method.ctmp_fitter import fit_ctmp_meas_mitigator
 from .ctmp_method.ctmp_generator_set import Generator
 
 
-class MeasMitigatorFitter:
-    """Measurement error mitigator calibration fitter.
-
-    NOTE: This is just a temporary class with very basic functionality.
-    """
+class ExpvalMeasMitigatorFitter:
+    """Expectation value measurement error mitigator calibration fitter."""
 
     def __init__(self,
                  result: Result,
@@ -65,7 +62,7 @@ class MeasMitigatorFitter:
         if method == 'complete':
             # Construct A-matrix from calibration data
             amat = assignment_matrix(self._cal_data, self._num_qubits)
-            self._mitigator = CompleteMeasMitigator(amat)
+            self._mitigator = CompleteExpvalMeasMitigator(amat)
 
         elif method == 'tensored':
             # Construct single-qubit A-matrices from calibration data
@@ -73,7 +70,7 @@ class MeasMitigatorFitter:
             for qubit in range(self._num_qubits):
                 amat = assignment_matrix(self._cal_data, self._num_qubits, [qubit])
                 amats.append(amat)
-            self._mitigator = TensoredMeasMitigator(amats)
+            self._mitigator = TensoredExpvalMeasMitigator(amats)
 
         elif method == 'CTMP' or method == 'ctmp':
             self._mitigator = fit_ctmp_meas_mitigator(self._cal_data, self._num_qubits, generators)

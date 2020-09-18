@@ -2,7 +2,7 @@
 
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2020.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,16 +12,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 """
-Measurement error mitigation module
+Expectation value measurement error mitigation module
 """
 
-# Legacy Measurement Error mitigation
-from .legacy import (complete_meas_cal, tensored_meas_cal, MeasurementFilter,
-                     TensoredFilter, CompleteMeasFitter, TensoredMeasFitter)
-
-from .meas_mit_generator import MeasMitigatorGenerator
-from .meas_mit_fitter import MeasMitigatorFitter
-from .complete_method import CompleteMeasMitigator
-from .tensored_method import TensoredMeasMitigator
-from .ctmp_method import CTMPMeasMitigator
-from .meas_mit_utils import expectation_value, counts_probability_vector
+from .circuits import expval_meas_mitigator_circuits
+from .fitter import ExpvalMeasMitigatorFitter
+from .complete_method import CompleteExpvalMeasMitigator
+from .tensored_method import TensoredExpvalMeasMitigator
+from .ctmp_method import CTMPExpvalMeasMitigator
+from .utils import expectation_value, counts_probability_vector

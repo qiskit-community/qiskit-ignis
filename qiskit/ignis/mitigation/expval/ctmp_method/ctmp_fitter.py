@@ -21,16 +21,16 @@ import scipy.linalg as la
 
 from qiskit.exceptions import QiskitError
 from qiskit.result import Result
-from .ctmp_mitigator import CTMPMeasMitigator
+from .ctmp_mitigator import CTMPExpvalMeasMitigator
 from .ctmp_generator_set import Generator, standard_generator_set
-from ..meas_mit_utils import assignment_matrix
+from ..utils import assignment_matrix
 
 logger = logging.getLogger(__name__)
 
 
 def fit_ctmp_meas_mitigator(cal_data: Dict[int, Dict[int, int]],
                             num_qubits: int,
-                            generators: List[Generator] = None) -> CTMPMeasMitigator:
+                            generators: List[Generator] = None) -> CTMPExpvalMeasMitigator:
     """Return FullMeasureErrorMitigator from result data.
 
     Args:
@@ -54,7 +54,7 @@ def fit_ctmp_meas_mitigator(cal_data: Dict[int, Dict[int, int]],
 
     # Compute rates for generators
     rates = [_get_ctmp_error_rate(gen, gen_mat_dict, num_qubits) for gen in generators]
-    return CTMPMeasMitigator(generators, rates)
+    return CTMPExpvalMeasMitigator(generators, rates)
 
 
 # Utility functions used for fitting (Should be moved to Fitter class)

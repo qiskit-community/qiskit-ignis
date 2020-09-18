@@ -2,7 +2,7 @@
 
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019, 2020.
+# (C) Copyright IBM 2020.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -31,8 +31,9 @@ logger = logging.getLogger(__name__)
 def expectation_value(counts: Counts,
                       diagonal: Optional[np.ndarray] = None,
                       clbits: Optional[List[int]] = None,
-                      mitigator: Optional = None,
-                      mitigator_qubits: Optional[List[int]] = None) -> Tuple[float, float]:
+                      meas_mitigator: Optional = None,
+                      meas_mitigator_qubits: Optional[List[int]] = None
+    ) -> Tuple[float, float]:
     r"""Compute the expectation value of a diagonal operator from counts.
 
     Args:
@@ -40,17 +41,18 @@ def expectation_value(counts: Counts,
         diagonal: Optional, values of the diagonal observable. If None the
                   observable is set to :math:`Z^\otimes n`.
         clbits: Optional, marginalize counts to just these bits.
-        mitigator: Optional, a measurement mitigator to apply mitigation.
-        mitigator_qubits: Optional, qubits the count bitstrings correspond to.
-                          Only required if applying mitigation with clbits arg.
+        meas_mitigator: Optional, a measurement mitigator to apply mitigation.
+        meas_mitigator_qubits: Optional, qubits the count bitstrings correspond to.
+                               Only required if applying mitigation with clbits arg.
 
     Returns:
         (float, float): the expectation value and standard deviation.
     """
-    if mitigator is not None:
+    if meas_mitigator is not None:
         # Use mitigator expectation value method
-        return mitigator.expectation_value(
-            counts, diagonal=diagonal, clbits=clbits, qubits=mitigator_qubits)
+        return meas_mitigator.expectation_value(
+            counts, diagonal=diagonal, clbits=clbits,
+            qubits=meas_mitigator_qubits)
 
     # Marginalize counts
     if clbits is not None:
@@ -67,7 +69,7 @@ def expectation_value(counts: Counts,
                            for key in counts.keys()], dtype=probs.dtype)
     else:
         keys = [int(key, 2) for key in counts.keys()]
-        coeffs = np.asarray(diagonal[keys], dtype=probs.dtype)        
+        coeffs = np.asarray(diagonal[keys], dtype=probs.dtype)
 
     return _expval_with_stddev(coeffs, probs, shots)
 

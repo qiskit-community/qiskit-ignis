@@ -19,8 +19,8 @@ import unittest
 
 import numpy as np
 import scipy as sp
-from qiskit.ignis.mitigation.measurement import CTMPMeasMitigator
-from qiskit.ignis.mitigation.measurement.ctmp_method.ctmp_mitigator import _markov_chain_compiled
+from qiskit.ignis.mitigation import CTMPExpvalMeasMitigator
+from qiskit.ignis.mitigation.expval.ctmp_method.ctmp_mitigator import _markov_chain_compiled
 
 
 def statistical_test(num_tests: int, fraction_passes: float):
@@ -69,7 +69,7 @@ class TestMarkov(unittest.TestCase):
             ('10', '01', (0, 1)): 1e-3
         }
 
-        mitigator = CTMPMeasMitigator(
+        mitigator = CTMPExpvalMeasMitigator(
             generators=self.r_dict.keys(),
             rates=self.r_dict.values(),
             num_qubits=2

@@ -15,5 +15,5 @@
 CTMP measurement error mitigation.
 """
 
-from .ctmp_mitigator import CTMPMeasMitigator
+from .ctmp_mitigator import CTMPExpvalMeasMitigator
 from .ctmp_fitter import fit_ctmp_meas_mitigator

@@ -18,11 +18,11 @@ from typing import Optional, List, Dict, Tuple
 import numpy as np
 
 from qiskit.exceptions import QiskitError
-from ..meas_mit_utils import (counts_probability_vector, _expval_with_stddev)
-from ..base_meas_mitigator import BaseMeasMitigator
+from ..utils import (counts_probability_vector, _expval_with_stddev)
+from ..base_meas_mitigator import BaseExpvalMeasMitigator
 
 
-class CompleteMeasMitigator(BaseMeasMitigator):
+class CompleteExpvalMeasMitigator(BaseExpvalMeasMitigator):
     """Measurement error mitigator via full N-qubit mitigation."""
 
     def __init__(self, amat: np.ndarray):
