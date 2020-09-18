@@ -58,6 +58,9 @@ class CompleteExpvalMeasMitigator(BaseExpvalMeasMitigator):
         Returns:
             (float, float): the expectation value and standard deviation.
 
+        Raises:
+            QiskitError: if arguments are invalid.
+
         Additional Information:
             The observable :math:`O` is input using the ``diagonal`` kwarg as a
             Numpy array :math:`[O(0), ..., O(2^n -1)]`. If no diagonal is specified
