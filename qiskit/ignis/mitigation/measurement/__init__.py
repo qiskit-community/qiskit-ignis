@@ -11,17 +11,14 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
+
 """
-Measurement error mitigation module
+Measurement correction module
+
 """
 
-# Legacy Measurement Error mitigation
-from .legacy import (complete_meas_cal, tensored_meas_cal, MeasurementFilter,
-                     TensoredFilter, CompleteMeasFitter, TensoredMeasFitter)
-
-from .meas_mit_generator import MeasMitigatorGenerator
-from .meas_mit_fitter import MeasMitigatorFitter
-from .complete_method import CompleteMeasMitigator
-from .tensored_method import TensoredMeasMitigator
-from .ctmp_method import CTMPMeasMitigator
-from .meas_mit_utils import expectation_value, counts_probability_vector
+# Measurement correction functions
+from .circuits import complete_meas_cal, tensored_meas_cal
+from .filters import MeasurementFilter, TensoredFilter
+from .fitters import CompleteMeasFitter, TensoredMeasFitter

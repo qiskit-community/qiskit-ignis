@@ -57,10 +57,10 @@ from .measurement import (complete_meas_cal, tensored_meas_cal,
                           MeasurementFilter, TensoredFilter,
                           CompleteMeasFitter, TensoredMeasFitter)
 
-from .measurement import (expectation_value,
-                          counts_probability_vector,
-                          MeasMitigatorGenerator,
-                          MeasMitigatorFitter,
-                          CompleteMeasMitigator,
-                          TensoredMeasMitigator,
-                          CTMPMeasMitigator)
+from .expval import (expectation_value,
+                     counts_probability_vector,
+                     MeasMitigatorGenerator,
+                     MeasMitigatorFitter,
+                     CompleteMeasMitigator,
+                     TensoredMeasMitigator,
+                     CTMPMeasMitigator)
