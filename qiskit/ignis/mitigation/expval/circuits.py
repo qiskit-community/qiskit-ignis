@@ -17,9 +17,8 @@ Expectation value measurement error migitation generator.
 
 from typing import Optional, Tuple, List
 
-from qiskit import QuantumCircuit, transpile
+from qiskit import QuantumCircuit
 from qiskit.exceptions import QiskitError
-from qiskit.providers import BaseBackend
 
 
 def expval_meas_mitigator_circuits(num_qubits: int,

@@ -75,7 +75,7 @@ class ExpvalMeasMitigatorFitter:
                 amats.append(amat)
             self._mitigator = TensoredExpvalMeasMitigator(amats)
 
-        elif method == 'CTMP' or method == 'ctmp':
+        elif method in ['CTMP', 'ctmp']:
             self._mitigator = fit_ctmp_meas_mitigator(
                 self._cal_data, self._num_qubits, generators)
         else:

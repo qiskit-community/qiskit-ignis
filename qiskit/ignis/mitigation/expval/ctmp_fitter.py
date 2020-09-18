@@ -20,7 +20,6 @@ import numpy as np
 import scipy.linalg as la
 
 from qiskit.exceptions import QiskitError
-from qiskit.result import Result
 from .ctmp_mitigator import CTMPExpvalMeasMitigator
 from .ctmp_generator_set import Generator, standard_generator_set
 from .utils import assignment_matrix
@@ -40,9 +39,12 @@ def fit_ctmp_meas_mitigator(cal_data: Dict[int, Dict[int, int]],
 
     Returns:
         Measurement error mitigator object.
+
+    Raises:
+        QiskitError: if input arguments are invalid.
     """
     if not isinstance(num_qubits, int):
-        raise ValueError('Number of qubits must be an int')
+        raise QiskitError('Number of qubits must be an int')
     if generators is None:
         generators = standard_generator_set(num_qubits)
 
@@ -63,6 +65,7 @@ def _ctmp_err_rate_1_q(a: str, b: str, j: int,
                        g_mat_dict: Dict[Generator, np.array],
                        num_qubits: int) -> float:
     """Compute the 1q error rate for a given generator."""
+    # pylint: disable=invalid-name
     rate_list = []
     if a == '0' and b == '1':
         g1 = ('00', '10')
@@ -88,6 +91,7 @@ def _ctmp_err_rate_1_q(a: str, b: str, j: int,
 
 def _ctmp_err_rate_2_q(gen, g_mat_dict) -> float:
     """Compute the 2 qubit error rate for a given generator."""
+    # pylint: disable=invalid-name
     g_mat = g_mat_dict[gen]
     b, a, _ = gen
     r = g_mat[int(b, 2), int(a, 2)]
@@ -110,6 +114,7 @@ def _get_ctmp_error_rate(gen: Generator,
     Raises:
         ValueError: The provided generator is not already in the set of generators.
     """
+    # pylint: disable=invalid-name
     b, a, c = gen
     if len(b) == 1:
         rate = _ctmp_err_rate_1_q(a, b, c[0], g_mat_dict, num_qubits)
@@ -122,6 +127,7 @@ def _local_g_matrix(gen: Generator,
                     cal_data: Dict[int, Dict[int, int]],
                     num_qubits: int) -> np.array:
     """Computes the G(j,k) matrix in the basis [00, 01, 10, 11]."""
+    # pylint: disable=invalid-name
     _, _, c = gen
     j, k = c
     a_mat = assignment_matrix(cal_data, num_qubits, [j, k])
