@@ -20,7 +20,7 @@ import unittest
 import numpy as np
 import scipy as sp
 from qiskit.ignis.mitigation import CTMPExpvalMeasMitigator
-from qiskit.ignis.mitigation.expval.ctmp_method.ctmp_mitigator import _markov_chain_compiled
+from qiskit.ignis.mitigation.expval.ctmp_mitigator import _markov_chain_compiled
 
 
 def statistical_test(num_tests: int, fraction_passes: float):

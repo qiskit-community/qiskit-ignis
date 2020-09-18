@@ -23,7 +23,7 @@ from qiskit.exceptions import QiskitError
 from qiskit.result import Result
 from .ctmp_mitigator import CTMPExpvalMeasMitigator
 from .ctmp_generator_set import Generator, standard_generator_set
-from ..utils import assignment_matrix
+from .utils import assignment_matrix
 
 logger = logging.getLogger(__name__)
 

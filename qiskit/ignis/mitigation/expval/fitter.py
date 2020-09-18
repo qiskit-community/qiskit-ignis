@@ -21,11 +21,11 @@ from qiskit.result import Result
 from qiskit.exceptions import QiskitError
 
 from .utils import calibration_data, assignment_matrix
-from .complete_method.complete_mitigator import CompleteExpvalMeasMitigator
-from .tensored_method.tensored_mitigator import TensoredExpvalMeasMitigator
-from .ctmp_method.ctmp_mitigator import CTMPExpvalMeasMitigator
-from .ctmp_method.ctmp_fitter import fit_ctmp_meas_mitigator
-from .ctmp_method.ctmp_generator_set import Generator
+from .complete_mitigator import CompleteExpvalMeasMitigator
+from .tensored_mitigator import TensoredExpvalMeasMitigator
+from .ctmp_mitigator import CTMPExpvalMeasMitigator
+from .ctmp_fitter import fit_ctmp_meas_mitigator
+from .ctmp_generator_set import Generator
 
 
 class ExpvalMeasMitigatorFitter:
