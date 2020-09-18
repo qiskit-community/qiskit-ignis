@@ -6,6 +6,7 @@ This module provides several miscellaneous tools for
 analysis of the GHZ State (most notably, Fourier Analysis)
 """
 
+from typing import Dict, Tuple
 import numpy as np
 
 try:
@@ -15,10 +16,17 @@ except ImportError:
     HAS_MATPLOTLIB = False
 
 
-def ordered_list_generator(counts_dictionary, qn):
+def ordered_list_generator(counts_dictionary: Dict, qn: int) -> np.array:
     """
     For parity oscillations; just arranges dictionary of counts
     in bitwise binary order to compute dot products more easily
+
+    Args:
+        counts_dictionary: The counts
+        qn: Number of qubits
+
+    Returns:
+        The counts rearrangement
     """
     orderedlist = []
     limit = 2**qn
@@ -30,9 +38,15 @@ def ordered_list_generator(counts_dictionary, qn):
     return np.asarray(orderedlist)
 
 
-def composite_pauli_z(qn):
+def composite_pauli_z(qn: int) -> np.array:
     """
     Generates n tensored pauli z matrix upon input of qubit number
+
+    Args:
+        qn: Number of qubits
+
+    Returns:
+        The tensored pauli z matrices
     """
     composite_sigma_z = sigma_z = np.array([[1, 0], [0, -1]])
     for _ in range(1, qn):
@@ -41,10 +55,17 @@ def composite_pauli_z(qn):
     return composite_sigma_z
 
 
-def composite_pauli_z_expvalue(counts_dictionary, qn):
+def composite_pauli_z_expvalue(counts_dictionary: Dict, qn: int) -> float:
     """
     Generates expectation value of n tensored pauli matrix
     upon input of qubit number and composite pauli matrix
+
+    Args:
+        counts_dictionary: The counts
+        qn: Number of qubits
+
+    Returns:
+        The expectation value
     """
     return np.dot(ordered_list_generator(counts_dictionary, qn),
                   np.diag(composite_pauli_z(qn)))
@@ -52,14 +73,17 @@ def composite_pauli_z_expvalue(counts_dictionary, qn):
 
 class Plotter:
     """
-    Various plots of the |000...0> state in MQC and PO experiments
+    Various plots of the ground state in MQC and PO experiments
     """
     def __init__(self, label):
         self.label = label
 
-    def title_maker(self):
+    def title_maker(self) -> Tuple[str, str]:
         """
         Make title depending on type of exp.
+
+        Returns:
+            The title strings
         """
         if self.label == 'mqc':
             title = 'Raw counts of ground state'
@@ -70,9 +94,20 @@ class Plotter:
 
         return title, title_ext
 
-    def sin_plotter(self, x, y, y_m=None):
+    def sin_plotter(self,
+                    x: np.array,
+                    y: np.array,
+                    y_m: np.array = None
+                    ):
         """
         Make sin plot of counts in both mqc and po exps.
+        Args:
+            x: Phase series
+            y: Counts series
+            y_m: Mitigated counts series
+
+        Raises:
+            ImportError: If matplotlib is not present
         """
         if not HAS_MATPLOTLIB:
             raise ImportError("matplotlib needs to be installed and properly "
@@ -92,9 +127,26 @@ class Plotter:
             plt.xlabel(r'\phi')
             plt.ylabel('Normalized Contrast')
 
-    def get_fourier_info(self, qn, x, y, y_m, p_dict):
+    def get_fourier_info(self,
+                         qn: int,
+                         x: np.array,
+                         y: np.array,
+                         y_m: np.array,
+                         p_dict: Dict
+                         ) -> Dict:
         """
         Get fourier trans. data/plot of both mqc and po exps.
+        Args:
+            qn: Number of qubits
+            x: Phase series
+            y: Counts series
+            y_m: Mitigated counts series
+            p_dict: probabilities dictionary
+        Returns:
+            The fourier transform data
+        Raises:
+            ImportError: If matplotlib is not present
+            Exception: If y_m or p_dict are not provided
         """
         if not HAS_MATPLOTLIB:
             raise ImportError("matplotlib needs to be installed and properly "
@@ -162,9 +214,13 @@ class Plotter:
         return None
 
 
-def rho_to_fidelity(rho):
+def rho_to_fidelity(rho: float) -> float:
     """
     Get fidelity given rho
+    Args:
+            rho: The density matrix
+    Returns:
+        The fidelity value for rho
     """
     return np.abs((rho[0, 0] + rho[-1, -1] + np.abs(rho[0, -1])
                    + np.abs(rho[-1, 0]))/2)
