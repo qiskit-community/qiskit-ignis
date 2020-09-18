@@ -79,6 +79,7 @@ setuptools.setup(
     extras_require={
         'visualization': ['matplotlib>=2.1'],
         'cvx': ['cvxpy>=1.0.15'],
+        'ctmp': ['numba'],
     },
     install_requires=requirements,
     include_package_data=True,

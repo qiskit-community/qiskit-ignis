@@ -1,0 +1,25 @@
+---
+features:
+  - |
+    Adds expectation value measurement error mitigation to the mitigation module.
+    This supports using *complete* N-qubit assignment matrix, single-qubit
+    *tensored* assignment matrix, or *continuous time Markov process (CTMP)* [1]
+    measurement error mitigation when computing expectation values of diagonal
+    operators from counts dictionaries. Expectation values are computed using
+    the using the :func:`qiskit.ignis.mitigation.expectation_value` function.
+
+    Calibration circuits for calibrating a measurement error mitigator are
+    generated using the :func:`qiskit.ignis.mitigation.expval_meas_mitigator_circuits`
+    function, and the result fitted using the
+    :class:`qiskit.ignis.mitigation.ExpvalMeasMitigatorFitter` class. The
+    fitter returns a mitigator object can the be supplied as an argument to the
+    :func:`~qiskit.ignis.mitigation.expectation_value` function to apply mitigation.
+
+    [1] S Bravyi, S Sheldon, A Kandala, DC Mckay, JM Gambetta,
+        *Mitigating measurement errors in multi-qubit experiments*,
+        arXiv:2006.14044 [quant-ph].
+  - |
+    Adds Numba as an optional dependency. Numba is used to significantly increase
+    the performance of the :class:`qiskit.ignis.mitigation.CTMPExpvalMeasMitigator`
+    class used for expectation value measurement error mitigation with the CTMP
+    method.
