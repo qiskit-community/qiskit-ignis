@@ -27,8 +27,12 @@ can do this with `pip install matplotlib` or when you install ignis with
 `pip install qiskit-ignis[visualization]`. If you're going to use a cvx fitter
 for running tomogography you'll need to install cvxpy. You can do this with
 `pip install cvxpy` or when you install install ignis with
-`pip install qiskit-ignis[cvx]`. If you want to install both when you install
-ignis you can run `pip install qiskit-ignis[visualization,cvx]`.
+`pip install qiskit-ignis[cvx]`. When performing expectation value measurement
+error mitigation using the CTMP method performance can be improved using
+just-in-time compiling if Numbda is installed. You can do this with
+`pip install numba` or when you install install ignis with
+`pip install qiskit-ignis[jit]`. If you want to install all extra requirements
+when you install ignis you can run `pip install qiskit-ignis[visualization,cvx,jit]`.
 
 ## Creating your first quantum experiment with Qiskit Ignis
 Now that you have Qiskit Ignis installed, you can start creating experiments, to reveal information about the device quality. Here is a basic example:
