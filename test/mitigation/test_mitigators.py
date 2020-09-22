@@ -40,7 +40,7 @@ class NoisySimulationTest(unittest.TestCase):
     sim = QasmSimulator()
 
     # Example max qubit number
-    num_qubits = 4
+    num_qubits = 3
 
     # Create readout errors
     readout_errors = []
@@ -75,50 +75,37 @@ class NoisySimulationTest(unittest.TestCase):
         ).result()
 
 
+@ddt
 class TestExpVals(NoisySimulationTest):
     """Test the expectation values of all the ExpvalMeasMitigator* classes
     and compare against the exact results.
     """
 
-    qc = QuantumCircuit(4, 4)
-    qc.h(0)
-    qc.cx(0, 1)
-    qc.cx(1, 2)
-    qc.cx(2, 3)
-    qc.h(range(4))
-    qc.measure(range(4), range(4))
-
     def setUp(self):
-        result_targ = self.execute_circs(self.qc)
-        result_nois = self.execute_circs(self.qc, noise_model=self.noise_model)
+        qc = QuantumCircuit(self.num_qubits)
+        qc.h(0)
+        for i in range(1, self.num_qubits):
+            qc.cx(i - 1, i)
+        qc.measure_all()
+        result_targ = self.execute_circs(qc)
+        result_noise = self.execute_circs(qc, noise_model=self.noise_model)
+        self.counts_ideal = result_targ.get_counts(0)
+        self.counts_noise = result_noise.get_counts(0)
 
-        counts_target = result_targ.get_counts(0)
-        self.counts_noise = result_nois.get_counts(0)
-
-        self.exp_targ, _ = expectation_value(counts_target)
-
-        self.method = None
-
-    def test_ctmp_exp(self):
-        """Test CTMP"""
-        self.method = 'CTMP'
-
-    def test_full_exp(self):
-        """Test complete"""
-        self.method = 'complete'
-
-    def test_tensored_exp(self):
-        """Test tensored"""
-        self.method = 'tensored'
-
-    def tearDown(self):
-        circs, meta = expval_meas_mitigator_circuits(self.num_qubits, method=self.method)
+    @data(*product(['complete', 'tensored', 'CTMP'],
+                   [None, [1, -1, -1, 1, -1, 1, 1, -1],
+                    [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]]))
+    @unpack
+    def test_expval_mitigator(self, method, diagonal):
+        """Test ExpvalMeasMitigator"""
+        circs, meta = expval_meas_mitigator_circuits(self.num_qubits, method=method)
         result_cal = self.execute_circs(circs, noise_model=self.noise_model)
-        mitigator = ExpvalMeasMitigatorFitter(result_cal, meta).fit(method=self.method)
-
-        expval, _ = mitigator.expectation_value(self.counts_noise)
-
-        self.assertLess(abs(self.exp_targ - expval), self.tolerance)
+        mitigator = ExpvalMeasMitigatorFitter(result_cal, meta).fit()
+        target, _ = expectation_value(self.counts_ideal, diagonal=diagonal)
+        expval, _ = expectation_value(self.counts_noise,
+                                      diagonal=diagonal,
+                                      meas_mitigator=mitigator)
+        self.assertLess(abs(target - expval), self.tolerance)
 
 
 # https://docs.python.org/3/library/itertools.html#recipes
@@ -137,7 +124,7 @@ class TestPartialExpVals(NoisySimulationTest):
     @data(*product(
         [
             item for sublist in
-            [*map(lambda x: list(permutations(x)), powerset(range(4)))] for item in sublist],
+            [*map(lambda x: list(permutations(x)), powerset(range(3)))] for item in sublist],
         ['complete', 'tensored']
         ))
     @unpack
@@ -149,7 +136,7 @@ class TestPartialExpVals(NoisySimulationTest):
         if len(qubits) == 0:
             return None
 
-        qc = QuantumCircuit(4, len(qubits))
+        qc = QuantumCircuit(self.num_qubits, len(qubits))
         qc.h(qubits[0])
         for i, j in combinations(qubits, r=2):
             qc.cx(i, j)
