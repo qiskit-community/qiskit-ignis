@@ -650,20 +650,32 @@ class CNOTDihedral(BaseOperator):
     def adjoint(self):
         """Return the conjugate transpose of the CNOTDihedral element"""
 
-        circ = self.to_circuit()
+        circ = self.to_instruction()
         result = self.from_circuit(circ.inverse())
         return result
 
-
     def conjugate(self):
         """Return the conjugate of the CNOTDihedral element."""
-
-        return self.adjoint()
+        circ = self.to_instruction()
+        new_circ = QuantumCircuit(self.num_qubits)
+        qargs = list(range(self.num_qubits))
+        for instr, qregs, _ in circ.definition:
+            new_qubits = [qargs[tup.index] for tup in qregs]
+            if instr.name == 'u1':
+                params = 2 * np.pi - instr.params[0]
+                instr.params[0] = params
+                new_circ.append(instr, new_qubits)
+            else:
+                new_circ.append(instr, new_qubits)
+        result = self.from_circuit(new_circ)
+        return result
 
     def transpose(self):
         """Return the transpose of the CNOT-Dihedral element."""
 
-        return self.adjoint()
+        circ = self.to_instruction()
+        result = self.from_circuit(circ.reverse_ops())
+        return result
 
 
 def make_dict_0(num_qubits):

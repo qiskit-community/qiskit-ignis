@@ -17,6 +17,7 @@ Tests for CNOT-dihedral functions
 """
 
 import unittest
+import numpy as np
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators import Operator
 
@@ -438,13 +439,10 @@ class TestCNOTDihedral(unittest.TestCase):
             for i in range(samples):
                 elem = random_cnotdihedral(qubit_num, seed=nseed + i)
                 circ = elem.to_circuit()
-                #print (circ)
                 value = elem.transpose().to_operator()
                 target = Operator(circ).transpose()
-                #print (value)
-                #print (target)
-                #self.assertTrue(target.equiv(value),
-                #                'Error: transpose circuit is not the same')
+                self.assertTrue(target.equiv(value),
+                                'Error: transpose circuit is not the same')
 
     def test_conjugate(self):
         """Test transpose method"""
@@ -456,9 +454,24 @@ class TestCNOTDihedral(unittest.TestCase):
                 circ = elem.to_circuit()
                 value = elem.conjugate().to_operator()
                 target = Operator(circ).conjugate()
-                #self.assertTrue(target.equiv(value),
-                #                'Error: conjugate circuit is not the same')
+                self.assertTrue(target.equiv(value),
+                                'Error: conjugate circuit is not the same')
 
+    def test_to_matrix(self):
+        """Test to_matrix method"""
+        samples = 10
+        nseed = 888
+        for qubit_num in range(1, 3):
+            for i in range(samples):
+                elem = random_cnotdihedral(qubit_num, seed=nseed + i)
+                circ = elem.to_circuit()
+                mat = elem.to_matrix()
+                self.assertIsInstance(mat, np.ndarray)
+                self.assertEqual(mat.shape, 2 * (2 ** qubit_num,))
+                value = Operator(mat)
+                target = Operator(circ)
+                self.assertTrue(value.equiv(target),
+                                'Error: matrix of the circuit is not the same')
 
 if __name__ == '__main__':
     unittest.main()
