@@ -417,7 +417,7 @@ class TestCNOTDihedral(unittest.TestCase):
                     self.assertEqual(target, value,
                                      'Error: expand circuit is not the same')
 
-    def test_transpose(self):
+    def test_adjoint(self):
         """Test transpose method"""
         samples = 10
         nseed = 555
@@ -425,12 +425,39 @@ class TestCNOTDihedral(unittest.TestCase):
             for i in range(samples):
                 elem = random_cnotdihedral(qubit_num, seed=nseed + i)
                 circ = elem.to_circuit()
-                value = Operator(elem.transpose().to_circuit())
-                target = Operator(circ).transpose()
+                value = elem.adjoint().to_operator()
+                target = Operator(circ).adjoint()
+                self.assertTrue(target.equiv(value),
+                                'Error: adjoint circuit is not the same')
+
+    def test_transpose(self):
+        """Test transpose method"""
+        samples = 10
+        nseed = 666
+        for qubit_num in range(1, 3):
+            for i in range(samples):
+                elem = random_cnotdihedral(qubit_num, seed=nseed + i)
+                circ = elem.to_circuit()
                 #print (circ)
-                #print(value)
-                #print(target)
-                #self.assertTrue(target.equiv(value))
+                value = elem.transpose().to_operator()
+                target = Operator(circ).transpose()
+                #print (value)
+                #print (target)
+                #self.assertTrue(target.equiv(value),
+                #                'Error: transpose circuit is not the same')
+
+    def test_conjugate(self):
+        """Test transpose method"""
+        samples = 10
+        nseed = 777
+        for qubit_num in range(1, 3):
+            for i in range(samples):
+                elem = random_cnotdihedral(qubit_num, seed=nseed + i)
+                circ = elem.to_circuit()
+                value = elem.conjugate().to_operator()
+                target = Operator(circ).conjugate()
+                #self.assertTrue(target.equiv(value),
+                #                'Error: conjugate circuit is not the same')
 
 
 if __name__ == '__main__':

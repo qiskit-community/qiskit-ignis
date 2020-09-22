@@ -44,6 +44,7 @@ from numpy.random import RandomState
 
 from qiskit.exceptions import QiskitError
 from qiskit.quantum_info.operators.base_operator import BaseOperator
+from qiskit.quantum_info.operators.operator import Operator
 from qiskit.circuit import QuantumCircuit, Instruction
 
 
@@ -522,6 +523,14 @@ class CNOTDihedral(BaseOperator):
         append_circuit(elem, circuit)
         return elem
 
+    def to_matrix(self):
+        """Convert operator to Numpy matrix."""
+        return self.to_operator().data
+
+    def to_operator(self):
+        """Convert to an Operator object."""
+        return Operator(self.to_instruction())
+
     def compose(self, other):
         """Return the composed operator.
 
@@ -638,12 +647,23 @@ class CNOTDihedral(BaseOperator):
 
         return self._tensor_product(other, reverse=False)
 
+    def adjoint(self):
+        """Return the conjugate transpose of the CNOTDihedral element"""
+
+        circ = self.to_circuit()
+        result = self.from_circuit(circ.inverse())
+        return result
+
+
     def conjugate(self):
-        pass
+        """Return the conjugate of the CNOTDihedral element."""
+
+        return self.adjoint()
 
     def transpose(self):
         """Return the transpose of the CNOT-Dihedral element."""
-        return self
+
+        return self.adjoint()
 
 
 def make_dict_0(num_qubits):
