@@ -473,5 +473,6 @@ class TestCNOTDihedral(unittest.TestCase):
                 self.assertTrue(value.equiv(target),
                                 'Error: matrix of the circuit is not the same')
 
+
 if __name__ == '__main__':
     unittest.main()
