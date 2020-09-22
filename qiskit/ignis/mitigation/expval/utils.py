@@ -30,29 +30,51 @@ logger = logging.getLogger(__name__)
 
 def expectation_value(counts: Counts,
                       diagonal: Optional[np.ndarray] = None,
+                      qubits: Optional[List[int]] = None,
                       clbits: Optional[List[int]] = None,
                       meas_mitigator: Optional = None,
-                      meas_mitigator_qubits: Optional[List[int]] = None
                       ) -> Tuple[float, float]:
     r"""Compute the expectation value of a diagonal operator from counts.
 
+    This computes the estimator of
+    :math:`\langle O \rangle = \mbox{Tr}[\rho. O]`, optionally with measurement
+    error mitigation, of a diagonal observable
+    :math:`O = \sum_{x\in\{0, 1\}^n} O(x)|x\rangle\!\langle x|`.
+
     Args:
-        counts: counts object.
-        diagonal: Optional, values of the diagonal observable. If None the
-                  observable is set to :math:`Z^\otimes n`.
+        counts: counts object
+        diagonal: Optional, the vector of diagonal values for suming the
+                    expectation value. If ``None`` the the default value is
+                    :math:`[1, -1]^\otimes n`.
+        qubits: Optional, the measured physical qubits the count bitstrings
+                correspond to. This is only used if a meas_mitigator is supplied.
         clbits: Optional, marginalize counts to just these bits.
         meas_mitigator: Optional, a measurement mitigator to apply mitigation.
-        meas_mitigator_qubits: Optional, qubits the count bitstrings correspond to.
-                               Only required if applying mitigation with clbits arg.
 
     Returns:
         (float, float): the expectation value and standard deviation.
+
+    Additional Information:
+        The diagonal observable :math:`O` is input using the ``diagonal``
+        kwarg as a list or Numpy array :math:`[O(0), ..., O(2^n -1)]`. If
+        no diagonal is specified the diagonal of the Pauli operator
+        :math:`O = \mbox{diag}(Z^{\otimes n}) = [1, -1]^{\otimes n}` is used.
+
+        The ``clbits`` kwarg is used to marginalize the input counts dictionary
+        over the specified bit-values, and the ``qubits`` kwarg is used to specify
+        which physical qubits these bit-values correspond to as
+        ``circuit.measure(qubits, clbits)``.
+
+        For calibrating a expval measurement error mitigator for the
+        ``meas_mitigator`` kwarg see
+        :func:`qiskit.ignis.mitigation.expval_meas_mitigator_circuits` and
+        :class:`qiskit.ignis.mitigation.ExpvalMeasMitigatorFitter`.
     """
     if meas_mitigator is not None:
         # Use mitigator expectation value method
         return meas_mitigator.expectation_value(
             counts, diagonal=diagonal, clbits=clbits,
-            qubits=meas_mitigator_qubits)
+            qubits=qubits)
 
     # Marginalize counts
     if clbits is not None:
@@ -68,6 +90,7 @@ def expectation_value(counts: Counts,
         coeffs = np.array([(-1) ** (key.count('1') % 2)
                            for key in counts.keys()], dtype=probs.dtype)
     else:
+        diagonal = np.asarray(diagonal)
         keys = [int(key, 2) for key in counts.keys()]
         coeffs = np.asarray(diagonal[keys], dtype=probs.dtype)
 
@@ -76,16 +99,16 @@ def expectation_value(counts: Counts,
 
 def counts_probability_vector(
         counts: Counts,
-        clbits: Optional[List[int]] = None,
         qubits: Optional[List[int]] = None,
+        clbits: Optional[List[int]] = None,
         num_qubits: Optional[int] = None,
         return_shots: Optional[bool] = False) -> np.ndarray:
     """Compute mitigated expectation value.
 
     Args:
         counts: counts object
-        clbits: Optional, marginalize counts to just these bits.
         qubits: qubits the count bitstrings correspond to.
+        clbits: Optional, marginalize counts to just these bits.
         num_qubits: the total number of qubits.
         return_shots: return the number of shots.
 

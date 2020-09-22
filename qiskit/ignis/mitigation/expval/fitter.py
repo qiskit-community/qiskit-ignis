@@ -12,10 +12,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 """
-Full A-matrix measurement migitation generator.
+Expectation value measurement migitator fitter.
 """
 
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Union
 
 from qiskit.result import Result
 from qiskit.exceptions import QiskitError
@@ -23,12 +23,17 @@ from qiskit.exceptions import QiskitError
 from .utils import calibration_data, assignment_matrix
 from .complete_mitigator import CompleteExpvalMeasMitigator
 from .tensored_mitigator import TensoredExpvalMeasMitigator
+from .ctmp_mitigator import CTMPExpvalMeasMitigator
 from .ctmp_fitter import fit_ctmp_meas_mitigator
 from .ctmp_generator_set import Generator
 
 
 class ExpvalMeasMitigatorFitter:
-    """Expectation value measurement error mitigator calibration fitter."""
+    """Expectation value measurement error mitigator calibration fitter.
+
+    See :func:`qiskit.ignis.mitigation.expval_meas_mitigator_circuits` for
+    additional documentation.
+    """
 
     def __init__(self,
                  result: Result,
@@ -38,9 +43,6 @@ class ExpvalMeasMitigatorFitter:
         Args:
             result: Qiskit result object.
             metadata: mitigation generator metadata.
-
-        Returns:
-            Measurement error mitigator object.
         """
         self._num_qubits = None
         self._cal_data = None
@@ -56,7 +58,10 @@ class ExpvalMeasMitigatorFitter:
         return self._mitigator
 
     def fit(self, method: Optional[str] = None,
-            generators: Optional[List[Generator]] = None):
+            generators: Optional[List[Generator]] = None) -> Union[
+                CompleteExpvalMeasMitigator,
+                TensoredExpvalMeasMitigator,
+                CTMPExpvalMeasMitigator]:
         """Fit and return the Mitigator object from the calibration data."""
 
         if method is None:

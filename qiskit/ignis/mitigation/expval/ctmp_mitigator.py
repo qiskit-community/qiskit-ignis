@@ -32,11 +32,25 @@ logger = logging.getLogger(__name__)
 
 
 class CTMPExpvalMeasMitigator(BaseExpvalMeasMitigator):
-    """Measurement error mitigator via full N-qubit mitigation."""
+    """N-qubit CTMP measurement error mitigator.
+
+    This class can be used with the
+    :func:`qiskit.ignis.mitigation.expectation_value` function to apply
+    measurement error mitigation of N-qubit measurement errors caused by
+    one and two-body error generators. Expectation values
+    can also be computed directly using the :meth:`expectation_value` method.
+
+    For measurement mitigation to be applied the mitigator should be
+    calibrated using the
+    :func:`qiskit.ignis.mitigation.expval_meas_mitigator_circuits` function
+    and :class:`qiskit.ignis.mitigation.ExpvalMeasMitigatorFitter` class with
+    the ``'CTMP'`` mitigation method.
+    """
     def __init__(self,
                  generators: List[Generator],
                  rates: List[float],
-                 num_qubits: Optional[int] = None):
+                 num_qubits: Optional[int] = None,
+                 seed: Optional = None):
         """Initialize a TensorMeasurementMitigator"""
         if num_qubits is None:
             self._num_qubits = 1 + max([max([max(gen[2]) for gen in generators])])
@@ -59,38 +73,38 @@ class CTMPExpvalMeasMitigator(BaseExpvalMeasMitigator):
         self._sampling_mats = {}
 
         # RNG for CTMP sampling
-        self._rng = np.random.default_rng()
+        self._rng = None
+        self.seed(seed)
 
     def expectation_value(self,
                           counts: Dict,
                           diagonal: Optional[np.ndarray] = None,
+                          qubits: Optional[List[int]] = None,
                           clbits: Optional[List[int]] = None,
-                          qubits: Optional[List[int]] = None
                           ) -> Tuple[float, float]:
         r"""Compute the mitigated expectation value of a diagonal observable.
 
         This computes the mitigated estimator of
         :math:`\langle O \rangle = \mbox{Tr}[\rho. O]` of a diagonal observable
-        :math:`O = \sum_{x\in\{0, 1\}^n} O(x)|x\rangle\!\langle x|` where
-        :math:`|O(x)|\le 1`.
+        :math:`O = \sum_{x\in\{0, 1\}^n} O(x)|x\rangle\!\langle x|`.
 
         Args:
             counts: counts object
-            diagonal: Optional, values of the diagonal observable. If None the
-                      observable is set to :math:`Z^\otimes n`.
+            diagonal: Optional, the vector of diagonal values for suming the
+                      expectation value. If ``None`` the the default value is
+                      :math:`[1, -1]^\otimes n`.
+            qubits: Optional, the measured physical qubits the count
+                    bitstrings correspond to.
             clbits: Optional, marginalize counts to just these bits.
-            qubits: qubits the count bitstrings correspond to.
 
         Returns:
             (float, float): the expectation value and standard deviation.
 
-        Raises:
-            NotImplementedError: if qubits or diagonal kwargs are used.
-
         Additional Information:
-            The observable :math:`O` is input using the ``diagonal`` kwarg as a
-            Numpy array :math:`[O(0), ..., O(2^n -1)]`. If no diagonal is specified
-            the Pauli-Z operator `O = Z^{\otimes n}` is used.
+            The diagonal observable :math:`O` is input using the ``diagonal`` kwarg as
+            a list or Numpy array :math:`[O(0), ..., O(2^n -1)]`. If no diagonal is specified
+            the diagonal of the Pauli operator
+            :math`O = \mbox{diag}(Z^{\otimes n}) = [1, -1]^{\otimes n}` is used.
 
             The ``clbits`` kwarg is used to marginalize the input counts dictionary
             over the specified bit-values, and the ``qubits`` kwarg is used to specify

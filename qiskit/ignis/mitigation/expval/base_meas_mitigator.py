@@ -16,7 +16,7 @@ Full A-matrix measurement migitation generator.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple, Union
 import numpy as np
 
 try:
@@ -32,31 +32,34 @@ class BaseExpvalMeasMitigator(ABC):
     @abstractmethod
     def expectation_value(self,
                           counts: Dict,
-                          diagonal: Optional[np.ndarray] = None,
+                          diagonal: Optional[
+                              Union[np.ndarray, List[complex], List[float]]] = None,
+                          qubits: Optional[List[int]] = None,
                           clbits: Optional[List[int]] = None,
-                          qubits: Optional[List[int]] = None
                           ) -> Tuple[float, float]:
-        r"""Compute the mitigated expectation value of a diagonal observable.
+        r"""Compute a measurement error mitigated expectation value.
 
         This computes the mitigated estimator of
         :math:`\langle O \rangle = \mbox{Tr}[\rho. O]` of a diagonal observable
-        :math:`O = \sum_{x\in\{0, 1\}^n} O(x)|x\rangle\!\langle x|` where
-        :math:`|O(x)|\le 1`.
+        :math:`O = \sum_{x\in\{0, 1\}^n} O(x)|x\rangle\!\langle x|`.
 
         Args:
             counts: counts object
-            diagonal: Optional, values of the diagonal observable. If None the
-                      observable is set to :math:`Z^\otimes n`.
+            diagonal: Optional, the vector of diagonal values for suming the
+                      expectation value. If ``None`` the the default value is
+                      :math:`[1, -1]^\otimes n`.
+            qubits: Optional, the measured physical qubits the count
+                    bitstrings correspond to.
             clbits: Optional, marginalize counts to just these bits.
-            qubits: qubits the count bitstrings correspond to.
 
         Returns:
             (float, float): the expectation value and standard deviation.
 
         Additional Information:
-            The observable :math:`O` is input using the ``diagonal`` kwarg as a
-            Numpy array :math:`[O(0), ..., O(2^n -1)]`. If no diagonal is specified
-            the Pauli-Z operator `O = Z^{\otimes n}` is used.
+            The diagonal observable :math:`O` is input using the ``diagonal`` kwarg as
+            a list or Numpy array :math:`[O(0), ..., O(2^n -1)]`. If no diagonal is specified
+            the diagonal of the Pauli operator
+            :math`O = \mbox{diag}(Z^{\otimes n}) = [1, -1]^{\otimes n}` is used.
 
             The ``clbits`` kwarg is used to marginalize the input counts dictionary
             over the specified bit-values, and the ``qubits`` kwarg is used to specify

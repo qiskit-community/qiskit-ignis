@@ -39,18 +39,18 @@ of another experiment of interest.
 Expectation Value Measurement
 =============================
 
-The following classes allow mitigation of measurement errors
-in expectation value computations.
+The following classes allow mitigation of measurement errors when computing
+expectation values of diagonal operators from counts.
 
 .. autosummary::
    :toctree: ../stubs/
 
    expectation_value
-   counts_probability_vector
    expval_meas_mitigator_circuits
    ExpvalMeasMitigatorFitter
    CTMPExpvalMeasMitigator
    CompleteExpvalMeasMitigator
+   TensoredExpvalMeasMitigator
 """
 
 from .measurement import (complete_meas_cal, tensored_meas_cal,
@@ -58,7 +58,6 @@ from .measurement import (complete_meas_cal, tensored_meas_cal,
                           CompleteMeasFitter, TensoredMeasFitter)
 
 from .expval import (expectation_value,
-                     counts_probability_vector,
                      expval_meas_mitigator_circuits,
                      ExpvalMeasMitigatorFitter,
                      CompleteExpvalMeasMitigator,

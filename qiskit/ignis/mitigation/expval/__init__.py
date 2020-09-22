@@ -15,9 +15,9 @@
 Expectation value measurement error mitigation module
 """
 
+from .utils import expectation_value
 from .circuits import expval_meas_mitigator_circuits
 from .fitter import ExpvalMeasMitigatorFitter
 from .complete_mitigator import CompleteExpvalMeasMitigator
 from .tensored_mitigator import TensoredExpvalMeasMitigator
 from .ctmp_mitigator import CTMPExpvalMeasMitigator
-from .utils import expectation_value, counts_probability_vector
