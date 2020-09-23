@@ -26,6 +26,7 @@ from qiskit import QiskitError
 from ...utils import build_counts_dict_from_list
 
 try:
+    from matplotlib import get_backend
     from matplotlib import pyplot as plt
     HAS_MATPLOTLIB = True
 except ImportError:
@@ -375,7 +376,11 @@ class QVFitter:
         labels = [labels[1], labels[2], labels[0], labels[3]]
         ax.legend(handles, labels)
 
-        plt.close(fig)  # close additional figure
+        # Only close mpl figures in jupyter with inline backends
+        if fig:
+            if get_backend() in ['module://ipykernel.pylab.backend_inline',
+                                 'nbAgg']:
+                plt.close(fig)
 
         return fig
 
