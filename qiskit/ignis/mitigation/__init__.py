@@ -36,7 +36,30 @@ of another experiment of interest.
    CompleteMeasFitter
    TensoredMeasFitter
 
+Expectation Value Measurement
+=============================
+
+The following classes allow mitigation of measurement errors when computing
+expectation values of diagonal operators from counts.
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   expectation_value
+   expval_meas_mitigator_circuits
+   ExpvalMeasMitigatorFitter
+   CTMPExpvalMeasMitigator
+   CompleteExpvalMeasMitigator
+   TensoredExpvalMeasMitigator
 """
+
 from .measurement import (complete_meas_cal, tensored_meas_cal,
                           MeasurementFilter, TensoredFilter,
                           CompleteMeasFitter, TensoredMeasFitter)
+
+from .expval import (expectation_value,
+                     expval_meas_mitigator_circuits,
+                     ExpvalMeasMitigatorFitter,
+                     CompleteExpvalMeasMitigator,
+                     TensoredExpvalMeasMitigator,
+                     CTMPExpvalMeasMitigator)

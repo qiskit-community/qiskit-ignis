@@ -24,8 +24,9 @@ import re
 import numpy as np
 from qiskit import QiskitError
 from qiskit.result import Result
+from qiskit.ignis.verification.tomography import count_keys
 from .filters import MeasurementFilter, TensoredFilter
-from ...verification.tomography import count_keys
+
 
 try:
     from matplotlib import pyplot as plt
