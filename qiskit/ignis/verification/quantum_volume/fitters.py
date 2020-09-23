@@ -258,13 +258,15 @@ class QVFitter:
                                         (1.0-self._ydata[2][depthidx])
                                         / self._ntrials)**0.5
 
-    def plot_qv_data(self, ax=None, show_plt=True, figsize=(7, 5)):
+    def plot_qv_data(self, ax=None, show_plt=True, figsize=(7, 5), set_title=True, title=None):
         """Plot the qv data as a function of depth
 
         Args:
             ax (Axes or None): plot axis (if passed in).
             show_plt (bool): display the plot.
             figsize (tuple): Figure size in inches.
+            set_title (bool): set figure title.
+            title (String or None): text for setting figure title
 
         Raises:
             ImportError: If matplotlib is not installed.
@@ -312,13 +314,17 @@ class QVFitter:
         ax.grid(True)
 
         ax.legend()
-        ax.set_title(
-            f'Quantum Volume for up to {len(self._qubit_lists[-1])} Qubits and '
-            f'and {self._ntrials} Trials')
+
+        if set_title:
+            if title is None:
+                title = (
+                    f'Quantum Volume for up to {len(self._qubit_lists[-1])} Qubits '
+                    f'and {self._ntrials} Trials')
+            ax.set_title(title)
 
         if fig:
             if get_backend() in ['module://ipykernel.pylab.backend_inline',
-                                'nbAgg']:
+                                 'nbAgg']:
                 plt.close(fig)
 
         if show_plt:
