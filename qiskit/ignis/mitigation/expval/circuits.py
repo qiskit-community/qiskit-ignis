@@ -62,7 +62,7 @@ def expval_meas_mitigator_circuits(num_qubits: int,
     Example:
 
         The following example shows calibrating a 5-qubit expectation value
-        measurement error mitigator using the ``'tensored'``method.
+        measurement error mitigator using the ``'tensored'`` method.
 
         .. jupyter-execute::
 

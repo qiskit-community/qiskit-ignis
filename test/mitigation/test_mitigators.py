@@ -40,7 +40,7 @@ class NoisySimulationTest(unittest.TestCase):
     sim = QasmSimulator()
 
     # Example max qubit number
-    num_qubits = 3
+    num_qubits = 4
 
     # Create readout errors
     readout_errors = []
@@ -93,8 +93,8 @@ class TestExpVals(NoisySimulationTest):
         self.counts_noise = result_noise.get_counts(0)
 
     @data(*product(['complete', 'tensored', 'CTMP'],
-                   [None, [1, -1, -1, 1, -1, 1, 1, -1],
-                    [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]]))
+                   [None, [(-1) ** i for i in range(16)],
+                    [0.1 * i for i in range(16)]]))
     @unpack
     def test_expval_mitigator(self, method, diagonal):
         """Test ExpvalMeasMitigator"""
