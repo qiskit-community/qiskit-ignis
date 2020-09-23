@@ -318,7 +318,7 @@ class QVFitter:
 
         if fig:
             if get_backend() in ['module://ipykernel.pylab.backend_inline',
-                             'nbAgg']:
+                                'nbAgg']:
                 plt.close(fig)
 
         if show_plt:
