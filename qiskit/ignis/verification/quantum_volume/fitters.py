@@ -26,7 +26,9 @@ from qiskit import QiskitError
 from ...utils import build_counts_dict_from_list
 
 try:
+    from matplotlib import get_backend
     from matplotlib import pyplot as plt
+
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
@@ -313,7 +315,11 @@ class QVFitter:
         ax.set_title(
             f'Quantum Volume for up to {len(self._qubit_lists[-1])} Qubits and '
             f'and {self._ntrials} Trials')
-        plt.close(fig)  # close additional figure
+
+        if fig:
+            if get_backend() in ['module://ipykernel.pylab.backend_inline',
+                             'nbAgg']:
+                plt.close(fig)
 
         if show_plt:
             plt.show()
