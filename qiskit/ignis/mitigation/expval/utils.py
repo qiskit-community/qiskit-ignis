@@ -43,12 +43,13 @@ def expectation_value(counts: Counts,
 
     Args:
         counts: counts object
-        diagonal: Optional, the vector of diagonal values for suming the
+        diagonal: Optional, the vector of diagonal values for summing the
                     expectation value. If ``None`` the the default value is
                     :math:`[1, -1]^\otimes n`.
-        qubits: Optional, the measured physical qubits the count bitstrings
-                correspond to. This is only used if a meas_mitigator is supplied.
-        clbits: Optional, marginalize counts to just these bits.
+        qubits: Optional, the measured physical qubits the count
+                bitstrings correspond to. If None qubits are assumed to be
+                :math:`[0, ..., n-1]`.
+        clbits: Optional, if not None marginalize counts to the specified bits.
         meas_mitigator: Optional, a measurement mitigator to apply mitigation.
 
     Returns:

@@ -62,12 +62,13 @@ class CompleteExpvalMeasMitigator(BaseExpvalMeasMitigator):
 
         Args:
             counts: counts object
-            diagonal: Optional, the vector of diagonal values for suming the
+            diagonal: Optional, the vector of diagonal values for summing the
                       expectation value. If ``None`` the the default value is
                       :math:`[1, -1]^\otimes n`.
             qubits: Optional, the measured physical qubits the count
-                    bitstrings correspond to.
-            clbits: Optional, marginalize counts to just these bits.
+                    bitstrings correspond to. If None qubits are assumed to be
+                    :math:`[0, ..., n-1]`.
+            clbits: Optional, if not None marginalize counts to the specified bits.
 
         Returns:
             (float, float): the expectation value and standard deviation.
