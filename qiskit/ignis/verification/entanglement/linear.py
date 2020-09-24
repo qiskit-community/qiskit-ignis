@@ -17,25 +17,30 @@ The module linear.py provides the linear
 preparation analogous of parallelize.py.
 """
 
+from typing import Tuple, List
 from qiskit.circuit import ClassicalRegister, QuantumRegister, Parameter
 from qiskit.circuit import QuantumCircuit
 
 
-def get_measurement_circ(n, qregname, cregname, full_measurement=True):
+def get_measurement_circ(n: int,
+                         qregname: str,
+                         cregname: str,
+                         full_measurement: bool = True
+                         ) -> QuantumCircuit:
     """
     Creates a measurement circuit that can toggle between
     measuring the first control qubit or measuring all qubits.
     The default is measurement of all qubits.
 
     Args:
-        n (int): number of qubits
-        qregname (str): The name to use for the quantum register
-        cregname (str): The name to use for the classical register
-        full_measurement (bool): Whether to append full measurement, or only on
+        n: number of qubits
+        qregname: The name to use for the quantum register
+        cregname: The name to use for the classical register
+        full_measurement: Whether to append full measurement, or only on
             the first qubit.
 
     Returns:
-        QuantumCircuit: The measurement suffix for a circuit
+        The measurement suffix for a circuit
     """
     q = QuantumRegister(n, qregname)
     if full_measurement:
@@ -52,18 +57,21 @@ def get_measurement_circ(n, qregname, cregname, full_measurement=True):
     return meas
 
 
-def get_ghz_simple(n, measure=True, full_measurement=True):
+def get_ghz_simple(n: int,
+                   measure: bool = True,
+                   full_measurement: bool = True
+                   ) -> QuantumCircuit:
     """
     Creates a linear GHZ state with the option of measurement
 
     Args:
-        n (int): number of qubits
-        measure (bool): Whether to add measurement gates
-        full_measurement (bool): Whether to append full measurement, or only on
+        n: number of qubits
+        measure: Whether to add measurement gates
+        full_measurement: Whether to append full measurement, or only on
             the first qubit. Relevant only for measure=True
 
     Returns:
-        QuantumCircuit: A linear GHZ Circuit
+        A linear GHZ Circuit
     """
     q = QuantumRegister(n, 'q')
     circ = QuantumCircuit(q)
@@ -77,10 +85,22 @@ def get_ghz_simple(n, measure=True, full_measurement=True):
     return circ
 
 
-def get_ghz_mqc(n, delta, full_measurement):
+def get_ghz_mqc(n: int,
+                delta: float,
+                full_measurement: bool = True
+                ) -> QuantumCircuit:
     """
     This function creates an MQC circuit with n qubits,
     where the middle phase rotation around the z axis is by delta
+
+    Args:
+        n: number of qubits
+        delta: the rotation of the middle phase around the z axis
+        full_measurement: Whether to append full measurement, or only
+            on the first qubit.
+
+    Returns:
+       The MQC circuit
     """
     q = QuantumRegister(n, 'q')
     circ = get_ghz_simple(n, measure=False)
@@ -95,19 +115,20 @@ def get_ghz_mqc(n, delta, full_measurement):
     return circ
 
 
-def get_ghz_mqc_para(n, full_measurement=True):
+def get_ghz_mqc_para(n: int,
+                     full_measurement: bool = True
+                     ) -> Tuple[QuantumCircuit, Parameter]:
     """
     This function creates an MQC circuit with n qubits,
-    where the middle phase rotation around the z axis is by delta
+    where the middle phase rotation around the z axis is parameterized
 
     Args:
-        n (int): number of qubits
-        full_measurement (bool): Whether to append full measurement, or only
+        n: number of qubits
+        full_measurement: Whether to append full measurement, or only
             on the first qubit.
 
     Returns:
-        tuple: A tuple of type (``QuantumCircuit``, ``Parameter``): An mqc
-            circuit and its Delta parameter
+        An mqc circuit and its Delta parameter
     """
     q = QuantumRegister(n, 'q')
     circ = get_ghz_simple(n, measure=False)
@@ -123,11 +144,18 @@ def get_ghz_mqc_para(n, full_measurement=True):
     return circ, delta
 
 
-def get_ghz_po(n, delta):
+def get_ghz_po(n: int, delta: float) -> QuantumCircuit:
     """
     This function creates an Parity Oscillation circuit
     with n qubits, where the middle superposition rotation around
     the x and y axes is by delta
+
+    Args:
+        n: number of qubits
+        delta: the middle superposition rotation
+
+    Returns:
+        The Parity Oscillation circuit
     """
     q = QuantumRegister(n, 'q')
     circ = get_ghz_simple(n, measure=False)
@@ -140,7 +168,7 @@ def get_ghz_po(n, delta):
     return circ
 
 
-def get_ghz_po_para(n):
+def get_ghz_po_para(n: int) -> Tuple[QuantumCircuit, List[Parameter]]:
     """
     This function creates a Parity Oscillation circuit with n qubits,
     where the middle superposition rotation around
@@ -148,11 +176,10 @@ def get_ghz_po_para(n):
     the x and y axes is by delta
 
     Args:
-        n (int): number of qubits
+        n: number of qubits
 
     Returns:
-        tuple: A tuple of type (``QuantumCircuit``, ``list``) containing a
-            parity oscillation circuit and its Delta/minus-delta parameters
+        The parity oscillation circuit and its Delta/minus-delta parameters
     """
     q = QuantumRegister(n, 'q')
     delta = Parameter('t')
