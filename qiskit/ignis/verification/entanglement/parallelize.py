@@ -28,6 +28,7 @@ It may be more suitable to put this module in Terra rather
 than Ignis.
 """
 
+from typing import Tuple, List, Dict
 from qiskit.circuit import ClassicalRegister, QuantumRegister, Parameter
 from qiskit.circuit import QuantumCircuit
 from qiskit.compiler import transpile
@@ -43,20 +44,20 @@ class BConfig:
         self.nodes = {}
         self.backend = backend
         self.cmap = backend.configuration().coupling_map
-        self.initialize_nodes()
+        self._initialize_nodes()
         self.indicator = indicator
 
-    def initialize_nodes(self):
+    def _initialize_nodes(self):
         """
         Initializes the nodes to the dictionary based on coupling map
         """
         self.nodes = {}
-        for i in range(len(self.cmap_calib())):
-            self.nodes[self.cmap_calib()[i][0]] = []
-        for i in range(len(self.cmap_calib())):
-            self.nodes[self.cmap_calib()[i][0]].append(self.cmap_calib()[i][1])
+        for i in range(len(self._cmap_calib())):
+            self.nodes[self._cmap_calib()[i][0]] = []
+        for i in range(len(self._cmap_calib())):
+            self.nodes[self._cmap_calib()[i][0]].append(self._cmap_calib()[i][1])
 
-    def cmap_calib(self):
+    def _cmap_calib(self):
         """
         Only intended for public devices (doubling and reversing
         each item in coupling map), but useful to run anyway
@@ -68,7 +69,7 @@ class BConfig:
         cmap_new.sort(key=lambda x: x[0])
         return cmap_new
 
-    def get_best_node(self):
+    def _get_best_node(self):
         """
         First node with the most connections; Does not yet sort
         based on error, but that is probably not too useful
@@ -82,21 +83,21 @@ class BConfig:
                 pass
         return best_node
 
-    def indicator_off(self):
+    def _indicator_off(self):
         """
         We turn off gate-based sorting of the tier_dict
         """
 
         self.indicator = False
 
-    def indicator_on(self):
+    def _indicator_on(self):
         """
         We turn on gate-based sorting of the tier_dict
         """
 
         self.indicator = True
 
-    def get_cx_error(self):
+    def _get_cx_error(self):
         """
         Gets dict of relevant CNOT gate errors
         """
@@ -118,7 +119,7 @@ class BConfig:
 
         return cxerrordict
 
-    def get_cx_length(self):
+    def _get_cx_length(self) -> Dict:
         """
         Gets dict of relevant CNOT gate lengths
         """
@@ -140,14 +141,14 @@ class BConfig:
 
         return cxlengthdict
 
-    def child_sorter(self, children, parent):
+    def _child_sorter(self, children, parent):
         """
         Sorts children nodes based on error/length
         """
 
-        return sorted(children, key=lambda child: self.get_cx_error()[(child, parent)])
+        return sorted(children, key=lambda child: self._get_cx_error()[(child, parent)])
 
-    def get_tier_dict(self):
+    def get_tier_dict(self) -> Dict:
         """
         Take the nodes of the BConfig to create a Tier Dictionary,
         where keys are the steps in the process,
@@ -156,7 +157,7 @@ class BConfig:
         backend's GHZ state is parallelized.
 
         Returns:
-            dict: Tier dictionary - [step in process, control-target connection]
+            Tier dictionary - [step in process, control-target connection]
                 Facilitates parallelized GHZ circuits
         """
 
@@ -164,11 +165,11 @@ class BConfig:
         tier_DM = {}
         length = len(self.nodes.keys())
         trashlist = []
-        tier[0] = (self.get_best_node())
-        tier_DM[self.get_best_node()] = 0
+        tier[0] = (self._get_best_node())
+        tier_DM[self._get_best_node()] = 0
 
-        trashlist.append(self.get_best_node())
-        parent = self.get_best_node()
+        trashlist.append(self._get_best_node())
+        parent = self._get_best_node()
 
         tier = {x: [[]] for x in range(length)}
 
@@ -180,7 +181,7 @@ class BConfig:
             for parent in parentlist:
                 children = self.nodes[parent]
                 if self.indicator:
-                    children = self.child_sorter(children, parent)
+                    children = self._child_sorter(children, parent)
                 totalchildren += children
                 children = [a for a in children if a not in trashlist]
                 j = tier_DM[parent]
@@ -208,17 +209,21 @@ class BConfig:
 
         return tier
 
-    def get_ghz_layout(self, n, transpiled=True, barriered=True):
+    def get_ghz_layout(self,
+                       n: int,
+                       transpiled: bool = True,
+                       barriered: bool = True
+                       ) -> Tuple[QuantumCircuit, Dict]:
         """
         Feeds the Tier Dict of the backend to create a basic
         qiskit GHZ circuit with no measurement;
         Args:
-           n (int): number of qubits
-           transpiled (bool): toggle on/off transpilation - useful for tomography
-           barriered (bool): yes/no whether to barrier each step of CNOT gates
+           n: number of qubits
+           transpiled: toggle on/off transpilation - useful for tomography
+           barriered: yes/no whether to barrier each step of CNOT gates
 
         Returns:
-           QuantumCircuit: A GHZ Circuit
+           A GHZ Circuit and its initial GHZ layout
        """
 
         tierdict = self.get_tier_dict()
@@ -257,12 +262,27 @@ class BConfig:
 
         return circ, initial_layout
 
-    def get_measurement_circ(self, n, qregname, cregname, full_measurement=True):
+    def get_measurement_circ(self,
+                             n: int,
+                             qregname: str,
+                             cregname: str,
+                             full_measurement: bool = True
+                             ) -> QuantumCircuit:
         """
         Creates a measurement circuit that can toggle
         between measuring the control qubit
         or measuring all qubits. The default is
         measurement of all qubits.
+
+        Args:
+            n: number of qubits
+            qregname: name of the qubit register
+            cregname: name of the classical register
+            full_measurement: Whether to append full measurement, or
+                only on the first qubit
+
+        Returns:
+            The measurement circuit
         """
 
         q = QuantumRegister(n, qregname)
@@ -279,9 +299,23 @@ class BConfig:
         meas.measure(q[0], cla)
         return meas
 
-    def get_ghz_mqc(self, n, delta, full_measurement=True):
+    def get_ghz_mqc(self,
+                    n: int,
+                    delta: float,
+                    full_measurement: bool = True
+                    ) -> Tuple[QuantumCircuit, Dict]:
         """
-        Get MQC circuit
+        This function creates an MQC circuit with n qubits,
+        where the middle phase rotation around the z axis is by delta
+
+        Args:
+            n: number of qubits
+            delta: the rotation of the middle phase around the z axis
+            full_measurement: Whether to append full measurement, or
+                only on the first qubit
+
+        Returns:
+            The MQC circuit and the initial GHZ layout
         """
 
         circ, initial_layout = self.get_ghz_layout(n)
@@ -306,18 +340,21 @@ class BConfig:
 
         return new_circ, initial_layout
 
-    def get_ghz_mqc_para(self, n, full_measurement=True):
+    def get_ghz_mqc_para(self,
+                         n: int,
+                         full_measurement: bool = True
+                         ) -> Tuple[QuantumCircuit, Parameter, Dict]:
         """
         Get a parametrized MQC circuit.
         Remember that get_counts() method accepts
         an index now, not a circuit
 
         Args:
-            n (int): number of qubits
-            full_measurement (bool): Whether to append full measurement, or
+            n: number of qubits
+            full_measurement: Whether to append full measurement, or
                 only on the first qubit
         Returns:
-            QuantumCircuit: A GHZ Circuit
+            The MQC circuit, its delta parameter, and the initial GHZ layout
         """
 
         circ, initial_layout = self.get_ghz_layout(n)
@@ -339,9 +376,21 @@ class BConfig:
         new_circ = circ + rotate + circ.inverse() + meas
         return new_circ, delta, initial_layout
 
-    def get_ghz_po(self, n, delta):
+    def get_ghz_po(self,
+                   n: int,
+                   delta: float,
+                   ) -> Tuple[QuantumCircuit, Dict]:
         """
-        Get Parity Oscillation circuit
+        This function creates an Parity Oscillation circuit
+        with n qubits, where the middle superposition rotation around
+        the x and y axes is by delta
+
+        Args:
+            n: number of qubits
+            delta: the middle superposition rotation
+
+        Returns:
+            The Parity Oscillation circuit and the initial GHZ layout
         """
 
         circ, initial_layout = self.get_ghz_layout(n)
@@ -364,18 +413,19 @@ class BConfig:
 
         return new_circ, initial_layout
 
-    def get_ghz_po_para(self, n):
+    def get_ghz_po_para(self,
+                        n: int
+                        ) -> Tuple[QuantumCircuit, List[Parameter], Dict]:
         """
         Get a parametrized PO circuit. Remember that get_counts()
         method accepts an index now, not a circuit.
         The two phase parameters are a quirk of the Parameter module
 
         Args:
-            n (int): number of qubits
+            n: number of qubits
 
         Returns:
-            tuple: A tuple of type (``QuantumCircuit``, ``list``, ``dict``) A
-                parity oscillation circuit, its Delta/minus-delta parameters,
+            A parity oscillation circuit, its Delta/minus-delta parameters,
                 and the initial ghz layout
         """
 
@@ -399,16 +449,20 @@ class BConfig:
         new_circ = circ + rotate + meas
         return new_circ, [delta, deltaneg], initial_layout
 
-    def get_ghz_simple(self, n, full_measurement):
+    def get_ghz_simple(self,
+                       n: int,
+                       full_measurement: bool = True
+                       ) -> Tuple[QuantumCircuit, QuantumRegister, Dict]:
         """
         Get simple GHZ circuit with measurement
 
         Args:
-            n (int): number of qubits
-            full_measurement (bool): Whether to append full measurement, or
+            n: number of qubits
+            full_measurement: Whether to append full measurement, or
                 only on the first qubit
         Returns:
-           QuantumCircuit: A GHZ Circuit
+           A GHZ Circuit, its measurement circle quantum register
+           and the initial GHZ layout
         """
 
         circ, initial_layout = self.get_ghz_layout(n)

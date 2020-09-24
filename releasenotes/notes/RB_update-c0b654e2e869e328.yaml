@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    The :func:`qiskit.ignis.verification.randomized_benchmarking.randomized_benchmarking_seq`
+    function allows an optional input of gate objects as `interleaved_elem`.
+    In addition, the CNOT-Dihedral class
+    :class:`qiskit.ignis.verification.randomized_benchmarking.CNOTDihedral`
+    has a new method `to_instruction`, and the existing `from_circuit` method has
+    an optional input of an `Instruction` (in addition to `QuantumCircuit`).

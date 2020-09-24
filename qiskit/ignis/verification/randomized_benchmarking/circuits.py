@@ -25,7 +25,7 @@ from warnings import warn
 import numpy as np
 from numpy.random import RandomState
 import qiskit
-from qiskit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, Instruction
 
 
 from .rb_groups import RBgroup
@@ -81,9 +81,9 @@ def check_pattern(pattern, is_purity=False, interleaved_elem=None):
     Args:
         pattern (list): RB pattern
         is_purity (bool): True only for purity rb (default is False)
-        interleaved_elem (List[qiskit.QuantumCircuit]):
-            or List[qiskit.quantum_info.operators.symplectic.Clifford]
-            or List[CNOTDihedral]]].
+        interleaved_elem (List[QuantumCircuit]):
+            or List[Instruction], or List[CNOTDihedral]]]) or
+            List[qiskit.quantum_info.operators.symplectic.Clifford].
             not None only for interleaved RB
 
     Raises:
@@ -126,9 +126,10 @@ def check_pattern(pattern, is_purity=False, interleaved_elem=None):
 def handle_interleaved_elem(interleaved_elem, rb_group):
     """ Handle the various types of the interleaved element
 
-        Args:
-        interleaved_elem (Optional[Union[List[qiskit.QuantumCircuit],
-            List[qiskit.quantum_info.operators.symplectic.Clifford], List[CNOTDihedral]]]):
+    Args:
+        interleaved_elem (List[QuantumCircuit]):
+            or List[Instruction], or List[CNOTDihedral]]]) or
+            List[qiskit.quantum_info.operators.symplectic.Clifford].
             not None only for interleaved RB
         rb_group (RBgroup): the relevant RBgroup class object
 
@@ -148,7 +149,7 @@ def handle_interleaved_elem(interleaved_elem, rb_group):
 
     else:
         for elem in interleaved_elem:
-            if isinstance(elem, QuantumCircuit):
+            if isinstance(elem, (QuantumCircuit, Instruction)):
                 num_qubits = elem.num_qubits
                 qc = elem
                 elem = rb_group.iden(num_qubits)
@@ -198,15 +199,15 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                 interleaved_gates: Optional[List[List[str]]] = None,
                                 interleaved_elem:
                                 Optional[
-                                    Union[List[qiskit.QuantumCircuit],
+                                    Union[List[QuantumCircuit], List[Instruction],
                                           List[qiskit.quantum_info.operators.symplectic.Clifford],
                                           List[CNOTDihedral]]] = None,
                                 is_purity: bool = False,
                                 group_gates: Optional[str] = None,
                                 rand_seed: Optional[Union[int, RandomState]] = None) -> \
-        (List[List[qiskit.QuantumCircuit]], List[List[int]],
-         Optional[List[List[qiskit.QuantumCircuit]]],
-         Optional[List[List[List[qiskit.QuantumCircuit]]]],
+        (List[List[QuantumCircuit]], List[List[int]],
+         Optional[List[List[QuantumCircuit]]],
+         Optional[List[List[List[QuantumCircuit]]]],
          Optional[int]):
     """Generate generic randomized benchmarking (RB) sequences.
 
@@ -260,7 +261,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
         interleaved_gates: Deprecated.
             Please use the ``interleaved_elem`` kwarg that supersedes it.
 
-        interleaved_elem: An list of QuantumCircuits or group elements
+        interleaved_elem: A list of QuantumCircuits or gate objects or group elements
             that will be interleaved.
             It is not ``None`` only for interleaved randomized benchmarking.
             The lengths of the lists should be equal to the length of the
@@ -342,6 +343,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
         .. code-block::
 
             rb_pattern = [[0,3],[2],[1]]
+
+            # as a QuantumCircuit:
             qc_cx = QuantumCircuit(2)
             qc_cx.cx(0, 1)
             qc_x = QuantumCircuit(1)
@@ -350,6 +353,9 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             qc_h.h(0)
 
             interleaved_elem = [qc_cx, qc_x, qc_h]
+
+            # or as gate objects:
+            interleaved_elem = [CXGate(), XGate(), HGate()]
 
         Interleave the 2-qubit gate ``cx`` on qubits Q0 and Q3,
         a 1-qubit gate ``x`` on qubit Q2,
@@ -434,6 +440,9 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
 
                 for _ in range(length_multiplier[rb_pattern_index]):
+                    # make the seed unique for each element
+                    if rand_seed:
+                        rand_seed += (seed + 1)
                     new_elmnt = rb_group.random(rb_q_num, rand_seed)
                     Elmnts[rb_pattern_index] = rb_group.compose(
                         Elmnts[rb_pattern_index], new_elmnt)
