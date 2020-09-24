@@ -26,7 +26,9 @@ from qiskit import QiskitError
 from ...utils import build_counts_dict_from_list
 
 try:
+    from matplotlib import get_backend
     from matplotlib import pyplot as plt
+
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
@@ -256,16 +258,24 @@ class QVFitter:
                                         (1.0-self._ydata[2][depthidx])
                                         / self._ntrials)**0.5
 
-    def plot_qv_data(self, ax=None, show_plt=True):
-        """
-        Plot the qv data as a function of depth
+    def plot_qv_data(self, ax=None, show_plt=True, figsize=(7, 5), set_title=True, title=None):
+        """Plot the qv data as a function of depth
 
         Args:
             ax (Axes or None): plot axis (if passed in).
             show_plt (bool): display the plot.
+            figsize (tuple): Figure size in inches.
+            set_title (bool): set figure title.
+            title (String or None): text for setting figure title
 
         Raises:
             ImportError: If matplotlib is not installed.
+
+        Returns:
+            matplotlib.Figure:
+                A figure of Quantum Volume data (heavy
+                output probability) with two-sigma error
+                bar as a function of circuit depth.
         """
 
         if not HAS_MATPLOTLIB:
@@ -273,40 +283,54 @@ class QVFitter:
                               'Run "pip install matplotlib" before.')
 
         if ax is None:
-            plt.figure()
-            ax = plt.gca()
+            fig, ax = plt.subplots(figsize=figsize)
+        else:
+            fig = None
 
         xdata = range(len(self._depths))
 
         # Plot the experimental data with error bars
         ax.errorbar(xdata, self._ydata[0],
-                    yerr=self._ydata[1],
-                    color='r', linestyle=None, marker='o', markersize=5,
-                    label='Exp')
+                    yerr=self._ydata[1]*2,
+                    color='r', marker='o',
+                    markersize=6, capsize=5,
+                    elinewidth=2, label='Exp (2$\\sigma$ error)')
 
         # Plot the ideal data with error bars
         ax.errorbar(xdata, self._ydata[2],
-                    yerr=self._ydata[3],
-                    color='b', linestyle=None, marker='o', markersize=5,
-                    label='Ideal')
+                    yerr=self._ydata[3]*2,
+                    color='b', marker='v',
+                    markersize=6, capsize=5,
+                    elinewidth=2, label='Ideal (2$\\sigma$ error)')
 
         # Plot the threshold
-        ax.plot(xdata,
-                np.ones(len(xdata))*2.0/3.0,
-                color='black', linestyle='--', linewidth=2, label='Threshold')
-        ax.tick_params(labelsize=14)
+        ax.axhline(2/3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
 
         ax.set_xticks(xdata)
         ax.set_xticklabels(self._qubit_lists, rotation=45)
 
-        ax.set_xlabel('Qubit Subset', fontsize=16)
-        ax.set_ylabel('Heavy Probability', fontsize=16)
+        ax.set_xlabel('Qubit Subset', fontsize=14)
+        ax.set_ylabel('Heavy Output Probability', fontsize=14)
         ax.grid(True)
 
         ax.legend()
 
+        if set_title:
+            if title is None:
+                title = (
+                    f'Quantum Volume for up to {len(self._qubit_lists[-1])} Qubits '
+                    f'and {self._ntrials} Trials')
+            ax.set_title(title)
+
+        if fig:
+            if get_backend() in ['module://ipykernel.pylab.backend_inline',
+                                 'nbAgg']:
+                plt.close(fig)
+
         if show_plt:
             plt.show()
+
+        return fig
 
     def qv_success(self):
         """Return whether each depth was successful (> 2/3 with confidence
