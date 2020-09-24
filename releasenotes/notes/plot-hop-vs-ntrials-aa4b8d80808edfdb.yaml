@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    The :meth:`qiskit.ignis.verification.quantum_volume.QVFitter.plot_hop_accumulative` method
+    has been added to plot heavy output probability (HOP) vs number of trials similar to
+    Figure 2a of Quantum Volume 64 paper (`arXiv:2008.08571 <https://arxiv.org/abs/2008.08571>`_).
+    HOP of individual trials are plotted as scatters and cummulative HOP are plotted in red line.
+    Two-sigma confidence intervals are plotted as shaded area and 2/3 success threshold is plotted
+    as dashed line.

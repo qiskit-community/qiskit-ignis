@@ -55,6 +55,7 @@ class QVFitter:
         self._heavy_output_counts = {}
         self._circ_shots = {}
         self._heavy_output_prob_ideal = {}
+        self._heavy_output_prob_exp = {}
         self._ydata = []
         self._heavy_outputs = {}
         self.add_statevectors(statevector_result)
@@ -214,11 +215,15 @@ class QVFitter:
                 self._circ_shots[circ_name] = \
                     sum(circ_counts[circ_name].values())
 
-                # calculate the heavy output probability
+                # calculate the experimental heavy output counts
                 self._heavy_output_counts[circ_name] = \
                     self._subset_probability(
                         self._heavy_outputs[circ_name],
                         circ_counts[circ_name])
+
+                # calculate the experimental heavy output probability
+                self._heavy_output_prob_exp[circ_name] = \
+                    self._heavy_output_counts[circ_name] / self._circ_shots[circ_name]
 
     def calc_statistics(self):
         """
@@ -329,6 +334,76 @@ class QVFitter:
 
         if show_plt:
             plt.show()
+
+        return fig
+
+    def plot_hop_accumulative(self, depth, ax=None, figsize=(7, 5)):
+        """Plot individual and accumulative heavy output probability (HOP)
+        as a function of number of trials
+
+        Args:
+            depth (int): depth of QV circuits
+            ax (Axes or None): plot axis (if passed in).
+            figsize (tuple): figure size in inches.
+
+        Raises:
+            ImportError: If matplotlib is not installed.
+
+        Returns:
+            matplotlib.Figure:
+                A figure of individual and accumulative HOP as a function of number of trials,
+                with 2-sigma confidence interval and 2/3 threshold.
+        """
+
+        if not HAS_MATPLOTLIB:
+            raise ImportError('The function plot_hop_accumulative needs matplotlib. '
+                              'Run "pip install matplotlib" before.')
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        else:
+            fig = None
+
+        trial_list = np.arange(self._ntrials)  # x data
+        hop_list = []  # y data
+
+        for trial_index in range(self._ntrials):
+            circ_name = f'qv_depth_{depth}_trial_{trial_index}'
+            hop_list.append(self._heavy_output_prob_exp[circ_name])
+
+        hop_accumulative = np.cumsum(hop_list) / np.arange(1, self._ntrials+1)
+        two_sigma = 2 * (hop_accumulative * (1 - hop_accumulative) /
+                         np.arange(1, self._ntrials+1))**0.5
+
+        # plot two-sigma shaded area
+        ax.errorbar(trial_list, hop_accumulative, fmt="none", yerr=two_sigma, ecolor='lightgray',
+                    elinewidth=20, capsize=0, alpha=0.5, label='2$\\sigma$')
+        # plot accumulative HOP
+        ax.plot(trial_list, hop_accumulative, color='r', label='Cumulative HOP')
+        # plot inidivual HOP as scatter
+        ax.scatter(trial_list, hop_list, s=3, zorder=3, label='Individual HOP')
+        # plot 2/3 success threshold
+        ax.axhline(2/3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
+
+        ax.set_xlim(0, self._ntrials)
+        ax.set_ylim(hop_accumulative[-1]-4*two_sigma[-1], hop_accumulative[-1]+4*two_sigma[-1])
+
+        ax.set_xlabel('Number of Trials', fontsize=14)
+        ax.set_ylabel('Heavy Output Probability', fontsize=14)
+
+        ax.set_title(f'Quantum Volume {2**depth} Trials', fontsize=14)
+
+        # re-arrange legend order
+        handles, labels = ax.get_legend_handles_labels()
+        handles = [handles[1], handles[2], handles[0], handles[3]]
+        labels = [labels[1], labels[2], labels[0], labels[3]]
+        ax.legend(handles, labels)
+
+        # Only close mpl figures in jupyter with inline backends
+        if fig:
+            if get_backend() in ['module://ipykernel.pylab.backend_inline',
+                                 'nbAgg']:
+                plt.close(fig)
 
         return fig
 
