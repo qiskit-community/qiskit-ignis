@@ -27,6 +27,7 @@ from qiskit.visualization import plot_histogram
 from ...utils import build_counts_dict_from_list
 
 try:
+    from matplotlib import get_backend
     from matplotlib import pyplot as plt
     from matplotlib.patches import Rectangle
     HAS_MATPLOTLIB = True
@@ -357,7 +358,11 @@ class QVFitter:
         ax1.legend()
         ax1.set_title(f'Quantum Volume {2**depth}, Trial #{trial_index}', fontsize=14)
 
-        plt.close(fig)  # close additional figure
+        # Only close mpl figures in jupyter with inline backends
+        if fig:
+            if get_backend() in ['module://ipykernel.pylab.backend_inline',
+                                 'nbAgg']:
+                plt.close(fig)
 
         return fig
 
