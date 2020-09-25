@@ -392,7 +392,7 @@ class QVFitter:
 
     def plot_hop_accumulative(self, depth, ax=None, figsize=(7, 5)):
         """Plot individual and accumulative heavy output probability (HOP)
-        as a function of number of trials
+        as a function of number of trials.
 
         Args:
             depth (int): depth of QV circuits
