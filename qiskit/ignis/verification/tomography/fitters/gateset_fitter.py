@@ -55,17 +55,23 @@ class GatesetTomographyFitter:
             collected by the backend, the circuits on which it operated
             and the gateset basis used when collecting the data.
 
-        Example:
-            >> gate = HGate()
-            >> basis = default_gateset_basis()
-            >> basis.add_gate(gate)
-            >> backend = ...
-            >> circuits = gateset_tomography_circuits(gateset_basis=basis)
-            >> qobj = assemble(circuits, shots=10000)
-            >> result = backend.run(qobj).result()
-            >> fitter = GatesetTomographyFitter(result, circuits, basis)
-            >> result_gates = fitter.fit()
-            >> result_gate = result_gates[gate.name]
+        Example::
+
+            from qiskit.circuits.library.standard import *
+            from qiskit.ignis.verification.basis import default_gateset_basis
+            from qiskit.ignis.verification import gateset_tomography_circuits
+            from qiskit.ignis.verification import GateSetTomographyFitter
+
+            gate = HGate()
+            basis = default_gateset_basis()
+            basis.add_gate(gate)
+            backend = ...
+            circuits = gateset_tomography_circuits(gateset_basis=basis)
+            qobj = assemble(circuits, shots=10000)
+            result = backend.run(qobj).result()
+            fitter = GatesetTomographyFitter(result, circuits, basis)
+            result_gates = fitter.fit()
+            result_gate = result_gates[gate.name]
         """
         self.gateset_basis = gateset_basis
         if gateset_basis == 'default':

@@ -1,0 +1,22 @@
+---
+features:
+  - |
+    The :class:`qiskit.ignis.verification.QVFitter` method
+    :meth:`~qiskit.ignis.verification.QVFitter.plot_qv_data` has been updated to return a
+    ``matplotlib.Figure`` object. Previously, it would not return anything. By returning a figure
+    this makes it easier to integrate the visualizations into a larger ``matplotlib`` workflow.
+  - |
+    The error bars in the figure produced by the
+    :class:`qiskit.ignis.verification.QVFitter` method
+    :meth:`qiskit.ignis.verification.QVFitter.plot_qv_data` has been updated to represent
+    two-sigma confidence intervals. Previously, the error bars represent one-sigma confidence intervals.
+    The success criteria of Quantum Volume benchmarking requires heavy output probability > 2/3 with
+    one-sided two-sigma confidence (~97.7%). Changing error bars to represent two-sigma confidence
+    intervals allows easily identification of success in the figure.
+  - |
+    A new kwarg, ``figsize`` has been added to the
+    :class:`qiskit.ignis.verification.QVFitter` method
+    :meth:`qiskit.ignis.verification.QVFitter.plot_qv_data`. This kwarg takes in a tuple of the
+    form ``(x, y)`` where ``x`` and ``y`` are the dimension in inches to make the generated
+    plot.
+
