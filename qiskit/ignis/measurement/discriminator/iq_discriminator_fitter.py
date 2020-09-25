@@ -73,16 +73,23 @@ class IQDiscriminationFitter:
             raise QiskitError("Discriminator has not been fitted. Run `fit` first.")
         return self._discriminator
 
-    def fit(self, method, classifier=None):
-        """Fits the discriminator using self._xdata and self._ydata."""
+    def fit(self, method, classifier=None, states=2):
+        """Fits the discriminator using self._xdata and self._ydata.
+
+        Args:
+            method (str): Name of classifier.
+            classfier (sklearn classifer): Custom classifier for SklearnDiscriminator.
+            states (int): Number of states to discriminate into. Default is 2. Not
+                currently implemented.
+        """
         if method == "LDA":
-            self._discriminator = LDADiscriminator(self._cal_results, self._qubit_mask)
+            self._discriminator = LDADiscriminator(self._cal_results, self._qubit_mask, states)
         elif method == "QDA":
-            self._discriminator = QDADiscriminator(self._cal_results, self._qubit_mask)
+            self._discriminator = QDADiscriminator(self._cal_results, self._qubit_mask, states)
         elif method == "PCA":
-            self._discriminator = PCADiscriminator(self._cal_results, self._qubit_mask)
+            self._discriminator = PCADiscriminator(self._cal_results, self._qubit_mask, states)
         elif method == "sklearn":
-            self._discriminator = SklearnDiscriminator(self._cal_results, self._qubit_mask, classifier)
+            self._discriminator = SklearnDiscriminator(self._cal_results, self._qubit_mask, classifier, states)
         else:
             raise ValueError("Invalid method specified.")
         return self._discriminator

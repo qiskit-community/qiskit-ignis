@@ -17,16 +17,12 @@
 """
 IQ Discriminator module to discriminate date in the IQ Plane.
 """
-from abc import abstractmethod
-from typing import Union, List, Dict
-from collections import Counter
-
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from typing import Union, List
 
 from qiskit.exceptions import QiskitError
 from qiskit.ignis.measurement.discriminator.base_discriminator_fitter import \
     BaseDiscriminationFitter
-from qiskit.pulse import PulseError
 from qiskit.result import Result
 from qiskit.pulse.schedule import Schedule
 try:
@@ -37,7 +33,7 @@ except ImportError:
 
 
 class SklearnDiscriminator(BaseDiscriminationFitter):
-    """Quadratic discriminant analysis discriminator for IQ data."""
+    """Sklearn discriminator for IQ data."""
 
     def __init__(self, classifier, cal_results: Union[Result, List[Result]],
                  qubit_mask: List[int], expected_states: List[str] = None,
@@ -46,6 +42,8 @@ class SklearnDiscriminator(BaseDiscriminationFitter):
                  discriminator_parameters: dict = None, **serialized_dict):
         """
         Args:
+            classifier (sklearn classifier): Classifier. Must have fit and predict
+                methods.
             cal_results (Union[Result, List[Result]]): calibration results,
                 Result or list of Result used to fit the discriminator.
             qubit_mask (List[int]): determines which qubit's level 1 data to

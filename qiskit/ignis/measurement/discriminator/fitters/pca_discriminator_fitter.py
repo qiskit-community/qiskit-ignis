@@ -36,13 +36,14 @@ except ImportError:
 class PCADiscriminator(BaseDiscriminationFitter):
     """ Principle Component Analysis discriminator for level 1 data. """
 
-    def __init__(self, cal_results: Union[Result, List[Result]],
+    def __init__(self, states, cal_results: Union[Result, List[Result]],
                  qubit_mask: List[int], expected_states: List[str] = None,
                  standardize: bool = False,
                  schedules: Union[List[str], List[Schedule]] = None,
                  discriminator_parameters: dict = None,**serialized_dict):
         """
         Args:
+            states (int): Number of states to classify into. Default is 2.
             cal_results (Union[Result, List[Result]]): calibration results,
                 Result or list of Result used to fit the discriminator.
             qubit_mask (List[int]): determines which qubit's level 1 data to
