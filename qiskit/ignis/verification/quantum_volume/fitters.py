@@ -341,6 +341,8 @@ class QVFitter:
         if show_plt:
             plt.show()
 
+        return fig
+
     def plot_qv_trial(self, depth, trial_index, figsize=(7, 5)):
         """Plot individual trial.
         Args:
