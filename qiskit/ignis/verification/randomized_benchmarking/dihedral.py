@@ -340,7 +340,9 @@ class CNOTDihedral(BaseOperator):
            npj Quantum Inf 2, 16012 (2016).
     """
 
-    def __init__(self, data, validate=True):
+    def __init__(self, data):
+        """Initialize a CNOTDihedral operator object."""
+
         # Construct the identity element on num_qubits qubits.
         if isinstance(data, int):
             self._num_qubits = data
@@ -350,6 +352,10 @@ class CNOTDihedral(BaseOperator):
         self.linear = np.eye(self._num_qubits, dtype=np.int8)
         # binary shift, n coefficients in Z_2
         self.shift = np.zeros(self._num_qubits, dtype=np.int8)
+
+        # Initialize BaseOperator
+        dims = self._num_qubits * (2,)
+        super().__init__(dims, dims)
 
     def _z2matmul(self, left, right):
         """Compute product of two n x n z2 matrices."""
@@ -478,6 +484,16 @@ class CNOTDihedral(BaseOperator):
         out += ")\n"
         return out
 
+    def _add(self):
+        """Not implemented."""
+        raise NotImplementedError(
+            "{} does not support conjugatge".format(type(self)))
+
+    def _multiply(self):
+        """Not implemented."""
+        raise NotImplementedError(
+            "{} does not support conjugatge".format(type(self)))
+
     def to_circuit(self):
         """Return a QuantumCircuit implementing the CNOT-Dihedral element.
 
@@ -531,7 +547,7 @@ class CNOTDihedral(BaseOperator):
         """Convert to an Operator object."""
         return Operator(self.to_instruction())
 
-    def compose(self, other):
+    def compose(self, other, qargs=None):
         """Return the composed operator.
 
         Args:
@@ -553,7 +569,7 @@ class CNOTDihedral(BaseOperator):
         other.poly.weight_0 = 0  # set global phase
         return other
 
-    def dot(self, other):
+    def dot(self, other, qargs=None):
         """Return the right multiplied operator self * other.
 
         Args:
