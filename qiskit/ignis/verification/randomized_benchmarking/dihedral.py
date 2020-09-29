@@ -484,12 +484,12 @@ class CNOTDihedral(BaseOperator):
         out += ")\n"
         return out
 
-    def _add(self):
+    def _add(self, other, qargs=None):
         """Not implemented."""
         raise NotImplementedError(
             "{} does not support conjugatge".format(type(self)))
 
-    def _multiply(self):
+    def _multiply(self, other):
         """Not implemented."""
         raise NotImplementedError(
             "{} does not support conjugatge".format(type(self)))
@@ -547,11 +547,13 @@ class CNOTDihedral(BaseOperator):
         """Convert to an Operator object."""
         return Operator(self.to_instruction())
 
-    def compose(self, other, qargs=None):
+    def compose(self, other, qargs=None, front=False):
         """Return the composed operator.
 
         Args:
             other (CNOTDihedral): an operator object.
+            qargs (None).
+            front (None).
         Returns:
             CNOTDihedral: The operator self @ other.
         Raises:
@@ -574,6 +576,7 @@ class CNOTDihedral(BaseOperator):
 
         Args:
             other (CNOTDihedral): an operator object.
+            qargs (None).
         Returns:
             CNOTDihedral: The operator self * other.
         Raises:
