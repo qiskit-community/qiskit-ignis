@@ -19,7 +19,7 @@ use the fitters to produce a filter.
 from typing import List, Tuple, Union
 from qiskit import QuantumRegister, ClassicalRegister, \
     QuantumCircuit, QiskitError
-from ...verification.tomography import count_keys
+from qiskit.ignis.verification.tomography import count_keys
 
 
 def complete_meas_cal(qubit_list: List[int] = None,
