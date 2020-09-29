@@ -552,8 +552,8 @@ class CNOTDihedral(BaseOperator):
 
         Args:
             other (CNOTDihedral): an operator object.
-            qargs (None).
-            front (None).
+            qargs (None): None.
+            front (None): None.
         Returns:
             CNOTDihedral: The operator self @ other.
         Raises:
@@ -576,7 +576,7 @@ class CNOTDihedral(BaseOperator):
 
         Args:
             other (CNOTDihedral): an operator object.
-            qargs (None).
+            qargs (None): None.
         Returns:
             CNOTDihedral: The operator self * other.
         Raises:
