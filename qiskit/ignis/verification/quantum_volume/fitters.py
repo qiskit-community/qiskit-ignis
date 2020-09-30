@@ -349,10 +349,8 @@ class QVFitter:
             depth(int): circuit depth
             trial_index(int): trial index
             figsize (tuple): Figure size in inches.
-            ax (matplotlib.axes.Axes): An optional Axes object to be used for
-                the visualization output. If none is specified a new matplotlib
-                Figure will be created and used. Additionally, if specified there
-                will be no returned Figure since it is redundant.
+            ax (Axes or None): plot axis (if passed in).
+
         Returns:
             matplotlib.Figure:
                 A figure for histogram of ideal and experiment probabilities.
