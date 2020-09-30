@@ -231,16 +231,14 @@ class SpecialPolynomial():
             offset_2 = int(indices[1] - indices[0] - 1)
             return self.weight_2[offset_1 + offset_2]
 
-        # sum({self.n_vars-j choose 2}, {j, 1, indices[0]})
-        offset_1 = int(indices[0] * (2 + indices[0]**2 - 3*indices[0] *
-                                     (self.n_vars - 1) -
-                                     6 * self.n_vars +
-                                     3 * self.n_vars**2)/6)
-        # sum(self.n_vars-j, {j, 2, indices[1]-indices[0]})
-        offset_2 = int((indices[1] - indices[0] - 1) *
-                       (2 * self.n_vars - indices[1] + indices[0] - 2)/2)
-        offset_3 = int(indices[2] - indices[1] - 1)
-        return self.weight_3[offset_1 + offset_2 + offset_3]
+        tmp_1 = self.n_vars - indices[0]
+        offset_1 = int((tmp_1 - 3) * (tmp_1 - 2) * (tmp_1 - 1) / 6)
+        tmp_2 = self.n_vars - indices[1]
+        offset_2 = int((tmp_2 - 2) * (tmp_2 - 1) / 2)
+        offset_3 = self.n_vars - indices[2]
+        offset = int(self.n_vars * (self.n_vars - 1) * (self.n_vars - 2) / 6 -
+                     offset_1 - offset_2 - offset_3)
+        return self.weight_3[offset]
 
     def set_term(self, indices, value):
         """Set the value of a term given the list of variables.
@@ -274,16 +272,14 @@ class SpecialPolynomial():
             offset_2 = int(indices[1] - indices[0] - 1)
             self.weight_2[offset_1 + offset_2] = value
         else:
-            # sum({self.n_vars-j choose 2}, {j, 1, indices[0]})
-            offset_1 = int(indices[0] * (2 + indices[0]**2 - 3*indices[0] *
-                                         (self.n_vars - 1) -
-                                         6 * self.n_vars +
-                                         3 * self.n_vars**2)/6)
-            # sum(self.n_vars-j, {j, 2, indices[1]-indices[0]})
-            offset_2 = int((indices[1] - indices[0] - 1) *
-                           (2 * self.n_vars - indices[1] + indices[0] - 2)/2)
-            offset_3 = int(indices[2] - indices[1] - 1)
-            self.weight_3[offset_1 + offset_2 + offset_3] = value
+            tmp_1 = self.n_vars - indices[0]
+            offset_1 = int((tmp_1 - 3) * (tmp_1 - 2) * (tmp_1 - 1) / 6)
+            tmp_2 = self.n_vars - indices[1]
+            offset_2 = int((tmp_2 - 2) * (tmp_2 - 1) / 2)
+            offset_3 = self.n_vars - indices[2]
+            offset = int(self.n_vars * (self.n_vars - 1) * (self.n_vars - 2) / 6 -
+                         offset_1 - offset_2 - offset_3)
+            self.weight_3[offset] = value
 
     @property
     def key(self):
