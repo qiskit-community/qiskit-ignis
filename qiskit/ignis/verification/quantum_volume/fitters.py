@@ -384,7 +384,7 @@ class QVFitter:
 
         # Only close mpl figures in jupyter with inline backends
         if get_backend() in ['module://ipykernel.pylab.backend_inline',
-                                'nbAgg']:
+                             'nbAgg']:
             plt.close(fig)
 
         return fig
