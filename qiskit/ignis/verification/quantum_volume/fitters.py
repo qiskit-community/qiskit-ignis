@@ -343,12 +343,16 @@ class QVFitter:
 
         return fig
 
-    def plot_qv_trial(self, depth, trial_index, figsize=(7, 5)):
+    def plot_qv_trial(self, depth, trial_index, figsize=(7, 5), ax=None):
         """Plot individual trial.
         Args:
             depth(int): circuit depth
             trial_index(int): trial index
             figsize (tuple): Figure size in inches.
+            ax (matplotlib.axes.Axes): An optional Axes object to be used for
+                the visualization output. If none is specified a new matplotlib
+                Figure will be created and used. Additionally, if specified there
+                will be no returned Figure since it is redundant.
         Returns:
             matplotlib.Figure:
                 A figure for histogram of ideal and experiment probabilities.
@@ -357,8 +361,10 @@ class QVFitter:
         ideal_data = self._all_output_prob_ideal[circ_name]
         exp_data = self._circ_counts[circ_name]
 
-        fig = plt.figure(figsize=figsize)
-        ax = plt.gca()
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        else:
+            fig = None
 
         # plot experimental histogram
         plot_histogram(exp_data, legend=['Exp'], ax=ax)
