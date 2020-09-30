@@ -358,29 +358,29 @@ class QVFitter:
         exp_data = self._circ_counts[circ_name]
 
         fig = plt.figure(figsize=figsize)
-        ax1 = plt.gca()
+        ax = plt.gca()
 
         # plot experimental histogram
-        plot_histogram(exp_data, legend=['Exp'], ax=ax1)
+        plot_histogram(exp_data, legend=['Exp'], ax=ax)
 
         # plot idea histogram overlap with experimental values
-        plot_histogram(ideal_data, legend=['Ideal'], bar_labels=False, ax=ax1, color='r')
+        plot_histogram(ideal_data, legend=['Ideal'], bar_labels=False, ax=ax, color='r')
 
         # get ideal histograms and change to unfilled
-        bars = [r for r in ax1.get_children() if isinstance(r, Rectangle)]
+        bars = [r for r in ax.get_children() if isinstance(r, Rectangle)]
         for i in range(int(len(bars)/2), len(bars)-1):
             bars[i].fill = False
             # set non-black edge color to increase bar labels legibility
             bars[i].set_edgecolor('saddlebrown')
 
         # show experimental heavy output probability to the legend
-        ax1.plot([], [], ' ', label=f'HOP~{self._heavy_output_prob_exp[circ_name]:.3f}')
+        ax.plot([], [], ' ', label=f'HOP~{self._heavy_output_prob_exp[circ_name]:.3f}')
 
         # plot median probability
         median_prob = self._median_probabilities([self._all_output_prob_ideal[circ_name]])
-        ax1.axhline(median_prob, color='r', linestyle='dashed', linewidth=1, label='Median')
-        ax1.legend()
-        ax1.set_title(f'Quantum Volume {2**depth}, Trial #{trial_index}', fontsize=14)
+        ax.axhline(median_prob, color='r', linestyle='dashed', linewidth=1, label='Median')
+        ax.legend()
+        ax.set_title(f'Quantum Volume {2**depth}, Trial #{trial_index}', fontsize=14)
 
         # Only close mpl figures in jupyter with inline backends
         if get_backend() in ['module://ipykernel.pylab.backend_inline',
