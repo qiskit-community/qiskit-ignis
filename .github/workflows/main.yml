@@ -131,7 +131,7 @@ jobs:
           path: ~/.cache/pip
           key: ${{ runner.os }}-${{ matrix.python-version }}-pip-tutorials-${{ hashFiles('setup.py','requirements-dev.txt','constraints.txt') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.python-version }}pip-tutorials-
+            ${{ runner.os }}-${{ matrix.python-version }}-pip-tutorials-
             ${{ runner.os }}-${{ matrix.python-version }}-pip-
             ${{ runner.os }}-${{ matrix.python-version }}-
       - name: Setup tutorials job
