@@ -692,6 +692,24 @@ class CNOTDihedral(BaseOperator):
         result = self.from_circuit(circ.reverse_ops())
         return result
 
+    def is_cnotdihedral(self):
+        """Return True if input is a CNOTDihedral element."""
+
+        assert self.poly.weight_0 == 0
+        assert len(self.poly.weight_1) == self.num_qubits
+        assert len(self.poly.weight_2) == int(self.num_qubits * (self.num_qubits - 1) / 2)
+        assert len(self.poly.weight_3) == int(self.num_qubits * (self.num_qubits - 1)
+                                              * (self.num_qubits - 2) / 6)
+        assert (self.linear).shape == (self.num_qubits, self.num_qubits)
+        assert len(self.shift) == self.num_qubits
+        assert np.linalg.det(self.linear) != 0
+        assert (set(self.poly.weight_1.flatten())).issubset({0, 1, 2, 3, 4, 5, 6, 7})
+        assert (set(self.poly.weight_2.flatten())).issubset({0, 2, 4, 6})
+        assert (set(self.poly.weight_3.flatten())).issubset({0, 4})
+        assert (set(self.shift.flatten())).issubset({0, 1})
+        assert (set(self.linear.flatten())).issubset({0, 1})
+        return True
+
 
 def make_dict_0(num_qubits):
     """Make the zero-CNOT dictionary.

@@ -302,11 +302,14 @@ class TestCNOTDihedral(unittest.TestCase):
         and to_circuit and from_circuit methods
         (where num_qubits < 3)
         """
-        for qubit_num in range(1, 5):
+        for qubit_num in range(1, 10):
             for nseed in range(20):
                 elem = random_cnotdihedral(qubit_num, seed=nseed)
-                self.assertTrue(elem,
+                self.assertIsInstance(elem, CNOTDihedral,
+                                      'Error: random element is not CNOTDihedral')
+                self.assertTrue(elem.is_cnotdihedral(),
                                 'Error: random element is not CNOTDihedral')
+
                 if qubit_num < 3:
                     test_circ = elem.to_circuit()
                     self.assertTrue(test_circ,
