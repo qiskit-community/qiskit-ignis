@@ -11,11 +11,11 @@ import qiskit.ignis.verification.quantum_volume as qv
 """
 Plan:
 
-1. find all connected subsets of backend
+1. Find all connected subsets of backend
 2. Get connectivity of a chosen subset of qubits
 3. Get fidelity of a chosen subset of qubits
 4. Calculate quantum volume for different subsets.
-5. Calculate the values for a chosen cost-function, idely theses values order
+5. Calculate the values for a chosen cost-function, ideally these values order
 the subset like the quantum volume.
 6. Change the cost-functions to improve the alignment between the order of the
 cost-function values and the quantum volume.
