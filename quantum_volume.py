@@ -8,8 +8,22 @@ from qiskit.providers.aer.noise.errors.standard_errors import depolarizing_error
 #Import the qv function
 import qiskit.ignis.verification.quantum_volume as qv
 
+"""
+Plan:
+
+1. find all connected subsets of backend
+2. Get connectivity of a chosen subset of qubits
+3. Get fidelity of a chosen subset of qubits
+4. Calculate quantum volume for different subsets.
+5. Calculate the values for a chosen cost-function, idely theses values order
+the subset like the quantum volume.
+6. Change the cost-functions to improve the alignment between the order of the
+cost-function values and the quantum volume.
+
+"""
+
 # qubit_lists: list of list of qubit subsets to generate QV circuits
-qubit_lists = [[0,1,3],[0,1,3,5],[0,1,3,5,7],[0,1,3,5,7,10]]
+qubit_lists = [[0,1,3], [0,1,3,5], [0,1,3,5,7], [0,1,3,5,7,10]]
 # ntrials: Number of random circuits to create for each subset
 ntrials = 50
 
@@ -68,8 +82,6 @@ qv_fitter.plot_qv_data(ax=ax, show_plt=False)
 ax.set_title('Quantum Volume for up to %d Qubits \n and %d Trials'%(len(qubit_lists[-1]), ntrials), fontsize=18)
 
 plt.show()
-
-print(qv_list)
 
 qv_success_list = qv_fitter.qv_success()
 qv_list = qv_fitter.ydata
