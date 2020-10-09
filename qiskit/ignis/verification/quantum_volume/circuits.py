@@ -169,9 +169,9 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
 
     if qubit_lists == None:
         # find layouts for a range of qubits from 2 up to max_qubits
-        best_layouts_list = [[] for tmp in range(max_qubits-1)]
-        for n_qubits in range(2, max_qubits+1, 1):
-            best_layouts_list[n_qubits-2] = get_layout(qv_circs, n_qubits, ntrials, backend,
+        best_layouts_list = [[] for tmp in range(max_qubits-2)]
+        for n_qubits in range(3, max_qubits+1, 1):
+            best_layouts_list[n_qubits-3] = get_layout(qv_circs, n_qubits, ntrials, backend,
                                                           transpile_trials=None, n_desired_layouts=1)
         # [[n_desired_layouts * Layouts], [n_desired_layouts * Layouts], [], [], [], []]
         qubit_lists = []
@@ -243,7 +243,7 @@ def get_layout(qv_circs, n_qubits, n_trials, backend, transpile_trials=None, n_d
     return sorted_layouts[:n_desired_layouts]
 
 
-    def get_layout_low_cost(num_qubits, backend, layout_method='noise_adaptive'):     
+def get_layout_low_cost(num_qubits, backend, layout_method='noise_adaptive'):
     """     
     Creates a mock circuit similar to the SU(4) circuit
     to be used with the transpiler allocation passes.
