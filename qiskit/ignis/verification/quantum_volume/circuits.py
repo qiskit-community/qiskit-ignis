@@ -108,55 +108,45 @@ def qv_circuits(qubit_lists, ntrials=1,
 
 
 def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
-                backend=None, qr=None, cr=None, seed=None, n_desired_layouts=1, nth_best=0):
+                backend=None, qr=None, cr=None, seed=None):
     """
     Return a list of quantum volume circuits transpiled on
-    for specific backend. The circuit will be square (depth=width)
-    as long as the user's specified layout doesn't require extra
-    qubits to perform any swaps needed. If  no user-specified layout is
-    provided, the function will try to find the best suitable qubtis.
+     for specific backend. The circuit will be square (depth=width)
+     as long as the user's specified layout doesn't require extra
+     qubits to perform any swaps needed. If  no user-specified layout is
+     provided, the function will try to find the best suitable qubtis.
 
     Args:
         qubit_lists (list): list of list of qubits to apply qv circuits to. Assume
             the list is ordered in increasing number of qubits
-
         ntrials (int): number of random iterations
-
         qr (QuantumRegister): quantum register to act on (if None one is created)
-
         cr (ClassicalRegister): classical register to measure to (if None one is created)
-
         seed (int): An optional RNG seed to use for the generated circuit
-
-        max_qubits (int): Will be used if the user doesn't specify their desired layout.
-            Minimum value is 2
-
+        max_qubits (int): Will be used if the user doesn't specify their desired layout. Minimum value is 2
         backend (IBMQBackend): A backend for the quantum volume circuits to be transpiled
-            for.
-
-        n_desired_layouts (int): Number of layouts chosen (with most occurencies)
-
-        nth_best (int): Choose the n-th best layout of the n_desired_layouts,
-            so n_desired_layouts > nth_best
+        for.
 
     Returns:
         tuple: A tuple of the type (``circuits``, ``circuits_nomeas``) wheere:
             ``circuits`` is a list of lists of circuits for the qv sequences
             (separate list for each trial) and `` circuitss_nomeas`` is the
             same circuits but with no measurements for the ideal simulation
-    """     
-    assert (n_desired_layouts > nth_best) , "Error: It needs to be n_desired_layouts > nth_best "
+    """
+    if backend.configuration().simulator:
+        return qv_circuits(qubit_lists, ntrials=ntrials)
 
     if seed:
         rng = np.random.default_rng(seed)
     else:
         _seed = None
-
     
     qv_circs = [[] for e in range(ntrials)]
     circuits_nomeas = [[] for e in range(ntrials)]
 
+    ql_cond = True
     if qubit_lists == None:
+        ql_cond = False
         depth_list = [i for i in range(2,max_qubits+1)]
 
     else:
@@ -182,15 +172,15 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
 
     if qubit_lists == None:
         # find layouts for a range of qubits from 2 up to max_qubits
-        best_layouts_list = [[] for tmp in range(max_qubits-2)]
-        for n_qubits in range(3, max_qubits+1, 1):
-            best_layouts_list[n_qubits-3] = get_layout(qv_circs, n_qubits, ntrials, backend,
-                transpile_trials=None, n_desired_layouts=n_desired_layouts)
+        best_layouts_list = [[] for tmp in range(max_qubits-1)]
+        for n_qubits in range(2, max_qubits+1, 1):
+            best_layouts_list[n_qubits-2] = get_layout(qv_circs, n_qubits, ntrials, backend,
+                                                          transpile_trials=None, n_desired_layouts=1)
         # [[n_desired_layouts * Layouts], [n_desired_layouts * Layouts], [], [], [], []]
         qubit_lists = []
 
         for good_layout in best_layouts_list:
-            qubit_lists.append(good_layout[nth_best])
+            qubit_lists.append(good_layout[0])
 
     else:
         warnings.warn("The choice of the qubit list may result in extra swaps and extra qubits"
@@ -209,7 +199,10 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
 
             circuits[trial].append(qc)
 
-    return circuits, circuits_nomeas
+    if ql_cond==False:
+        return circuits, circuits_nomeas, qubit_lists
+    else:
+        return circuits, circuits_nomeas
 
 
 def get_layout(qv_circs, n_qubits, n_trials, backend, transpile_trials=None, n_desired_layouts=1):
@@ -255,46 +248,6 @@ def get_layout(qv_circs, n_qubits, n_trials, backend, transpile_trials=None, n_d
 
     return sorted_layouts[:n_desired_layouts]
 
-
-def get_layout_low_cost(num_qubits, backend, layout_method='noise_adaptive'):
-    """     
-    Creates a mock circuit similar to the SU(4) circuit
-    to be used with the transpiler allocation passes.
-
-    returns the initial_layour
-    """     
-    if (num_qubits > backend.configuration().n_qubits): 
-        return None     
-    
-    cct = QuantumCircuit(num_qubits)     
-    comb = combinations(range(num_qubits), 2)    
-
-    for i in comb:
-        for j in range(3):
-            cct.cx(i[0],i[1]) 
-            cct.u3(np.pi/2, np.pi/2,np.pi/2, i[0])
-            cct.u3(np.pi/2, np.pi/2,np.pi/2, i[1])         
- 
-    cct_meas = copy.deepcopy(cct)
-    cct_meas.measure_active()
-
-
-    pm = PassManager()
-    pm.append(Unroll3qOrMore())
-    
-    if layout_method == 'noise_adaptive':
-        pm.append(NoiseAdaptiveLayout(backend.properties()))
-    elif layout_method == 'dense':
-        pm.append(DenseLayout(CouplingMap(backend.configuration().coupling_map), backend.properties()))
-    elif layout_method == 'sabre':
-        pm.append(SabreLayout(CouplingMap(backend.configuration().coupling_map)))
-
-    
-    pm.run(cct_meas)
-    layout = list(pm.property_set['layout'].get_physical_bits().keys())
-
-    return layout
-
 if __name__ == "__main__":
     qubit_lists = [[0,1,3], [0,1,3,5], [0,1,3,5,7], [0,1,3,5,7,10]]
     # ntrials: Number of random circuits to create for each subset
@@ -303,6 +256,6 @@ if __name__ == "__main__":
     fake_backend = FakeMelbourne()
 
     qv_circs, qv_circs_nomeas = qv_circuits_opt(ntrials=ntrials, max_qubits=4,
-        backend=fake_backend, qr=None, cr=None, seed=None, n_desired_layouts=6, nth_best=5)
+                    backend=fake_backend)
     print("qv_circ[0]: ", qv_circs[0])
     print(qv_circs[0][0])
