@@ -1,5 +1,7 @@
 from qiskit.transpiler import PassManager
 from qiskit.transpiler.passes import Unroll3qOrMore, NoiseAdaptiveLayout
+from qiskit.providers.basebackend import BaseBackend
+
 
 def get_layout(qv_circs, n_qubits, n_trials, backend, transpile_trials=None, n_desired_layouts=1):
     """
@@ -9,7 +11,7 @@ def get_layout(qv_circs, n_qubits, n_trials, backend, transpile_trials=None, n_d
 
     qv_circs(int): qv circuits
     n_qubits(int): number qubits for which to find a layout
-    backend(): the backend onto which the QV measurement is done
+    backend(BaseBackend): the backend onto which the QV measurement is done
     n_trials(int): total number of trials for QV measurement
     transpile_trials(int): number of transpiler trials to search for a layout, less or equal to n_trials
     """
@@ -19,7 +21,7 @@ def get_layout(qv_circs, n_qubits, n_trials, backend, transpile_trials=None, n_d
         transpile_trials = n_trials
 
     for idx, qv in enumerate(qv_circs[0]):
-        if qv.n_qubits == n_qubits:
+        if qv.n_qubits >= n_qubits:
             n_qubit_idx = idx
             break
 
@@ -31,6 +33,7 @@ def get_layout(qv_circs, n_qubits, n_trials, backend, transpile_trials=None, n_d
         pm.append(NoiseAdaptiveLayout(backend.properties()))
         pm.run(qv_circs[trial][n_qubit_idx])
         layout = list(pm.property_set['layout'].get_physical_bits().keys())
+
         if layout in layouts_list:
             idx = layouts_list.index(layout)
             layouts_counts[idx] += 1
