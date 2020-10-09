@@ -43,3 +43,21 @@ def get_layout(qv_circs, n_qubits, n_trials, backend, transpile_trials=None, n_d
 
     return sorted_layouts[:n_desired_layouts]
 
+def mock_cct(num_qubits, backend):     
+    """     
+    Creates a mock circuit to figure out the best qubits    
+    """     
+    if (num_qubits > backend.configuration().n_qubits): 
+        return None     
+    
+    cct = QuantumCircuit(num_qubits)     
+    cct_meas = QuantumCircuit(num_qubits,num_qubits)      
+    comb = combinations(range(num_qubits), 2)    
+
+    for i in comb:         
+        cct.cx(i[0],i[1])         
+        cct_meas.cx(i[0],i[1])           
+
+    cct_meas.measure(range(num_qubits), range(num_qubits)) 
+    
+    return cct, cct_meas
