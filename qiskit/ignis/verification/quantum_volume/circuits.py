@@ -139,6 +139,7 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
 
     
     qv_circs = [[] for e in range(ntrials)]
+    circuits_nomeas = [[] for e in range(ntrials)]
 
     if qubit_lists == None:
         depth_list = [i for i in range(2,max_qubits+1)]
@@ -156,9 +157,12 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
 
             qv_circ = QuantumVolume(depth, depth, seed=_seed)
 
+            qc2 = copy.deepcopy(qv_circ)
+
             qv_circ.measure_active()
             qv_circ.name = 'qv_depth_%d_trial_%d' % (depth, trial)
-
+            qc2.name = qv_circ.name
+            circuits_nomeas[trial].append(qc2)
             qv_circs[trial].append(qv_circ)
 
     if qubit_lists == None:
@@ -189,7 +193,7 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
 
             circuits[trial].append(qc)
 
-    return circuits
+    return circuits, circuits_nomeas
 
 
 def get_layout(qv_circs, n_qubits, n_trials, backend, transpile_trials=None, n_desired_layouts=1):
