@@ -242,6 +242,46 @@ def get_layout(qv_circs, n_qubits, n_trials, backend, transpile_trials=None, n_d
 
     return sorted_layouts[:n_desired_layouts]
 
+
+    def get_layout_low_cost(num_qubits, backend, layout_method='noise_adaptive'):     
+    """     
+    Creates a mock circuit similar to the SU(4) circuit
+    to be used with the transpiler allocation passes.
+
+    returns the initial_layour
+    """     
+    if (num_qubits > backend.configuration().n_qubits): 
+        return None     
+    
+    cct = QuantumCircuit(num_qubits)     
+    comb = combinations(range(num_qubits), 2)    
+
+    for i in comb:
+        for j in range(3):
+            cct.cx(i[0],i[1]) 
+            cct.u3(np.pi/2, np.pi/2,np.pi/2, i[0])
+            cct.u3(np.pi/2, np.pi/2,np.pi/2, i[1])         
+ 
+    cct_meas = copy.deepcopy(cct)
+    cct_meas.measure_active()
+
+
+    pm = PassManager()
+    pm.append(Unroll3qOrMore())
+    
+    if layout_method == 'noise_adaptive':
+        pm.append(NoiseAdaptiveLayout(backend.properties()))
+    elif layout_method == 'dense':
+        pm.append(DenseLayout(CouplingMap(backend.configuration().coupling_map), backend.properties()))
+    elif layout_method == 'sabre':
+        pm.append(SabreLayout(CouplingMap(backend.configuration().coupling_map)))
+
+    
+    pm.run(cct_meas)
+    layout = list(pm.property_set['layout'].get_physical_bits().keys())
+
+    return layout
+
 if __name__ == "__main__":
     qubit_lists = [[0,1,3], [0,1,3,5], [0,1,3,5,7], [0,1,3,5,7,10]]
     # ntrials: Number of random circuits to create for each subset
