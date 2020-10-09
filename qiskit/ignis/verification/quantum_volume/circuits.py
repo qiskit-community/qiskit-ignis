@@ -242,11 +242,14 @@ def get_layout(qv_circs, n_qubits, n_trials, backend, transpile_trials=None, n_d
 
     return sorted_layouts[:n_desired_layouts]
 
-qubit_lists = [[0,1,3], [0,1,3,5], [0,1,3,5,7], [0,1,3,5,7,10]]
-# ntrials: Number of random circuits to create for each subset
-ntrials = 50
+if __name__ == "__main__":
+    qubit_lists = [[0,1,3], [0,1,3,5], [0,1,3,5,7], [0,1,3,5,7,10]]
+    # ntrials: Number of random circuits to create for each subset
+    ntrials = 50
 
-fake_backend = FakeMelbourne()
+    fake_backend = FakeMelbourne()
 
-qv_circs, qv_circs_nomeas = qv_circuits_opt(ntrials=ntrials, max_qubits=4,
-                backend=fake_backend)
+    qv_circs, qv_circs_nomeas = qv_circuits_opt(ntrials=ntrials, max_qubits=4,
+                    backend=fake_backend)
+    print("qv_circ[0]: ", qv_circs[0])
+    print(qv_circs[0][0])
