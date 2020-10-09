@@ -102,3 +102,70 @@ def qv_circuits(qubit_lists, ntrials=1,
             circuits[trial].append(qc)
 
     return circuits, circuits_nomeas
+
+def qv_circuits_opt(qubit_lists=None, ntrials=1, num_qubits=1,
+                backend=None, qr=None, cr=None, seed=None):
+    """
+    Return a list of quantum volume circuits transpiled on
+     for specific backend. The circuit will be square (depth=width)
+     as long as the user's specified layout doesn't require extra
+     qubits to perform any swaps needed. If  no user-specified layout is
+     provided, the function will try to find the best suitable qubtis.
+
+    Args:
+        qubit_lists (list): list of list of qubits to apply qv circuits to. Assume
+            the list is ordered in increasing number of qubits
+        ntrials (int): number of random iterations
+        qr (QuantumRegister): quantum register to act on (if None one is created)
+        cr (ClassicalRegister): classical register to measure to (if None one is created)
+        seed (int): An optional RNG seed to use for the generated circuit
+        num_qubits (int): Will be used if the user doesn't specify their desired layout
+        backend (IBMQBackend): A backend for the quantum volume circuits to be transpiled
+        for.
+
+    Returns:
+        tuple: A tuple of the type (``circuits``, ``circuits_nomeas``) wheere:
+            ``circuits`` is a list of lists of circuits for the qv sequences
+            (separate list for each trial) and `` circuitss_nomeas`` is the
+            same circuits but with no measurements for the ideal simulation
+    """
+
+
+    if qubit_lists == None:
+        qubit_lists = find_better_layout(backend, num_qubits)
+
+    else:
+        warnings.warn("The choice of the qubit list may result in extra swaps and extra qubits"
+                      "when running on the actual machine.Please check the backend's"
+                      "coupling map to choose the right set of qubits.")
+
+    depth_list = [len(qubit_list) for qubit_list in qubit_lists]
+
+    if seed:
+        rng = np.random.default_rng(seed)
+    else:
+        _seed = None
+
+    circuits = [[] for e in range(ntrials)]
+    circuits_nomeas = [[] for e in range(ntrials)]
+
+    for trial in range(ntrials):
+        for depthidx, depth in enumerate(depth_list):
+            n_q_max = np.max(qubit_lists[depthidx])
+            if seed:
+                _seed = rng.integers(1000)
+            qv_circ = QuantumVolume(depth, depth, seed=_seed)
+
+            #Transpile the cct for the specific backend and layout
+            qc = transpile(qv_circ, backend, initial_layout=qubit_lists[depthidx])
+
+            qc2 = copy.deepcopy(qc)
+
+            qc.measure_active()
+            qc.name = 'qv_depth_%d_trial_%d' % (depth, trial)
+            qc2.name = qc.name
+
+            circuits_nomeas[trial].append(qc2)
+            circuits[trial].append(qc)
+
+    return circuits, circuits_nomeas
