@@ -100,7 +100,6 @@ def qv_circuits(qubit_lists, ntrials=1,
             qc.measure_active()
             qc.name = 'qv_depth_%d_trial_%d' % (depth, trial)
             qc2.name = qc.name
-
             circuits_nomeas[trial].append(qc2)
             circuits[trial].append(qc)
 
