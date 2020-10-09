@@ -25,6 +25,8 @@ import numpy as np
 from qiskit.circuit.library import QuantumVolume
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 from qiskit.compiler.transpile import transpile
+from qiskit.transpiler import PassManager
+from qiskit.transpiler.passes import Unroll3qOrMore, NoiseAdaptiveLayout
 
 
 def qv_circuits(qubit_lists, ntrials=1,
@@ -104,7 +106,7 @@ def qv_circuits(qubit_lists, ntrials=1,
 
     return circuits, circuits_nomeas
 
-def qv_circuits_opt(qubit_lists=None, ntrials=1, num_qubits=2,
+def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
                 backend=None, qr=None, cr=None, seed=None):
     """
     Return a list of quantum volume circuits transpiled on
@@ -120,7 +122,7 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, num_qubits=2,
         qr (QuantumRegister): quantum register to act on (if None one is created)
         cr (ClassicalRegister): classical register to measure to (if None one is created)
         seed (int): An optional RNG seed to use for the generated circuit
-        num_qubits (int): Will be used if the user doesn't specify their desired layout. Minimum value is 2
+        max_qubits (int): Will be used if the user doesn't specify their desired layout. Minimum value is 2
         backend (IBMQBackend): A backend for the quantum volume circuits to be transpiled
         for.
 
@@ -140,7 +142,7 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, num_qubits=2,
     qv_circs = [[] for e in range(ntrials)]
 
     if qubit_lists == None:
-        depth_list = [i for i in range(2,num_qubits+1)]
+        depth_list = [i for i in range(2,max_qubits+1)]
 
     else:
         depth_list = [len(qubit_list) for qubit_list in qubit_lists]
@@ -159,11 +161,17 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, num_qubits=2,
             qv_circ.name = 'qv_depth_%d_trial_%d' % (depth, trial)
 
             qv_circs[trial].append(qv_circ)
-        
 
     if qubit_lists == None:
-        qubit_lists = find_better_layout(qv_circs, num_qubits, ntrials, 
-                                            backend, transpile_trials=None, n_desired_layouts=1)
+        # find layouts for a range of qubits from 2 up to max_qubits
+        best_layouts_list = [[] * (max_qubits-1)]
+        for n_qubits in range(2, max_qubits+1, 1):
+            best_layouts_list[n_qubits-2].append(get_layout(qv_circs, n_qubits, ntrials, backend,
+                                                          transpile_trials=None, n_desired_layouts=1))
+        # [[n_desired_layouts * Layouts], [n_desired_layouts * Layouts], [], [], [], []]
+        qubit_lists = []
+        for good_layout in best_layouts_list:
+            qubit_lists.append(good_layout[0])
 
     else:
         warnings.warn("The choice of the qubit list may result in extra swaps and extra qubits"
@@ -183,3 +191,47 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, num_qubits=2,
             circuits[trial].append(qc)
 
     return circuits
+
+
+def get_layout(qv_circs, n_qubits, n_trials, backend, transpile_trials=None, n_desired_layouts=1):
+    """
+    Multiple runs of transpiler level 3
+    Counting occurrences of different layouts
+    Return a list of layouts, ordered by occurrence/probability for good QV
+
+    qv_circs(int): qv circuits
+    n_qubits(int): number qubits for which to find a layout
+    backend(BaseBackend): the backend onto which the QV measurement is done
+    n_trials(int): total number of trials for QV measurement
+    transpile_trials(int): number of transpiler trials to search for a layout, less or equal to n_trials
+    """
+
+    n_qubit_idx = 0
+    if not transpile_trials:
+        transpile_trials = n_trials
+
+    for idx, qv in enumerate(qv_circs[0]):
+        if qv.n_qubits >= n_qubits:
+            n_qubit_idx = idx
+            break
+
+    layouts_list = []
+    layouts_counts = []
+    for trial in range(transpile_trials):
+        pm = PassManager()
+        pm.append(Unroll3qOrMore())
+        pm.append(NoiseAdaptiveLayout(backend.properties()))
+        pm.run(qv_circs[trial][n_qubit_idx])
+        layout = list(pm.property_set['layout'].get_physical_bits().keys())
+
+        if layout in layouts_list:
+            idx = layouts_list.index(layout)
+            layouts_counts[idx] += 1
+        else:
+            layouts_list.append(layout)
+            layouts_counts.append(1)
+
+    # Sort the layout list based on max occurrences
+    sorted_layouts = sorted(layouts_list, key=lambda x: layouts_counts[layouts_list.index(x)], reverse=True)
+
+    return sorted_layouts[:n_desired_layouts]

@@ -114,7 +114,7 @@ Accreditation
    QOTP
    QOTPCorrectCounts
 """
-from .quantum_volume import qv_circuits, QVFitter
+from .quantum_volume import qv_circuits, qv_circuits_opt, QVFitter
 from .randomized_benchmarking import (CNOTDihedral,
                                       randomized_benchmarking_seq,
                                       RBFitter, InterleavedRBFitter,
