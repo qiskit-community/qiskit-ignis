@@ -1,5 +1,3 @@
-from qiskit.circuit import Gate
-from qiskit.compiler.transpile import _parse_backend_properties
 from qiskit.transpiler import PassManager
 from qiskit.transpiler.passes import Unroll3qOrMore, NoiseAdaptiveLayout
 
