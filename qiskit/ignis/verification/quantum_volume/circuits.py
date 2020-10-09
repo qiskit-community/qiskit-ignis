@@ -25,6 +25,7 @@ import numpy as np
 from qiskit.circuit.library import QuantumVolume
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 from qiskit.compiler.transpile import transpile
+from qiskit.test.mock import FakeMelbourne
 from qiskit.transpiler import PassManager
 from qiskit.transpiler.passes import Unroll3qOrMore, NoiseAdaptiveLayout
 
@@ -105,6 +106,7 @@ def qv_circuits(qubit_lists, ntrials=1,
 
     return circuits, circuits_nomeas
 
+
 def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
                 backend=None, qr=None, cr=None, seed=None):
     """
@@ -167,12 +169,13 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
 
     if qubit_lists == None:
         # find layouts for a range of qubits from 2 up to max_qubits
-        best_layouts_list = [[] * (max_qubits-1)]
+        best_layouts_list = [[] for tmp in range(max_qubits-1)]
         for n_qubits in range(2, max_qubits+1, 1):
-            best_layouts_list[n_qubits-2].append(get_layout(qv_circs, n_qubits, ntrials, backend,
-                                                          transpile_trials=None, n_desired_layouts=1))
+            best_layouts_list[n_qubits-2] = get_layout(qv_circs, n_qubits, ntrials, backend,
+                                                          transpile_trials=None, n_desired_layouts=1)
         # [[n_desired_layouts * Layouts], [n_desired_layouts * Layouts], [], [], [], []]
         qubit_lists = []
+
         for good_layout in best_layouts_list:
             qubit_lists.append(good_layout[0])
 
@@ -188,7 +191,7 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
     for trial in range(ntrials):
         for depthidx, depth in enumerate(depth_list):
 
-            qc = transpile(qv_circ[trial][depthidx], backend, initial_layout=qubit_lists[depthidx])
+            qc = transpile(qv_circs[trial][depthidx], backend, initial_layout=qubit_lists[depthidx])
             qc.name = 'qv_depth_%d_trial_%d' % (depth, trial)
 
             circuits[trial].append(qc)
