@@ -108,31 +108,44 @@ def qv_circuits(qubit_lists, ntrials=1,
 
 
 def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
-                backend=None, qr=None, cr=None, seed=None):
+                backend=None, qr=None, cr=None, seed=None, n_desired_layouts=1, nth_best=0):
     """
     Return a list of quantum volume circuits transpiled on
-     for specific backend. The circuit will be square (depth=width)
-     as long as the user's specified layout doesn't require extra
-     qubits to perform any swaps needed. If  no user-specified layout is
-     provided, the function will try to find the best suitable qubtis.
+    for specific backend. The circuit will be square (depth=width)
+    as long as the user's specified layout doesn't require extra
+    qubits to perform any swaps needed. If  no user-specified layout is
+    provided, the function will try to find the best suitable qubtis.
 
     Args:
         qubit_lists (list): list of list of qubits to apply qv circuits to. Assume
             the list is ordered in increasing number of qubits
+
         ntrials (int): number of random iterations
+
         qr (QuantumRegister): quantum register to act on (if None one is created)
+
         cr (ClassicalRegister): classical register to measure to (if None one is created)
+
         seed (int): An optional RNG seed to use for the generated circuit
-        max_qubits (int): Will be used if the user doesn't specify their desired layout. Minimum value is 2
+
+        max_qubits (int): Will be used if the user doesn't specify their desired layout.
+            Minimum value is 2
+
         backend (IBMQBackend): A backend for the quantum volume circuits to be transpiled
-        for.
+            for.
+
+        n_desired_layouts (int): Number of layouts chosen (with most occurencies)
+
+        nth_best (int): Choose the n-th best layout of the n_desired_layouts,
+            so n_desired_layouts > nth_best
 
     Returns:
         tuple: A tuple of the type (``circuits``, ``circuits_nomeas``) wheere:
             ``circuits`` is a list of lists of circuits for the qv sequences
             (separate list for each trial) and `` circuitss_nomeas`` is the
             same circuits but with no measurements for the ideal simulation
-    """
+    """     
+    assert (n_desired_layouts > nth_best) , "Error: It needs to be n_desired_layouts > nth_best "
 
     if seed:
         rng = np.random.default_rng(seed)
@@ -172,12 +185,12 @@ def qv_circuits_opt(qubit_lists=None, ntrials=1, max_qubits=2,
         best_layouts_list = [[] for tmp in range(max_qubits-2)]
         for n_qubits in range(3, max_qubits+1, 1):
             best_layouts_list[n_qubits-3] = get_layout(qv_circs, n_qubits, ntrials, backend,
-                                                          transpile_trials=None, n_desired_layouts=1)
+                transpile_trials=None, n_desired_layouts=n_desired_layouts)
         # [[n_desired_layouts * Layouts], [n_desired_layouts * Layouts], [], [], [], []]
         qubit_lists = []
 
         for good_layout in best_layouts_list:
-            qubit_lists.append(good_layout[0])
+            qubit_lists.append(good_layout[nth_best])
 
     else:
         warnings.warn("The choice of the qubit list may result in extra swaps and extra qubits"
@@ -290,6 +303,6 @@ if __name__ == "__main__":
     fake_backend = FakeMelbourne()
 
     qv_circs, qv_circs_nomeas = qv_circuits_opt(ntrials=ntrials, max_qubits=4,
-                    backend=fake_backend)
+        backend=fake_backend, qr=None, cr=None, seed=None, n_desired_layouts=6, nth_best=5)
     print("qv_circ[0]: ", qv_circs[0])
     print(qv_circs[0][0])
