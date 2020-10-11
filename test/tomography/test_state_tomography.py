@@ -129,6 +129,23 @@ class TestStateTomography(unittest.TestCase):
         F_bell = state_fidelity(psi, rho, validate=False)
         self.assertAlmostEqual(F_bell, 1, places=1)
 
+    def test_fitter_string_input(self):
+        q3 = QuantumRegister(3)
+        bell = QuantumCircuit(q3)
+        bell.h(q3[0])
+        bell.cx(q3[0], q3[1])
+        bell.cx(q3[1], q3[2])
+
+        qst = tomo.state_tomography_circuits(bell, q3)
+        qst_names = [circ.name for circ in qst]
+        job = qiskit.execute(qst, Aer.get_backend('qasm_simulator'),
+                             shots=5000)
+        tomo_fit = tomo.StateTomographyFitter(job.result(), qst_names)
+        rho = tomo_fit.fit(method=self.method)
+        psi = Statevector.from_instruction(bell)
+        F_bell = state_fidelity(psi, rho, validate=False)
+        self.assertAlmostEqual(F_bell, 1, places=1)
+
 
 @unittest.skipUnless(cvx_fit._HAS_CVX, 'cvxpy is required  to run this test')
 class TestStateTomographyCVX(TestStateTomography):
