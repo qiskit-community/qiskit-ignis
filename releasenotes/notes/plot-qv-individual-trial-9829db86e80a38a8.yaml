@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    The :meth:`qiskit.ignis.verification.quantum_volume.QVFitter.plot_qv_trial` method
+    has been added to plot individual trials, leveraging on the
+    :meth:`qiskit.visualization.plot_histogram` method from Qiskit Terra.
+    Bitstring counts are plotted as overlapping histograms for ideal (hollow) and experimental
+    (filled) values.
+    Experimental heavy output probability are shown on the legend.
+    Median probability is plotted as red dashed line.
