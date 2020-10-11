@@ -255,7 +255,7 @@ def rb_purity_circuit_execution(rb_opts: dict, shots: int):
     return purity_results, xdata, npurity, coherent_results
 
 
-def rb_correlated_circuit_execution(rb_opts: dict, shots: int):
+def rb_correlated_circuit_execution_1(rb_opts: dict, shots: int):
     """
     Create correlated rb circuits with coherent weight 2 error and
      thermal relaxation error and simulate them
@@ -292,6 +292,53 @@ def rb_correlated_circuit_execution(rb_opts: dict, shots: int):
     noise_model.add_all_qubit_quantum_error(thermal_relaxation_error(t_1, t_2, 2 * gate1q), 'u3')
     noise_model.add_all_qubit_quantum_error(thermal_relaxation_error(t_1, t_2, gate2q).tensor(
         thermal_relaxation_error(t_1, t_2, gate2q)), 'cx')
+
+    results = []
+    for circuit in rb_circs:
+        results.append(qiskit.execute(circuit, backend=backend,
+                                      basis_gates=basis_gates,
+                                      shots=shots,
+                                      noise_model=noise_model,
+                                      seed_simulator=SEED).result())
+
+    return results, xdata
+
+
+def rb_correlated_circuit_execution_2(rb_opts: dict, shots: int):
+    """
+    Create correlated rb circuits with coherent weight 2 error and
+     thermal relaxation error and simulate them
+
+    Args:
+        rb_opts: the options for the rb circuits
+        shots: number of shots for each circuit simulation
+
+    Returns:
+        list: list of Results of the circuits simulations
+        list: the xdata of the rb circuit
+
+    """
+    # Load simulator
+    backend = qiskit.Aer.get_backend('qasm_simulator')
+    basis_gates = ['u1', 'u2', 'u3', 'cx']
+
+    rb_circs, xdata = rb.randomized_benchmarking_seq(**rb_opts)
+
+    # creating the noise
+    noise_model = NoiseModel()
+    zz_unitary = np.eye(4, dtype=complex)
+    zz_unitary[3, 3] = np.exp(0.5j * (np.pi / 5))
+    error = coherent_unitary_error(zz_unitary)
+    noise_model.add_nonlocal_quantum_error(error, basis_gates, [1], [1, 2])
+    noise_model.add_nonlocal_quantum_error(error, basis_gates, [2], [2, 1])
+
+    # Add depolarizing noise to the simulation
+    p1Q = 0.0005
+    p2Q = 0.005
+
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1Q, 1), 'u2')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1Q, 1), 'u3')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2Q, 2), 'cx')
 
     results = []
     for circuit in rb_circs:
@@ -657,7 +704,9 @@ def generate_correlated_fitter_data(results_1_file_path: str, expected_results_1
     for test_ind, results_file_path in enumerate(results_file_paths):
         if test_ind == 1:  # change the pattern for the second test
             rb_opts['rb_pattern'] = [[0, 1], [2], [3]]
-        rb_results, xdata = rb_correlated_circuit_execution(rb_opts, shots)
+            rb_results, xdata = rb_correlated_circuit_execution_2(rb_opts, shots)
+        else:
+            rb_results, xdata = rb_correlated_circuit_execution_1(rb_opts, shots)
         save_results_as_json(rb_results, results_file_path)
 
         # generate also the expected results of the fitter
