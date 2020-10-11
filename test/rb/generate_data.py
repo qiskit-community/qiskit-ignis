@@ -255,7 +255,7 @@ def rb_purity_circuit_execution(rb_opts: dict, shots: int):
     return purity_results, xdata, npurity, coherent_results
 
 
-def rb_correlated_circuit_execution_1(rb_opts: dict, shots: int):
+def rb_correlated_circuit_exec1(rb_opts: dict, shots: int):
     """
     Create correlated rb circuits with coherent weight 2 error and
      thermal relaxation error and simulate them
@@ -304,7 +304,7 @@ def rb_correlated_circuit_execution_1(rb_opts: dict, shots: int):
     return results, xdata
 
 
-def rb_correlated_circuit_execution_2(rb_opts: dict, shots: int):
+def rb_correlated_circuit_exec2(rb_opts: dict, shots: int):
     """
     Create correlated rb circuits with coherent weight 2 error and
      thermal relaxation error and simulate them
@@ -333,12 +333,12 @@ def rb_correlated_circuit_execution_2(rb_opts: dict, shots: int):
     noise_model.add_nonlocal_quantum_error(error, basis_gates, [2], [2, 1])
 
     # Add depolarizing noise to the simulation
-    p1Q = 0.0005
-    p2Q = 0.005
+    p_1qubit = 0.0005
+    p_2qubit = 0.005
 
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1Q, 1), 'u2')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p1Q, 1), 'u3')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p2Q, 2), 'cx')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p_1qubit, 1), 'u2')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(2 * p_1qubit, 1), 'u3')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p_2qubit, 2), 'cx')
 
     results = []
     for circuit in rb_circs:
@@ -704,9 +704,9 @@ def generate_correlated_fitter_data(results_1_file_path: str, expected_results_1
     for test_ind, results_file_path in enumerate(results_file_paths):
         if test_ind == 1:  # change the pattern for the second test
             rb_opts['rb_pattern'] = [[0, 1], [2], [3]]
-            rb_results, xdata = rb_correlated_circuit_execution_2(rb_opts, shots)
+            rb_results, xdata = rb_correlated_circuit_exec2(rb_opts, shots)
         else:
-            rb_results, xdata = rb_correlated_circuit_execution_1(rb_opts, shots)
+            rb_results, xdata = rb_correlated_circuit_exec1(rb_opts, shots)
         save_results_as_json(rb_results, results_file_path)
 
         # generate also the expected results of the fitter
