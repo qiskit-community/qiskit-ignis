@@ -214,7 +214,9 @@ class SpecialPolynomial():
         If the indices are not increasing the method fails.
         """
         length = len(indices)
-        assert length < 4, "no term!"
+        if (length >= 4):
+            return 0
+        #assert length < 4, "no term!"
         indices_arr = np.array(indices)
         assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
             "indices out of bounds!"
@@ -238,6 +240,7 @@ class SpecialPolynomial():
         offset_3 = self.n_vars - indices[2]
         offset = int(self.n_vars * (self.n_vars - 1) * (self.n_vars - 2) / 6 -
                      offset_1 - offset_2 - offset_3)
+
         return self.weight_3[offset]
 
     def set_term(self, indices, value):
@@ -254,7 +257,9 @@ class SpecialPolynomial():
         The value is reduced modulo 8.
         """
         length = len(indices)
-        assert length < 4, "no term!"
+        if (length >= 4):
+            return
+        #assert length < 4, "no term!"
         indices_arr = np.array(indices)
         assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
             "indices out of bounds!"
@@ -842,6 +847,30 @@ def decompose_cnotdihedral(elem):
         elem (CNOTDihedral): a CNOTDihedral element.
     Return:
         QuantumCircuit: a circuit implementation of the CNOTDihedral element.
+
+    References:
+        1. Shelly Garion and Andrew W. Cross, *On the structure of the CNOT-Dihedral group*,
+           `arXiv:2006.12042 [quant-ph] <https://arxiv.org/abs/2006.12042>`_
+        2. Andrew W. Cross, Easwar Magesan, Lev S. Bishop, John A. Smolin and Jay M. Gambetta,
+           *Scalable randomised benchmarking of non-Clifford gates*,
+           npj Quantum Inf 2, 16012 (2016).
+    """
+
+    num_qubits = elem.num_qubits
+
+    if num_qubits < 3:
+        return decompose_cnotdihedral_1_2_qubits(elem)
+
+    return decompose_cnotdihedral_general(elem)
+
+
+def decompose_cnotdihedral_1_2_qubits(elem):
+    """Decompose a CNOTDihedral element into a QuantumCircuit.
+
+    Args:
+        elem (CNOTDihedral): a CNOTDihedral element.
+    Return:
+        QuantumCircuit: a circuit implementation of the CNOTDihedral element.
     Remark:
         Decompose 1 and 2-qubit CNOTDihedral elements.
 
@@ -1085,6 +1114,114 @@ def decompose_cnotdihedral(elem):
     return circuit
 
 
+def decompose_cnotdihedral_general(elem):
+    """Decompose a CNOTDihedral element into a QuantumCircuit.
+
+    Args:
+        elem (CNOTDihedral): a CNOTDihedral element.
+    Return:
+        QuantumCircuit: a circuit implementation of the CNOTDihedral element.
+    Remark:
+        Decompose general CNOTDihedral elements.
+        The number of CNOT gates is not necessarily optimal.
+
+        References:
+        1. Andrew W. Cross, Easwar Magesan, Lev S. Bishop, John A. Smolin and Jay M. Gambetta,
+           *Scalable randomised benchmarking of non-Clifford gates*,
+           npj Quantum Inf 2, 16012 (2016).
+    """
+
+    num_qubits = elem.num_qubits
+    circuit = QuantumCircuit(num_qubits)
+
+    # Make a copy of the CNOTDihedral element as we are going to
+    # reduce it to an identity
+    elem_cpy = elem.copy()
+
+    # Do x gate for each qubit i where shift[i]=1
+    for i in range(num_qubits):
+        if elem.shift[i]:
+            circuit.x(i)
+            elem_cpy.flip(i)
+
+    assert ((elem_cpy.shift ==  np.zeros(num_qubits)).all())
+
+    assert np.allclose((np.linalg.det(elem_cpy.linear) % 2), 1)
+
+    # Do Gauss elimination on the linear part by adding cx gates
+    for i in range(num_qubits):
+        # set i-th element to be 1
+        if not elem_cpy.linear[i][i]:
+            for j in range(i+1, num_qubits):
+                if elem_cpy.linear[j][i]: # swap qubits i and j
+                    circuit.cx(j, i)
+                    circuit.cx(i, j)
+                    circuit.cx(j, i)
+                    elem_cpy.cnot(j, i)
+                    elem_cpy.cnot(i, j)
+                    elem_cpy.cnot(j, i)
+                    break
+        # make all the other elements in column i zero
+        for j in range(num_qubits):
+            if j != i:
+                if elem_cpy.linear[j][i]:
+                    circuit.cx(i, j)
+                    elem_cpy.cnot(i, j)
+
+    assert ((elem_cpy.linear ==  np.eye(num_qubits)).all())
+
+    new_elem = CNOTDihedral(num_qubits)
+    new_circuit = QuantumCircuit(num_qubits)
+
+    # Do cx and u1 gates to construct all monomials of weight 3
+    for i in range(num_qubits):
+        for j in range(i+1, num_qubits):
+            for k in range(j+1, num_qubits):
+                if elem_cpy.poly.get_term([i, j, k]) != 0:
+                    new_elem.cnot(i, k)
+                    new_elem.cnot(j, k)
+                    new_elem.phase(1, k)
+                    new_elem.cnot(i, k)
+                    new_elem.cnot(j, k)
+                    new_circuit.cx(i, k)
+                    new_circuit.cx(j, k)
+                    new_circuit.u1(np.pi / 4, k)
+                    new_circuit.cx(i, k)
+                    new_circuit.cx(j, k)
+
+    assert (elem.poly.weight_3 == new_elem.poly.weight_3).all()
+
+    # Do cx and u1 gates to construct all monomials of weight 2
+    for i in range(num_qubits):
+        for j in range(i+1, num_qubits):
+            aa = elem_cpy.poly.get_term([i, j])
+            bb = new_elem.poly.get_term([i, j])
+            cc = ((bb - aa) / 2) % 4
+            if cc != 0:
+                new_elem.cnot(i, j)
+                new_elem.phase(cc , j)
+                new_elem.cnot(i, j)
+                new_circuit.cx(i, j)
+                new_circuit.u1(cc * np.pi / 4, j)
+                new_circuit.cx(i, j)
+
+    assert (elem.poly.weight_2 == new_elem.poly.weight_2).all()
+
+    # Do u1 gates to construct all monomials of weight 1
+    for i in range(num_qubits):
+        aa = elem_cpy.poly.get_term([i])
+        bb = new_elem.poly.get_term([i])
+        cc = (aa - bb) % 8
+        if cc != 0:
+            new_elem.phase(cc, i)
+            new_circuit.u1(cc * np.pi / 4, i)
+
+    assert (elem.poly.weight_1 == new_elem.poly.weight_1).all()
+
+    inv_circuit = circuit.inverse()
+    return new_circuit.combine(inv_circuit)
+
+
 def random_cnotdihedral(num_qubits, seed=None):
     """Return a random CNOTDihedral element.
 
@@ -1117,7 +1254,7 @@ def random_cnotdihedral(num_qubits, seed=None):
     # Random affine function
     # Random invertible binary matrix
     det = 0
-    while det == 0:
+    while np.allclose(det, 0) or np.allclose(det, 2):
         linear = rng.randint(2, size=(num_qubits, num_qubits))
         det = np.linalg.det(linear) % 2
     elem.linear = linear

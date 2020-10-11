@@ -302,7 +302,7 @@ class TestCNOTDihedral(unittest.TestCase):
         and to_circuit and from_circuit methods
         (where num_qubits < 3)
         """
-        for qubit_num in range(1, 10):
+        for qubit_num in range(1, 9):
             for nseed in range(20):
                 elem = random_cnotdihedral(qubit_num, seed=nseed)
                 self.assertIsInstance(elem, CNOTDihedral,
@@ -310,36 +310,35 @@ class TestCNOTDihedral(unittest.TestCase):
                 self.assertTrue(elem.is_cnotdihedral(),
                                 'Error: random element is not CNOTDihedral')
 
-                if qubit_num < 3:
-                    test_circ = elem.to_circuit()
-                    self.assertTrue(test_circ,
-                                    'Error: cannot decompose a random '
-                                    'CNOTDihedral element to a circuit')
-                    new_elem = CNOTDihedral(qubit_num)
-                    test_elem = new_elem.from_circuit(test_circ)
-                    # Test of to_circuit and from_circuit methods
-                    self.assertEqual(elem, test_elem,
-                                     'Error: decomposed circuit is not equal '
-                                     'to the original circuit')
+                test_circ = elem.to_circuit()
+                self.assertTrue(test_circ,
+                                'Error: cannot decompose a random '
+                                'CNOTDihedral element to a circuit')
+                new_elem = CNOTDihedral(qubit_num)
+                test_elem = new_elem.from_circuit(test_circ)
+                # Test of to_circuit and from_circuit methods
+                self.assertEqual(elem, test_elem,
+                                 'Error: decomposed circuit is not equal '
+                                 'to the original circuit')
 
-                    test_gates = elem.to_instruction()
-                    self.assertIsInstance(test_gates, qiskit.circuit.Gate,
-                                          'Error: cannot decompose a random '
-                                          'CNOTDihedral element to a Gate')
-                    self.assertEqual(test_gates.num_qubits, test_circ.num_qubits,
-                                     'Error: wrong num_qubits in decomposed gates')
-                    new_elem1 = CNOTDihedral(qubit_num)
-                    test_elem1 = new_elem1.from_circuit(test_gates)
-                    # Test of to_instruction and from_circuit methods
-                    self.assertEqual(elem, test_elem1,
-                                     'Error: decomposed gates are not equal '
-                                     'to the original gates')
+                test_gates = elem.to_instruction()
+                self.assertIsInstance(test_gates, qiskit.circuit.Gate,
+                                      'Error: cannot decompose a random '
+                                      'CNOTDihedral element to a Gate')
+                self.assertEqual(test_gates.num_qubits, test_circ.num_qubits,
+                                 'Error: wrong num_qubits in decomposed gates')
+                new_elem1 = CNOTDihedral(qubit_num)
+                test_elem1 = new_elem1.from_circuit(test_gates)
+                # Test of to_instruction and from_circuit methods
+                self.assertEqual(elem, test_elem1,
+                                 'Error: decomposed gates are not equal '
+                                 'to the original gates')
 
     def test_compose_method(self):
         """Test compose method"""
         samples = 10
         nseed = 111
-        for qubit_num in range(1, 3):
+        for qubit_num in range(1, 6):
             for i in range(samples):
                 elem1 = random_cnotdihedral(qubit_num, seed=nseed + i)
                 elem2 = random_cnotdihedral(qubit_num, seed=nseed + samples + i)
@@ -355,7 +354,7 @@ class TestCNOTDihedral(unittest.TestCase):
         """Test dot method"""
         samples = 10
         nseed = 222
-        for qubit_num in range(1, 3):
+        for qubit_num in range(1, 6):
             for i in range(samples):
                 elem1 = random_cnotdihedral(qubit_num, seed=nseed + i)
                 elem2 = random_cnotdihedral(qubit_num, seed=nseed + samples + i)
@@ -371,8 +370,8 @@ class TestCNOTDihedral(unittest.TestCase):
         """Test tensor method"""
         samples = 10
         nseed = 333
-        for num_qubits_1 in range(1, 3):
-            for num_qubits_2 in range(1, 3):
+        for num_qubits_1 in range(1, 5):
+            for num_qubits_2 in range(1, 5):
                 for i in range(samples):
                     elem1 = random_cnotdihedral(num_qubits_1, seed=nseed + i)
                     elem2 = random_cnotdihedral(num_qubits_2, seed=nseed + samples + i)
@@ -398,8 +397,8 @@ class TestCNOTDihedral(unittest.TestCase):
         """Test tensor method"""
         samples = 10
         nseed = 444
-        for num_qubits_1 in range(1, 3):
-            for num_qubits_2 in range(1, 3):
+        for num_qubits_1 in range(1, 5):
+            for num_qubits_2 in range(1, 5):
                 for i in range(samples):
                     elem1 = random_cnotdihedral(num_qubits_1, seed=nseed + i)
                     elem2 = random_cnotdihedral(num_qubits_2, seed=nseed + samples + i)
@@ -425,7 +424,7 @@ class TestCNOTDihedral(unittest.TestCase):
         """Test transpose method"""
         samples = 10
         nseed = 555
-        for qubit_num in range(1, 3):
+        for qubit_num in range(1, 5):
             for i in range(samples):
                 elem = random_cnotdihedral(qubit_num, seed=nseed + i)
                 circ = elem.to_circuit()
@@ -438,7 +437,7 @@ class TestCNOTDihedral(unittest.TestCase):
         """Test transpose method"""
         samples = 10
         nseed = 666
-        for qubit_num in range(1, 3):
+        for qubit_num in range(1, 5):
             for i in range(samples):
                 elem = random_cnotdihedral(qubit_num, seed=nseed + i)
                 circ = elem.to_circuit()
@@ -451,7 +450,7 @@ class TestCNOTDihedral(unittest.TestCase):
         """Test transpose method"""
         samples = 10
         nseed = 777
-        for qubit_num in range(1, 3):
+        for qubit_num in range(1, 5):
             for i in range(samples):
                 elem = random_cnotdihedral(qubit_num, seed=nseed + i)
                 circ = elem.to_circuit()
@@ -464,7 +463,7 @@ class TestCNOTDihedral(unittest.TestCase):
         """Test to_matrix method"""
         samples = 10
         nseed = 888
-        for qubit_num in range(1, 3):
+        for qubit_num in range(1, 5):
             for i in range(samples):
                 elem = random_cnotdihedral(qubit_num, seed=nseed + i)
                 circ = elem.to_circuit()
