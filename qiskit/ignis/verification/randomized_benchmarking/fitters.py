@@ -1458,7 +1458,9 @@ class CorrelatedRBFitter(RBFitterBase):
             tmplist = []
             for ii in range(self._n_partitions):
                 for _ in range(len(rb_pattern[ii])):
-                    tmplist.append(self._subsystems[-1][ii])
+                    # the qubits order is from right to left, while the subsystem's list
+                    # positioning of a number is from left to right
+                    tmplist.insert(0, self._subsystems[-1][-(ii + 1)])
             self._subsystems2.append(int(''.join(tmplist), base=2))
 
         self._r_coeff = None
