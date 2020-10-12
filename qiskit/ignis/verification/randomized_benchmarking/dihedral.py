@@ -221,7 +221,7 @@ class SpecialPolynomial():
         If the indices are not increasing the method fails.
         """
         length = len(indices)
-        if (length >= 4):
+        if length >= 4:
             return 0
         indices_arr = np.array(indices)
         if (indices_arr < 0).any() or (indices_arr >= self.n_vars).any():
@@ -265,7 +265,7 @@ class SpecialPolynomial():
         The value is reduced modulo 8.
         """
         length = len(indices)
-        if (length >= 4):
+        if length >= 4:
             return
         indices_arr = np.array(indices)
         if (indices_arr < 0).any() or (indices_arr >= self.n_vars).any():
@@ -438,7 +438,7 @@ class CNOTDihedral(BaseOperator):
         Left multiply the element by CNOT_{i,j}.
         """
 
-        if not (0 <= i < self.num_qubits) or not (0 <= j < self.num_qubits):
+        if not 0 <= i < self.num_qubits or not 0 <= j < self.num_qubits:
             raise QiskitError("cnot qubits are out of bounds.")
         self.linear[j] = (self.linear[i] + self.linear[j]) % 2
         self.shift[j] = (self.shift[i] + self.shift[j]) % 2
@@ -574,6 +574,7 @@ class CNOTDihedral(BaseOperator):
         Raises:
             QiskitError: if operators have incompatible dimensions for
                          composition.
+            NotImplementedError: if qargs is not None.
         Additional Information:
             Composition (``@``) is defined as `left` matrix multiplication for
             matrix operators. That is that ``A @ B`` is equal to ``B * A``.
@@ -600,8 +601,8 @@ class CNOTDihedral(BaseOperator):
         Returns:
             CNOTDihedral: The operator self * other.
         Raises:
-            QiskitError: if operators have incompatible dimensions for
-                         composition.
+            QiskitError: if operators have incompatible dimensions for composition.
+            NotImplementedError: if qargs is not None.
         """
         if qargs is not None:
             raise NotImplementedError("dot method does not support qargs.")
@@ -721,19 +722,31 @@ class CNOTDihedral(BaseOperator):
     def is_cnotdihedral(self):
         """Return True if input is a CNOTDihedral element."""
 
-        assert self.poly.weight_0 == 0
-        assert len(self.poly.weight_1) == self.num_qubits
-        assert len(self.poly.weight_2) == int(self.num_qubits * (self.num_qubits - 1) / 2)
-        assert len(self.poly.weight_3) == int(self.num_qubits * (self.num_qubits - 1)
-                                              * (self.num_qubits - 2) / 6)
-        assert (self.linear).shape == (self.num_qubits, self.num_qubits)
-        assert len(self.shift) == self.num_qubits
-        assert np.linalg.det(self.linear) != 0
-        assert (set(self.poly.weight_1.flatten())).issubset({0, 1, 2, 3, 4, 5, 6, 7})
-        assert (set(self.poly.weight_2.flatten())).issubset({0, 2, 4, 6})
-        assert (set(self.poly.weight_3.flatten())).issubset({0, 4})
-        assert (set(self.shift.flatten())).issubset({0, 1})
-        assert (set(self.linear.flatten())).issubset({0, 1})
+        if self.poly.weight_0 != 0:
+            return False
+        if len(self.poly.weight_1) != self.num_qubits:
+            return False
+        if len(self.poly.weight_2) != int(self.num_qubits * (self.num_qubits - 1) / 2):
+            return False
+        if len(self.poly.weight_3) != int(self.num_qubits * (self.num_qubits - 1)
+                                          * (self.num_qubits - 2) / 6):
+            return False
+        if (self.linear).shape != (self.num_qubits, self.num_qubits):
+            return False
+        if len(self.shift) != self.num_qubits:
+            return False
+        if not np.allclose((np.linalg.det(self.linear) % 2), 1):
+            return False
+        if not (set(self.poly.weight_1.flatten())).issubset({0, 1, 2, 3, 4, 5, 6, 7}):
+            return False
+        if not (set(self.poly.weight_2.flatten())).issubset({0, 2, 4, 6}):
+            return False
+        if not (set(self.poly.weight_3.flatten())).issubset({0, 4}):
+            return False
+        if not (set(self.shift.flatten())).issubset({0, 1}):
+            return False
+        if not (set(self.linear.flatten())).issubset({0, 1}):
+            return False
         return True
 
 
@@ -878,12 +891,12 @@ def decompose_cnotdihedral(elem):
     num_qubits = elem.num_qubits
 
     if num_qubits < 3:
-        return decompose_cnotdihedral_1_2_qubits(elem)
+        return decompose_cnotdihedral_2_qubits(elem)
 
     return decompose_cnotdihedral_general(elem)
 
 
-def decompose_cnotdihedral_1_2_qubits(elem):
+def decompose_cnotdihedral_2_qubits(elem):
     """Decompose a CNOTDihedral element into a QuantumCircuit.
 
     Args:
@@ -892,6 +905,8 @@ def decompose_cnotdihedral_1_2_qubits(elem):
         QuantumCircuit: a circuit implementation of the CNOTDihedral element.
     Remark:
         Decompose 1 and 2-qubit CNOTDihedral elements.
+    Raises:
+        QiskitError: if the element in not 1 or 2-qubit CNOTDihedral.
 
     References:
         1. Shelly Garion and Andrew W. Cross, *On the structure of the CNOT-Dihedral group*,
@@ -1188,8 +1203,8 @@ def decompose_cnotdihedral_general(elem):
                     circuit.cx(i, j)
                     elem_cpy.cnot(i, j)
 
-    if not ((elem_cpy.shift == np.zeros(num_qubits)).all()) or \
-            not ((elem_cpy.linear == np.eye(num_qubits)).all()):
+    if not (elem_cpy.shift == np.zeros(num_qubits)).all() or \
+            not (elem_cpy.linear == np.eye(num_qubits)).all():
         raise QiskitError("Cannot do Gauss elimination on linear part.")
 
     new_elem = CNOTDihedral(num_qubits)
@@ -1214,27 +1229,27 @@ def decompose_cnotdihedral_general(elem):
     # Do cx and u1 gates to construct all monomials of weight 2
     for i in range(num_qubits):
         for j in range(i+1, num_qubits):
-            aa = elem_cpy.poly.get_term([i, j])
-            bb = new_elem.poly.get_term([i, j])
-            cc = ((bb - aa) / 2) % 4
-            if cc != 0:
+            a = elem_cpy.poly.get_term([i, j])
+            b = new_elem.poly.get_term([i, j])
+            c = ((b - a) / 2) % 4
+            if c != 0:
                 new_elem.cnot(i, j)
-                new_elem.phase(cc, j)
+                new_elem.phase(c, j)
                 new_elem.cnot(i, j)
                 new_circuit.cx(i, j)
-                new_circuit.u1(cc * np.pi / 4, j)
+                new_circuit.u1(c * np.pi / 4, j)
                 new_circuit.cx(i, j)
 
     # Do u1 gates to construct all monomials of weight 1
     for i in range(num_qubits):
-        aa = elem_cpy.poly.get_term([i])
-        bb = new_elem.poly.get_term([i])
-        cc = (aa - bb) % 8
-        if cc != 0:
-            new_elem.phase(cc, i)
-            new_circuit.u1(cc * np.pi / 4, i)
+        a = elem_cpy.poly.get_term([i])
+        b = new_elem.poly.get_term([i])
+        c = (a - b) % 8
+        if c != 0:
+            new_elem.phase(c, i)
+            new_circuit.u1(c * np.pi / 4, i)
 
-    if not (elem.poly == new_elem.poly):
+    if elem.poly != new_elem.poly:
         raise QiskitError("Could not recover phase polynomial.")
 
     inv_circuit = circuit.inverse()
