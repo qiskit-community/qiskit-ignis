@@ -722,30 +722,22 @@ class CNOTDihedral(BaseOperator):
     def is_cnotdihedral(self):
         """Return True if input is a CNOTDihedral element."""
 
-        if self.poly.weight_0 != 0:
+        if self.poly.weight_0 != 0 or \
+                len(self.poly.weight_1) != self.num_qubits or \
+                len(self.poly.weight_2) != int(self.num_qubits * (self.num_qubits - 1) / 2) \
+                or len(self.poly.weight_3) != int(self.num_qubits * (self.num_qubits - 1) \
+                                                  * (self.num_qubits - 2) / 6):
             return False
-        if len(self.poly.weight_1) != self.num_qubits:
+        if (self.linear).shape != (self.num_qubits, self.num_qubits) or \
+                len(self.shift) != self.num_qubits or \
+                not np.allclose((np.linalg.det(self.linear) % 2), 1):
             return False
-        if len(self.poly.weight_2) != int(self.num_qubits * (self.num_qubits - 1) / 2):
+        if not (set(self.poly.weight_1.flatten())).issubset({0, 1, 2, 3, 4, 5, 6, 7}) or \
+                not (set(self.poly.weight_2.flatten())).issubset({0, 2, 4, 6}) or \
+                not (set(self.poly.weight_3.flatten())).issubset({0, 4}):
             return False
-        if len(self.poly.weight_3) != int(self.num_qubits * (self.num_qubits - 1)
-                                          * (self.num_qubits - 2) / 6):
-            return False
-        if (self.linear).shape != (self.num_qubits, self.num_qubits):
-            return False
-        if len(self.shift) != self.num_qubits:
-            return False
-        if not np.allclose((np.linalg.det(self.linear) % 2), 1):
-            return False
-        if not (set(self.poly.weight_1.flatten())).issubset({0, 1, 2, 3, 4, 5, 6, 7}):
-            return False
-        if not (set(self.poly.weight_2.flatten())).issubset({0, 2, 4, 6}):
-            return False
-        if not (set(self.poly.weight_3.flatten())).issubset({0, 4}):
-            return False
-        if not (set(self.shift.flatten())).issubset({0, 1}):
-            return False
-        if not (set(self.linear.flatten())).issubset({0, 1}):
+        if not (set(self.shift.flatten())).issubset({0, 1}) or \
+                not (set(self.linear.flatten())).issubset({0, 1}):
             return False
         return True
 
@@ -1160,6 +1152,8 @@ def decompose_cnotdihedral_general(elem):
     Remark:
         Decompose general CNOTDihedral elements.
         The number of CNOT gates is not necessarily optimal.
+    Raises:
+        QiskitError: if the element could not be decomposed into a circuit.
 
     References:
         1. Andrew W. Cross, Easwar Magesan, Lev S. Bishop, John A. Smolin and Jay M. Gambetta,
@@ -1229,25 +1223,25 @@ def decompose_cnotdihedral_general(elem):
     # Do cx and u1 gates to construct all monomials of weight 2
     for i in range(num_qubits):
         for j in range(i+1, num_qubits):
-            a = elem_cpy.poly.get_term([i, j])
-            b = new_elem.poly.get_term([i, j])
-            c = ((b - a) / 2) % 4
-            if c != 0:
+            tpow1 = elem_cpy.poly.get_term([i, j])
+            tpow2 = new_elem.poly.get_term([i, j])
+            tpow = ((tpow2 - tpow1) / 2) % 4
+            if tpow != 0:
                 new_elem.cnot(i, j)
-                new_elem.phase(c, j)
+                new_elem.phase(tpow, j)
                 new_elem.cnot(i, j)
                 new_circuit.cx(i, j)
-                new_circuit.u1(c * np.pi / 4, j)
+                new_circuit.u1(tpow * np.pi / 4, j)
                 new_circuit.cx(i, j)
 
     # Do u1 gates to construct all monomials of weight 1
     for i in range(num_qubits):
-        a = elem_cpy.poly.get_term([i])
-        b = new_elem.poly.get_term([i])
-        c = (a - b) % 8
-        if c != 0:
-            new_elem.phase(c, i)
-            new_circuit.u1(c * np.pi / 4, i)
+        tpow1 = elem_cpy.poly.get_term([i])
+        tpow2 = new_elem.poly.get_term([i])
+        tpow = (tpow1 - tpow2) % 8
+        if tpow != 0:
+            new_elem.phase(tpow, i)
+            new_circuit.u1(tpow * np.pi / 4, i)
 
     if elem.poly != new_elem.poly:
         raise QiskitError("Could not recover phase polynomial.")
