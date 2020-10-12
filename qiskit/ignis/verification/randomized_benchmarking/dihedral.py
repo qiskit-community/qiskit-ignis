@@ -110,7 +110,7 @@ class SpecialPolynomial():
             result.weight_3 = (self.weight_3 * other) % 8
         else:
             if self.n_vars != other.n_vars:
-                raise QiskitError ("Multiplication on different n_vars.")
+                raise QiskitError("Multiplication on different n_vars.")
             terms0 = [[]]
             terms1 = list(combinations(range(self.n_vars), r=1))
             terms2 = list(combinations(range(self.n_vars), r=2))
@@ -567,7 +567,8 @@ class CNOTDihedral(BaseOperator):
         Args:
             other (CNOTDihedral): an operator object.
             qargs (None): None.
-            front (None): None.
+            front (bool): If True compose using right operator multiplication,
+                          instead of left multiplication [default: False].
         Returns:
             CNOTDihedral: The operator self @ other.
         Raises:
@@ -579,9 +580,14 @@ class CNOTDihedral(BaseOperator):
             Setting ``front=True`` returns `right` matrix multiplication
             ``A * B`` and is equivalent to the :meth:`dot` method.
         """
+        if qargs is not None:
+            raise NotImplementedError("compose method does not support qargs.")
         if self.num_qubits != other.num_qubits:
             raise QiskitError("Incompatible dimension for composition")
-        other = other * self
+        if front:
+            other = self * other
+        else:
+            other = other * self
         other.poly.weight_0 = 0  # set global phase
         return other
 
@@ -597,6 +603,8 @@ class CNOTDihedral(BaseOperator):
             QiskitError: if operators have incompatible dimensions for
                          composition.
         """
+        if qargs is not None:
+            raise NotImplementedError("dot method does not support qargs.")
         if self.num_qubits != other.num_qubits:
             raise QiskitError("Incompatible dimension for composition")
         other = self * other
@@ -900,7 +908,7 @@ def decompose_cnotdihedral_1_2_qubits(elem):
                           "use decompose_cnotdihedral_general function instead.")
 
     if elem.num_qubits == 1:
-        if elem.poly.weight_0 != 0 or  elem.linear != [[1]]:
+        if elem.poly.weight_0 != 0 or elem.linear != [[1]]:
             raise QiskitError("1-qubit element in not CNOT-Dihedral .")
         tpow0 = elem.poly.weight_1[0]
         xpow0 = elem.shift[0]
@@ -1138,7 +1146,7 @@ def decompose_cnotdihedral_general(elem):
         Decompose general CNOTDihedral elements.
         The number of CNOT gates is not necessarily optimal.
 
-        References:
+    References:
         1. Andrew W. Cross, Easwar Magesan, Lev S. Bishop, John A. Smolin and Jay M. Gambetta,
            *Scalable randomised benchmarking of non-Clifford gates*,
            npj Quantum Inf 2, 16012 (2016).
@@ -1165,7 +1173,7 @@ def decompose_cnotdihedral_general(elem):
         # set i-th element to be 1
         if not elem_cpy.linear[i][i]:
             for j in range(i+1, num_qubits):
-                if elem_cpy.linear[j][i]: # swap qubits i and j
+                if elem_cpy.linear[j][i]:  # swap qubits i and j
                     circuit.cx(j, i)
                     circuit.cx(i, j)
                     circuit.cx(j, i)
@@ -1181,8 +1189,8 @@ def decompose_cnotdihedral_general(elem):
                     elem_cpy.cnot(i, j)
 
     if not ((elem_cpy.shift == np.zeros(num_qubits)).all()) or \
-        not ((elem_cpy.linear == np.eye(num_qubits)).all()):
-            raise QiskitError("Cannot do Gauss elimination on linear part.")
+            not ((elem_cpy.linear == np.eye(num_qubits)).all()):
+        raise QiskitError("Cannot do Gauss elimination on linear part.")
 
     new_elem = CNOTDihedral(num_qubits)
     new_circuit = QuantumCircuit(num_qubits)
@@ -1211,7 +1219,7 @@ def decompose_cnotdihedral_general(elem):
             cc = ((bb - aa) / 2) % 4
             if cc != 0:
                 new_elem.cnot(i, j)
-                new_elem.phase(cc , j)
+                new_elem.phase(cc, j)
                 new_elem.cnot(i, j)
                 new_circuit.cx(i, j)
                 new_circuit.u1(cc * np.pi / 4, j)
