@@ -725,7 +725,7 @@ class CNOTDihedral(BaseOperator):
         if self.poly.weight_0 != 0 or \
                 len(self.poly.weight_1) != self.num_qubits or \
                 len(self.poly.weight_2) != int(self.num_qubits * (self.num_qubits - 1) / 2) \
-                or len(self.poly.weight_3) != int(self.num_qubits * (self.num_qubits - 1) \
+                or len(self.poly.weight_3) != int(self.num_qubits * (self.num_qubits - 1)
                                                   * (self.num_qubits - 2) / 6):
             return False
         if (self.linear).shape != (self.num_qubits, self.num_qubits) or \
