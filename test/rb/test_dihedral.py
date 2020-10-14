@@ -20,6 +20,7 @@ import unittest
 import numpy as np
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators import Operator
+from qiskit.quantum_info.operators.pauli import Pauli
 
 import qiskit
 # Import the dihedral_utils functions
@@ -299,8 +300,7 @@ class TestCNOTDihedral(unittest.TestCase):
     def test_dihedral_random_decompose(self):
         """
         Test that random elements are CNOTDihedral
-        and to_circuit and from_circuit methods
-        (where num_qubits < 3)
+        and to_circuit, to_instruction, from_circuit, is_cnotdihedral methods
         """
         for qubit_num in range(1, 9):
             for nseed in range(20):
@@ -319,6 +319,11 @@ class TestCNOTDihedral(unittest.TestCase):
                 self.assertEqual(elem, test_elem,
                                  'Error: decomposed circuit is not equal '
                                  'to the original circuit')
+                # Test that is_cnotdihedral fails if linear part is wrong
+                test_elem.linear = np.zeros((qubit_num, qubit_num))
+                value = test_elem.is_cnotdihedral()
+                self.assertFalse(value,
+                                 'Error: is_cnotdihedral is not correct.')
 
                 test_gates = elem.to_instruction()
                 self.assertIsInstance(test_gates, qiskit.circuit.Gate,
@@ -344,7 +349,6 @@ class TestCNOTDihedral(unittest.TestCase):
                 circ2 = elem2.to_circuit()
                 value = elem1.compose(elem2)
                 target = CNOTDihedral(circ1.extend(circ2))
-                #target = target.from_circuit(circ1.extend(circ2))
                 self.assertEqual(target, value,
                                  'Error: composed circuit is not the same')
 
@@ -469,6 +473,19 @@ class TestCNOTDihedral(unittest.TestCase):
                 target = Operator(circ)
                 self.assertTrue(value.equiv(target),
                                 'Error: matrix of the circuit is not the same')
+
+    def test_init_from_pauli(self):
+        """Test initialization from Pauli"""
+        samples = 10
+        nseed = 999
+        for qubit_num in range(1, 5):
+            for i in range(samples):
+                pauli = Pauli.random(qubit_num, seed=nseed + i)
+                elem = CNOTDihedral(pauli)
+                value = Operator(pauli)
+                target = Operator(elem)
+                self.assertTrue(value.equiv(target),
+                                'Error: Pauli operator is not the same.')
 
 
 if __name__ == '__main__':

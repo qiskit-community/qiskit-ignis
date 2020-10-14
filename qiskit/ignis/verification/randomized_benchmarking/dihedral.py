@@ -45,6 +45,7 @@ from numpy.random import RandomState
 from qiskit.exceptions import QiskitError
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.quantum_info.operators.operator import Operator
+from qiskit.quantum_info.operators.pauli import Pauli
 from qiskit.quantum_info.operators.scalar_op import ScalarOp
 from qiskit.circuit import QuantumCircuit, Instruction
 
@@ -388,6 +389,14 @@ class CNOTDihedral(BaseOperator):
             self.linear = np.eye(self._num_qubits, dtype=np.int8)
             # binary shift, n coefficients in Z_2
             self.shift = np.zeros(self._num_qubits, dtype=np.int8)
+
+        elif isinstance(data, Pauli):
+            self._num_qubits = data.num_qubits
+            elem = self.from_circuit(data.to_instruction())
+            self.poly = elem.poly
+            self.linear = elem.linear
+            self.shift = elem.shift
+
 
         # Initialize BaseOperator
         dims = self._num_qubits * (2,)
@@ -876,6 +885,17 @@ def append_circuit(elem, circuit, qargs=None):
                 raise QiskitError("Invalid qubits for 1-qubit gate x.")
             elem.flip(new_qubits[0])
 
+        elif (instr.name == 'z' or gate.name == 'z'):
+            if len(new_qubits) != 1:
+                raise QiskitError("Invalid qubits for 1-qubit gate z.")
+            elem.phase(4, new_qubits[0])
+
+        elif (instr.name == 'y' or gate.name == 'y'):
+            if len(new_qubits) != 1:
+                raise QiskitError("Invalid qubits for 1-qubit gate y.")
+            elem.flip(new_qubits[0])
+            elem.phase(4, new_qubits[0])
+
         elif (instr.name == 'u1' or gate.name == 'u1'):
             if (len(new_qubits) != 1 or len(instr.params) != 1):
                 raise QiskitError("Invalid qubits or params for 1-qubit gate u1.")
@@ -885,6 +905,17 @@ def append_circuit(elem, circuit, qargs=None):
             if len(new_qubits) != 2:
                 raise QiskitError("Invalid qubits for 2-qubit gate cx.")
             elem.cnot(new_qubits[0], new_qubits[1])
+
+        elif (instr.name == 'cz' or gate.name == 'cz'):
+            if len(new_qubits) != 2:
+                raise QiskitError("Invalid qubits for 2-qubit gate cz.")
+            elem.phase(7, new_qubits[1])
+            elem.phase(7, new_qubits[0])
+            elem.cnot(new_qubits[1], new_qubits[0])
+            elem.phase(2, new_qubits[0])
+            elem.cnot(new_qubits[1], new_qubits[0])
+            elem.phase(7, new_qubits[1])
+            elem.phase(7, new_qubits[0])
 
         elif (instr.name == 'id' or gate.name == 'id'):
             pass
@@ -1038,13 +1069,7 @@ def decompose_cnotdihedral_2_qubits(elem):
             if xpow1 == 1:
                 circuit.x(1)
             # CZ gate is implemented using 2 CX gates
-            circuit.u1(7 * np.pi / 4, 1)
-            circuit.u1(7 * np.pi / 4, 0)
-            circuit.cx(1, 0)
-            circuit.u1(2 * np.pi / 4, 0)
-            circuit.cx(1, 0)
-            circuit.u1(7 * np.pi / 4, 1)
-            circuit.u1(7 * np.pi / 4, 0)
+            circuit.cz(1, 0)
 
     # CX01-like class
     if (linear == [[1, 0], [1, 1]]).all():
