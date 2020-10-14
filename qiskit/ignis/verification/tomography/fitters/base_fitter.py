@@ -243,7 +243,10 @@ class TomographyFitter:
             QiskitError: In case some of the tomography data is not found
                 in the results
         """
-        if len(circuits[0].cregs) == 1:
+        if len(circuits) == 0:
+            raise QiskitError("No circuit data given")
+
+        if isinstance(circuits[0], str) or len(circuits[0].cregs) == 1:
             marginalize = False
         else:
             marginalize = True
