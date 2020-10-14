@@ -59,7 +59,7 @@ jobs:
             ${{ runner.os }}-${{ matrix.python-version }}-pip-
             ${{ runner.os }}-${{ matrix.python-version }}-
       - name: Install deps
-        run: pip install -U tox cvxopt
+        run: pip install -U tox cvxopt setuptools virtualenv wheel
         shell: pwsh
       - name: Install and Run Tests
         run: tox --sitepackages -epy
