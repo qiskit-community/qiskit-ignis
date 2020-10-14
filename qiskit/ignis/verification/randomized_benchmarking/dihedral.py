@@ -397,7 +397,6 @@ class CNOTDihedral(BaseOperator):
             self.linear = elem.linear
             self.shift = elem.shift
 
-
         # Initialize BaseOperator
         dims = self._num_qubits * (2,)
         super().__init__(dims, dims)
