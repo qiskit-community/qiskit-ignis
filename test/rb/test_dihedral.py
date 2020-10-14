@@ -314,8 +314,7 @@ class TestCNOTDihedral(unittest.TestCase):
                 self.assertTrue(test_circ,
                                 'Error: cannot decompose a random '
                                 'CNOTDihedral element to a circuit')
-                new_elem = CNOTDihedral(qubit_num)
-                test_elem = new_elem.from_circuit(test_circ)
+                test_elem = CNOTDihedral(test_circ)
                 # Test of to_circuit and from_circuit methods
                 self.assertEqual(elem, test_elem,
                                  'Error: decomposed circuit is not equal '
@@ -327,8 +326,7 @@ class TestCNOTDihedral(unittest.TestCase):
                                       'CNOTDihedral element to a Gate')
                 self.assertEqual(test_gates.num_qubits, test_circ.num_qubits,
                                  'Error: wrong num_qubits in decomposed gates')
-                new_elem1 = CNOTDihedral(qubit_num)
-                test_elem1 = new_elem1.from_circuit(test_gates)
+                test_elem1 = CNOTDihedral(test_gates)
                 # Test of to_instruction and from_circuit methods
                 self.assertEqual(elem, test_elem1,
                                  'Error: decomposed gates are not equal '
@@ -345,8 +343,8 @@ class TestCNOTDihedral(unittest.TestCase):
                 circ1 = elem1.to_circuit()
                 circ2 = elem2.to_circuit()
                 value = elem1.compose(elem2)
-                target = CNOTDihedral(qubit_num)
-                target = target.from_circuit(circ1.extend(circ2))
+                target = CNOTDihedral(circ1.extend(circ2))
+                #target = target.from_circuit(circ1.extend(circ2))
                 self.assertEqual(target, value,
                                  'Error: composed circuit is not the same')
 
@@ -361,8 +359,7 @@ class TestCNOTDihedral(unittest.TestCase):
                 circ1 = elem1.to_circuit()
                 circ2 = elem2.to_circuit()
                 value = elem1.dot(elem2)
-                target = CNOTDihedral(qubit_num)
-                target = target.from_circuit(circ2.extend(circ1))
+                target = CNOTDihedral(circ2.extend(circ1))
                 self.assertEqual(target, value,
                                  'Error: composed circuit is not the same')
 
@@ -387,8 +384,7 @@ class TestCNOTDihedral(unittest.TestCase):
                     for instr, qregs, _ in circ2.definition:
                         new_qubits = [qargs[tup.index] for tup in qregs]
                         circ.append(instr, new_qubits)
-                    target = CNOTDihedral(num_qubits_1 + num_qubits_2)
-                    target = target.from_circuit(circ)
+                    target = CNOTDihedral(circ)
 
                     self.assertEqual(target, value,
                                      'Error: tensor circuit is not the same')
@@ -414,8 +410,7 @@ class TestCNOTDihedral(unittest.TestCase):
                     for instr, qregs, _ in circ2.definition:
                         new_qubits = [qargs[tup.index] for tup in qregs]
                         circ.append(instr, new_qubits)
-                    target = CNOTDihedral(num_qubits_1 + num_qubits_2)
-                    target = target.from_circuit(circ)
+                    target = CNOTDihedral(circ)
 
                     self.assertEqual(target, value,
                                      'Error: expand circuit is not the same')

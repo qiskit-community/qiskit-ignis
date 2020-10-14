@@ -45,6 +45,7 @@ from numpy.random import RandomState
 from qiskit.exceptions import QiskitError
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.quantum_info.operators.operator import Operator
+from qiskit.quantum_info.operators.scalar_op import ScalarOp
 from qiskit.circuit import QuantumCircuit, Instruction
 
 
@@ -349,22 +350,52 @@ class CNOTDihedral(BaseOperator):
            npj Quantum Inf 2, 16012 (2016).
     """
 
-    def __init__(self, data):
+    def __init__(self, data, validate=True):
         """Initialize a CNOTDihedral operator object."""
 
+        # Initialize from another CNOTDihedral by sharing the underlying
+        # poly, linear and shift
+        if isinstance(data, CNOTDihedral):
+            self.linear = data.linear
+            self.shift = data.shift
+            self.poly = data.poly
+
+        # Initialize from ScalarOp as N-qubit identity discarding any global phase
+        elif isinstance(data, ScalarOp):
+            if not data.is_unitary() or set(data._input_dims) != {2}:
+                raise QiskitError("Can only initialize from N-qubit identity ScalarOp.")
+            self._num_qubits = data.num_qubits
+            # phase polynomial
+            self.poly = SpecialPolynomial(self._num_qubits)
+            # n x n invertible matrix over Z_2
+            self.linear = np.eye(self._num_qubits, dtype=np.int8)
+            # binary shift, n coefficients in Z_2
+            self.shift = np.zeros(self._num_qubits, dtype=np.int8)
+
+        # Initialize from a QuantumCircuit or Instruction object
+        elif isinstance(data, (QuantumCircuit, Instruction)):
+            self._num_qubits = data.num_qubits
+            self.poly = self.from_circuit(data).poly
+            self.linear = self.from_circuit(data).linear
+            self.shift = self.from_circuit(data).shift
+
         # Construct the identity element on num_qubits qubits.
-        if isinstance(data, int):
+        elif isinstance(data, int):
             self._num_qubits = data
-        # phase polynomial
-        self.poly = SpecialPolynomial(self._num_qubits)
-        # n x n invertible matrix over Z_2
-        self.linear = np.eye(self._num_qubits, dtype=np.int8)
-        # binary shift, n coefficients in Z_2
-        self.shift = np.zeros(self._num_qubits, dtype=np.int8)
+            # phase polynomial
+            self.poly = SpecialPolynomial(self._num_qubits)
+            # n x n invertible matrix over Z_2
+            self.linear = np.eye(self._num_qubits, dtype=np.int8)
+            # binary shift, n coefficients in Z_2
+            self.shift = np.zeros(self._num_qubits, dtype=np.int8)
 
         # Initialize BaseOperator
         dims = self._num_qubits * (2,)
         super().__init__(dims, dims)
+
+        # Validate the CNOTDihedral element
+        if validate and not self.is_cnotdihedral():
+            raise QiskitError('Invalid CNOTDihedsral element.')
 
     def _z2matmul(self, left, right):
         """Compute product of two n x n z2 matrices."""
