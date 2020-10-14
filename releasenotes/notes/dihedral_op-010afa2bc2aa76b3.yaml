@@ -1,0 +1,20 @@
+---
+features:
+  - |
+    The :class:`qiskit.ignis.verification.randomized_benchmarking.CNOTDihedral`
+    now contains the following new features.
+    Initialization from various types of objects:
+    `CNOTDihedral`, `ScalarOp`, `QuantumCircuit`, `Instruction` and `Pauli`.
+    Converting to a matrix using `to_matrix` and to an operator using `to_operator`.
+    Tensor product methods `tensor` and `expand`.
+    Calculation of the adjoint, conjugate and transpose using `conjugate`, `adjoint`
+    and `transpose` methods.
+    Verify that an element is CNOTDihedral using `is_cnotdihedral` method.
+    General decomposition of a CNOTDihedral element into a circuit method `to_circuit`
+    was extended to allow any number of qubits, based on the function
+    `decompose_cnotdihedral_general`.
+fixes:
+  - |
+    Fixing a bug in the class
+    :class:`qiskit.ignis.verification.randomized_benchmarking.CNOTDihedral`
+    for elements with more than 5 quits.
