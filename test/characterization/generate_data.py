@@ -203,8 +203,7 @@ def t2star_circuit_execution() -> Tuple[qiskit.result.Result,
     shots = 200
 
     # Estimate T2* via an oscilliator function
-    circs_osc, xdata, omega = t2star_circuits(num_of_gates, gate_time,
-                                              qubits, 5)
+    circs, xdata, omega = t2star_circuits(num_of_gates, gate_time, qubits, 5)
 
     qobj = qiskit.assemble(
         qiskit.transpile(circs, backend=backend, optimization_level=0),
