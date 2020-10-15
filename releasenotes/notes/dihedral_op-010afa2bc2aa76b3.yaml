@@ -10,7 +10,7 @@ features:
     Calculation of the adjoint, conjugate and transpose using `conjugate`, `adjoint`
     and `transpose` methods.
     Verify that an element is CNOTDihedral using `is_cnotdihedral` method.
-    General decomposition of a CNOTDihedral element into a circuit method `to_circuit`
+    Decomposition method `to_circuit` of a CNOTDihedral element into a circuit
     was extended to allow any number of qubits, based on the function
     `decompose_cnotdihedral_general`.
 fixes:
