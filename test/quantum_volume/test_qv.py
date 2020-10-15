@@ -64,11 +64,12 @@ def qv_circuit_execution(qubit_lists: list, ntrials: int, shots: int):
     basis_gates = ['u1', 'u2', 'u3', 'cx']  # use U,CX for now
     exp_results = []
     for trial in range(ntrials):
-        exp_results.append(
-            qiskit.execute(qv_circs[trial], basis_gates=basis_gates, backend=backend,
-                           noise_model=noise_model, shots=shots,
-                           seed_simulator=SEED,
-                           backend_options={'max_parallel_experiments': 0}).result())
+        qobj = qiskit.assemble(qiskit.transpile(qv_circs[trial],
+                                                backend=backend,
+                                                basis_gates=basis_gates),
+                               backend=backend, shots=shots, seed_simulator=SEED,
+                               noise_model=noise_model, max_parallel_experiments=0)
+        exp_results.append(backend.run(qobj).result())
 
     return ideal_results, exp_results
 

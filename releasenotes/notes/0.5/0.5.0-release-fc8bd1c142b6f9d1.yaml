@@ -1,0 +1,5 @@
+---
+prelude: >
+    This release includes a new module for expectation value measurement
+    error mitigation, improved plotting functionality for quantum volume
+    experiments, several bug fixes, and drops support for Python 3.5.

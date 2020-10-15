@@ -21,7 +21,7 @@ import unittest
 
 from ddt import ddt, unpack, data
 
-from qiskit import execute, QuantumCircuit
+from qiskit import QuantumCircuit, assemble, transpile
 from qiskit.result import Result
 from qiskit.providers.aer import QasmSimulator, noise
 from qiskit.ignis.mitigation import (
@@ -65,14 +65,14 @@ class NoisySimulationTest(unittest.TestCase):
                       noise_model=None) -> Result:
         """Run circuits with the readout noise defined in this class
         """
-        return execute(
-            qc_list,
-            backend=self.sim,
-            seed_simulator=self.seed_simulator,
-            shots=self.shots,
-            noise_model=None if noise_model is None else self.noise_model,
-            backend_options={'method': 'density_matrix'}
-        ).result()
+        backend = self.sim
+        qobj = assemble(transpile(qc_list, backend=backend),
+                        backend=backend, shots=self.shots,
+                        seed_simulator=self.seed_simulator,
+                        noise_model=None if noise_model is None else self.noise_model,
+                        method='density_matrix')
+
+        return backend.run(qobj).result()
 
 
 @ddt
