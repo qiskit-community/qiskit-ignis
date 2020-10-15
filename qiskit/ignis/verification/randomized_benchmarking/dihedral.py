@@ -363,7 +363,8 @@ class CNOTDihedral(BaseOperator):
 
         # Initialize from ScalarOp as N-qubit identity discarding any global phase
         elif isinstance(data, ScalarOp):
-            if not data.is_unitary() or set(data._input_dims) != {2}:
+            if not data.is_unitary() or set(data._input_dims) != {2} or \
+                    data.num_qubits is None:
                 raise QiskitError("Can only initialize from N-qubit identity ScalarOp.")
             self._num_qubits = data.num_qubits
             # phase polynomial
@@ -376,9 +377,10 @@ class CNOTDihedral(BaseOperator):
         # Initialize from a QuantumCircuit or Instruction object
         elif isinstance(data, (QuantumCircuit, Instruction)):
             self._num_qubits = data.num_qubits
-            self.poly = self.from_circuit(data).poly
-            self.linear = self.from_circuit(data).linear
-            self.shift = self.from_circuit(data).shift
+            elem = self.from_circuit(data)
+            self.poly = elem.poly
+            self.linear = elem.linear
+            self.shift = elem.shift
 
         # Construct the identity element on num_qubits qubits.
         elif isinstance(data, int):
@@ -540,12 +542,12 @@ class CNOTDihedral(BaseOperator):
     def _add(self, other, qargs=None):
         """Not implemented."""
         raise NotImplementedError(
-            "{} does not support conjugatge".format(type(self)))
+            "{} does not support addition".format(type(self)))
 
     def _multiply(self, other):
         """Not implemented."""
         raise NotImplementedError(
-            "{} does not support conjugatge".format(type(self)))
+            "{} does not support scalar multiplication".format(type(self)))
 
     def to_circuit(self):
         """Return a QuantumCircuit implementing the CNOT-Dihedral element.
@@ -605,8 +607,8 @@ class CNOTDihedral(BaseOperator):
 
         Args:
             other (CNOTDihedral): an operator object.
-            qargs (None): None.
-            front (bool): If True compose using right operator multiplication,
+            qargs (None): using specific qargs is not implemented for this operator.
+            front (bool): if True compose using right operator multiplication,
                           instead of left multiplication [default: False].
         Returns:
             CNOTDihedral: The operator self @ other.
@@ -614,6 +616,7 @@ class CNOTDihedral(BaseOperator):
             QiskitError: if operators have incompatible dimensions for
                          composition.
             NotImplementedError: if qargs is not None.
+
         Additional Information:
             Composition (``@``) is defined as `left` matrix multiplication for
             matrix operators. That is that ``A @ B`` is equal to ``B * A``.
@@ -636,7 +639,7 @@ class CNOTDihedral(BaseOperator):
 
         Args:
             other (CNOTDihedral): an operator object.
-            qargs (None): None.
+            qargs (None): using specific qargs is not implemented for this operator.
         Returns:
             CNOTDihedral: The operator self * other.
         Raises:
