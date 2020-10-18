@@ -43,6 +43,10 @@ import numpy as np
 from numpy.random import RandomState
 
 from qiskit.exceptions import QiskitError
+from qiskit.quantum_info.operators.base_operator import BaseOperator
+from qiskit.quantum_info.operators.operator import Operator
+from qiskit.quantum_info.operators.pauli import Pauli
+from qiskit.quantum_info.operators.scalar_op import ScalarOp
 from qiskit.circuit import QuantumCircuit, Instruction
 
 
@@ -59,7 +63,8 @@ class SpecialPolynomial():
         #   {n choose 2} quadratic terms x_1x_2, x_1x_3, ..., x_{n-1}x_n
         #   {n choose 3} cubic terms x_1x_2x_3, ..., x_{n-2}x_{n-1}x_n
         # and coefficients in Z_8
-        assert n_vars >= 1, "n_vars too small!"
+        if n_vars < 1:
+            raise QiskitError("n_vars for SpecialPolynomial is too small.")
         self.n_vars = n_vars
         self.nc2 = int(n_vars * (n_vars-1) / 2)
         self.nc3 = int(n_vars * (n_vars-1) * (n_vars-2) / 6)
@@ -74,12 +79,13 @@ class SpecialPolynomial():
         Returns the product.
         """
         length = len(indices)
-        assert length < 4, "no term!"
+        if length >= 4:
+            raise QiskitError("There is no term with on more than 3 indices.")
         indices_arr = np.array(indices)
-        assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
-            "indices out of bounds!"
-        if length > 1:
-            assert (np.diff(indices_arr) > 0).all(), "indices non-increasing!"
+        if (indices_arr < 0).any() and (indices_arr > self.n_vars).any():
+            raise QiskitError("Indices are out of bounds.")
+        if length > 1 and (np.diff(indices_arr) <= 0).any():
+            raise QiskitError("Indices are non-increasing!")
         result = SpecialPolynomial(self.n_vars)
         if length == 0:
             result = copy.deepcopy(self)
@@ -105,7 +111,8 @@ class SpecialPolynomial():
             result.weight_2 = (self.weight_2 * other) % 8
             result.weight_3 = (self.weight_3 * other) % 8
         else:
-            assert self.n_vars == other.n_vars, "different n_vars!"
+            if self.n_vars != other.n_vars:
+                raise QiskitError("Multiplication on different n_vars.")
             terms0 = [[]]
             terms1 = list(combinations(range(self.n_vars), r=1))
             terms2 = list(combinations(range(self.n_vars), r=2))
@@ -128,8 +135,10 @@ class SpecialPolynomial():
 
     def __add__(self, other):
         """Add two polynomials."""
-        assert isinstance(other, SpecialPolynomial), "other isn't poly!"
-        assert self.n_vars == other.n_vars, "different n_vars!"
+        if not isinstance(other, SpecialPolynomial):
+            raise QiskitError("Element to add is not a SpecialPolynomial.")
+        if self.n_vars != other.n_vars:
+            raise QiskitError("Addition on different n_vars.")
         result = SpecialPolynomial(self.n_vars)
         result.weight_0 = (self.weight_0 + other.weight_0) % 8
         result.weight_1 = (self.weight_1 + other.weight_1) % 8
@@ -144,14 +153,16 @@ class SpecialPolynomial():
         if xval is a length n vector of multinomials, return
         a multinomial. The multinomials must all be on n vars.
         """
-        assert len(xval) == self.n_vars, "wrong number of variables!"
+        if len(xval) != self.n_vars:
+            raise QiskitError("Evaluate on wrong number of variables.")
         check_int = list(map(lambda x: isinstance(x, int), xval))
         check_poly = list(map(lambda x: isinstance(x, SpecialPolynomial), xval))
-        assert False not in check_int or False not in check_poly, "wrong type!"
+        if False in check_int and False in check_poly:
+            raise QiskitError("Evaluate on a wrong type.")
         is_int = (False not in check_int)
         if not is_int:
-            assert False not in [i.n_vars == self.n_vars for i in xval], \
-                "incompatible polynomials!"
+            if False in [i.n_vars == self.n_vars for i in xval]:
+                raise QiskitError("Evaluate on incompatible polynomials.")
         else:
             xval = xval % 2
         # Examine each term of this polynomial
@@ -183,8 +194,8 @@ class SpecialPolynomial():
         p_J(x) := sum_{a subseteq J,|a| neq 0} (-2)^{|a|-1}x^a
         """
         indices_arr = np.array(indices)
-        assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
-            "indices out of bounds!"
+        if (indices_arr < 0).any() or (indices_arr >= self.n_vars).any():
+            raise QiskitError("Indices are out of bounds.")
         indices = sorted(indices)
         subsets_2 = itertools.combinations(indices, 2)
         subsets_3 = itertools.combinations(indices, 3)
@@ -212,12 +223,14 @@ class SpecialPolynomial():
         If the indices are not increasing the method fails.
         """
         length = len(indices)
-        assert length < 4, "no term!"
+        if length >= 4:
+            return 0
         indices_arr = np.array(indices)
-        assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
-            "indices out of bounds!"
-        if length > 1:
-            assert (np.diff(indices_arr) > 0).all(), "indices non-increasing!"
+        if (indices_arr < 0).any() or (indices_arr >= self.n_vars).any():
+            raise QiskitError("Indices are out of bounds.")
+        if length > 1 and (np.diff(indices_arr) <= 0).any():
+            raise QiskitError("Indices are non-increasing.")
+
         if length == 0:
             return self.weight_0
         if length == 1:
@@ -229,16 +242,16 @@ class SpecialPolynomial():
             offset_2 = int(indices[1] - indices[0] - 1)
             return self.weight_2[offset_1 + offset_2]
 
-        # sum({self.n_vars-j choose 2}, {j, 1, indices[0]})
-        offset_1 = int(indices[0] * (2 + indices[0]**2 - 3*indices[0] *
-                                     (self.n_vars - 1) -
-                                     6 * self.n_vars +
-                                     3 * self.n_vars**2)/6)
-        # sum(self.n_vars-j, {j, 2, indices[1]-indices[0]})
-        offset_2 = int((indices[1] - indices[0] - 1) *
-                       (2 * self.n_vars - indices[1] + indices[0] - 2)/2)
-        offset_3 = int(indices[2] - indices[1] - 1)
-        return self.weight_3[offset_1 + offset_2 + offset_3]
+        # handle length = 3
+        tmp_1 = self.n_vars - indices[0]
+        offset_1 = int((tmp_1 - 3) * (tmp_1 - 2) * (tmp_1 - 1) / 6)
+        tmp_2 = self.n_vars - indices[1]
+        offset_2 = int((tmp_2 - 2) * (tmp_2 - 1) / 2)
+        offset_3 = self.n_vars - indices[2]
+        offset = int(self.n_vars * (self.n_vars - 1) * (self.n_vars - 2) / 6 -
+                     offset_1 - offset_2 - offset_3)
+
+        return self.weight_3[offset]
 
     def set_term(self, indices, value):
         """Set the value of a term given the list of variables.
@@ -254,12 +267,14 @@ class SpecialPolynomial():
         The value is reduced modulo 8.
         """
         length = len(indices)
-        assert length < 4, "no term!"
+        if length >= 4:
+            return
         indices_arr = np.array(indices)
-        assert (indices_arr >= 0).all() and (indices_arr < self.n_vars).all(), \
-            "indices out of bounds!"
-        if length > 1:
-            assert (np.diff(indices_arr) > 0).all(), "indices non-increasing!"
+        if (indices_arr < 0).any() or (indices_arr >= self.n_vars).any():
+            raise QiskitError("Indices are out of bounds.")
+        if length > 1 and (np.diff(indices_arr) <= 0).any():
+            raise QiskitError("Indices are non-increasing.")
+
         value = value % 8
         if length == 0:
             self.weight_0 = value
@@ -271,17 +286,15 @@ class SpecialPolynomial():
                            ((indices[0] + 1) * indices[0])/2)
             offset_2 = int(indices[1] - indices[0] - 1)
             self.weight_2[offset_1 + offset_2] = value
-        else:
-            # sum({self.n_vars-j choose 2}, {j, 1, indices[0]})
-            offset_1 = int(indices[0] * (2 + indices[0]**2 - 3*indices[0] *
-                                         (self.n_vars - 1) -
-                                         6 * self.n_vars +
-                                         3 * self.n_vars**2)/6)
-            # sum(self.n_vars-j, {j, 2, indices[1]-indices[0]})
-            offset_2 = int((indices[1] - indices[0] - 1) *
-                           (2 * self.n_vars - indices[1] + indices[0] - 2)/2)
-            offset_3 = int(indices[2] - indices[1] - 1)
-            self.weight_3[offset_1 + offset_2 + offset_3] = value
+        else:  # length = 3
+            tmp_1 = self.n_vars - indices[0]
+            offset_1 = int((tmp_1 - 3) * (tmp_1 - 2) * (tmp_1 - 1) / 6)
+            tmp_2 = self.n_vars - indices[1]
+            offset_2 = int((tmp_2 - 2) * (tmp_2 - 1) / 2)
+            offset_3 = self.n_vars - indices[2]
+            offset = int(self.n_vars * (self.n_vars - 1) * (self.n_vars - 2) / 6 -
+                         offset_1 - offset_2 - offset_3)
+            self.weight_3[offset] = value
 
     @property
     def key(self):
@@ -325,7 +338,7 @@ class SpecialPolynomial():
         return out
 
 
-class CNOTDihedral():
+class CNOTDihedral(BaseOperator):
     """CNOT-dihedral Object Class.
     The CNOT-dihedral group on num_qubits qubits is generated by the gates
     CNOT, T and X.
@@ -338,15 +351,61 @@ class CNOTDihedral():
            npj Quantum Inf 2, 16012 (2016).
     """
 
-    def __init__(self, num_qubits):
+    def __init__(self, data, validate=True):
+        """Initialize a CNOTDihedral operator object."""
+
+        # Initialize from another CNOTDihedral by sharing the underlying
+        # poly, linear and shift
+        if isinstance(data, CNOTDihedral):
+            self.linear = data.linear
+            self.shift = data.shift
+            self.poly = data.poly
+
+        # Initialize from ScalarOp as N-qubit identity discarding any global phase
+        elif isinstance(data, ScalarOp):
+            if not data.is_unitary() or set(data._input_dims) != {2} or \
+                    data.num_qubits is None:
+                raise QiskitError("Can only initialize from N-qubit identity ScalarOp.")
+            self._num_qubits = data.num_qubits
+            # phase polynomial
+            self.poly = SpecialPolynomial(self._num_qubits)
+            # n x n invertible matrix over Z_2
+            self.linear = np.eye(self._num_qubits, dtype=np.int8)
+            # binary shift, n coefficients in Z_2
+            self.shift = np.zeros(self._num_qubits, dtype=np.int8)
+
+        # Initialize from a QuantumCircuit or Instruction object
+        elif isinstance(data, (QuantumCircuit, Instruction)):
+            self._num_qubits = data.num_qubits
+            elem = self.from_circuit(data)
+            self.poly = elem.poly
+            self.linear = elem.linear
+            self.shift = elem.shift
+
         # Construct the identity element on num_qubits qubits.
-        self.num_qubits = num_qubits
-        # phase polynomial
-        self.poly = SpecialPolynomial(num_qubits)
-        # n x n invertible matrix over Z_2
-        self.linear = np.eye(num_qubits, dtype=np.int8)
-        # binary shift, n coefficients in Z_2
-        self.shift = np.zeros(num_qubits, dtype=np.int8)
+        elif isinstance(data, int):
+            self._num_qubits = data
+            # phase polynomial
+            self.poly = SpecialPolynomial(self._num_qubits)
+            # n x n invertible matrix over Z_2
+            self.linear = np.eye(self._num_qubits, dtype=np.int8)
+            # binary shift, n coefficients in Z_2
+            self.shift = np.zeros(self._num_qubits, dtype=np.int8)
+
+        elif isinstance(data, Pauli):
+            self._num_qubits = data.num_qubits
+            elem = self.from_circuit(data.to_instruction())
+            self.poly = elem.poly
+            self.linear = elem.linear
+            self.shift = elem.shift
+
+        # Initialize BaseOperator
+        dims = self._num_qubits * (2,)
+        super().__init__(dims, dims)
+
+        # Validate the CNOTDihedral element
+        if validate and not self.is_cnotdihedral():
+            raise QiskitError('Invalid CNOTDihedsral element.')
 
     def _z2matmul(self, left, right):
         """Compute product of two n x n z2 matrices."""
@@ -360,7 +419,8 @@ class CNOTDihedral():
 
     def __mul__(self, other):
         """Left multiplication self * other."""
-        assert self.num_qubits == other.num_qubits, "not same num_qubits!"
+        if self.num_qubits != other.num_qubits:
+            raise QiskitError("Multiplication on different number of qubits.")
         result = CNOTDihedral(self.num_qubits)
         result.shift = [(x[0] + x[1]) % 2
                         for x in zip(self._z2matvecmul(self.linear, other.shift), self.shift)]
@@ -381,7 +441,8 @@ class CNOTDihedral():
 
     def __rmul__(self, other):
         """Right multiplication other * self."""
-        assert self.num_qubits == other.num_qubits, "not same num_qubits!"
+        if self.num_qubits != other.num_qubits:
+            raise QiskitError("Multiplication on different number of qubits.")
         result = CNOTDihedral(self.num_qubits)
         result.shift = [(x[0] + x[1]) % 2
                         for x in zip(self._z2matvecmul(other.linear,
@@ -417,8 +478,9 @@ class CNOTDihedral():
         """Apply a CNOT gate to this element.
         Left multiply the element by CNOT_{i,j}.
         """
-        assert (0 <= i < self.num_qubits) and (0 <= j < self.num_qubits) \
-               and (i != j), "cnot qubits out of bounds!"
+
+        if not 0 <= i < self.num_qubits or not 0 <= j < self.num_qubits:
+            raise QiskitError("cnot qubits are out of bounds.")
         self.linear[j] = (self.linear[i] + self.linear[j]) % 2
         self.shift[j] = (self.shift[i] + self.shift[j]) % 2
 
@@ -426,7 +488,8 @@ class CNOTDihedral():
         """Apply an k-th power of T to this element.
         Left multiply the element by T_i^k.
         """
-        assert 0 <= i < self.num_qubits, "phase qubit out of bounds!"
+        if not 0 <= i < self.num_qubits:
+            raise QiskitError("phase qubit out of bounds.")
         # If the kth bit is flipped, conjugate this gate
         if self.shift[i] == 1:
             k = (7*k) % 8
@@ -450,7 +513,8 @@ class CNOTDihedral():
         """Apply X to this element.
         Left multiply the element by X_i.
         """
-        assert 0 <= i < self.num_qubits, "flip qubit out of bounds!"
+        if not 0 <= i < self.num_qubits:
+            raise QiskitError("flip qubit out of bounds.")
         self.shift[i] = (self.shift[i] + 1) % 2
 
     def __str__(self):
@@ -474,6 +538,16 @@ class CNOTDihedral():
                 out += ","
         out += ")\n"
         return out
+
+    def _add(self, other, qargs=None):
+        """Not implemented."""
+        raise NotImplementedError(
+            "{} does not support addition".format(type(self)))
+
+    def _multiply(self, other):
+        """Not implemented."""
+        raise NotImplementedError(
+            "{} does not support scalar multiplication".format(type(self)))
 
     def to_circuit(self):
         """Return a QuantumCircuit implementing the CNOT-Dihedral element.
@@ -520,44 +594,194 @@ class CNOTDihedral():
         append_circuit(elem, circuit)
         return elem
 
-    def compose(self, other):
+    def to_matrix(self):
+        """Convert operator to Numpy matrix."""
+        return self.to_operator().data
+
+    def to_operator(self):
+        """Convert to an Operator object."""
+        return Operator(self.to_instruction())
+
+    def compose(self, other, qargs=None, front=False):
         """Return the composed operator.
 
         Args:
             other (CNOTDihedral): an operator object.
+            qargs (None): using specific qargs is not implemented for this operator.
+            front (bool): if True compose using right operator multiplication,
+                          instead of left multiplication [default: False].
         Returns:
             CNOTDihedral: The operator self @ other.
         Raises:
             QiskitError: if operators have incompatible dimensions for
                          composition.
+            NotImplementedError: if qargs is not None.
+
         Additional Information:
             Composition (``@``) is defined as `left` matrix multiplication for
             matrix operators. That is that ``A @ B`` is equal to ``B * A``.
             Setting ``front=True`` returns `right` matrix multiplication
             ``A * B`` and is equivalent to the :meth:`dot` method.
         """
+        if qargs is not None:
+            raise NotImplementedError("compose method does not support qargs.")
         if self.num_qubits != other.num_qubits:
             raise QiskitError("Incompatible dimension for composition")
-        other = other * self
+        if front:
+            other = self * other
+        else:
+            other = other * self
         other.poly.weight_0 = 0  # set global phase
         return other
 
-    def dot(self, other):
+    def dot(self, other, qargs=None):
         """Return the right multiplied operator self * other.
 
         Args:
             other (CNOTDihedral): an operator object.
+            qargs (None): using specific qargs is not implemented for this operator.
         Returns:
             CNOTDihedral: The operator self * other.
         Raises:
-            QiskitError: if operators have incompatible dimensions for
-                         composition.
+            QiskitError: if operators have incompatible dimensions for composition.
+            NotImplementedError: if qargs is not None.
         """
+        if qargs is not None:
+            raise NotImplementedError("dot method does not support qargs.")
         if self.num_qubits != other.num_qubits:
             raise QiskitError("Incompatible dimension for composition")
         other = self * other
         other.poly.weight_0 = 0  # set global phase
         return other
+
+    def _tensor_product(self, other, reverse=False):
+        """Returns the tensor product operator.
+
+         Args:
+             other (CNOTDihedral): another operator subclass object.
+             reverse (bool): If False return self tensor other,
+                            if True return other tensor self [Default: False].
+         Returns:
+             CNOTDihedral: the tensor product operator: self tensor other.
+         Raises:
+             QiskitError: if other cannot be converted into an CNOTDihderal object.
+        """
+
+        if not isinstance(other, CNOTDihedral):
+            raise QiskitError("Tensored element is not a CNOTDihderal object.")
+
+        if reverse:
+            elem0 = self
+            elem1 = other
+        else:
+            elem0 = other
+            elem1 = self
+
+        result = CNOTDihedral(elem0.num_qubits + elem1.num_qubits)
+        linear = np.block([[elem0.linear,
+                            np.zeros((elem0.num_qubits, elem1.num_qubits), dtype=np.int8)],
+                           [np.zeros((elem1.num_qubits, elem0.num_qubits), dtype=np.int8),
+                            elem1.linear]])
+        result.linear = linear
+        shift = np.block([elem0.shift, elem1.shift])
+        result.shift = shift
+
+        for i in range(elem0.num_qubits):
+            value = elem0.poly.get_term([i])
+            result.poly.set_term([i], value)
+            for j in range(i):
+                value = elem0.poly.get_term([j, i])
+                result.poly.set_term([j, i], value)
+                for k in range(j):
+                    value = elem0.poly.get_term([k, j, i])
+                    result.poly.set_term([k, j, i], value)
+
+        for i in range(elem1.num_qubits):
+            value = elem1.poly.get_term([i])
+            result.poly.set_term([i + elem0.num_qubits], value)
+            for j in range(i):
+                value = elem1.poly.get_term([j, i])
+                result.poly.set_term([j + elem0.num_qubits, i + elem0.num_qubits], value)
+                for k in range(j):
+                    value = elem1.poly.get_term([k, j, i])
+                    result.poly.set_term([k + elem0.num_qubits, j + elem0.num_qubits,
+                                          i + elem0.num_qubits], value)
+
+        return result
+
+    def tensor(self, other):
+        """Return the tensor product operator: self tensor other.
+
+         Args:
+             other (CNOTDihedral): an operator subclass object.
+         Returns:
+             CNOTDihedral: the tensor product operator: self tensor other.
+         """
+
+        return self._tensor_product(other, reverse=True)
+
+    def expand(self, other):
+        """Return the tensor product operator: other tensor self.
+
+         Args:
+             other (CNOTDihedral): an operator subclass object.
+         Returns:
+             CNOTDihedral: the tensor product operator: other tensor other.
+         """
+
+        return self._tensor_product(other, reverse=False)
+
+    def adjoint(self):
+        """Return the conjugate transpose of the CNOTDihedral element"""
+
+        circ = self.to_instruction()
+        result = self.from_circuit(circ.inverse())
+        return result
+
+    def conjugate(self):
+        """Return the conjugate of the CNOTDihedral element."""
+        circ = self.to_instruction()
+        new_circ = QuantumCircuit(self.num_qubits)
+        qargs = list(range(self.num_qubits))
+        for instr, qregs, _ in circ.definition:
+            new_qubits = [qargs[tup.index] for tup in qregs]
+            if instr.name == 'u1':
+                params = 2 * np.pi - instr.params[0]
+                instr.params[0] = params
+                new_circ.append(instr, new_qubits)
+            else:
+                new_circ.append(instr, new_qubits)
+        result = self.from_circuit(new_circ)
+        return result
+
+    def transpose(self):
+        """Return the transpose of the CNOT-Dihedral element."""
+
+        circ = self.to_instruction()
+        result = self.from_circuit(circ.reverse_ops())
+        return result
+
+    def is_cnotdihedral(self):
+        """Return True if input is a CNOTDihedral element."""
+
+        if self.poly.weight_0 != 0 or \
+                len(self.poly.weight_1) != self.num_qubits or \
+                len(self.poly.weight_2) != int(self.num_qubits * (self.num_qubits - 1) / 2) \
+                or len(self.poly.weight_3) != int(self.num_qubits * (self.num_qubits - 1)
+                                                  * (self.num_qubits - 2) / 6):
+            return False
+        if (self.linear).shape != (self.num_qubits, self.num_qubits) or \
+                len(self.shift) != self.num_qubits or \
+                not np.allclose((np.linalg.det(self.linear) % 2), 1):
+            return False
+        if not (set(self.poly.weight_1.flatten())).issubset({0, 1, 2, 3, 4, 5, 6, 7}) or \
+                not (set(self.poly.weight_2.flatten())).issubset({0, 2, 4, 6}) or \
+                not (set(self.poly.weight_3.flatten())).issubset({0, 4}):
+            return False
+        if not (set(self.shift.flatten())).issubset({0, 1}) or \
+                not (set(self.linear.flatten())).issubset({0, 1}):
+            return False
+        return True
 
 
 def make_dict_0(num_qubits):
@@ -568,7 +792,6 @@ def make_dict_0(num_qubits):
     The key is a unique string and the value is a pair:
     a CNOTDihedral object and a list of gates as a string.
     """
-    assert num_qubits >= 1, "num_qubits too small!"
     obj = {}
     for i in range(16**num_qubits):
         elem = CNOTDihedral(num_qubits)
@@ -599,7 +822,6 @@ def make_dict_next(num_qubits, dicts_prior):
     The key is a unique string and the value is a pair:
     a CNOTDihedral object and a list of gates as a string.
     """
-    assert num_qubits >= 1, "num_qubits too small!"
     obj = {}
     for elem, circ in dicts_prior[-1].values():
         for i in range(num_qubits):
@@ -665,6 +887,17 @@ def append_circuit(elem, circuit, qargs=None):
                 raise QiskitError("Invalid qubits for 1-qubit gate x.")
             elem.flip(new_qubits[0])
 
+        elif (instr.name == 'z' or gate.name == 'z'):
+            if len(new_qubits) != 1:
+                raise QiskitError("Invalid qubits for 1-qubit gate z.")
+            elem.phase(4, new_qubits[0])
+
+        elif (instr.name == 'y' or gate.name == 'y'):
+            if len(new_qubits) != 1:
+                raise QiskitError("Invalid qubits for 1-qubit gate y.")
+            elem.flip(new_qubits[0])
+            elem.phase(4, new_qubits[0])
+
         elif (instr.name == 'u1' or gate.name == 'u1'):
             if (len(new_qubits) != 1 or len(instr.params) != 1):
                 raise QiskitError("Invalid qubits or params for 1-qubit gate u1.")
@@ -674,6 +907,17 @@ def append_circuit(elem, circuit, qargs=None):
             if len(new_qubits) != 2:
                 raise QiskitError("Invalid qubits for 2-qubit gate cx.")
             elem.cnot(new_qubits[0], new_qubits[1])
+
+        elif (instr.name == 'cz' or gate.name == 'cz'):
+            if len(new_qubits) != 2:
+                raise QiskitError("Invalid qubits for 2-qubit gate cz.")
+            elem.phase(7, new_qubits[1])
+            elem.phase(7, new_qubits[0])
+            elem.cnot(new_qubits[1], new_qubits[0])
+            elem.phase(2, new_qubits[0])
+            elem.cnot(new_qubits[1], new_qubits[0])
+            elem.phase(7, new_qubits[1])
+            elem.phase(7, new_qubits[0])
 
         elif (instr.name == 'id' or gate.name == 'id'):
             pass
@@ -691,8 +935,34 @@ def decompose_cnotdihedral(elem):
         elem (CNOTDihedral): a CNOTDihedral element.
     Return:
         QuantumCircuit: a circuit implementation of the CNOTDihedral element.
+
+    References:
+        1. Shelly Garion and Andrew W. Cross, *On the structure of the CNOT-Dihedral group*,
+           `arXiv:2006.12042 [quant-ph] <https://arxiv.org/abs/2006.12042>`_
+        2. Andrew W. Cross, Easwar Magesan, Lev S. Bishop, John A. Smolin and Jay M. Gambetta,
+           *Scalable randomised benchmarking of non-Clifford gates*,
+           npj Quantum Inf 2, 16012 (2016).
+    """
+
+    num_qubits = elem.num_qubits
+
+    if num_qubits < 3:
+        return decompose_cnotdihedral_2_qubits(elem)
+
+    return decompose_cnotdihedral_general(elem)
+
+
+def decompose_cnotdihedral_2_qubits(elem):
+    """Decompose a CNOTDihedral element into a QuantumCircuit.
+
+    Args:
+        elem (CNOTDihedral): a CNOTDihedral element.
+    Return:
+        QuantumCircuit: a circuit implementation of the CNOTDihedral element.
     Remark:
         Decompose 1 and 2-qubit CNOTDihedral elements.
+    Raises:
+        QiskitError: if the element in not 1 or 2-qubit CNOTDihedral.
 
     References:
         1. Shelly Garion and Andrew W. Cross, *On the structure of the CNOT-Dihedral group*,
@@ -704,12 +974,13 @@ def decompose_cnotdihedral(elem):
 
     circuit = QuantumCircuit(elem.num_qubits)
 
-    assert elem.num_qubits < 3, \
-        "cannot decompose a CNOT-Dihedral element with more than 2 qubits"
+    if elem.num_qubits > 2:
+        raise QiskitError("Cannot decompose a CNOT-Dihedral element with more than 2 qubits. "
+                          "use decompose_cnotdihedral_general function instead.")
 
     if elem.num_qubits == 1:
-        assert elem.poly.weight_0 == 0
-        assert elem.linear == [[1]]
+        if elem.poly.weight_0 != 0 or elem.linear != [[1]]:
+            raise QiskitError("1-qubit element in not CNOT-Dihedral .")
         tpow0 = elem.poly.weight_1[0]
         xpow0 = elem.shift[0]
         if tpow0 > 0:
@@ -721,7 +992,8 @@ def decompose_cnotdihedral(elem):
         return circuit
 
     # case elem.num_qubits == 2:
-    assert elem.poly.weight_0 == 0
+    if elem.poly.weight_0 != 0:
+        raise QiskitError("2-qubit element in not CNOT-Dihedral .")
     weight_1 = elem.poly.weight_1
     weight_2 = elem.poly.weight_2
     linear = elem.linear
@@ -799,13 +1071,7 @@ def decompose_cnotdihedral(elem):
             if xpow1 == 1:
                 circuit.x(1)
             # CZ gate is implemented using 2 CX gates
-            circuit.u1(7 * np.pi / 4, 1)
-            circuit.u1(7 * np.pi / 4, 0)
-            circuit.cx(1, 0)
-            circuit.u1(2 * np.pi / 4, 0)
-            circuit.cx(1, 0)
-            circuit.u1(7 * np.pi / 4, 1)
-            circuit.u1(7 * np.pi / 4, 0)
+            circuit.cz(1, 0)
 
     # CX01-like class
     if (linear == [[1, 0], [1, 1]]).all():
@@ -934,6 +1200,114 @@ def decompose_cnotdihedral(elem):
     return circuit
 
 
+def decompose_cnotdihedral_general(elem):
+    """Decompose a CNOTDihedral element into a QuantumCircuit.
+
+    Args:
+        elem (CNOTDihedral): a CNOTDihedral element.
+    Return:
+        QuantumCircuit: a circuit implementation of the CNOTDihedral element.
+    Remark:
+        Decompose general CNOTDihedral elements.
+        The number of CNOT gates is not necessarily optimal.
+    Raises:
+        QiskitError: if the element could not be decomposed into a circuit.
+
+    References:
+        1. Andrew W. Cross, Easwar Magesan, Lev S. Bishop, John A. Smolin and Jay M. Gambetta,
+           *Scalable randomised benchmarking of non-Clifford gates*,
+           npj Quantum Inf 2, 16012 (2016).
+    """
+
+    num_qubits = elem.num_qubits
+    circuit = QuantumCircuit(num_qubits)
+
+    # Make a copy of the CNOTDihedral element as we are going to
+    # reduce it to an identity
+    elem_cpy = elem.copy()
+
+    if not np.allclose((np.linalg.det(elem_cpy.linear) % 2), 1):
+        raise QiskitError("Linear part is not invertible.")
+
+    # Do x gate for each qubit i where shift[i]=1
+    for i in range(num_qubits):
+        if elem.shift[i]:
+            circuit.x(i)
+            elem_cpy.flip(i)
+
+    # Do Gauss elimination on the linear part by adding cx gates
+    for i in range(num_qubits):
+        # set i-th element to be 1
+        if not elem_cpy.linear[i][i]:
+            for j in range(i+1, num_qubits):
+                if elem_cpy.linear[j][i]:  # swap qubits i and j
+                    circuit.cx(j, i)
+                    circuit.cx(i, j)
+                    circuit.cx(j, i)
+                    elem_cpy.cnot(j, i)
+                    elem_cpy.cnot(i, j)
+                    elem_cpy.cnot(j, i)
+                    break
+        # make all the other elements in column i zero
+        for j in range(num_qubits):
+            if j != i:
+                if elem_cpy.linear[j][i]:
+                    circuit.cx(i, j)
+                    elem_cpy.cnot(i, j)
+
+    if not (elem_cpy.shift == np.zeros(num_qubits)).all() or \
+            not (elem_cpy.linear == np.eye(num_qubits)).all():
+        raise QiskitError("Cannot do Gauss elimination on linear part.")
+
+    new_elem = CNOTDihedral(num_qubits)
+    new_circuit = QuantumCircuit(num_qubits)
+
+    # Do cx and u1 gates to construct all monomials of weight 3
+    for i in range(num_qubits):
+        for j in range(i+1, num_qubits):
+            for k in range(j+1, num_qubits):
+                if elem_cpy.poly.get_term([i, j, k]) != 0:
+                    new_elem.cnot(i, k)
+                    new_elem.cnot(j, k)
+                    new_elem.phase(1, k)
+                    new_elem.cnot(i, k)
+                    new_elem.cnot(j, k)
+                    new_circuit.cx(i, k)
+                    new_circuit.cx(j, k)
+                    new_circuit.u1(np.pi / 4, k)
+                    new_circuit.cx(i, k)
+                    new_circuit.cx(j, k)
+
+    # Do cx and u1 gates to construct all monomials of weight 2
+    for i in range(num_qubits):
+        for j in range(i+1, num_qubits):
+            tpow1 = elem_cpy.poly.get_term([i, j])
+            tpow2 = new_elem.poly.get_term([i, j])
+            tpow = ((tpow2 - tpow1) / 2) % 4
+            if tpow != 0:
+                new_elem.cnot(i, j)
+                new_elem.phase(tpow, j)
+                new_elem.cnot(i, j)
+                new_circuit.cx(i, j)
+                new_circuit.u1(tpow * np.pi / 4, j)
+                new_circuit.cx(i, j)
+
+    # Do u1 gates to construct all monomials of weight 1
+    for i in range(num_qubits):
+        tpow1 = elem_cpy.poly.get_term([i])
+        tpow2 = new_elem.poly.get_term([i])
+        tpow = (tpow1 - tpow2) % 8
+        if tpow != 0:
+            new_elem.phase(tpow, i)
+            new_circuit.u1(tpow * np.pi / 4, i)
+
+    if elem.poly != new_elem.poly:
+        raise QiskitError("Could not recover phase polynomial.")
+
+    inv_circuit = circuit.inverse()
+    return new_circuit.combine(inv_circuit)
+
+
 def random_cnotdihedral(num_qubits, seed=None):
     """Return a random CNOTDihedral element.
 
@@ -966,7 +1340,7 @@ def random_cnotdihedral(num_qubits, seed=None):
     # Random affine function
     # Random invertible binary matrix
     det = 0
-    while det == 0:
+    while np.allclose(det, 0) or np.allclose(det, 2):
         linear = rng.randint(2, size=(num_qubits, num_qubits))
         det = np.linalg.det(linear) % 2
     elem.linear = linear

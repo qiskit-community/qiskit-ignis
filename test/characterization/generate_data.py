@@ -69,13 +69,11 @@ def t1_circuit_execution() -> Tuple[qiskit.result.Result,
 
     backend = qiskit.Aer.get_backend('qasm_simulator')
     shots = 100
-    backend_result = qiskit.execute(
-        circs, backend,
-        shots=shots,
-        seed_simulator=SEED,
-        backend_options={'max_parallel_experiments': 0},
-        noise_model=noise_model,
-        optimization_level=0).result()
+    qobj = qiskit.assemble(
+        qiskit.transpile(circs, backend=backend, optimization_level=0),
+        backend=backend, shots=shots, seed_simulator=SEED,
+        noise_model=noise_model, max_parallel_experiments=0)
+    backend_result = backend.run(qobj).result()
 
     return backend_result, xdata, qubits, t1_value
 
@@ -137,13 +135,11 @@ def t2_circuit_execution() -> Tuple[qiskit.result.Result,
 
     backend = qiskit.Aer.get_backend('qasm_simulator')
     shots = 100
-    backend_result = qiskit.execute(
-        circs, backend,
-        shots=shots,
-        seed_simulator=SEED,
-        backend_options={'max_parallel_experiments': 0},
-        noise_model=noise_model,
-        optimization_level=0).result()
+    qobj = qiskit.assemble(
+        qiskit.transpile(circs, backend=backend, optimization_level=0),
+        backend=backend, shots=shots, seed_simulator=SEED,
+        noise_model=noise_model, max_parallel_experiments=0)
+    backend_result = backend.run(qobj).result()
 
     return backend_result, xdata, qubits, t2_value
 
@@ -207,16 +203,13 @@ def t2star_circuit_execution() -> Tuple[qiskit.result.Result,
     shots = 200
 
     # Estimate T2* via an oscilliator function
-    circs_osc, xdata, omega = t2star_circuits(num_of_gates, gate_time,
-                                              qubits, 5)
+    circs, xdata, omega = t2star_circuits(num_of_gates, gate_time, qubits, 5)
 
-    backend_result = qiskit.execute(
-        circs_osc, backend,
-        shots=shots,
-        seed_simulator=SEED,
-        backend_options={'max_parallel_experiments': 0},
-        noise_model=noise_model,
-        optimization_level=0).result()
+    qobj = qiskit.assemble(
+        qiskit.transpile(circs, backend=backend, optimization_level=0),
+        backend=backend, shots=shots, seed_simulator=SEED,
+        noise_model=noise_model, max_parallel_experiments=0)
+    backend_result = backend.run(qobj).result()
 
     return backend_result, xdata, qubits, t2_value, omega
 

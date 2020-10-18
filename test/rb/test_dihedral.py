@@ -17,6 +17,10 @@ Tests for CNOT-dihedral functions
 """
 
 import unittest
+import numpy as np
+from qiskit.circuit import QuantumCircuit
+from qiskit.quantum_info.operators import Operator
+from qiskit.quantum_info.operators.pauli import Pauli
 
 import qiskit
 # Import the dihedral_utils functions
@@ -296,52 +300,55 @@ class TestCNOTDihedral(unittest.TestCase):
     def test_dihedral_random_decompose(self):
         """
         Test that random elements are CNOTDihedral
-        and to_circuit and from_circuit methods
-        (where num_qubits < 3)
+        and to_circuit, to_instruction, from_circuit, is_cnotdihedral methods
         """
-        for qubit_num in range(1, 5):
+        for qubit_num in range(1, 9):
             for nseed in range(20):
                 elem = random_cnotdihedral(qubit_num, seed=nseed)
-                self.assertTrue(elem,
+                self.assertIsInstance(elem, CNOTDihedral,
+                                      'Error: random element is not CNOTDihedral')
+                self.assertTrue(elem.is_cnotdihedral(),
                                 'Error: random element is not CNOTDihedral')
-                if qubit_num < 3:
-                    test_circ = elem.to_circuit()
-                    self.assertTrue(test_circ,
-                                    'Error: cannot decompose a random '
-                                    'CNOTDihedral element to a circuit')
-                    new_elem = CNOTDihedral(qubit_num)
-                    test_elem = new_elem.from_circuit(test_circ)
-                    # Test of to_circuit and from_circuit methods
-                    self.assertEqual(elem, test_elem,
-                                     'Error: decomposed circuit is not equal '
-                                     'to the original circuit')
 
-                    test_gates = elem.to_instruction()
-                    self.assertIsInstance(test_gates, qiskit.circuit.Gate,
-                                          'Error: cannot decompose a random '
-                                          'CNOTDihedral element to a Gate')
-                    self.assertEqual(test_gates.num_qubits, test_circ.num_qubits,
-                                     'Error: wrong num_qubits in decomposed gates')
-                    new_elem1 = CNOTDihedral(qubit_num)
-                    test_elem1 = new_elem1.from_circuit(test_gates)
-                    # Test of to_instruction and from_circuit methods
-                    self.assertEqual(elem, test_elem1,
-                                     'Error: decomposed gates are not equal '
-                                     'to the original gates')
+                test_circ = elem.to_circuit()
+                self.assertTrue(test_circ,
+                                'Error: cannot decompose a random '
+                                'CNOTDihedral element to a circuit')
+                test_elem = CNOTDihedral(test_circ)
+                # Test of to_circuit and from_circuit methods
+                self.assertEqual(elem, test_elem,
+                                 'Error: decomposed circuit is not equal '
+                                 'to the original circuit')
+                # Test that is_cnotdihedral fails if linear part is wrong
+                test_elem.linear = np.zeros((qubit_num, qubit_num))
+                value = test_elem.is_cnotdihedral()
+                self.assertFalse(value,
+                                 'Error: is_cnotdihedral is not correct.')
+
+                test_gates = elem.to_instruction()
+                self.assertIsInstance(test_gates, qiskit.circuit.Gate,
+                                      'Error: cannot decompose a random '
+                                      'CNOTDihedral element to a Gate')
+                self.assertEqual(test_gates.num_qubits, test_circ.num_qubits,
+                                 'Error: wrong num_qubits in decomposed gates')
+                test_elem1 = CNOTDihedral(test_gates)
+                # Test of to_instruction and from_circuit methods
+                self.assertEqual(elem, test_elem1,
+                                 'Error: decomposed gates are not equal '
+                                 'to the original gates')
 
     def test_compose_method(self):
         """Test compose method"""
         samples = 10
         nseed = 111
-        for qubit_num in range(1, 3):
+        for qubit_num in range(1, 6):
             for i in range(samples):
                 elem1 = random_cnotdihedral(qubit_num, seed=nseed + i)
                 elem2 = random_cnotdihedral(qubit_num, seed=nseed + samples + i)
                 circ1 = elem1.to_circuit()
                 circ2 = elem2.to_circuit()
                 value = elem1.compose(elem2)
-                target = CNOTDihedral(qubit_num)
-                target = target.from_circuit(circ1.extend(circ2))
+                target = CNOTDihedral(circ1.extend(circ2))
                 self.assertEqual(target, value,
                                  'Error: composed circuit is not the same')
 
@@ -349,17 +356,136 @@ class TestCNOTDihedral(unittest.TestCase):
         """Test dot method"""
         samples = 10
         nseed = 222
-        for qubit_num in range(1, 3):
+        for qubit_num in range(1, 6):
             for i in range(samples):
                 elem1 = random_cnotdihedral(qubit_num, seed=nseed + i)
                 elem2 = random_cnotdihedral(qubit_num, seed=nseed + samples + i)
                 circ1 = elem1.to_circuit()
                 circ2 = elem2.to_circuit()
                 value = elem1.dot(elem2)
-                target = CNOTDihedral(qubit_num)
-                target = target.from_circuit(circ2.extend(circ1))
+                target = CNOTDihedral(circ2.extend(circ1))
                 self.assertEqual(target, value,
                                  'Error: composed circuit is not the same')
+
+    def test_tensor_method(self):
+        """Test tensor method"""
+        samples = 10
+        nseed = 333
+        for num_qubits_1 in range(1, 5):
+            for num_qubits_2 in range(1, 5):
+                for i in range(samples):
+                    elem1 = random_cnotdihedral(num_qubits_1, seed=nseed + i)
+                    elem2 = random_cnotdihedral(num_qubits_2, seed=nseed + samples + i)
+                    circ1 = elem1.to_instruction()
+                    circ2 = elem2.to_instruction()
+                    value = elem1.tensor(elem2)
+                    circ = QuantumCircuit(num_qubits_1 + num_qubits_2)
+                    qargs = list(range(num_qubits_1))
+                    for instr, qregs, _ in circ1.definition:
+                        new_qubits = [qargs[tup.index] for tup in qregs]
+                        circ.append(instr, new_qubits)
+                    qargs = list(range(num_qubits_1, num_qubits_1 + num_qubits_2))
+                    for instr, qregs, _ in circ2.definition:
+                        new_qubits = [qargs[tup.index] for tup in qregs]
+                        circ.append(instr, new_qubits)
+                    target = CNOTDihedral(circ)
+
+                    self.assertEqual(target, value,
+                                     'Error: tensor circuit is not the same')
+
+    def test_expand_method(self):
+        """Test tensor method"""
+        samples = 10
+        nseed = 444
+        for num_qubits_1 in range(1, 5):
+            for num_qubits_2 in range(1, 5):
+                for i in range(samples):
+                    elem1 = random_cnotdihedral(num_qubits_1, seed=nseed + i)
+                    elem2 = random_cnotdihedral(num_qubits_2, seed=nseed + samples + i)
+                    circ1 = elem1.to_instruction()
+                    circ2 = elem2.to_instruction()
+                    value = elem2.expand(elem1)
+                    circ = QuantumCircuit(num_qubits_1 + num_qubits_2)
+                    qargs = list(range(num_qubits_1))
+                    for instr, qregs, _ in circ1.definition:
+                        new_qubits = [qargs[tup.index] for tup in qregs]
+                        circ.append(instr, new_qubits)
+                    qargs = list(range(num_qubits_1, num_qubits_1 + num_qubits_2))
+                    for instr, qregs, _ in circ2.definition:
+                        new_qubits = [qargs[tup.index] for tup in qregs]
+                        circ.append(instr, new_qubits)
+                    target = CNOTDihedral(circ)
+
+                    self.assertEqual(target, value,
+                                     'Error: expand circuit is not the same')
+
+    def test_adjoint(self):
+        """Test transpose method"""
+        samples = 10
+        nseed = 555
+        for qubit_num in range(1, 5):
+            for i in range(samples):
+                elem = random_cnotdihedral(qubit_num, seed=nseed + i)
+                circ = elem.to_circuit()
+                value = elem.adjoint().to_operator()
+                target = Operator(circ).adjoint()
+                self.assertTrue(target.equiv(value),
+                                'Error: adjoint circuit is not the same')
+
+    def test_transpose(self):
+        """Test transpose method"""
+        samples = 10
+        nseed = 666
+        for qubit_num in range(1, 5):
+            for i in range(samples):
+                elem = random_cnotdihedral(qubit_num, seed=nseed + i)
+                circ = elem.to_circuit()
+                value = elem.transpose().to_operator()
+                target = Operator(circ).transpose()
+                self.assertTrue(target.equiv(value),
+                                'Error: transpose circuit is not the same')
+
+    def test_conjugate(self):
+        """Test transpose method"""
+        samples = 10
+        nseed = 777
+        for qubit_num in range(1, 5):
+            for i in range(samples):
+                elem = random_cnotdihedral(qubit_num, seed=nseed + i)
+                circ = elem.to_circuit()
+                value = elem.conjugate().to_operator()
+                target = Operator(circ).conjugate()
+                self.assertTrue(target.equiv(value),
+                                'Error: conjugate circuit is not the same')
+
+    def test_to_matrix(self):
+        """Test to_matrix method"""
+        samples = 10
+        nseed = 888
+        for qubit_num in range(1, 5):
+            for i in range(samples):
+                elem = random_cnotdihedral(qubit_num, seed=nseed + i)
+                circ = elem.to_circuit()
+                mat = elem.to_matrix()
+                self.assertIsInstance(mat, np.ndarray)
+                self.assertEqual(mat.shape, 2 * (2 ** qubit_num,))
+                value = Operator(mat)
+                target = Operator(circ)
+                self.assertTrue(value.equiv(target),
+                                'Error: matrix of the circuit is not the same')
+
+    def test_init_from_pauli(self):
+        """Test initialization from Pauli"""
+        samples = 10
+        nseed = 999
+        for qubit_num in range(1, 5):
+            for i in range(samples):
+                pauli = Pauli.random(qubit_num, seed=nseed + i)
+                elem = CNOTDihedral(pauli)
+                value = Operator(pauli)
+                target = Operator(elem)
+                self.assertTrue(value.equiv(target),
+                                'Error: Pauli operator is not the same.')
 
 
 if __name__ == '__main__':
