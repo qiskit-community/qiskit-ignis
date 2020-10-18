@@ -43,7 +43,6 @@ class RBgroup():
             self._rb_group = CNOTDihedral
             self._rb_circ_type += '_cnotdihedral'
             self._group_gates_type = 1
-            assert num_qubits <= 2, "num_qubits for CNOT-Dihedral RB should be 1 or 2"
         else:
             raise QiskitError("Unknown group or set of gates.")
 
@@ -63,7 +62,6 @@ class RBgroup():
         """Initialize an identity group element"""
         self._num_qubits = num_qubits
         if self._group_gates_type:
-            assert num_qubits <= 2, "num_qubits for CNOT-Dihedral RB should be 1 or 2"
             return CNOTDihedral(num_qubits)
         else:
             return Clifford(np.eye(2 * num_qubits))
@@ -72,7 +70,6 @@ class RBgroup():
         """Generate a random group element"""
         self._num_qubits = num_qubits
         if self._group_gates_type:
-            assert num_qubits <= 2, "num_qubits for CNOT-Dihedral RB should be 1 or 2"
             return random_cnotdihedral(num_qubits, seed=rand_seed)
         else:
             return random_clifford(num_qubits, seed=rand_seed)
