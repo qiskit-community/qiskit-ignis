@@ -75,6 +75,24 @@ Circuits
 .. autosummary::
 
     process_tomography_circuits
+
+================================================================
+Gate Set Tomography (:mod:`qiskit.ignis.verification.tomography`)
+================================================================
+
+.. currentmodule:: qiskit.ignis.verification.tomography
+
+Fitter
+======
+.. autosummary::
+
+    GatesetTomographyFitter
+
+Circuits
+========
+.. autosummary::
+
+    gateset_tomography_circuits
 """
 
 # Tomography circuit generation

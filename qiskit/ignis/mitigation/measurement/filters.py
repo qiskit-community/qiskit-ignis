@@ -26,7 +26,7 @@ import numpy as np
 import qiskit
 from qiskit import QiskitError
 from qiskit.tools import parallel_map
-from ...verification.tomography import count_keys
+from qiskit.ignis.verification.tomography import count_keys
 
 
 class MeasurementFilter():
@@ -108,6 +108,11 @@ class MeasurementFilter():
         # check forms of raw_data
         if isinstance(raw_data, dict):
             # counts dictionary
+            for data_label in raw_data.keys():
+                if data_label not in self._state_labels:
+                    raise QiskitError("Unexpected state label '" + data_label +
+                                      "', verify the fitter's state labels "
+                                      "correpsond to the input data")
             data_format = 0
             # convert to form2
             raw_data2 = [np.zeros(len(self._state_labels), dtype=float)]

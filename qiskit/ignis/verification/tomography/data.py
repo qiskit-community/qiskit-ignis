@@ -73,7 +73,7 @@ def marginal_counts(counts: Dict[str, int],
     # Generate bitstring keys for measured qubits
     meas_keys = count_keys(len(qubits))
 
-    # Get regex match strings for suming outcomes of other qubits
+    # Get regex match strings for summing outcomes of other qubits
     rgx = []
     for key in meas_keys:
         def helper(x, y):
