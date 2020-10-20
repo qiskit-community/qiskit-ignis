@@ -11,15 +11,23 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+<<<<<<< HEAD
+# pylint: disable= no-member
+=======
 
 # pylint: disable=no-member,invalid-name
 
+>>>>>>> upstream/master
 """
 Generate data for accreditation tests
 """
 
 # Import general libraries (needed for functions)
+<<<<<<< HEAD
+import pickle
+=======
 import json
+>>>>>>> upstream/master
 import qiskit
 
 
@@ -59,7 +67,11 @@ def make_accred_system(seed=None):
 
 
 def generate_data_ideal():
+<<<<<<< HEAD
+    """generaete a ideal data pickle"""
+=======
     """generaete a ideal data and save it as json"""
+>>>>>>> upstream/master
     seed_accreditation = 134780132
 
     accsys = make_accred_system(seed=seed_accreditation)
@@ -81,6 +93,20 @@ def generate_data_ideal():
                       simulator,
                       shots=1)
         all_results.append(job.result())
+<<<<<<< HEAD
+        all_postp_list.append(postp_list)
+        all_v_zero.append(v_zero)
+    outputdict = {'all_results': all_results,
+                  'all_postp_list': all_postp_list,
+                  'all_v_zero': all_v_zero}
+    f = open('accred_ideal_results.pkl', 'wb')
+    pickle.dump(outputdict, f)
+    f.close()
+
+
+def generate_data_noisy():
+    """generaete a noisy data pickle"""
+=======
         all_postp_list.append([postp.tolist() for postp in postp_list])
         all_v_zero.append(v_zero)
     outputdict = {'all_results': [result.to_dict() for result in all_results],
@@ -92,6 +118,7 @@ def generate_data_ideal():
 
 def generate_data_noisy():
     """generaete a noisy data and save it as json"""
+>>>>>>> upstream/master
     seed_accreditation = 1435754
     seed_simulator = 877924554
 
@@ -124,7 +151,11 @@ def generate_data_noisy():
                       noise_model=noise_model, basis_gates=basis_gates,
                       shots=1, seed_simulator=seed_simulator + run)
         all_results.append(job.result())
+<<<<<<< HEAD
+        all_postp_list.append(postp_list)
+=======
         all_postp_list.append([postp.tolist() for postp in postp_list])
+>>>>>>> upstream/master
         all_v_zero.append(v_zero)
         # Post-process the outputs and see if the protocol accepts
         test_3.single_protocol_run(job.result(), postp_list, v_zero)
@@ -133,14 +164,24 @@ def generate_data_noisy():
     theta = 5/100
     test_3.bound_variation_distance(theta)
     bound = test_3.bound
+<<<<<<< HEAD
+    outputdict = {'all_results': all_results,
+=======
     outputdict = {'all_results': [result.to_dict() for result in all_results],
+>>>>>>> upstream/master
                   'all_postp_list': all_postp_list,
                   'all_v_zero': all_v_zero,
                   'all_acc': all_acc,
                   'theta': theta,
                   'bound': bound}
+<<<<<<< HEAD
+    f = open('accred_noisy_results.pkl', 'wb')
+    pickle.dump(outputdict, f)
+    f.close()
+=======
     with open('accred_noisy_results.json', "w") as results_file:
         json.dump(outputdict, results_file)
+>>>>>>> upstream/master
 
 
 if __name__ == '__main__':
