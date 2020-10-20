@@ -23,7 +23,7 @@ https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
 
 import numpy as np
 from qiskit import QiskitError
-from .qotp import QOTPCorrectCounts
+from .qotp import QOTPCorrectCounts, QOTPCorrectString
 
 
 class AccreditationFitter:
@@ -35,23 +35,63 @@ class AccreditationFitter:
     New Journal of Physics, Volume 21, November 2019
     https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
     """
-
-    bound = 1
-    confidence = 1
-    n_acc = 0
-    num_runs = 0
-    flag = 'accepted'
-    outputs = []
-    num_runs = 0
-    num_traps = 0
-    g_num = 1
-
-    def single_protocol_run(self, results, postp_list, v_zero):
+    def __init__(self):
+        self.reset()
+    
+    def reset(self):
+        self.bound = 1
+        self.confidence = 1
+        self.n_acc = 0
+        self.n_rejects_per_run = []
+        self.num_runs = 0
+        self.flag = 'accepted'
+        self.outputs = []
+        self.num_runs = 0
+        self.num_traps = 0
+        self.g_num = 1
+    def AppendResults(self, results, postp_list, v_zero):
         """
-        Single protocol run of accreditation protocol on simul backend
+        Single run of accreditation protocol, data input as 
+        qiskit result object
 
         Args:
             results (Result): results of the quantum job
+            postp_list (list): list of strings used to post-process outputs
+            v_zero (int): position of target
+        """
+        strings = []
+        for ind, _ in enumerate(postp_list):
+            # Classical postprocessing
+            # check single shot and extract string
+            counts = results.get_counts(ind)
+            shots = 0
+            countstring = None
+            for countstring, val in counts.items():
+                shots += val
+            if shots != 1 or countstring is None:
+                QiskitError("ERROR: not single shot data")
+            strings.append(countstring)
+        self.single_protocol_run(strings, postp_list, v_zero)
+        
+    def AppendStrings(self, strings, postp_list, v_zero):
+        """
+        Single run of accreditation protocol, data input as 
+        a list of output strings
+        
+
+        Args:
+            strings (list): stringlist of outputs
+            postp_list (list): list of strings used to post-process outputs
+            v_zero (int): position of target
+        """
+        self.single_protocol_run(strings, postp_list, v_zero)
+    
+    def single_protocol_run(self, strings, postp_list, v_zero):
+        """
+        Single protocol run of accreditation protocol
+
+        Args:
+            strings (list): outputs of the quantum job
             postp_list (list): list of strings used to post-process outputs
             v_zero (int): position of target
         """
@@ -65,30 +105,20 @@ class AccreditationFitter:
             if len(postp_list)-1 != self.num_traps:
                 QiskitError("ERROR: Run protocol with the"
                             "same number of traps")
-
         if self.num_traps < 3:
             QiskitError("ERROR: run the protocol with at least 3 traps")
-        allcounts = []
-        for ind, postp in enumerate(postp_list):
-
-            # Classical postprocessing
-            # check single shot and extract string
-            counts = results.get_counts(ind)
-            counts = QOTPCorrectCounts(counts, postp)
-            shots = 0
-            countstring = None
-            for countstring, val in counts.items():
-                shots += val
-            if shots != 1 or countstring is None:
-                QiskitError("ERROR: not single shot data")
-            allcounts.append(countstring)
-        for k, count in enumerate(allcounts):
+        k = 0
+        self.n_rejects_per_run.append(0)
+        for s,p in zip(strings,postp_list):
             if k != v_zero:
                 # Check if trap returns correct output
-                if count != '0' * len(count):
+                meas = QOTPCorrectString(s,p)
+                if meas != '0' * len(meas):
                     self.flag = 'rejected'
+                    self.n_rejects_per_run[-1]+=1
             else:
-                output_target = count
+                output_target = QOTPCorrectString(s,p)
+            k+=1
         if self.flag == 'accepted':
             self.n_acc += 1
             self.outputs.append(output_target)
