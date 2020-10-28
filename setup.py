@@ -23,7 +23,6 @@ requirements = [
     "qiskit-terra>=0.13.0",
     "scipy>=0.19,!=0.19.1",
     "setuptools>=40.1.0",
-    "scikit-learn>=0.17",
 ]
 
 
@@ -79,6 +78,7 @@ setuptools.setup(
     extras_require={
         'visualization': ['matplotlib>=2.1'],
         'cvx': ['cvxpy>=1.0.15'],
+        'iq': ["scikit-learn>=0.17"],
         'jit': ['numba'],
     },
     install_requires=requirements,

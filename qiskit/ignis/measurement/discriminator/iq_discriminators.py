@@ -21,8 +21,6 @@ from abc import abstractmethod
 from typing import Union, List
 
 import numpy as np
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 
 from qiskit.exceptions import QiskitError
 from qiskit.ignis.measurement.discriminator.discriminators import \
@@ -36,6 +34,12 @@ try:
 except ImportError:
     HAS_MATPLOTLIB = False
 
+try:
+    from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+    from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+    HAS_SKLEARN = True
+except ImportError:
+    HAS_SKLEARN = False
 
 class IQDiscriminationFitter(BaseDiscriminationFitter):
     """
@@ -65,10 +69,9 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 instead of the schedules. If schedules is None, then all the
                 schedules in cal_results are used.
         """
-
-        BaseDiscriminationFitter.__init__(self, cal_results, qubit_mask,
-                                          expected_states, standardize,
-                                          schedules)
+        super().__init__(self, cal_results, qubit_mask,
+                         expected_states, standardize,
+                         schedules)
 
     def get_xdata(self, results: Union[Result, List[Result]],
                   schedule_type_to_get: int,
@@ -431,15 +434,18 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
         shrink = discriminator_parameters.get('shrinkage', None)
         store_cov = discriminator_parameters.get('store_covariance', False)
         tol = discriminator_parameters.get('tol', 1.0e-4)
-
+        if not HAS_SKLEARN:
+            raise ImportError("To use the LinearIQDiscriminator class "
+                              "scikit-learn needs to be installed. This can "
+                              "be done with 'pip install scikit-learn'")
         self._lda = LinearDiscriminantAnalysis(solver=solver, shrinkage=shrink,
                                                store_covariance=store_cov,
                                                tol=tol)
 
         # Also sets the x and y data.
-        IQDiscriminationFitter.__init__(self, cal_results, qubit_mask,
-                                        expected_states, standardize,
-                                        schedules)
+        super().__init__(self, cal_results, qubit_mask,
+                         expected_states, standardize,
+                         schedules)
 
         self._description = 'Linear IQ discriminator for measurement level 1.'
 
@@ -498,14 +504,19 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
 
         store_cov = discriminator_parameters.get('store_covariance', False)
         tol = discriminator_parameters.get('tol', 1.0e-4)
+        if not HAS_SKLEARN:
+            raise ImportError("To use the QuadraticIQDiscriminator class "
+                              "scikit-learn needs to be installed. This can "
+                              "be done with 'pip install scikit-learn'")
+
 
         self._qda = QuadraticDiscriminantAnalysis(store_covariance=store_cov,
                                                   tol=tol)
 
         # Also sets the x and y data.
-        IQDiscriminationFitter.__init__(self, cal_results, qubit_mask,
-                                        expected_states, standardize,
-                                        schedules)
+        super().__init__(self, cal_results, qubit_mask,
+                         expected_states, standardize,
+                         schedules)
 
         self._description = 'Quadratic IQ discriminator for measurement ' \
                             'level 1.'
