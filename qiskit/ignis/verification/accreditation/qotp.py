@@ -256,12 +256,13 @@ def QOTP(circ, num, two_qubit_gate='cx', coupling_map=None, seed=None):
         qotp_postps.append(postp)
     return qotp_circs, qotp_postps
 
+
 def QOTPCorrectString(qotp_string, qotp_postp):
     """
     Corrects a measurement string, shifting the qotp
 
     Args:
-        qotp_output (str): a measurement output string 
+        qotp_string (str): a measurement output string
         qotp_postp (list): a binary list denoting the one time pad
     Returns:
         dict: the corrected counts dict
@@ -270,7 +271,6 @@ def QOTPCorrectString(qotp_string, qotp_postp):
     corrected_string = [(k+s) % 2 for k, s in zip(corrected_string, qotp_postp)]
     corrected_string = ''.join([str(k) for k in corrected_string])
     return corrected_string
-
 
 
 def QOTPCorrectCounts(qotp_counts, qotp_postp):
@@ -286,6 +286,6 @@ def QOTPCorrectCounts(qotp_counts, qotp_postp):
 
     counts_out = {}
     for key, val in qotp_counts.items():
-        keyshift = QOTPCorrectString(key,qotp_postp)
+        keyshift = QOTPCorrectString(key, qotp_postp)
         counts_out[keyshift] = val
     return counts_out

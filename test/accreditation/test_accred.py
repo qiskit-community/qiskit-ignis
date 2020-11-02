@@ -76,7 +76,7 @@ class TestAccred(unittest.TestCase):
         all_v_zero = ideal_results['all_v_zero']
         test_1 = accred.AccreditationFitter()
         for a, b, c in zip(all_results, all_postp_list, all_v_zero):
-            test_1.single_protocol_run(a, b, c)
+            test_1.AppendResults(a, b, c)
             self.assertEqual(test_1.flag,
                              'accepted',
                              "Error: Ideal outcomes not passing accred")
@@ -90,7 +90,7 @@ class TestAccred(unittest.TestCase):
         all_acc = noisy_results['all_acc']
         test_1 = accred.AccreditationFitter()
         for a, b, c, d in zip(all_results, all_postp_list, all_v_zero, all_acc):
-            test_1.single_protocol_run(a, b, c)
+            test_1.AppendResults(a, b, c)
             self.assertEqual(test_1.flag,
                              d,
                              "Error: Noisy outcomes not correct accred")

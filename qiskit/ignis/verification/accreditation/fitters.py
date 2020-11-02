@@ -25,7 +25,7 @@ https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
 
 import numpy as np
 from qiskit import QiskitError
-from .qotp import QOTPCorrectCounts, QOTPCorrectString
+from .qotp import QOTPCorrectString
 
 
 class AccreditationFitter:
@@ -38,12 +38,9 @@ class AccreditationFitter:
     https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
     """
     def __init__(self):
-        self.reset()
-    
-    def reset(self):
         self.bound = 1
         self.confidence = 1
-        self.n_acc = 0
+        self.N_acc = 0
         self.n_rejects_per_run = []
         self.num_runs = 0
         self.flag = 'accepted'
@@ -51,9 +48,10 @@ class AccreditationFitter:
         self.num_runs = 0
         self.num_traps = 0
         self.g_num = 1
+
     def AppendResults(self, results, postp_list, v_zero):
         """
-        Single run of accreditation protocol, data input as 
+        Single run of accreditation protocol, data input as
         qiskit result object
 
         Args:
@@ -74,10 +72,10 @@ class AccreditationFitter:
                 QiskitError("ERROR: not single shot data")
             strings.append(countstring)
         self.single_protocol_run(strings, postp_list, v_zero)
-        
+
     def AppendStrings(self, strings, postp_list, v_zero):
         """
-        Single run of accreditation protocol, data input as 
+        Single run of accreditation protocol, data input as
         a list of output strings
 
         Args:
@@ -86,7 +84,7 @@ class AccreditationFitter:
             v_zero (int): position of target
         """
         self.single_protocol_run(strings, postp_list, v_zero)
-    
+
     def single_protocol_run(self, strings, postp_list, v_zero):
         """
         Single protocol run of accreditation protocol
@@ -110,16 +108,16 @@ class AccreditationFitter:
             QiskitError("ERROR: run the protocol with at least 3 traps")
         k = 0
         self.n_rejects_per_run.append(0)
-        for s,p in zip(strings,postp_list):
+        for s, p in zip(strings, postp_list):
             if k != v_zero:
                 # Check if trap returns correct output
-                meas = QOTPCorrectString(s,p)
+                meas = QOTPCorrectString(s, p)
                 if meas != '0' * len(meas):
                     self.flag = 'rejected'
-                    self.n_rejects_per_run[-1]+=1
+                    self.n_rejects_per_run[-1] += 1
             else:
-                output_target = QOTPCorrectString(s,p)
-            k+=1
+                output_target = QOTPCorrectString(s, p)
+            k += 1
         if self.flag == 'accepted':
             self.N_acc += 1
             self.outputs.append(output_target)
