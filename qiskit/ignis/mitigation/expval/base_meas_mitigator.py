@@ -172,7 +172,7 @@ class BaseExpvalMeasMitigator(ABC):
 
         Args:
             qubits (list): Optional, qubits being measured for operator expval.
-            ax (axes: Optional. Axes object to add plot to.
+            ax (axes): Optional. Axes object to add plot to.
 
         Returns:
             plt.axes: the figure axes object.
@@ -196,7 +196,7 @@ class BaseExpvalMeasMitigator(ABC):
 
     def plot_mitigation_matrix(self,
                                qubits=None,
-                               ax= None):
+                               ax=None):
         """Matrix plot of the readout error mitigation matrix.
 
         Args:
