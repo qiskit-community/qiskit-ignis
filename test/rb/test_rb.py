@@ -32,7 +32,7 @@ from qiskit import QiskitError
 from qiskit.circuit.library import (XGate, YGate, ZGate, HGate, TGate,
                                     SGate, SdgGate, CXGate, CZGate,
                                     SwapGate)
-
+from qiskit.circuit.library import U1Gate, U2Gate, U3Gate
 
 @ddt
 class TestRB(unittest.TestCase):
@@ -1037,11 +1037,11 @@ class TestRBUtils(unittest.TestCase):
         for num_gate in num_gates:
             circ = qiskit.QuantumCircuit(2)
             for _ in range(num_gate[0]):
-                circ.u1(0, 0)
+                circ.append(U1Gate(0), [0])
             for _ in range(num_gate[1]):
-                circ.u2(0, 0, 0)
+                circ.append(U2Gate(0, 0), [0])
             for _ in range(num_gate[2]):
-                circ.u3(0, 0, 0, 0)
+                circ.append(U3Gate(0, 0, 0), [0])
             for _ in range(num_gate[3]):
                 circ.cx(0, 1)
             circs.append(circ)
