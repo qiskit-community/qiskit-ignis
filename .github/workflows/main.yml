@@ -38,7 +38,7 @@ jobs:
         run: tox -e py
         if: runner.os == 'macOS'
   tests-no-opt:
-    name: tests-python${{ matrix.python-version }}-${{ matrix.os }}
+    name: tests-python3.8-no-optional-dependencies
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
