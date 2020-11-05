@@ -171,7 +171,7 @@ class BaseExpvalMeasMitigator(ABC):
         """Matrix plot of the readout error assignment matrix.
 
         Args:
-            qubits (list): Optional, qubits being measured for operator expval.
+            qubits (list(int)): Optional, qubits being measured for operator expval.
             ax (axes): Optional. Axes object to add plot to.
 
         Returns:
@@ -200,7 +200,7 @@ class BaseExpvalMeasMitigator(ABC):
         """Matrix plot of the readout error mitigation matrix.
 
         Args:
-            qubits (list): Optional, qubits being measured for operator expval.
+            qubits (list(int)): Optional, qubits being measured for operator expval.
             ax (plt.axes): Optional. Axes object to add plot to.
 
         Returns:
