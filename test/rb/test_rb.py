@@ -34,6 +34,7 @@ from qiskit.circuit.library import (XGate, YGate, ZGate, HGate, TGate,
                                     SwapGate)
 from qiskit.circuit.library import U1Gate, U2Gate, U3Gate
 
+
 @ddt
 class TestRB(unittest.TestCase):
     """The test class."""
