@@ -24,6 +24,7 @@ import numpy as np
 # Import QISKit classes
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.circuit import Gate
+from qiskit.circuit.library import U2Gate
 from qiskit.quantum_info import PTM
 from .tomographybasis import TomographyBasis
 
@@ -252,8 +253,8 @@ def default_gateset_basis():
     """
     default_gates = {
         'Id': lambda circ, qubit: None,
-        'X_Rot_90': lambda circ, qubit: circ.u2(-np.pi / 2, np.pi / 2, qubit),
-        'Y_Rot_90': lambda circ, qubit: circ.u2(np.pi, np.pi, qubit)
+        'X_Rot_90': lambda circ, qubit: circ.append(U2Gate(-np.pi / 2, np.pi / 2), [qubit]),
+        'Y_Rot_90': lambda circ, qubit: circ.append(U2Gate(np.pi, np.pi), [qubit])
     }
     default_spam = {
         'F0': ('Id',),
