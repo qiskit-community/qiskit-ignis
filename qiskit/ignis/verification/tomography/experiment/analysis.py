@@ -1,17 +1,18 @@
+from typing import List, Dict, Union, Optional
+import numpy as np
 from qiskit import QiskitError
 from qiskit.ignis.experiments.base import Analysis
 from qiskit.providers import BaseJob
 from qiskit.result import Result, Counts
-from typing import List, Dict, Union, Optional
-from qiskit.ignis.verification.tomography.data import marginal_counts, combine_counts, count_keys
-from utils import _fitter_data
+from qiskit.ignis.verification.tomography.data import marginal_counts, count_keys
 from qiskit.ignis.verification.tomography.basis import TomographyBasis, default_basis
 from qiskit.ignis.verification.tomography.fitters.lstsq_fit import lstsq_fit
 from qiskit.ignis.verification.tomography.fitters.cvx_fit import cvx_fit, _HAS_CVX
-import numpy as np
+from .utils import _fitter_data
 
 class TomographyAnalysis(Analysis):
     _HAS_SDP_SOLVER = None
+
     def __init__(self,
                  data: Optional[Union[BaseJob, Result, List[any], any]] = None,
                  metadata: Optional[Union[List[Dict[str, any]], Dict[str, any]]] = None,

@@ -1,7 +1,12 @@
-from qiskit.ignis.verification.tomography.data import marginal_counts, count_keys
+import logging
 from typing import List, Dict, Any, Tuple, Callable
 import numpy as np
 import itertools as it
+from qiskit.ignis.verification.tomography.data import marginal_counts, count_keys
+
+# Create logger
+logger = logging.getLogger(__name__)
+
 
 def _fitter_data(counts: List[np.array],
                  metadata: List[Dict[str, Any]],
