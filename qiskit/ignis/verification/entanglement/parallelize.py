@@ -32,6 +32,7 @@ from typing import Tuple, List, Dict
 from qiskit.circuit import ClassicalRegister, QuantumRegister, Parameter
 from qiskit.circuit import QuantumCircuit
 from qiskit.compiler import transpile
+from qiskit.circuit.library import U1Gate, U2Gate
 
 
 class BConfig:
@@ -323,7 +324,7 @@ class BConfig:
         rotate = QuantumCircuit(q)
 
         rotate.barrier()
-        rotate.u1(delta, q)
+        rotate.append(U1Gate(delta), [q])
         rotate.barrier()
         rotate.x(q)
         rotate.barrier()
@@ -362,7 +363,7 @@ class BConfig:
         rotate = QuantumCircuit(q)
         delta = Parameter('t')
         rotate.barrier()
-        rotate.u1(delta, q)
+        rotate.append(U1Gate(delta), [q])
         rotate.barrier()
         rotate.x(q)
         rotate.barrier()
@@ -398,7 +399,7 @@ class BConfig:
         rotate = QuantumCircuit(q)
 
         rotate.barrier()
-        rotate.u2(delta, -delta, q)
+        rotate.append(U2Gate(delta, -delta), [q])
         rotate.barrier()
         rotate = transpile(rotate,
                            backend=self.backend,
@@ -437,7 +438,7 @@ class BConfig:
         deltaneg = Parameter('-t')
 
         rotate.barrier()
-        rotate.u2(delta, deltaneg, q)
+        rotate.append(U2Gate(delta, deltaneg), [q])
         rotate.barrier()
         rotate = transpile(rotate,
                            backend=self.backend,

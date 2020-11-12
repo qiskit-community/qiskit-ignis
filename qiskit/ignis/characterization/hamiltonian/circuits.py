@@ -18,6 +18,7 @@ Circuit generation for measuring hamiltonian parametes
 
 import numpy as np
 import qiskit
+from qiskit.circuit.library import U1Gate
 from ..characterization_utils import pad_id_gates
 
 
@@ -75,7 +76,7 @@ def zz_circuits(num_of_gates, gate_time, qubits, spectators, nosc=5):
             for qind, qubit in enumerate(qubits):
                 circ.h(qr[qubit])
                 circ = pad_id_gates(circ, qr, qubit, circ_length)
-                circ.u1(2*np.pi*osc_freq*xdata[circ_index], qr[qubit])
+                circ.append(U1Gate(2*np.pi*osc_freq*xdata[circ_index]), [qr[qubit]])
                 circ.h(qr[qubit])
             circ.barrier(qr)
             for qind, qubit in enumerate(qubits):
