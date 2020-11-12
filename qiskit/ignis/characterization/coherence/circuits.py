@@ -19,6 +19,7 @@ Circuit generation for coherence experiments
 from typing import List, Union, Tuple
 import numpy as np
 import qiskit
+from qiskit.circuit.library import U1Gate, U2Gate
 from ..characterization_utils import pad_id_gates
 
 
@@ -104,7 +105,7 @@ def t2star_circuits(num_of_gates: Union[List[int], np.array],
         for qind, qubit in enumerate(qubits):
             circ.h(qr[qubit])
             circ = pad_id_gates(circ, qr, qubit, circ_length)
-            circ.u1(2*np.pi*osc_freq*xdata[circ_index], qr[qubit])
+            circ.append(U1Gate(2*np.pi*osc_freq*xdata[circ_index]), [qr[qubit]])
             circ.h(qr[qubit])
         circ.barrier(qr)
         for qind, qubit in enumerate(qubits):
@@ -165,7 +166,7 @@ def t2_circuits(num_of_gates: Union[List[int], np.array],
         for qind, qubit in enumerate(qubits):
 
             # First Y90 and Y echo
-            circ.u2(0.0, 0.0, qr[qubit])  # Y90
+            circ.append(U2Gate(0.0, 0.0), [qr[qubit]])  # Y90
             circ = pad_id_gates(circ, qr, qubit, circ_length)  # ids
             circ.y(qr[qubit])
 
@@ -177,7 +178,7 @@ def t2_circuits(num_of_gates: Union[List[int], np.array],
                     circ.y(qr[qubit])
 
             circ = pad_id_gates(circ, qr, qubit, circ_length)  # ids
-            circ.u2(0.0, 0.0, qr[qubit])  # Y90
+            circ.append(U2Gate(0.0, 0.0), [qr[qubit]])  # Y90
         circ.barrier(qr)
         for qind, qubit in enumerate(qubits):
             circ.measure(qr[qubit], cr[qind])  # measure

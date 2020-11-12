@@ -24,6 +24,7 @@ import numpy as np
 # Import QISKit classes
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.circuit import Gate
+from qiskit.circuit.library import U2Gate
 from qiskit.quantum_info import PTM
 from .tomographybasis import TomographyBasis
 

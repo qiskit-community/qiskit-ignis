@@ -1,0 +1,13 @@
+---
+fixes:
+  - |
+    Fix the ``"auto"`` method of the
+    :class:`~qiskit.ignis.verification.tomography.TomographyFitter`,
+    :class:`~qiskit.ignis.verification.tomography.StateTomographyFitter`, and
+    :class:`~qiskit.ignis.verification.tomography.ProcessTomographyFitter` to
+    only use ``"cvx"`` if CVXPY is installed *and* a third-party SDP solver
+    other than SCS is available. This is because the SCS solver has lower
+    accuracy than other solver methods and often returns a density matrix or
+    Choi-matrix that is not completely-positive and fails validation when used
+    with the :func:`qiskit.quantum_info.state_fidelity` or
+    :func:`qiskit.quantum_info.process_fidelity` functions.
