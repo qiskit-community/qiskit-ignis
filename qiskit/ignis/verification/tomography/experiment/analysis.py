@@ -4,10 +4,10 @@ from qiskit import QiskitError
 from qiskit.ignis.experiments.base import Analysis
 from qiskit.providers import BaseJob
 from qiskit.result import Result, Counts
-from qiskit.ignis.verification.tomography.data import marginal_counts, count_keys
-from qiskit.ignis.verification.tomography.basis import TomographyBasis, default_basis
-from qiskit.ignis.verification.tomography.fitters.lstsq_fit import lstsq_fit
-from qiskit.ignis.verification.tomography.fitters.cvx_fit import cvx_fit, _HAS_CVX
+from ..data import marginal_counts, count_keys
+from ..basis import TomographyBasis, default_basis
+from ..fitters.lstsq_fit import lstsq_fit
+from ..fitters.cvx_fit import cvx_fit, _HAS_CVX
 from .utils import _fitter_data
 
 class TomographyAnalysis(Analysis):

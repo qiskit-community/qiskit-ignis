@@ -1,10 +1,11 @@
 from qiskit import QuantumCircuit
-from qiskit.ignis.verification.tomography.basis import state_tomography_circuits
 from .experiment import TomographyExperiment
 from .generator import TomographyGenerator
 from .analysis import TomographyAnalysis
+from ..basis import state_tomography_circuits
 from ast import literal_eval
 from typing import List, Union, Tuple, Optional
+
 
 class StateTomographyExperiment(TomographyExperiment):
     # pylint: disable=arguments-differ
