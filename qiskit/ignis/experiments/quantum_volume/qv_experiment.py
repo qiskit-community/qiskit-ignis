@@ -16,7 +16,6 @@ Quantum volume Experiment.
 """
 
 import copy
-import itertools
 import warnings
 import math
 
@@ -36,8 +35,16 @@ from qiskit import transpile, assemble
 from qiskit.providers import BaseJob
 from qiskit.exceptions import QiskitError
 from qiskit.providers import BaseBackend
-from ...utils import build_counts_dict_from_list
 
+# for the Result object
+from qiskit.visualization import plot_histogram
+try:
+    from matplotlib import get_backend
+    from matplotlib import pyplot as plt
+    from matplotlib.patches import Rectangle
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
 
 class QuantumVolumeExperiment(Experiment):
     """Quantum volume experiment."""
@@ -47,12 +54,14 @@ class QuantumVolumeExperiment(Experiment):
                  qubits: Union[int, List[int]],
                  trials: Optional[int] = 0,
                  job: Optional = None,
-                 seed: Optional[Union[int, Generator]] = None):
+                 seed: Optional[Union[int, Generator]] = None,
+                 simulation_backend: Optional[BaseBackend] = None):
 
         if isinstance(qubits, int):
             qubits = [range(qubits)]
         self._qubits = qubits
         self._trials = 0
+        self._simulation_backend = simulation_backend
         self._exe_trials = 0
         self._circuits = []
         self._circuit_no_meas = []
@@ -66,6 +75,8 @@ class QuantumVolumeExperiment(Experiment):
             self._job = []
         else:
             self._job = [job]
+        if self._simulation_backend is None:
+            self._simulation_backend = qiskit.Aer.get_backend('statevector_simulator')
         if trials != 0:
             self.add_data(trials)
 
@@ -129,17 +140,16 @@ class QuantumVolumeExperiment(Experiment):
                              backend=backend,
                              initial_layout=self.qubits * new_trials)
         # Get the circuits without the measurement
-        statevector_backend = qiskit.Aer.get_backend('statevector_simulator')
         circuits_no_meas = transpile(self._circuit_no_meas[init_index_new_circuits:],
-                                     backend=statevector_backend,
+                                     backend=self._simulation_backend,
                                      initial_layout=self.qubits * new_trials)
 
         # Assemble qobj of the ideal results and submit to the statevector simulator
         ideal_qobj = assemble(circuits_no_meas,
-                              backend=statevector_backend,
+                              backend=self._simulation_backend,
                               qobj_header={'metadata': self._metadata[init_index_new_circuits:]},
                               **kwargs)
-        self._ideal_job.append(statevector_backend.run(ideal_qobj))
+        self._ideal_job.append(self._simulation_backend.run(ideal_qobj))
 
         # Assemble qobj and submit to backend
         qobj = assemble(circuits,
@@ -159,7 +169,8 @@ class QuantumVolumeExperiment(Experiment):
         """
         # assuming only latest job has to be added
         # TODO: add support for adding multiple jobs at once to the analysis
-        self.analysis.add_data([self._ideal_job[-1], self._job[-1]])
+        self.analysis.add_data(self._job[-1])
+        self.analysis.add_ideal_data(self._ideal_job[-1])
         result = self.analysis.run(**params)
         return result
 
@@ -209,7 +220,8 @@ class QuantumVolumeGenerator(Generator):
 
 
 class QuantumVolumeAnalysis(Analysis):
-    """Quantum volume experiment analysis."""
+    """Quantum volume experiment analysis.
+    the experiment data must include both ideal and non-ideal results"""
 
     # pylint: disable=arguments-differ
     def __init__(self,
@@ -220,22 +232,18 @@ class QuantumVolumeAnalysis(Analysis):
                  exp_id: Optional[str] = None):
         self._qubit_lists = qubit_lists
         self._depths = [len(qubit_list) for qubit_list in qubit_lists]
-        self._ntrials = 0
 
-        self._result_list = []
-        self._heavy_output_counts = {}
-        self._circ_shots = {}
-        self._circ_counts = {}
-        self._all_output_prob_ideal = {}
-        self._heavy_output_prob_ideal = {}
-        self._heavy_output_prob_exp = {}
+        self._exp_ideal_data = []
         self._ydata = []
-        self._heavy_outputs = {}
 
         super().__init__(data=data,
                          metadata=metadata,
-                         name='QV',
                          exp_id=exp_id)
+
+        # Optionally initialize with data (non ideal added in super call)
+        self.add_ideal_data(ideal_data, metadata)
+
+        self._analysis_fn = self.fit
 
     @property
     def depths(self):
@@ -247,260 +255,139 @@ class QuantumVolumeAnalysis(Analysis):
         """Return depth list."""
         return self._qubit_lists
 
-    @property
-    def results(self):
-        """Return all the results."""
-        return self._result_list
-
-    @property
-    def heavy_outputs(self):
-        """Return the ideal heavy outputs dictionary."""
-        return self._heavy_outputs
-
-    @property
-    def heavy_output_counts(self):
-        """Return the number of heavy output counts as measured."""
-        return self._heavy_output_counts
-
-    @property
-    def heavy_output_prob_ideal(self):
-        """Return the heavy output probability ideally."""
-        return self._heavy_output_prob_ideal
-
-    def run(self):
-        """Analyze the quantum volume circuits data.
-
-        Returns:
-            any: the output of the analysis, which is the QV data
-        """
-        self._calc_data()
-        self._calc_statistics()
-        # calc the QV
-        qv_success_list = self.qv_success()
-        qv_list = self._ydata
-        qv = 1
-        for qidx in range(len(self._qubit_lists)):
-            if qv_list[0][qidx] > 2 / 3:
-                if qv_success_list[qidx][0]:
-                    qv = self.quantum_volume()[qidx]
-
-        self._result = qv
-        return self._result
-
-    def print_results(self):
-        """
-        print the percentage of successful trials and the confidence level of each depth
-        """
-        qv_success_list = self.qv_success()
-        qv_list = self._ydata
-        for qidx, qubit_list in enumerate(self._qubit_lists):
-            if qv_list[0][qidx] > 2 / 3:
-                if qv_success_list[qidx][0]:
-                    print("Width/depth %d greater than 2/3 (%f) with confidence %f (successful)." %
-                          (len(qubit_list), qv_list[0][qidx], qv_success_list[qidx][1]))
-                else:
-                    print("Width/depth %d greater than 2/3 (%f) with confidence %f "
-                          "(unsuccessful)." %
-                          (len(qubit_list), qv_list[0][qidx], qv_success_list[qidx][1]))
-            else:
-                print("Width/depth %d less than 2/3 (unsuccessful)." % len(qubit_list))
-
-    def add_data(self,
-                 data: Union[BaseJob, Result, any],
+    def add_ideal_data(self,
+                 ideal_data: Union[BaseJob, Result, any],
                  metadata: Optional[Dict[str, any]] = None):
-        """Add additional data to the Quantum Volume analyser.
+        """Add additional ideal_data to the fitter.
 
         Args:
-                data: input data. must include both ideal and non-ideal results, in the form of
-                      a list [ideal results, non-ideal results].
-                metadata: Optional, list of metadata dicts for input data.
-                          if None will be taken from data Result object.
-                          can have one medatada for both ideal and non-ideal data
+                ideal_data: input ideal_data for the fitter.
+                metadata: Optional, list of metadata dicts for input ideal_data.
+                          if None will be taken from ideal_data Result object.
 
         Raises:
-            QiskitError: if input data is incorrectly formatted.
+            QiskitError: if input ideal_data is incorrectly formatted.
         """
-        if data is None:
-            return
-        if not isinstance(data, list) or len(data) != 2:
-            raise QiskitError("data must contain both ideal and non ideal data in the format of"
-                              " [ideal data, non ideal data]")
-        if isinstance(data[0], list) and isinstance(data[1], list) and \
-                        len(data[0]) != len(data[1]):
-            raise QiskitError("ideal data and non ideal data must be of the same length")
-        self._add_ideal_data(data[0], metadata)
-        self._add_nonideal_data(data[1], metadata)
+        # the add_data method saves the data to self._exp_data, so the data already there need to
+        # temporarily move. same for self._exp_metadata
+        temp = self._exp_data
+        self._exp_data = self._exp_ideal_data
+        temp_meta = self._exp_metadata
+        # the metadata is same for ideal and non ideal data.
+        # so use dummy meta for add_data function
+        self._exp_metadata = [{} for _ in range(len(self._exp_ideal_data))]
+        self.add_data(ideal_data, metadata)
+        self._exp_ideal_data = self._exp_data
+        self._exp_data = temp
+        self._exp_metadata = temp_meta
 
-    def _add_ideal_data(self, ideal_data: Union[BaseJob, Result, any],
-                        metadata: Optional[Dict[str, any]] = None):
+    def _format_data(self, data: Result,
+                     metadata: Dict[str, any],
+                     index: int):
+        """Format the required data from a Result.data dict
+        extract count in case of non ideal data, and state-vector in case of ideal data
         """
-        Add additional ideal data to the QV analyser.
-        Args:
+        try:
+            return data.get_statevector(index)
+        except QiskitError:
+            return data.get_counts(index)
 
-        Raises:
-            QiskitError: if input data was already added.
+    def fit(self, data, metadata):
         """
-        if ideal_data is None:
-            return
+        fit the data, calculate the heavy output probability and calculate the quantum volume.
 
-        if isinstance(ideal_data, BaseJob):
-            ideal_data = ideal_data.result()
-
-        if isinstance(ideal_data, Result):
-            # Extract metadata from result object if not provided
-            if metadata is None:
-                if not hasattr(ideal_data.header, "metadata"):
-                    raise QiskitError("Experiment is missing metadata.")
-                metadata = ideal_data.header.metadata
-
-            trials = int(len(ideal_data.results) / len(self._qubit_lists))
-            ideal_results = np.reshape(ideal_data.results, (trials, len(self._qubit_lists)))
-
-            exp_num = 0
-            for result_trial in ideal_results:
-                for result in result_trial:
-
-                    circ_name = metadata[exp_num]["circ_name"]
-
-                    # get the depth/width from the circuit name
-                    # qv_depth_%d_trial_%d
-                    depth = metadata[exp_num]["depth"]
-
-                    if circ_name in self._heavy_outputs:
-                        raise QiskitError("Already added the ideal result "
-                                          "for circuit %s" % circ_name)
-
-                    # convert the result into probability dictionary
-                    qstate = result.data.statevector
-                    pvector = np.multiply(qstate, qstate.conjugate())
-                    format_spec = "{0:0%db}" % depth
-                    self._all_output_prob_ideal[circ_name] = \
-                        {format_spec.format(b): float(np.real(pvector[b])) for b in range(2 ** depth)}
-
-                    median_prob = self._median_probabilities([self._all_output_prob_ideal[circ_name]])
-                    self._heavy_outputs[circ_name] = \
-                        self._heavy_strings(self._all_output_prob_ideal[circ_name], median_prob[0])
-
-                    # calculate the heavy output probability
-                    self._heavy_output_prob_ideal[circ_name] = \
-                        self._subset_probability(
-                            self._heavy_outputs[circ_name],
-                            self._all_output_prob_ideal[circ_name])
-
-                    exp_num += 1
-
-
-    def _add_nonideal_data(self,
-                           data: Union[BaseJob, Result, any],
-                           metadata: Optional[Dict[str, any]] = None):
-        """
-        Add additional non ideal data to the QV analyser.
-        Args:
-
-        Raises:
-            QiskitError: if input data was already added.
-        """
-
-        if data is None:
-            return
-
-        if isinstance(data, BaseJob):
-            data = data.result()
-
-        if isinstance(data, Result):
-            # Extract metadata from result object if not provided
-            if metadata is None:
-                if not hasattr(data.header, "metadata"):
-                    raise QiskitError("Experiment is missing metadata.")
-                metadata = data.header.metadata
-
-            trials = int(len(data.results) / len(self._qubit_lists))
-            data = np.reshape(data.results, (trials, len(self._qubit_lists)))
-
-            exp_num = 0
-            for result_trial in data:
-                for result in result_trial:
-                    circ_name = metadata[exp_num]["circ_name"]
-                    self._exp_metadata.append(metadata[exp_num])
-                    if circ_name not in self._heavy_output_prob_ideal:
-                        raise QiskitError('Ideal distribution must be loaded first')
-                    self._result_list.append(result)
-                    exp_num += 1
-            self._ntrials += trials
-
-    def _calc_data(self):
-        """
-        Make a count dictionary for each unique circuit from all the results.
-
-        Calculate the heavy output probability.
-
-        Additional information:
-            Assumes that 'result' was executed is
-            the output of circuits generated by qv_circuits,
-        """
-
-        for exp_num, result in enumerate(self._result_list):
-            circ_name = self._exp_metadata[exp_num]["circ_name"]
-
-            format_spec = "{0:0%db}" % 2
-            self._circ_counts[circ_name] = {format_spec.format(int(key[2:], 16)):
-                                                result.data.counts[key]
-                                            for key in result.data.counts.keys()}
-
-            self._circ_shots[circ_name] = \
-                sum(self._circ_counts[circ_name].values())
-
-            # calculate the experimental heavy output counts
-            self._heavy_output_counts[circ_name] = \
-                self._subset_probability(
-                    self._heavy_outputs[circ_name],
-                    self._circ_counts[circ_name])
-
-            # calculate the experimental heavy output probability
-            self._heavy_output_prob_exp[circ_name] = \
-                self._heavy_output_counts[circ_name] / self._circ_shots[circ_name]
-
-            # calculate the experimental heavy output probability
-            self._heavy_output_prob_exp[circ_name] = \
-                self._heavy_output_counts[circ_name] / self._circ_shots[circ_name]
-
-    def _calc_statistics(self):
-        """
-        Convert the heavy outputs in the different trials into mean and error
-        for plotting.
-
+        also convert the heavy outputs in the different trials into mean and error for plotting.
         Here we assume the error is due to a binomial distribution.
         Error (standard deviation) for binomial distribution is sqrt(np(1-p)),
         where n is the number of trials (self._ntrials) and
         p is the success probability (self._ydata[0][depthidx]/self._ntrials).
+
+        Returns:
+            int: quantum volume
         """
+        heavy_output_counts = {}
+        circ_shots = {}
+        all_output_prob_ideal = {}
+        heavy_output_prob_ideal = {}
+        heavy_output_prob_exp = {}
+        heavy_outputs = {}
 
+        for exp_num, ideal_result in enumerate(self._exp_ideal_data):
+            circ_name = self._exp_metadata[exp_num]["circ_name"]
+            depth = self._exp_metadata[exp_num]["depth"]
+
+            # convert the result into probability dictionary
+            pvector = np.multiply(ideal_result, ideal_result.conjugate())
+            format_spec = "{0:0%db}" % depth
+            all_output_prob_ideal[circ_name] = \
+                {format_spec.format(b): float(np.real(pvector[b])) for b in range(2 ** depth)}
+
+            median_prob = self._median_probabilities([all_output_prob_ideal[circ_name]])
+            heavy_outputs[circ_name] = \
+                self._heavy_strings(all_output_prob_ideal[circ_name], median_prob[0])
+
+            # calculate the heavy output probability
+            heavy_output_prob_ideal[circ_name] = \
+                self._subset_probability(
+                    heavy_outputs[circ_name],
+                    all_output_prob_ideal[circ_name])
+
+        for exp_num, result in enumerate(self._exp_data):
+            circ_name = self._exp_metadata[exp_num]["circ_name"]
+
+            circ_shots[circ_name] = sum(result.values())
+
+            # calculate the experimental heavy output counts
+            heavy_output_counts[circ_name] = \
+                self._subset_probability(heavy_outputs[circ_name], result)
+
+            # calculate the experimental heavy output probability
+            heavy_output_prob_exp[circ_name] = \
+                heavy_output_counts[circ_name] / circ_shots[circ_name]
+
+        # calculate the mean and error
         self._ydata = np.zeros([4, len(self._depths)], dtype=float)
+        trials = int(len(self._exp_data) / len(self._qubit_lists))
 
-        exp_vals = np.zeros(self._ntrials, dtype=float)
-        ideal_vals = np.zeros(self._ntrials, dtype=float)
+        exp_vals = np.zeros(trials, dtype=float)
+        ideal_vals = np.zeros(trials, dtype=float)
 
         for depthidx, depth in enumerate(self._depths):
-
             exp_shots = 0
 
-            for trialidx in range(self._ntrials):
+            for trialidx in range(trials):
                 cname = 'qv_depth_%d_trial_%d' % (depth, trialidx + 1)
-                exp_vals[trialidx] = self._heavy_output_counts[cname]
-                exp_shots += self._circ_shots[cname]
-                ideal_vals[trialidx] = self._heavy_output_prob_ideal[cname]
+                exp_vals[trialidx] = heavy_output_counts[cname]
+                exp_shots += circ_shots[cname]
+                ideal_vals[trialidx] = heavy_output_prob_ideal[cname]
 
             # Calculate mean and error for experimental data
             self._ydata[0][depthidx] = np.sum(exp_vals) / np.sum(exp_shots)
             self._ydata[1][depthidx] = (self._ydata[0][depthidx] *
                                         (1.0 - self._ydata[0][depthidx])
-                                        / self._ntrials) ** 0.5
+                                        / trials) ** 0.5
 
             # Calculate mean and error for ideal data
             self._ydata[2][depthidx] = np.mean(ideal_vals)
             self._ydata[3][depthidx] = (self._ydata[2][depthidx] *
                                         (1.0 - self._ydata[2][depthidx])
-                                        / self._ntrials) ** 0.5
+                                        / trials) ** 0.5
+
+        quantum_volume = self.calc_quantum_volume()
+        success_list = self.qv_success()
+        result = QuantumVolumeResult(quantum_volume,
+                                     success_list,
+                                     self.qubit_lists,
+                                     trials,
+                                     heavy_output_counts,
+                                     circ_shots,
+                                     result.values(),
+                                     all_output_prob_ideal,
+                                     heavy_output_prob_ideal,
+                                     heavy_output_prob_exp,
+                                     heavy_outputs,
+                                     self._ydata)
+        return result
 
     def qv_success(self):
         """Return whether each depth was successful (> 2/3 with confidence
@@ -566,7 +453,7 @@ class QuantumVolumeAnalysis(Analysis):
 
         return confidence_level
 
-    def quantum_volume(self):
+    def _quantum_volume(self):
         """Return the volume for each depth.
 
         Returns:
@@ -576,6 +463,22 @@ class QuantumVolumeAnalysis(Analysis):
         qv_list = 2 ** np.array(self._depths)
 
         return qv_list
+
+    def calc_quantum_volume(self):
+        """
+        calc the quantum volume of the analysed system
+        Returns:
+            int: quantum volume
+        """
+        qv_success_list = self.qv_success()
+        qv_list = self._ydata
+        quantum_volume = 1
+        for qidx in range(len(self._qubit_lists)):
+            if qv_list[0][qidx] > 2 / 3:
+                if qv_success_list[qidx][0]:
+                    quantum_volume = self._quantum_volume()[qidx]
+
+        return quantum_volume
 
     def _heavy_strings(self, ideal_distribution, ideal_median):
         """Return the set of heavy output strings.
@@ -624,3 +527,281 @@ class QuantumVolumeAnalysis(Analysis):
                 distribution.
         """
         return sum([distribution.get(value, 0) for value in strings])
+
+class QuantumVolumeResult():
+    """
+    Quantum volume result object
+    """
+    # TODO: inherit from a general ExperimentResultObject
+    def __init__(self,
+                 quantum_volume,
+                 success_list,
+                 qubit_lists,
+                 ntrials,
+                 heavy_output_counts,
+                 circ_shots,
+                 circ_counts,
+                 all_output_prob_ideal,
+                 heavy_output_prob_ideal,
+                 heavy_output_prob_exp,
+                 heavy_outputs,
+                 ydata):
+        self.quantum_volume = quantum_volume
+        self._success_list = success_list
+        self._qubit_lists = qubit_lists
+        self._ntrials = ntrials
+        self.circ_shots = circ_shots
+        self._circ_counts = circ_counts
+        self._all_output_prob_ideal = all_output_prob_ideal
+        self._heavy_output_prob_exp = heavy_output_prob_exp
+        self._ydata = ydata
+        self._depths = [len(qubit_list) for qubit_list in qubit_lists]
+
+        # not used in plotting
+        self._heavy_output_counts = heavy_output_counts
+        self._heavy_output_prob_ideal = heavy_output_prob_ideal
+        self._heavy_outputs = heavy_outputs
+
+    @property
+    def heavy_outputs(self):
+        """Return the ideal heavy outputs dictionary."""
+        return self._heavy_outputs
+
+    @property
+    def heavy_output_counts(self):
+        """Return the number of heavy output counts as measured."""
+        return self._heavy_output_counts
+
+    @property
+    def heavy_output_prob_ideal(self):
+        """Return the heavy output probability ideally."""
+        return self._heavy_output_prob_ideal
+
+    def print_results(self):
+        """
+        print the percentage of successful trials and the confidence level of each depth
+        """
+        qv_success_list = self._success_list
+        qv_list = self._ydata
+        for qidx, qubit_list in enumerate(self._qubit_lists):
+            if qv_list[0][qidx] > 2 / 3:
+                if qv_success_list[qidx][0]:
+                    print("Width/depth %d greater than 2/3 (%f) with confidence %f (successful)." %
+                          (len(qubit_list), qv_list[0][qidx], qv_success_list[qidx][1]))
+                else:
+                    print("Width/depth %d greater than 2/3 (%f) with confidence %f "
+                          "(unsuccessful)." %
+                          (len(qubit_list), qv_list[0][qidx], qv_success_list[qidx][1]))
+            else:
+                print("Width/depth %d less than 2/3 (unsuccessful)." % len(qubit_list))
+
+    def plot_qv_data(self, ax=None, show_plt=True, figsize=(7, 5), set_title=True, title=None):
+        """Plot the qv data as a function of depth
+
+        Args:
+            ax (Axes or None): plot axis (if passed in).
+            show_plt (bool): display the plot.
+            figsize (tuple): Figure size in inches.
+            set_title (bool): set figure title.
+            title (String or None): text for setting figure title
+
+        Raises:
+            ImportError: If matplotlib is not installed.
+
+        Returns:
+            matplotlib.Figure:
+                A figure of Quantum Volume data (heavy
+                output probability) with two-sigma error
+                bar as a function of circuit depth.
+        """
+
+        if not HAS_MATPLOTLIB:
+            raise ImportError('The function plot_rb_data needs matplotlib. '
+                              'Run "pip install matplotlib" before.')
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        else:
+            fig = None
+
+        xdata = range(len(self._depths))
+
+        # Plot the experimental data with error bars
+        ax.errorbar(xdata, self._ydata[0],
+                    yerr=self._ydata[1] * 2,
+                    color='r', marker='o',
+                    markersize=6, capsize=5,
+                    elinewidth=2, label='Exp (2$\\sigma$ error)')
+
+        # Plot the ideal data with error bars
+        ax.errorbar(xdata, self._ydata[2],
+                    yerr=self._ydata[3] * 2,
+                    color='b', marker='v',
+                    markersize=6, capsize=5,
+                    elinewidth=2, label='Ideal (2$\\sigma$ error)')
+
+        # Plot the threshold
+        ax.axhline(2 / 3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
+
+        ax.set_xticks(xdata)
+        ax.set_xticklabels(self._qubit_lists, rotation=45)
+
+        ax.set_xlabel('Qubit Subset', fontsize=14)
+        ax.set_ylabel('Heavy Output Probability', fontsize=14)
+        ax.grid(True)
+
+        ax.legend()
+
+        if set_title:
+            if title is None:
+                title = ('Quantum Volume for up to {} '
+                         'Qubits and {} Trials').format(len(self._qubit_lists[-1]), self._ntrials)
+                ax.set_title(title)
+
+            if fig:
+                if get_backend() in ['module://ipykernel.pylab.backend_inline',
+                                     'nbAgg']:
+                    plt.close(fig)
+
+            if show_plt:
+                plt.show()
+
+            return fig
+
+    def plot_qv_trial(self, depth, trial_index, figsize=(7, 5), ax=None):
+        """Plot individual trial.
+        Args:
+            depth(int): circuit depth
+            trial_index(int): trial index
+            figsize (tuple): Figure size in inches.
+            ax (Axes or None): plot axis (if passed in).
+
+        Returns:
+            matplotlib.Figure:
+                A figure for histogram of ideal and experiment probabilities.
+        """
+        circ_name = "qv_depth_{}_trial_{}".format(depth, trial_index)
+        ideal_data = self._all_output_prob_ideal[circ_name]
+        exp_data = self._circ_counts[circ_name]
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        else:
+            fig = None
+
+        # plot experimental histogram
+        plot_histogram(exp_data, legend=['Exp'], ax=ax)
+
+        # plot idea histogram overlap with experimental values
+        plot_histogram(ideal_data, legend=['Ideal'], bar_labels=False, ax=ax, color='r')
+
+        # get ideal histograms and change to unfilled
+        bars = [r for r in ax.get_children() if isinstance(r, Rectangle)]
+        for i in range(int(len(bars) / 2), len(bars) - 1):
+            bars[i].fill = False
+            # set non-black edge color to increase bar labels legibility
+            bars[i].set_edgecolor('saddlebrown')
+
+        # show experimental heavy output probability to the legend
+        ax.plot([], [], ' ', label='HOP~{:.3f}'.format(self._heavy_output_prob_exp[circ_name]))
+
+        # plot median probability
+        median_prob = self._median_probabilities([self._all_output_prob_ideal[circ_name]])
+        ax.axhline(median_prob, color='r', linestyle='dashed', linewidth=1, label='Median')
+        ax.legend()
+        ax.set_title('Quantum Volume {}, Trial #{}'.format(2**depth, trial_index), fontsize=14)
+
+        # Only close mpl figures in jupyter with inline backends
+        if get_backend() in ['module://ipykernel.pylab.backend_inline',
+                             'nbAgg']:
+            plt.close(fig)
+
+        return fig
+
+    def plot_hop_accumulative(self, depth, ax=None, figsize=(7, 5)):
+        """Plot individual and accumulative heavy output probability (HOP)
+        as a function of number of trials.
+
+        Args:
+            depth (int): depth of QV circuits
+            ax (Axes or None): plot axis (if passed in).
+            figsize (tuple): figure size in inches.
+
+        Raises:
+            ImportError: If matplotlib is not installed.
+
+        Returns:
+            matplotlib.Figure:
+                A figure of individual and accumulative HOP as a function of number of trials,
+                with 2-sigma confidence interval and 2/3 threshold.
+        """
+
+        if not HAS_MATPLOTLIB:
+            raise ImportError('The function plot_hop_accumulative needs matplotlib. '
+                              'Run "pip install matplotlib" before.')
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        else:
+            fig = None
+
+        trial_list = np.arange(1, self._ntrials)  # x data
+        hop_list = []  # y data
+
+        for trial_index in trial_list:
+            circ_name = 'qv_depth_{}_trial_{}'.format(depth, trial_index)
+            hop_list.append(self._heavy_output_prob_exp[circ_name])
+
+        hop_accumulative = np.cumsum(hop_list) / np.arange(1, self._ntrials + 1)
+        two_sigma = 2 * (hop_accumulative * (1 - hop_accumulative) /
+                         np.arange(1, self._ntrials + 1)) ** 0.5
+
+        # plot two-sigma shaded area
+        ax.errorbar(trial_list, hop_accumulative, fmt="none", yerr=two_sigma, ecolor='lightgray',
+                    elinewidth=20, capsize=0, alpha=0.5, label='2$\\sigma$')
+        # plot accumulative HOP
+        ax.plot(trial_list, hop_accumulative, color='r', label='Cumulative HOP')
+        # plot inidivual HOP as scatter
+        ax.scatter(trial_list, hop_list, s=3, zorder=3, label='Individual HOP')
+        # plot 2/3 success threshold
+        ax.axhline(2 / 3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
+
+        ax.set_xlim(0, self._ntrials)
+        ax.set_ylim(hop_accumulative[-1] - 4 * two_sigma[-1],
+                    hop_accumulative[-1] + 4 * two_sigma[-1])
+
+        ax.set_xlabel('Number of Trials', fontsize=14)
+        ax.set_ylabel('Heavy Output Probability', fontsize=14)
+
+        ax.set_title('Quantum Volume {} Trials'.format(2**depth), fontsize=14)
+
+        # re-arrange legend order
+        handles, labels = ax.get_legend_handles_labels()
+        handles = [handles[1], handles[2], handles[0], handles[3]]
+        labels = [labels[1], labels[2], labels[0], labels[3]]
+        ax.legend(handles, labels)
+
+        # Only close mpl figures in jupyter with inline backends
+        if fig:
+            if get_backend() in ['module://ipykernel.pylab.backend_inline',
+                                 'nbAgg']:
+                plt.close(fig)
+
+        return fig
+
+    def _median_probabilities(self, distributions):
+        """Return a list of median probabilities.
+
+        Args:
+            distributions (list): list of dicts mapping binary strings
+                (as strings) to probabilities.
+
+        Returns:
+            list: a list of median probabilities.
+        """
+        medians = []
+        for dist in distributions:
+            values = np.array(list(dist.values()))
+            medians.append(float(np.real(np.median(values))))
+
+        return medians
