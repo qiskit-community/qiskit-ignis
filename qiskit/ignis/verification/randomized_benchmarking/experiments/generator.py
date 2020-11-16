@@ -1,20 +1,26 @@
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.ignis.experiments.base import Generator
+from qiskit.circuit import Instruction
 from typing import List, Dict, Union, Optional
+from ..rb_groups import RBgroup
+from ..dihedral import CNOTDihedral
 
-
-class RBGenerator(Generator):
+class RBGeneratorBase(Generator):
     def __init__(self,
                  length_vector: Optional[List[int]] = None,
                  rb_pattern: Optional[List[List[int]]] = None,
                  length_multiplier: Optional[List[int]] = 1,
+                 group_gates: Optional[str] = None,
                  ):
         self.set_pattern(rb_pattern)
+        self.check_pattern()
         self.set_length_multiplier(length_multiplier)
         self._length_vector = length_vector if length_vector is not None else [1, 10, 20]
+        self._xdata = np.array([np.array(length_vector) * mult for mult in self._length_multiplier])
+        self._rb_group = RBgroup(group_gates)
 
-    def set_patten(self, rb_pattern):
+    def set_pattern(self, rb_pattern):
         self._rb_pattern = rb_pattern if rb_pattern is not None else [[0]]
         self._pattern_flat = [item for pat in self._rb_pattern for item in pat]
         self._pattern_dim = [len(pat) for pat in self._rb_pattern]
@@ -45,16 +51,82 @@ class RBGenerator(Generator):
          }
             for circ in self._circuits]
 
-class PurityRBGenerator(RBGenerator):
+class RBGenerator(RBGeneratorBase):
+    def __init__(self,
+                 length_vector: Optional[List[int]] = None,
+                 rb_pattern: Optional[List[List[int]]] = None,
+                 length_multiplier: Optional[List[int]] = 1,
+                 group_gates: Optional[str] = None,
+                 ):
+        super().__init__(length_vector,
+                         rb_pattern,
+                         length_multiplier,
+                         group_gates)
+
+class PurityRBGenerator(RBGeneratorBase):
+    def __init__(self,
+                 length_vector: Optional[List[int]] = None,
+                 rb_pattern: Optional[List[List[int]]] = None,
+                 length_multiplier: Optional[List[int]] = 1,
+                 group_gates: Optional[str] = None,
+                 ):
+        super().__init__(length_vector,
+                         rb_pattern,
+                         length_multiplier,
+                         group_gates)
+        self.check_pattern()
+        self._npurity = 3 ** max(self._pattern_dim)
+
     def check_pattern(self):
-        super().check_pattern()
         if len(set(self._pattern_dim)) > 1:
             raise ValueError("Invalid pattern for purity RB. \
             All simultaneous sequences should have the same dimension.")
 
-class InterleavedRBGenerator(RBGenerator):
+class InterleavedRBGenerator(RBGeneratorBase):
+    def __init__(self,
+                 interleaved_elem:
+                 Union[List[QuantumCircuit], List[Instruction],
+                       List[qiskit.quantum_info.operators.symplectic.Clifford],
+                       List[CNOTDihedral]],
+                 length_vector: Optional[List[int]] = None,
+                 rb_pattern: Optional[List[List[int]]] = None,
+                 length_multiplier: Optional[List[int]] = 1,
+                 group_gates: Optional[str] = None,
+                 ):
+        super().__init__(length_vector,
+                         rb_pattern,
+                         length_multiplier,
+                         group_gates)
+        self.set_interleaved_elem(interleaved_elem)
+        self.check_pattern()
+
+    def set_interleaved_elem(self, interleaved_elem):
+        self._interleaved_elem = interleaved_elem
+        self._interleaved_elem_list = []
+
+        group_gates_type = self._rb_group.group_gates_type()
+        for elem in interleaved_elem:
+            if isinstance(elem, (QuantumCircuit, Instruction)):
+                num_qubits = elem.num_qubits
+                qc = elem
+                elem = self._rb_group.iden(num_qubits)
+                elem = elem.from_circuit(qc)
+            if (isinstance(elem, qiskit.quantum_info.operators.symplectic.clifford.Clifford)
+                and group_gates_type == 0) or (isinstance(elem, CNOTDihedral)
+                                               and group_gates_type == 1):
+                self._interleaved_elem_list.append(elem)
+            else:
+                raise ValueError("Invalid interleaved element type.")
+
+            if not isinstance(elem, QuantumCircuit) and \
+                    not isinstance(elem,
+                                   qiskit.quantum_info.operators.symplectic.clifford.Clifford) \
+                    and not isinstance(elem, CNOTDihedral):
+                raise ValueError("Invalid interleaved element type. "
+                                 "interleaved_elem should be a list of QuantumCircuit,"
+                                 "or a list of Clifford / CNOTDihedral objects")
+
     def check_pattern(self):
-        super().check_pattern()
         interleaved_dim = [elem.num_qubits for elem in self._interleaved_elem]
         if self._pattern_dim != interleaved_dim:
             raise ValueError("Invalid pattern for interleaved RB.")
