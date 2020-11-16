@@ -245,16 +245,6 @@ class QuantumVolumeAnalysis(Analysis):
 
         self._analysis_fn = self.fit
 
-    @property
-    def depths(self):
-        """Return depth list."""
-        return self._depths
-
-    @property
-    def qubit_lists(self):
-        """Return depth list."""
-        return self._qubit_lists
-
     def add_ideal_data(self,
                  ideal_data: Union[BaseJob, Result, any],
                  metadata: Optional[Dict[str, any]] = None):
@@ -373,11 +363,7 @@ class QuantumVolumeAnalysis(Analysis):
                                         (1.0 - self._ydata[2][depthidx])
                                         / trials) ** 0.5
 
-        quantum_volume = self.calc_quantum_volume()
-        success_list = self.qv_success()
-        result = QuantumVolumeResult(quantum_volume,
-                                     success_list,
-                                     self.qubit_lists,
+        result = QuantumVolumeResult(self._qubit_lists,
                                      trials,
                                      heavy_output_counts,
                                      circ_shots,
@@ -388,97 +374,6 @@ class QuantumVolumeAnalysis(Analysis):
                                      heavy_outputs,
                                      self._ydata)
         return result
-
-    def qv_success(self):
-        """Return whether each depth was successful (> 2/3 with confidence
-        level > 0.977 corresponding to z_value = 2) and the confidence level.
-
-        Returns:
-            list: List of list of 2 elements for each depth:
-            - success True/False
-            - confidence level
-        """
-
-        success_list = []
-        confidence_level_threshold = self._calc_confidence_level(z_value=2)
-
-        for depth_ind, _ in enumerate(self._depths):
-            success_list.append([False, 0.0])
-            hmean = self._ydata[0][depth_ind]
-            sigma = self._ydata[1][depth_ind]
-            z_value = self._calc_z_value(hmean, sigma)
-            confidence_level = self._calc_confidence_level(z_value)
-            success_list[-1][1] = confidence_level
-
-            if hmean > 2 / 3 and confidence_level > confidence_level_threshold:
-                success_list[-1][0] = True
-
-        return success_list
-
-    def _calc_z_value(self, mean, sigma):
-        """Calculate z value using mean and sigma.
-
-        Args:
-            mean (float): mean
-            sigma (float): standard deviation
-
-        Returns:
-            float: z_value in standard normal distibution.
-        """
-
-        if sigma == 0:
-            # assign a small value for sigma if sigma = 0
-            sigma = 1e-10
-            warnings.warn('Standard deviation sigma should not be zero.')
-
-        z_value = (mean - 2 / 3) / sigma
-
-        return z_value
-
-    def _calc_confidence_level(self, z_value):
-        """Calculate confidence level using z value.
-
-        Accumulative probability for standard normal distribution
-        in [-z, +infinity] is 1/2 (1 + erf(z/sqrt(2))),
-        where z = (X - mu)/sigma = (hmean - 2/3)/sigma
-
-        Args:
-            z_value (float): z value in in standard normal distibution.
-
-        Returns:
-            float: confidence level in decimal (not percentage).
-        """
-
-        confidence_level = 0.5 * (1 + math.erf(z_value / 2 ** 0.5))
-
-        return confidence_level
-
-    def _quantum_volume(self):
-        """Return the volume for each depth.
-
-        Returns:
-            list: List of quantum volumes
-        """
-
-        qv_list = 2 ** np.array(self._depths)
-
-        return qv_list
-
-    def calc_quantum_volume(self):
-        """
-        calc the quantum volume of the analysed system
-        Returns:
-            int: quantum volume
-        """
-        qv_success_list = self.qv_success()
-        qv_list = self._ydata
-        quantum_volume = 1
-        for qidx in range(len(self._qubit_lists)):
-            if qv_list[0][qidx] > 2 / 3:
-                if qv_success_list[qidx][0]:
-                    quantum_volume = self._quantum_volume()[qidx]
-
-        return quantum_volume
 
     def _heavy_strings(self, ideal_distribution, ideal_median):
         """Return the set of heavy output strings.
@@ -534,8 +429,6 @@ class QuantumVolumeResult():
     """
     # TODO: inherit from a general ExperimentResultObject
     def __init__(self,
-                 quantum_volume,
-                 success_list,
                  qubit_lists,
                  ntrials,
                  heavy_output_counts,
@@ -546,8 +439,6 @@ class QuantumVolumeResult():
                  heavy_output_prob_exp,
                  heavy_outputs,
                  ydata):
-        self.quantum_volume = quantum_volume
-        self._success_list = success_list
         self._qubit_lists = qubit_lists
         self._ntrials = ntrials
         self.circ_shots = circ_shots
@@ -561,6 +452,11 @@ class QuantumVolumeResult():
         self._heavy_output_counts = heavy_output_counts
         self._heavy_output_prob_ideal = heavy_output_prob_ideal
         self._heavy_outputs = heavy_outputs
+
+    @property
+    def quantum_volume(self):
+        """Return the ideal heavy outputs dictionary."""
+        return self.calc_quantum_volume()
 
     @property
     def heavy_outputs(self):
@@ -577,23 +473,26 @@ class QuantumVolumeResult():
         """Return the heavy output probability ideally."""
         return self._heavy_output_prob_ideal
 
-    def print_results(self):
+    def __str__(self):
         """
         print the percentage of successful trials and the confidence level of each depth
         """
-        qv_success_list = self._success_list
+        res_str = ""
+        qv_success_list = self._qv_success()
         qv_list = self._ydata
         for qidx, qubit_list in enumerate(self._qubit_lists):
             if qv_list[0][qidx] > 2 / 3:
                 if qv_success_list[qidx][0]:
-                    print("Width/depth %d greater than 2/3 (%f) with confidence %f (successful)." %
-                          (len(qubit_list), qv_list[0][qidx], qv_success_list[qidx][1]))
+                    res_str += "Width/depth %d greater than 2/3 (%f) with confidence %f " \
+                               "(successful).\r\n" % \
+                               (len(qubit_list), qv_list[0][qidx], qv_success_list[qidx][1])
                 else:
-                    print("Width/depth %d greater than 2/3 (%f) with confidence %f "
-                          "(unsuccessful)." %
-                          (len(qubit_list), qv_list[0][qidx], qv_success_list[qidx][1]))
+                    res_str += "Width/depth %d greater than 2/3 (%f) with confidence %f " \
+                               "(unsuccessful).\r\n" \
+                               % (len(qubit_list), qv_list[0][qidx], qv_success_list[qidx][1])
             else:
-                print("Width/depth %d less than 2/3 (unsuccessful)." % len(qubit_list))
+                res_str += "Width/depth %d less than 2/3 (unsuccessful).\r\n" % len(qubit_list)
+        return res_str
 
     def plot_qv_data(self, ax=None, show_plt=True, figsize=(7, 5), set_title=True, title=None):
         """Plot the qv data as a function of depth
@@ -805,3 +704,98 @@ class QuantumVolumeResult():
             medians.append(float(np.real(np.median(values))))
 
         return medians
+
+    def _qv_success(self):
+        """Return whether each depth was successful (> 2/3 with confidence
+        level > 0.977 corresponding to z_value = 2) and the confidence level.
+
+        Returns:
+            list: List of list of 2 elements for each depth:
+            - success True/False
+            - confidence level
+        """
+
+        success_list = []
+        confidence_level_threshold = self._calc_confidence_level(z_value=2)
+
+        for depth_ind, _ in enumerate(self._depths):
+            success_list.append([False, 0.0])
+            hmean = self._ydata[0][depth_ind]
+            sigma = self._ydata[1][depth_ind]
+            z_value = self._calc_z_value(hmean, sigma)
+            confidence_level = self._calc_confidence_level(z_value)
+            success_list[-1][1] = confidence_level
+
+            if hmean > 2 / 3 and confidence_level > confidence_level_threshold:
+                success_list[-1][0] = True
+
+        return success_list
+
+
+    def _calc_z_value(self, mean, sigma):
+        """Calculate z value using mean and sigma.
+
+        Args:
+            mean (float): mean
+            sigma (float): standard deviation
+
+        Returns:
+            float: z_value in standard normal distibution.
+        """
+
+        if sigma == 0:
+            # assign a small value for sigma if sigma = 0
+            sigma = 1e-10
+            warnings.warn('Standard deviation sigma should not be zero.')
+
+        z_value = (mean - 2 / 3) / sigma
+
+        return z_value
+
+
+    def _calc_confidence_level(self, z_value):
+        """Calculate confidence level using z value.
+
+        Accumulative probability for standard normal distribution
+        in [-z, +infinity] is 1/2 (1 + erf(z/sqrt(2))),
+        where z = (X - mu)/sigma = (hmean - 2/3)/sigma
+
+        Args:
+            z_value (float): z value in in standard normal distibution.
+
+        Returns:
+            float: confidence level in decimal (not percentage).
+        """
+
+        confidence_level = 0.5 * (1 + math.erf(z_value / 2 ** 0.5))
+
+        return confidence_level
+
+
+    def _quantum_volume(self):
+        """Return the volume for each depth.
+
+        Returns:
+            list: List of quantum volumes
+        """
+
+        qv_list = 2 ** np.array(self._depths)
+
+        return qv_list
+
+
+    def calc_quantum_volume(self):
+        """
+        calc the quantum volume of the analysed system
+        Returns:
+            int: quantum volume
+        """
+        qv_success_list = self._qv_success()
+        qv_list = self._ydata
+        quantum_volume = 1
+        for qidx in range(len(self._qubit_lists)):
+            if qv_list[0][qidx] > 2 / 3:
+                if qv_success_list[qidx][0]:
+                    quantum_volume = self._quantum_volume()[qidx]
+
+        return quantum_volume
