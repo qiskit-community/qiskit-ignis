@@ -31,6 +31,7 @@ class RBGeneratorBase(Generator):
             circuit_and_meta = self.generate_circuits_for_seed()
             for data in circuit_and_meta:
                 circuit = data['circuit']
+                self.add_measurements(circuit)
                 meta = data['meta']
                 meta['seed'] = seed
                 self._circuits.append(circuit)
@@ -111,6 +112,15 @@ class RBGeneratorBase(Generator):
 
         return new_circuit
 
+    def add_measurements(self, circuit):
+        for clbit, qubit in enumerate(self._qubits):
+            circuit.measure(qubit, clbit)
+
+    def set_meta(self, circuit_and_meta_list, extra_meta):
+        for data in circuit_and_meta_list:
+            for key, value in extra_meta.items():
+                data['meta'][key] = value
+
     def circuits(self) -> List[QuantumCircuit]:
         """Return a list of experiment circuits."""
         return self._circuits
@@ -130,6 +140,14 @@ class RBGenerator(RBGeneratorBase):
                          qubits,
                          lengths,
                          group_gates)
+
+    def generate_circuits_for_seed(self):
+        circuits_and_meta = super().generate_circuits_for_seed()
+        self.set_meta(circuits_and_meta, {
+            'experiment_type': 'standard',
+        })
+        return circuits_and_meta
+
 
 
 class PurityRBGenerator(RBGeneratorBase):
@@ -184,3 +202,28 @@ class InterleavedRBGenerator(RBGeneratorBase):
                              "interleaved_elem should be a list of QuantumCircuit,"
                              "or a list of Clifford / CNOTDihedral objects")
         self._interleaved_element = interleaved_element
+
+    def generate_circuits_for_seed(self):
+        element_list = self.generate_random_element_list(self._lengths[-1])
+        element_lists = self.split_element_list(element_list, self._lengths)
+        circuits_and_meta = self.generate_circuits_from_elements(element_lists)
+        self.set_meta(circuits_and_meta, {
+            'experiment_type': 'interleaved',
+            'circuit_type': 'standard'
+        })
+
+        element_list = self.interleave(element_list)
+        element_lists = self.split_element_list(element_list, [2*x for x in self._lengths])
+        interleaved_circuits_and_meta = self.generate_circuits_from_elements(element_lists)
+        self.set_meta(interleaved_circuits_and_meta, {
+            'experiment_type': 'interleaved',
+            'circuit_type': 'interleaved'
+        })
+        return circuits_and_meta + interleaved_circuits_and_meta
+
+    def interleave(self, element_list):
+        new_element_list = []
+        for element in element_list:
+            new_element_list.append(element)
+            new_element_list.append(self._interleaved_element)
+        return new_element_list
