@@ -1,1 +1,1 @@
-from .generator import RBGenerator
+from .generator import (RBGenerator, PurityRBGenerator, InterleavedRBGenerator)

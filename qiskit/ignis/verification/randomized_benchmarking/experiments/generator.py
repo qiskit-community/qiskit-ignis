@@ -20,6 +20,10 @@ class RBGeneratorBase(Generator):
         self._qubits = list(set(qubits))
         self._lengths = lengths
         self._rb_group = RBgroup(group_gates)
+        if self._rb_group.group_gates_type() == 0:
+            self._rb_group_type = 'clifford'
+        if self._rb_group.group_gates_type() == 1:
+            self._rb_group_type = 'cnot_dihedral'
         self._rand_seed = None
         self._circuits = []
         self._metadata = []
@@ -68,7 +72,24 @@ class RBGeneratorBase(Generator):
             inv_circuit = self._rb_group.inverse(current_element)
             output_circ += self.replace_q_indices(inv_circuit, self._qubits, qr)
             result.append({'circuit': output_circ, 'meta': output_meta})
+            if self._rb_group_type == 'cnot_dihedral':
+                cnot_circuit, cnot_meta = self.generate_cnot_circuit(output_circ, output_meta)
+                result.append({'circuit': cnot_circuit, 'meta': cnot_meta})
         return result
+
+    def generate_cnot_circuit(self, circuit, meta):
+        cnot_circuit = QuantumCircuit(circuit.qregs[0], circuit.cregs[0])
+        cnot_meta = copy.copy(meta)
+        for qubit in self._qubits:
+            cnot_circuit.h(qubit)
+            cnot_circuit.barrier(qubit)
+        cnot_circuit += circuit
+        for qubit in self._qubits:
+            cnot_circuit.barrier(qubit)
+            cnot_circuit.h(qubit)
+
+        cnot_meta['cnot'] = True
+        return (cnot_circuit, cnot_meta)
 
     def generate_random_element_list(self, length):
         element_list = []
@@ -180,7 +201,7 @@ class PurityRBGenerator(RBGeneratorBase):
         meas_op_names = ['Z', 'X', 'Y']
         result = []
         for meas_ops in product(meas_op_names, repeat=self.num_qubits()):
-            new_meta = copy(meta)
+            new_meta = copy.copy(meta)
             new_meta['purity_name'] = "".join(meas_ops)
             new_circuit = QuantumCircuit(circuit.qregs[0], circuit.cregs[0])
             new_circuit += circuit
