@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 import qiskit
+from itertools import product
 from qiskit import (QuantumCircuit, QuantumRegister, ClassicalRegister)
 from qiskit.ignis.experiments.base import Generator
 from qiskit.circuit import Instruction
@@ -161,8 +162,39 @@ class PurityRBGenerator(RBGeneratorBase):
                          qubits,
                          lengths,
                          group_gates)
-        self._npurity = 3 ** len(self._qubits)
         self.generate_circuits()
+
+    def generate_circuits_for_seed(self):
+        circuits_and_meta = super().generate_circuits_for_seed()
+        # each standard circuit gives rise to 3**qubits circuits
+        # with corresponding pre-measure operators
+        new_circuits_and_meta = []
+        for data in circuits_and_meta:
+            new_circuits_and_meta += self.add_purity_measurements(data['circuit'], data['meta'])
+        self.set_meta(new_circuits_and_meta, {
+            'experiment_type': 'purity',
+        })
+        return new_circuits_and_meta
+
+    def add_purity_measurements(self, circuit, meta):
+        meas_op_names = ['Z', 'X', 'Y']
+        result = []
+        for meas_ops in product(meas_op_names, repeat=self.num_qubits()):
+            new_meta = copy(meta)
+            new_meta['purity_name'] = "".join(meas_ops)
+            new_circuit = QuantumCircuit(circuit.qregs[0], circuit.cregs[0])
+            new_circuit += circuit
+            for qubit_index, meas_op in enumerate(meas_ops):
+                qubit = self._qubits[qubit_index]
+                if meas_op == 'Z':
+                    pass # do nothing
+                if meas_op == 'X':
+                    new_circuit.rx(np.pi / 2, qubit)
+                if meas_op == 'Y':
+                    new_circuit.ry(np.pi / 2, qubit)
+            result.append({'circuit': new_circuit, 'meta': new_meta})
+        return result
+
 
 class InterleavedRBGenerator(RBGeneratorBase):
     def __init__(self,
