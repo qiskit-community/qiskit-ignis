@@ -36,11 +36,25 @@ class RBGeneratorBase(Generator):
             circuit_and_meta = self.generate_circuits_for_seed()
             for data in circuit_and_meta:
                 circuit = data['circuit']
-                self.add_measurements(circuit)
                 meta = data['meta']
                 meta['seed'] = seed
+                meta['group_type'] = self._rb_group_type
+                self.add_measurements(circuit)
+                self.set_circuit_name(circuit, meta)
                 self._circuits.append(circuit)
                 self._metadata.append(meta)
+
+    def set_circuit_name(self, circuit, meta):
+        name = "rb_"
+        if meta['group_type'] == 'cnot_dihedral':
+            name += "cnotdihedral_{}_".format(meta['cnot_basis'])
+        if self.circuit_type_string(meta) != None:
+            name += (self.circuit_type_string(meta) + "_")
+        name += "length_{}_seed_{}".format(meta['length_index'], meta['seed'])
+        circuit.name = name
+
+    def circuit_type_string(self, meta):
+        return None
 
     def generate_circuits_for_seed(self):
         element_list = self.generate_random_element_list(self._lengths[-1])
@@ -57,7 +71,7 @@ class RBGeneratorBase(Generator):
         cr = ClassicalRegister(self.num_qubits(), 'cr')
         circ = QuantumCircuit(qr, cr)
         current_element = self._rb_group.iden(self.num_qubits())
-        for element_list in element_lists:
+        for length_index, element_list in enumerate(element_lists):
             for element in element_list:
                 current_element = self._rb_group.compose(element, element)
                 circ += self.replace_q_indices(
@@ -67,14 +81,15 @@ class RBGeneratorBase(Generator):
                 circ.barrier(*[qr[x] for x in self._qubits])
             # finished with the current list - output a circuit based on what we have
             output_circ = QuantumCircuit(qr, cr)
-            output_meta = {}
+            output_meta = {'length_index': length_index}
             output_circ += circ
             inv_circuit = self._rb_group.inverse(current_element)
             output_circ += self.replace_q_indices(inv_circuit, self._qubits, qr)
-            result.append({'circuit': output_circ, 'meta': output_meta})
             if self._rb_group_type == 'cnot_dihedral':
+                output_meta['cnot_basis'] = 'Z'
                 cnot_circuit, cnot_meta = self.generate_cnot_circuit(output_circ, output_meta)
                 result.append({'circuit': cnot_circuit, 'meta': cnot_meta})
+            result.append({'circuit': output_circ, 'meta': output_meta})
         return result
 
     def generate_cnot_circuit(self, circuit, meta):
@@ -88,7 +103,7 @@ class RBGeneratorBase(Generator):
             cnot_circuit.barrier(qubit)
             cnot_circuit.h(qubit)
 
-        cnot_meta['cnot'] = True
+        cnot_meta['cnot_basis'] = 'X'
         return (cnot_circuit, cnot_meta)
 
     def generate_random_element_list(self, length):
@@ -202,7 +217,7 @@ class PurityRBGenerator(RBGeneratorBase):
         result = []
         for meas_ops in product(meas_op_names, repeat=self.num_qubits()):
             new_meta = copy.copy(meta)
-            new_meta['purity_name'] = "".join(meas_ops)
+            new_meta['purity_meas_ops'] = "".join(meas_ops)
             new_circuit = QuantumCircuit(circuit.qregs[0], circuit.cregs[0])
             new_circuit += circuit
             for qubit_index, meas_op in enumerate(meas_ops):
@@ -215,6 +230,9 @@ class PurityRBGenerator(RBGeneratorBase):
                     new_circuit.ry(np.pi / 2, qubit)
             result.append({'circuit': new_circuit, 'meta': new_meta})
         return result
+
+    def circuit_type_string(self, meta):
+        return "purity_{}".format(meta['purity_meas_ops'])
 
 
 class InterleavedRBGenerator(RBGeneratorBase):
@@ -280,3 +298,8 @@ class InterleavedRBGenerator(RBGeneratorBase):
             new_element_list.append(element)
             new_element_list.append(self._interleaved_element)
         return new_element_list
+
+    def circuit_type_string(self, meta):
+        if meta['circuit_type'] == 'interleaved':
+            return "interleaved"
+        return None
