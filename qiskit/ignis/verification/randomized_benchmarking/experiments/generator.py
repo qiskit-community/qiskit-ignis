@@ -4,10 +4,12 @@ import qiskit
 from itertools import product
 from qiskit import (QuantumCircuit, QuantumRegister, ClassicalRegister)
 from qiskit.ignis.experiments.base import Generator
+from qiskit.quantum_info.operators.symplectic.clifford import Clifford
 from qiskit.circuit import Instruction
 from typing import List, Dict, Union, Optional
 from ..rb_groups import RBgroup
 from ..dihedral import CNOTDihedral
+
 
 class RBGeneratorBase(Generator):
     def __init__(self,
@@ -48,7 +50,7 @@ class RBGeneratorBase(Generator):
         name = "rb_"
         if meta['group_type'] == 'cnot_dihedral':
             name += "cnotdihedral_{}_".format(meta['cnot_basis'])
-        if self.circuit_type_string(meta) != None:
+        if self.circuit_type_string(meta) is not None:
             name += (self.circuit_type_string(meta) + "_")
         name += "length_{}_seed_{}".format(meta['length_index'], meta['seed'])
         circuit.name = name
@@ -166,6 +168,7 @@ class RBGeneratorBase(Generator):
         """Generate a list of experiment metadata dicts."""
         return self._metadata
 
+
 class RBGenerator(RBGeneratorBase):
     def __init__(self,
                  nseeds: int = 1,
@@ -184,7 +187,6 @@ class RBGenerator(RBGeneratorBase):
             'experiment_type': 'standard',
         })
         return circuits_and_meta
-
 
 
 class PurityRBGenerator(RBGeneratorBase):
@@ -223,7 +225,7 @@ class PurityRBGenerator(RBGeneratorBase):
             for qubit_index, meas_op in enumerate(meas_ops):
                 qubit = self._qubits[qubit_index]
                 if meas_op == 'Z':
-                    pass # do nothing
+                    pass  # do nothing
                 if meas_op == 'X':
                     new_circuit.rx(np.pi / 2, qubit)
                 if meas_op == 'Y':
@@ -260,14 +262,12 @@ class InterleavedRBGenerator(RBGeneratorBase):
             qc = interleaved_element
             interleaved_element = self._rb_group.iden(num_qubits)
             interleaved_element = interleaved_element.from_circuit(qc)
-        if (not isinstance(interleaved_element, qiskit.quantum_info.operators.symplectic.clifford.Clifford)
-            and group_gates_type == 0) and not (isinstance(interleaved_element, CNOTDihedral)
-                                           and group_gates_type == 1):
+        if (not isinstance(interleaved_element, Clifford) and group_gates_type == 0) \
+                and not (isinstance(interleaved_element, CNOTDihedral) and group_gates_type == 1):
             raise ValueError("Invalid interleaved element type.")
 
         if not isinstance(interleaved_element, QuantumCircuit) and \
-                not isinstance(interleaved_element,
-                               qiskit.quantum_info.operators.symplectic.clifford.Clifford) \
+                not isinstance(interleaved_element, Clifford) \
                 and not isinstance(interleaved_element, CNOTDihedral):
             raise ValueError("Invalid interleaved element type. "
                              "interleaved_elem should be a list of QuantumCircuit,"
