@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.random import RandomState
 import copy
 import qiskit
 from itertools import product
@@ -17,6 +18,7 @@ class RBGeneratorBase(Generator):
                  qubits: List[int] = [0],
                  lengths: List[int] = [1, 10, 20],
                  group_gates: Optional[str] = None,
+                 rand_seed: Optional[Union[int, RandomState]] = None
                  ):
         self._nseeds = nseeds
         self._qubits = list(set(qubits))
@@ -26,7 +28,7 @@ class RBGeneratorBase(Generator):
             self._rb_group_type = 'clifford'
         if self._rb_group.group_gates_type() == 1:
             self._rb_group_type = 'cnot_dihedral'
-        self._rand_seed = None
+        self._rand_seed = rand_seed
         self._circuits = []
         self._metadata = []
 
