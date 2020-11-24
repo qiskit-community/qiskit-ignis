@@ -44,6 +44,7 @@ try:
 except ImportError:
     HAS_MATPLOTLIB = False
 
+
 class QuantumVolumeExperiment(Experiment):
     """Quantum volume experiment."""
 
@@ -430,6 +431,7 @@ class QuantumVolumeAnalysis(Analysis):
         """
         return sum([distribution.get(value, 0) for value in strings])
 
+
 class QuantumVolumeResult():
     """
     Quantum volume result object
@@ -752,7 +754,6 @@ class QuantumVolumeResult():
 
         return success_list
 
-
     def _calc_z_value(self, mean, sigma):
         """Calculate z value using mean and sigma.
 
@@ -773,7 +774,6 @@ class QuantumVolumeResult():
 
         return z_value
 
-
     def _calc_confidence_level(self, z_value):
         """Calculate confidence level using z value.
 
@@ -792,7 +792,6 @@ class QuantumVolumeResult():
 
         return confidence_level
 
-
     def _quantum_volume(self):
         """Return the volume for each depth.
 
@@ -803,7 +802,6 @@ class QuantumVolumeResult():
         qv_list = 2 ** np.array(self._depths)
 
         return qv_list
-
 
     def calc_quantum_volume(self):
         """
