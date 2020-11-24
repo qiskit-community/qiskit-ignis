@@ -18,19 +18,17 @@ Quantum volume Experiment.
 import copy
 import warnings
 import math
+import uuid
+from typing import Optional, Dict, Union, List
 
 import numpy as np
-import uuid
+from numpy import random
 import qiskit
 
 from qiskit.circuit.library import QuantumVolume
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 from qiskit.result import Result
-
-from typing import Optional, Dict, Union, List
-from numpy.random import Generator
 from qiskit.ignis.experiments.base import Experiment, Generator, Analysis
-
 from qiskit import transpile, assemble
 from qiskit.providers import BaseJob
 from qiskit.exceptions import QiskitError
@@ -54,7 +52,7 @@ class QuantumVolumeExperiment(Experiment):
                  qubits: Union[int, List[int]],
                  trials: Optional[int] = 0,
                  job: Optional = None,
-                 seed: Optional[Union[int, Generator]] = None,
+                 seed: Optional[Union[int, random.Generator]] = None,
                  simulation_backend: Optional[BaseBackend] = None):
 
         if isinstance(qubits, int):
@@ -165,12 +163,12 @@ class QuantumVolumeExperiment(Experiment):
         """Analyze the stored data.
 
         Returns:
-            any: the output of the analysis,
+            QuantumVolumeResult: the output of the analysis
         """
-        # assuming only latest job has to be added
-        # TODO: add support for adding multiple jobs at once to the analysis
-        self.analysis.add_data(self._job[-1])
-        self.analysis.add_ideal_data(self._ideal_job[-1])
+        self.analysis.clear_data()
+        for job_index in range(len(self._job)):
+            self.analysis.add_data(self._job[job_index])
+            self.analysis.add_ideal_data(self._ideal_job[job_index])
         result = self.analysis.run(**params)
         return result
 
@@ -246,8 +244,8 @@ class QuantumVolumeAnalysis(Analysis):
         self._analysis_fn = self.fit
 
     def add_ideal_data(self,
-                 ideal_data: Union[BaseJob, Result, any],
-                 metadata: Optional[Dict[str, any]] = None):
+                       ideal_data: Union[BaseJob, Result, any],
+                       metadata: Optional[Dict[str, any]] = None):
         """Add additional ideal_data to the fitter.
 
         Args:
@@ -271,6 +269,13 @@ class QuantumVolumeAnalysis(Analysis):
         self._exp_data = temp
         self._exp_metadata = temp_meta
 
+    def clear_data(self):
+        """Clear stored data"""
+        self._exp_data = []
+        self._exp_ideal_data = []
+        self._exp_metadata = []
+        self._result = None
+
     def _format_data(self, data: Result,
                      metadata: Dict[str, any],
                      index: int):
@@ -293,18 +298,19 @@ class QuantumVolumeAnalysis(Analysis):
         p is the success probability (self._ydata[0][depthidx]/self._ntrials).
 
         Returns:
-            int: quantum volume
+            QuantumVolumeResult: quantum volume result object
         """
         heavy_output_counts = {}
         circ_shots = {}
+        circ_counts = {}
         all_output_prob_ideal = {}
         heavy_output_prob_ideal = {}
         heavy_output_prob_exp = {}
         heavy_outputs = {}
 
         for exp_num, ideal_result in enumerate(self._exp_ideal_data):
-            circ_name = self._exp_metadata[exp_num]["circ_name"]
-            depth = self._exp_metadata[exp_num]["depth"]
+            circ_name = metadata[exp_num]["circ_name"]
+            depth = metadata[exp_num]["depth"]
 
             # convert the result into probability dictionary
             pvector = np.multiply(ideal_result, ideal_result.conjugate())
@@ -322,10 +328,11 @@ class QuantumVolumeAnalysis(Analysis):
                     heavy_outputs[circ_name],
                     all_output_prob_ideal[circ_name])
 
-        for exp_num, result in enumerate(self._exp_data):
-            circ_name = self._exp_metadata[exp_num]["circ_name"]
+        for exp_num, result in enumerate(data):
+            circ_name = metadata[exp_num]["circ_name"]
 
             circ_shots[circ_name] = sum(result.values())
+            circ_counts[circ_name] = result
 
             # calculate the experimental heavy output counts
             heavy_output_counts[circ_name] = \
@@ -337,7 +344,7 @@ class QuantumVolumeAnalysis(Analysis):
 
         # calculate the mean and error
         self._ydata = np.zeros([4, len(self._depths)], dtype=float)
-        trials = int(len(self._exp_data) / len(self._qubit_lists))
+        trials = int(len(data) / len(self._qubit_lists))
 
         exp_vals = np.zeros(trials, dtype=float)
         ideal_vals = np.zeros(trials, dtype=float)
@@ -367,7 +374,7 @@ class QuantumVolumeAnalysis(Analysis):
                                      trials,
                                      heavy_output_counts,
                                      circ_shots,
-                                     result.values(),
+                                     circ_counts,
                                      all_output_prob_ideal,
                                      heavy_output_prob_ideal,
                                      heavy_output_prob_exp,
@@ -473,7 +480,7 @@ class QuantumVolumeResult():
         """Return the heavy output probability ideally."""
         return self._heavy_output_prob_ideal
 
-    def __str__(self):
+    def __repr__(self):
         """
         print the percentage of successful trials and the confidence level of each depth
         """
@@ -565,7 +572,7 @@ class QuantumVolumeResult():
             if show_plt:
                 plt.show()
 
-            return fig
+        return fig
 
     def plot_qv_trial(self, depth, trial_index, figsize=(7, 5), ax=None):
         """Plot individual trial.
@@ -575,11 +582,20 @@ class QuantumVolumeResult():
             figsize (tuple): Figure size in inches.
             ax (Axes or None): plot axis (if passed in).
 
+        Raises:
+            QiskitError: If given depth or trial_index do not exit in the experiment.
+
         Returns:
             matplotlib.Figure:
                 A figure for histogram of ideal and experiment probabilities.
         """
         circ_name = "qv_depth_{}_trial_{}".format(depth, trial_index)
+        if circ_name not in self._all_output_prob_ideal.keys():
+            raise QiskitError("Error - given depth and trial do not exist."
+                              " possible depths are {},"
+                              " and highest trial number is {}"
+                              .format([len(qubits) for qubits in self._qubit_lists],
+                                      self._ntrials))
         ideal_data = self._all_output_prob_ideal[circ_name]
         exp_data = self._circ_counts[circ_name]
 
@@ -628,6 +644,7 @@ class QuantumVolumeResult():
 
         Raises:
             ImportError: If matplotlib is not installed.
+            QiskitError: If given depth do not exit in the experiment.
 
         Returns:
             matplotlib.Figure:
@@ -639,12 +656,16 @@ class QuantumVolumeResult():
             raise ImportError('The function plot_hop_accumulative needs matplotlib. '
                               'Run "pip install matplotlib" before.')
 
+        if depth not in [len(qubits) for qubits in self._qubit_lists]:
+            raise QiskitError("Error - given depth do not exist. possible depths are {}."
+                              .format([len(qubits) for qubits in self._qubit_lists]))
+
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
         else:
             fig = None
 
-        trial_list = np.arange(1, self._ntrials)  # x data
+        trial_list = np.arange(1, self._ntrials + 1)  # x data
         hop_list = []  # y data
 
         for trial_index in trial_list:
@@ -666,8 +687,8 @@ class QuantumVolumeResult():
         ax.axhline(2 / 3, color='k', linestyle='dashed', linewidth=1, label='Threshold')
 
         ax.set_xlim(0, self._ntrials)
-        ax.set_ylim(hop_accumulative[-1] - 4 * two_sigma[-1],
-                    hop_accumulative[-1] + 4 * two_sigma[-1])
+        ax.set_ylim(max([0, hop_accumulative[-1] - 4 * two_sigma[-1]]),
+                    min([1, hop_accumulative[-1] + 4 * two_sigma[-1]]))
 
         ax.set_xlabel('Number of Trials', fontsize=14)
         ax.set_ylabel('Heavy Output Probability', fontsize=14)
