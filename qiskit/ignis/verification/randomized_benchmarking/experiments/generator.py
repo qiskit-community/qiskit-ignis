@@ -18,10 +18,11 @@ class RBGeneratorBase(Generator):
                  qubits: List[int] = [0],
                  lengths: List[int] = [1, 10, 20],
                  group_gates: Optional[str] = None,
-                 rand_seed: Optional[Union[int, RandomState]] = None
+                 rand_seed: Optional[Union[int, RandomState]] = None,
+                 name = "randomized benchmarking base"
                  ):
         self._nseeds = nseeds
-        self._qubits = list(set(qubits))
+        self._meas_qubits = list(set(qubits))
         self._lengths = lengths
         self._rb_group = RBgroup(group_gates)
         if self._rb_group.group_gates_type() == 0:
@@ -31,9 +32,13 @@ class RBGeneratorBase(Generator):
         self._rand_seed = rand_seed
         self._circuits = []
         self._metadata = []
+        super().__init__(name, self.num_all_qubits())
 
     def num_qubits(self):
-        return len(self._qubits)
+        return len(self._meas_qubits)
+
+    def num_all_qubits(self):
+        return max(self._meas_qubits) + 1
 
     def generate_circuits(self):
         for seed in range(self._nseeds):
@@ -45,6 +50,7 @@ class RBGeneratorBase(Generator):
                 meta['group_type'] = self._rb_group_type
                 self.add_measurements(circuit)
                 self.set_circuit_name(circuit, meta)
+                meta['circuit_name'] = circuit.name
                 self._circuits.append(circuit)
                 self._metadata.append(meta)
 
@@ -71,7 +77,7 @@ class RBGeneratorBase(Generator):
         # at the end of every element list, outputs a circuit from what was currently built
         # with an inverse gate appended at the end
         result = []
-        qr = QuantumRegister(max(self._qubits) + 1, 'qr')
+        qr = QuantumRegister(self.num_all_qubits(), 'qr')
         cr = ClassicalRegister(self.num_qubits(), 'cr')
         circ = QuantumCircuit(qr, cr)
         current_element = self._rb_group.iden(self.num_qubits())
@@ -80,15 +86,15 @@ class RBGeneratorBase(Generator):
                 current_element = self._rb_group.compose(element, element)
                 circ += self.replace_q_indices(
                     self._rb_group.to_circuit(element),
-                    self._qubits, qr)
+                    self._meas_qubits, qr)
                 # add a barrier
-                circ.barrier(*[qr[x] for x in self._qubits])
+                circ.barrier(*[qr[x] for x in self._meas_qubits])
             # finished with the current list - output a circuit based on what we have
             output_circ = QuantumCircuit(qr, cr)
             output_meta = {'length_index': length_index}
             output_circ += circ
             inv_circuit = self._rb_group.inverse(current_element)
-            output_circ += self.replace_q_indices(inv_circuit, self._qubits, qr)
+            output_circ += self.replace_q_indices(inv_circuit, self._meas_qubits, qr)
             if self._rb_group_type == 'cnot_dihedral':
                 output_meta['cnot_basis'] = 'Z'
                 cnot_circuit, cnot_meta = self.generate_cnot_circuit(output_circ, output_meta)
@@ -99,11 +105,11 @@ class RBGeneratorBase(Generator):
     def generate_cnot_circuit(self, circuit, meta):
         cnot_circuit = QuantumCircuit(circuit.qregs[0], circuit.cregs[0])
         cnot_meta = copy.copy(meta)
-        for qubit in self._qubits:
+        for qubit in self._meas_qubits:
             cnot_circuit.h(qubit)
             cnot_circuit.barrier(qubit)
         cnot_circuit += circuit
-        for qubit in self._qubits:
+        for qubit in self._meas_qubits:
             cnot_circuit.barrier(qubit)
             cnot_circuit.h(qubit)
 
@@ -154,7 +160,7 @@ class RBGeneratorBase(Generator):
         return new_circuit
 
     def add_measurements(self, circuit):
-        for clbit, qubit in enumerate(self._qubits):
+        for clbit, qubit in enumerate(self._meas_qubits):
             circuit.measure(qubit, clbit)
 
     def set_meta(self, circuit_and_meta_list, extra_meta):
@@ -177,11 +183,15 @@ class RBGenerator(RBGeneratorBase):
                  qubits: List[int] = [0],
                  lengths: List[int] = [1, 10, 20],
                  group_gates: Optional[str] = None,
+                 rand_seed: Optional[Union[int, RandomState]] = None,
                  ):
         super().__init__(nseeds,
                          qubits,
                          lengths,
-                         group_gates)
+                         group_gates,
+                         rand_seed,
+                         name="randomized benchmarking")
+        self.generate_circuits()
 
     def generate_circuits_for_seed(self):
         circuits_and_meta = super().generate_circuits_for_seed()
@@ -201,7 +211,8 @@ class PurityRBGenerator(RBGeneratorBase):
         super().__init__(nseeds,
                          qubits,
                          lengths,
-                         group_gates)
+                         group_gates,
+                         name="purity randomized benchmarking")
         self.generate_circuits()
 
     def generate_circuits_for_seed(self):
@@ -225,7 +236,7 @@ class PurityRBGenerator(RBGeneratorBase):
             new_circuit = QuantumCircuit(circuit.qregs[0], circuit.cregs[0])
             new_circuit += circuit
             for qubit_index, meas_op in enumerate(meas_ops):
-                qubit = self._qubits[qubit_index]
+                qubit = self._meas_qubits[qubit_index]
                 if meas_op == 'Z':
                     pass  # do nothing
                 if meas_op == 'X':
@@ -253,7 +264,8 @@ class InterleavedRBGenerator(RBGeneratorBase):
         super().__init__(nseeds,
                          qubits,
                          lengths,
-                         group_gates)
+                         group_gates,
+                         name="interleaved randomized benchmarking")
         self.set_interleaved_element(interleaved_element)
         self.generate_circuits()
 
