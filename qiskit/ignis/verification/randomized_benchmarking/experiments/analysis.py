@@ -61,7 +61,6 @@ class RBAnalysisBase(Analysis):
 
     def generate_fit_guess(self, ydata):
         fit_guess = [0.95, 0.99, 1 / 2 ** self.num_qubits()]
-
         # Use the first two points to guess the decay param
         y0 = ydata['mean'][0]
         y1 = ydata['mean'][1]
@@ -78,7 +77,6 @@ class RBAnalysisBase(Analysis):
         return tuple(fit_guess)
 
     def fit(self, data, metadata):
-        print(metadata)
         xdata = self.organize_data(data, metadata)
         ydata = self.calc_statistics(xdata)
         fit_guess = self.generate_fit_guess(ydata)

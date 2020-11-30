@@ -83,7 +83,7 @@ class RBGeneratorBase(Generator):
         current_element = self._rb_group.iden(self.num_qubits())
         for length_index, element_list in enumerate(element_lists):
             for element in element_list:
-                current_element = self._rb_group.compose(element, element)
+                current_element = self._rb_group.compose(current_element, element)
                 circ += self.replace_q_indices(
                     self._rb_group.to_circuit(element),
                     self._meas_qubits, qr)
