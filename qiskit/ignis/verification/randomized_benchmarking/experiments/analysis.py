@@ -6,6 +6,14 @@ from qiskit.providers import BaseJob
 from qiskit.ignis.verification.tomography import marginal_counts
 
 from qiskit.ignis.experiments.base import Analysis
+
+try:
+    from matplotlib import pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
+
+
 class RBAnalysisBase(Analysis):
     def __init__(self,
                  qubits: List[int],
@@ -102,6 +110,97 @@ class RBAnalysisBase(Analysis):
         epc = (nrb - 1) / nrb * (1 - alpha)
         epc_err = (nrb - 1) / nrb * alpha_err / alpha
 
-        return {'params': params, 'params_err': params_err,
-                               'epc': epc, 'epc_err': epc_err}
+        return RBResult(
+            params=params,
+            params_err=params_err,
+            epc=epc,
+            epc_err=epc_err,
+            qubits=self._qubits,
+            xdata=xdata,
+            ydata=ydata,
+            lengths=self._lengths,
+            fit_function=self._rb_fit_fun
+        )
 
+class RBResult():
+    def __init__(self,
+                 params,
+                 params_err,
+                 epc,
+                 epc_err,
+                 qubits,
+                 xdata,
+                 lengths,
+                 ydata,
+                 fit_function
+                 ):
+        self._params = params
+        self._params_err = params_err
+        self._epc = epc
+        self._epc_err = epc_err
+        self._qubits = qubits
+        self._xdata = xdata
+        self._lengths = lengths
+        self._ydata = ydata
+        self._fit_function = fit_function
+
+    def num_qubits(self):
+        return len(self._qubits)
+
+    def plot(self, pattern_index=0, ax=None,
+                     add_label=True, show_plt=True):
+        """Plot randomized benchmarking data of a single pattern.
+
+        Args:
+            pattern_index (int): which RB pattern to plot.
+            ax (Axes): plot axis (if passed in).
+            add_label (bool): Add an EPC label.
+            show_plt (bool): display the plot.
+
+        Raises:
+            ImportError: if matplotlib is not installed.
+        """
+
+        if not HAS_MATPLOTLIB:
+            raise ImportError('The function plot_rb_data needs matplotlib. '
+                              'Run "pip install matplotlib" before.')
+
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+
+        # Plot the result for each sequence
+        for one_seed_data in self._xdata:
+            ax.plot(self._lengths, one_seed_data, color='gray', linestyle='none',
+                    marker='x')
+
+        # Plot the mean with error bars
+        ax.errorbar(self._lengths, self._ydata['mean'],
+                    yerr=self._ydata['std'],
+                    color='r', linestyle='--', linewidth=3)
+
+        # Plot the fit
+        ax.plot(self._lengths,
+                self._fit_function(self._lengths, *self._params),
+                color='blue', linestyle='-', linewidth=2)
+        ax.tick_params(labelsize=14)
+
+        ax.set_xlabel('Clifford Length', fontsize=16)
+        ax.set_ylabel('Ground State Population', fontsize=16)
+        ax.grid(True)
+
+        if add_label:
+            bbox_props = dict(boxstyle="round,pad=0.3",
+                              fc="white", ec="black", lw=2)
+
+            ax.text(0.6, 0.9,
+                    "alpha: %.3f(%.1e) EPC: %.3e(%.1e)" %
+                    (self._params[1],
+                     self._params_err[1],
+                     self._epc,
+                     self._epc_err),
+                    ha="center", va="center", size=14,
+                    bbox=bbox_props, transform=ax.transAxes)
+
+        if show_plt:
+            plt.show()
