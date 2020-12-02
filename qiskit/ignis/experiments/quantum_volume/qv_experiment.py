@@ -524,7 +524,7 @@ class QuantumVolumeResult():
         """
 
         if not HAS_MATPLOTLIB:
-            raise ImportError('The function plot_rb_data needs matplotlib. '
+            raise ImportError('The function plot_qv_data needs matplotlib. '
                               'Run "pip install matplotlib" before.')
 
         if ax is None:
