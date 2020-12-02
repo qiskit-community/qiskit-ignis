@@ -53,7 +53,6 @@ class RBAnalysisBase(Analysis):
     def organize_data(self, data, metadata):
         # changes the flat probability list to a list [seed_0_probs, seed_1_probs...]
         # where seed_i_prob is a list of the probs for seed i for every length
-
         seeds = sorted(list(set([m['seed'] for m in metadata])))
         length_indices = sorted(list(set([m['length_index'] for m in metadata])))
         prob_dict = {(m['seed'], m['length_index']): prob for (m,prob) in zip(metadata, data)}

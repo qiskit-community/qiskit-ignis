@@ -40,8 +40,14 @@ class RBGeneratorBase(Generator):
     def num_all_qubits(self):
         return max(self._meas_qubits) + 1
 
-    def generate_circuits(self):
-        for seed in range(self._nseeds):
+    def add_seeds(self, num_of_seeds):
+        current_seed_number = self._nseeds
+        self._nseeds += num_of_seeds
+        self.generate_circuits(start_seed=current_seed_number)
+        return list(range(current_seed_number, self._nseeds))
+
+    def generate_circuits(self, start_seed=0):
+        for seed in range(start_seed, self._nseeds):
             circuit_and_meta = self.generate_circuits_for_seed()
             for data in circuit_and_meta:
                 circuit = data['circuit']
