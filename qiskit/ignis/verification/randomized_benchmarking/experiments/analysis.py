@@ -4,6 +4,7 @@ from typing import Dict, Optional, List, Union
 from qiskit.result import Result, Counts
 from qiskit.providers import BaseJob
 from qiskit.ignis.verification.tomography import marginal_counts
+from qiskit.ignis.utils import build_counts_dict_from_list
 
 from qiskit.ignis.experiments.base import Analysis
 
@@ -36,6 +37,9 @@ class RBAnalysisBase(Analysis):
         counts = data.get_counts(metadata['circuit_name'])
         if 'meas_clbits' in metadata:
             counts = marginal_counts(counts, metadata['meas_clbits'])
+        return counts
+
+    def compute_prob(self, counts):
         prob = 0
         if len(counts) > 0:
             n = len(list(counts)[0])
@@ -50,12 +54,29 @@ class RBAnalysisBase(Analysis):
         # pylint: disable=invalid-name
         return a * alpha ** x + b
 
+    def collect_data(self, data, metadata, key_fn, conversion_fn=None):
+        result = {}
+        for (d, m) in zip(data, metadata):
+            key = key_fn(m)
+            if key not in result:
+                result[key] = []
+            result[key].append(d)
+
+        for key in result:
+            result[key] = build_counts_dict_from_list(result[key])
+            if conversion_fn is not None:
+                result[key] = conversion_fn(result[key])
+
+        return result
+
     def organize_data(self, data, metadata):
         # changes the flat probability list to a list [seed_0_probs, seed_1_probs...]
         # where seed_i_prob is a list of the probs for seed i for every length
         seeds = sorted(list(set([m['seed'] for m in metadata])))
         length_indices = sorted(list(set([m['length_index'] for m in metadata])))
-        prob_dict = {(m['seed'], m['length_index']): prob for (m,prob) in zip(metadata, data)}
+        prob_dict = self.collect_data(data, metadata,
+                                      key_fn=lambda m: (m['seed'], m['length_index']),
+                                      conversion_fn=self.compute_prob)
         return np.array([[prob_dict[(seed, length_index)] for length_index in length_indices] for seed in seeds])
 
     def calc_statistics(self, xdata):
