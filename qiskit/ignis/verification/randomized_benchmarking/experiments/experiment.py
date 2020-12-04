@@ -5,6 +5,7 @@ from qiskit.ignis.experiments.base import Experiment, Analysis, Generator
 from qiskit.providers import BaseJob
 from qiskit.providers import BaseBackend
 from qiskit import transpile, assemble
+from qiskit.exceptions import QiskitError
 from . import (RBGenerator, PurityRBGenerator, InterleavedRBGenerator, RBAnalysisBase)
 
 
@@ -14,12 +15,12 @@ class RBExperiment(Experiment):
                  qubits: List[int] = [0],
                  lengths: List[int] = [1, 10, 20],
                  group_gates: Optional[str] = None,
-                 rand_seed: Optional[Union[int, RandomState]] = None
+                 rand_seed: Optional[Union[int, RandomState]] = None,
                  ):
         generator = RBGenerator(nseeds, qubits, lengths, group_gates, rand_seed)
         analysis = RBAnalysisBase(qubits, lengths)
         super().__init__(generator=generator, analysis=analysis)
-        self._jobs = []
+        self.reset()
 
     def get_circuits_and_metadata(self, seeds=None):
         circuits = []
@@ -30,16 +31,40 @@ class RBExperiment(Experiment):
                 metadata.append(meta)
         return (circuits, metadata)
 
-    def run(self, backend: BaseBackend, seeds=None, **kwargs) -> any:
+    def default_basis_gates(self):
+        return ['u1', 'u2', 'u3', 'cx']
+
+    def reset(self):
+        self._jobs = []
+        self._kwargs = None
+        self._backend = None
+        self._basis_gates = None
+
+    def run(self, backend: BaseBackend, reset=True, seeds=None, **kwargs) -> any:
         """Run an experiment and perform analysis"""
+        if reset:
+            self.reset()
+        self._backend = backend
+        self._basis_gates = kwargs.pop('basis_gates', self.default_basis_gates())
+        self._kwargs = kwargs
         job = self.execute(backend, seeds, **kwargs)
         self._jobs.append(job)
         self.analysis.add_data(job)
         return self.run_analysis()
 
-    def add_seeds_and_run(self, backend, num_of_seeds, **kwargs):
+    def check_rerun_possible(self):
+        if self._backend is None:
+            raise QiskitError("Cannot rerun experiment: Use Experiment.run() for the first time.")
+
+    def run_additional_shots(self, shots):
+        self.check_rerun_possible()
+        self._kwargs['shots'] = shots
+        return self.run(backend=self._backend, reset=False, **self._kwargs)
+
+    def run_additional_seeds(self, num_of_seeds):
+        self.check_rerun_possible()
         new_seeds = self.generator.add_seeds(num_of_seeds)
-        return self.run(backend, new_seeds, **kwargs)
+        return self.run(backend=self._backend, seeds=new_seeds, reset=False, **self._kwargs)
 
     def execute(self, backend: BaseBackend, seeds=None, **kwargs) -> BaseJob:
         """Execute the experiment on a backend.
@@ -57,7 +82,8 @@ class RBExperiment(Experiment):
         circuits, metadata = self.get_circuits_and_metadata(seeds)
         circuits = transpile(circuits,
                              backend=backend,
-                             initial_layout=self.generator.qubits)  # should change somehow?
+                             basis_gates=self._basis_gates,
+                             initial_layout=self.generator.qubits)
 
         for meta in metadata:
             meta['name'] = self.generator.name
