@@ -14,6 +14,6 @@
 Quantum Volume Experiment
 """
 
-from .qv_experiment import (QuantumVolumeExperiment,
-                            QuantumVolumeGenerator,
-                            QuantumVolumeAnalysis)
+from .qv_experiment import QuantumVolumeExperiment
+from .qv_generator import QuantumVolumeGenerator
+from .qv_analysis import QuantumVolumeAnalysis
