@@ -20,6 +20,7 @@ from qiskit.circuit.library import QuantumVolume
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 from qiskit.ignis.experiments.base import Generator
 
+
 class QuantumVolumeGenerator(Generator):
     """Quantum volume experiment generator."""
 

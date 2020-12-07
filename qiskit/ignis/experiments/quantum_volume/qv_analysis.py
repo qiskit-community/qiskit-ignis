@@ -35,6 +35,7 @@ try:
 except ImportError:
     HAS_MATPLOTLIB = False
 
+
 class QuantumVolumeAnalysis(Analysis):
     """Quantum volume experiment analysis.
     the experiment data must include both ideal and non-ideal results"""
