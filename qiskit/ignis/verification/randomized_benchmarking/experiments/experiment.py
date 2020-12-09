@@ -39,6 +39,7 @@ class RBExperiment(Experiment):
         self._kwargs = None
         self._backend = None
         self._basis_gates = None
+        self._transpiled_circuits = None
 
     def run(self, backend: BaseBackend, reset=True, seeds=None, **kwargs) -> any:
         """Run an experiment and perform analysis"""
@@ -82,8 +83,7 @@ class RBExperiment(Experiment):
         circuits, metadata = self.get_circuits_and_metadata(seeds)
         circuits = transpile(circuits,
                              backend=backend,
-                             basis_gates=self._basis_gates,
-                             initial_layout=self.generator.qubits)
+                             basis_gates=self._basis_gates)
 
         for meta in metadata:
             meta['name'] = self.generator.name
@@ -110,3 +110,27 @@ class RBExperiment(Experiment):
         """
         result = self.analysis.run(**params)
         return result
+
+    def gates_per_clifford(self):
+        qubits = self.generator.meas_qubits()
+        ngates = {qubit: {base: 0 for base in self._basis_gates} for qubit in qubits}
+
+        transpiled_circuits_list = transpile(self.generator.circuits(),
+                                             backend=self._backend,
+                                             basis_gates=self._basis_gates
+                                             )
+
+        for transpiled_circuit in transpiled_circuits_list:
+            for instr, qregs, _ in transpiled_circuit.data:
+                for qreg in qregs:
+                    if qreg.index in ngates and instr.name in ngates[qreg.index]:
+                        ngates[qreg.index][instr.name] += 1
+
+        # include inverse, ie + 1 for all clifford length
+        total_ncliffs = len(transpiled_circuits_list) * sum([length + 1 for length in self.generator.lengths()])
+
+        for qubit in qubits:
+            for base in self._basis_gates:
+                ngates[qubit][base] /= total_ncliffs
+
+        return ngates

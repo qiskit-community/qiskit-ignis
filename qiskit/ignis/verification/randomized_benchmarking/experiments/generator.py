@@ -37,8 +37,14 @@ class RBGeneratorBase(Generator):
     def num_qubits(self):
         return len(self._meas_qubits)
 
+    def meas_qubits(self):
+        return self._meas_qubits
+
     def num_all_qubits(self):
         return max(self._meas_qubits) + 1
+
+    def lengths(self):
+        return self._lengths
 
     def add_seeds(self, num_of_seeds):
         current_seed_number = self._nseeds
