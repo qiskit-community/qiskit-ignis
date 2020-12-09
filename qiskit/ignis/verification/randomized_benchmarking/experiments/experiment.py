@@ -84,7 +84,6 @@ class RBExperiment(Experiment):
         circuits = transpile(circuits,
                              backend=backend,
                              basis_gates=self._basis_gates)
-
         for meta in metadata:
             meta['name'] = self.generator.name
             meta['exp_id'] = exp_id
@@ -127,8 +126,7 @@ class RBExperiment(Experiment):
                         ngates[qreg.index][instr.name] += 1
 
         # include inverse, ie + 1 for all clifford length
-        total_ncliffs = len(transpiled_circuits_list) * sum([length + 1 for length in self.generator.lengths()])
-
+        total_ncliffs = self.generator.nseeds() * sum([length + 1 for length in self.generator.lengths()])
         for qubit in qubits:
             for base in self._basis_gates:
                 ngates[qubit][base] /= total_ncliffs
