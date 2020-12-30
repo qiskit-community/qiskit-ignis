@@ -16,11 +16,11 @@
 Quantum tomography experiment utilities
 """
 
-import logging
 from typing import List, Dict, Any, Tuple, Callable
-import numpy as np
 import itertools as it
-from qiskit.ignis.verification.tomography.data import marginal_counts, count_keys
+import logging
+import numpy as np
+from qiskit.ignis.verification.tomography.data import marginal_counts
 
 # Create logger
 logger = logging.getLogger(__name__)
@@ -35,9 +35,11 @@ def _fitter_data(counts: List[np.array],
     """Generate tomography fitter data from a tomography data dictionary.
 
     Args:
+        counts: The result data from running the tomography circuits
+        metadata: The metadata related to the tomography circuits
         measurement: Measurement matrix for the tomography basis
         preparation: Preparation matrix for the tomography basis
-        standard_weight: Apply weights to basis matrix
+        standard_weights: Apply weights to basis matrix
             and data based on count probability
         beta: hedging parameter for 0, 1 probabilities
 

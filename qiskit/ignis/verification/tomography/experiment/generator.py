@@ -16,13 +16,16 @@
 Quantum tomography experiment generator class
 """
 
-
+from typing import List, Dict, Union
 from qiskit import QuantumCircuit
 from qiskit.ignis.experiments.base import Generator
-from typing import List, Dict, Union
 
 
 class TomographyGenerator(Generator):
+    """
+    Tomography experiment generator class
+    This class is meant to be subclassed (e.g. for state/process tomography)
+    """
     def __init__(self,
                  name: str,
                  circuit: QuantumCircuit,
@@ -34,7 +37,7 @@ class TomographyGenerator(Generator):
         self._meas_qubits = meas_qubits if meas_qubits else list(range(circuit.num_qubits))
         self._prep_qubits = prep_qubits if prep_qubits is not None else self._meas_qubits
         self._meas_clbits = meas_clbits if meas_clbits is not None else self._meas_qubits
-        self._circuits = None  # should be initialized by the derived class
+        self._circuits = []  # should be initialized by the derived class
 
     def circuits(self) -> List[QuantumCircuit]:
         """Return a list of experiment circuits."""
@@ -48,4 +51,4 @@ class TomographyGenerator(Generator):
             'prep_qubits': self._prep_qubits,
             'meas_clbits': self._meas_clbits
         }
-            for circ in self._circuits]
+                for circ in self._circuits]

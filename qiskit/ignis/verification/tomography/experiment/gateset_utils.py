@@ -12,12 +12,14 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=invalid-name
+
 """
 Quantum gate set tomography experiment utilities
 """
 
 import itertools
-from typing import Union, List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional
 import numpy as np
 from scipy.linalg import schur
 import scipy.optimize as opt
@@ -145,6 +147,9 @@ def fit(self) -> Dict:
 
 
 class GaugeOptimize():
+    """
+    Gauge optimizer class
+    """
     def __init__(self,
                  ideal_gateset: Dict[str, PTM],
                  initial_gateset: Dict[str, PTM],
@@ -252,6 +257,9 @@ def get_cholesky_like_decomposition(mat: np.array) -> np.array:
 
 
 class GST_Optimize():
+    """
+    Gate set tomography optimizer class
+    """
     def __init__(self,
                  Gs: List[str],
                  Fs_names: Tuple[str],

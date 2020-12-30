@@ -16,16 +16,18 @@
 Quantum process tomography experiment class
 """
 
+from ast import literal_eval
+from typing import List, Union, Tuple, Optional
 from qiskit import QuantumCircuit
 from .experiment import TomographyExperiment
 from .generator import TomographyGenerator
 from .analysis import TomographyAnalysis
 from ..basis import process_tomography_circuits
-from ast import literal_eval
-from typing import List, Union, Tuple, Optional
-
 
 class ProcessTomographyExperiment(TomographyExperiment):
+    """
+    Process tomography experiment class
+    """
     # pylint: disable=arguments-differ
     def __init__(self,
                  circuit: QuantumCircuit,
@@ -52,6 +54,9 @@ class ProcessTomographyExperiment(TomographyExperiment):
 
 
 class ProcessTomographyGenerator(TomographyGenerator):
+    """
+    Process tomography experiment generator class
+    """
     def __init__(self,
                  circuit: QuantumCircuit,
                  qubits: Union[int, List[int]] = None,

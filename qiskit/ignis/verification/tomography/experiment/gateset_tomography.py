@@ -12,25 +12,31 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-import numpy as np
+"""
+Gate set tomography experiment classes
+"""
+
 from ast import literal_eval
 from typing import List, Union, Dict, Optional
+import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit.gate import Gate
+from qiskit.ignis.experiments.base import (Generator, Analysis)
+from qiskit import QiskitError
+from qiskit.providers import BaseJob
+from qiskit.result import Result, Counts
 from .experiment import TomographyExperiment
 from .gateset_utils import (linear_inversion, _ideal_gateset, GaugeOptimize, GST_Optimize)
 from ..basis import GateSetBasis
 from ..basis import gateset_tomography_circuits
 from ..basis import default_gateset_basis
-from ..fitters import GatesetTomographyFitter
-from ..data import marginal_counts, count_keys
-from qiskit.ignis.experiments.base import (Generator, Analysis)
-from qiskit import QiskitError
-from qiskit.providers import BaseJob
-from qiskit.result import Result, Counts
+from ..data import marginal_counts
 
 
 class GatesetTomographyExperiment(TomographyExperiment):
+    """
+    Gate set tomography experiment class
+    """
     # pylint: disable=arguments-differ
     def __init__(self,
                  gate: Gate,
@@ -52,10 +58,16 @@ class GatesetTomographyExperiment(TomographyExperiment):
         super().__init__(generator=generator, analysis=analysis)
 
     def basis(self):
+        """
+        Returns the gateset basis
+        """
         return self._gateset_basis
 
 
 class GatesetTomographyGenerator(Generator):
+    """
+    Gate set tomography experiment generator class
+    """
     def __init__(self,
                  basis: GateSetBasis,
                  meas_qubits: Optional[Union[int, List[int]]] = None
@@ -82,10 +94,13 @@ class GatesetTomographyGenerator(Generator):
             'circuit_name': circ.name,
             'meas_qubits': self._meas_qubits,
         }
-            for circ in self._circuits]
+                for circ in self._circuits]
 
 
 class GatesetTomographyAnalysis(Analysis):
+    """
+    Gate set tomography experiment analysis class
+    """
     def __init__(self,
                  gateset_basis: GateSetBasis,
                  data: Optional[Union[BaseJob, Result, List[any], any]] = None,
@@ -123,7 +138,7 @@ class GatesetTomographyAnalysis(Analysis):
             3) Use MLE optimization to obtain the final outcome
         """
         circuit_names = [literal_eval(m['circuit_name']) for m in metadata]
-        probs = {name: values for (name, values) in zip(circuit_names, data)}
+        probs = dict(zip(circuit_names, data))
         linear_inversion_results = linear_inversion(self._gateset_basis, probs)
         n = len(self._gateset_basis.spam_labels)
         gauge_opt = GaugeOptimize(_ideal_gateset(n, self._gateset_basis),
