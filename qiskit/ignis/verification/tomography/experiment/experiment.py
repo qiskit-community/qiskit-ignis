@@ -12,9 +12,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=no-name-in-module,import-error
+
 """
 Quantum tomography experiment class
 """
+
 
 from typing import List, Optional
 from qiskit.ignis.experiments.base import Experiment, Analysis, Generator
