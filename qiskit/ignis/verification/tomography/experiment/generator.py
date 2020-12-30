@@ -1,3 +1,22 @@
+# -*- coding: utf-8 -*-
+#
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2020.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""
+Quantum tomography experiment generator class
+"""
+
+
 from qiskit import QuantumCircuit
 from qiskit.ignis.experiments.base import Generator
 from typing import List, Dict, Union
@@ -15,7 +34,7 @@ class TomographyGenerator(Generator):
         self._meas_qubits = meas_qubits if meas_qubits else list(range(circuit.num_qubits))
         self._prep_qubits = prep_qubits if prep_qubits is not None else self._meas_qubits
         self._meas_clbits = meas_clbits if meas_clbits is not None else self._meas_qubits
-        self._circuits = None # should be initialized by the derived class
+        self._circuits = None  # should be initialized by the derived class
 
     def circuits(self) -> List[QuantumCircuit]:
         """Return a list of experiment circuits."""

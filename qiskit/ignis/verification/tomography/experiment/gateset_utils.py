@@ -12,10 +12,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=missing-docstring,invalid-name
-
 """
-Quantum gate set tomography fitter
+Quantum gate set tomography experiment utilities
 """
 
 import itertools
@@ -25,6 +23,7 @@ from scipy.linalg import schur
 import scipy.optimize as opt
 from qiskit.quantum_info import Choi, PTM, Operator, DensityMatrix
 from ..basis.gatesetbasis import GateSetBasis
+
 
 def linear_inversion(gateset_basis: GateSetBasis, probs) -> Dict[str, PTM]:
     """
@@ -91,11 +90,13 @@ def linear_inversion(gateset_basis: GateSetBasis, probs) -> Dict[str, PTM]:
     result['rho'] = gram_inverse @ rho
     return result
 
+
 def _default_init_state(size):
     """Returns the PTM representation of the usual ground state"""
     if size == 4:
         return np.array([[np.sqrt(0.5)], [0], [0], [np.sqrt(0.5)]])
     raise RuntimeError("No default init state for more than 1 qubit")
+
 
 def _default_measurement_op(size):
     """The PTM representation of the usual Z-basis measurement"""
@@ -103,12 +104,14 @@ def _default_measurement_op(size):
         return np.array([[np.sqrt(0.5), 0, 0, np.sqrt(0.5)]])
     raise RuntimeError("No default measurement op for more than 1 qubit")
 
+
 def _ideal_gateset(size, gateset_basis):
     ideal_gateset = {label: PTM(gateset_basis.gate_matrices[label])
                      for label in gateset_basis.gate_labels}
     ideal_gateset['E'] = _default_measurement_op(size)
     ideal_gateset['rho'] = _default_init_state(size)
     return ideal_gateset
+
 
 def fit(self) -> Dict:
     """

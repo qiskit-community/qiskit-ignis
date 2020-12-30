@@ -1,3 +1,21 @@
+# -*- coding: utf-8 -*-
+#
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2020.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""
+Quantum tomography experiment analysis classes
+"""
+
 from typing import List, Dict, Union, Optional
 import numpy as np
 from qiskit import QiskitError
@@ -10,7 +28,11 @@ from ..fitters.lstsq_fit import lstsq_fit
 from ..fitters.cvx_fit import cvx_fit, _HAS_CVX
 from .utils import _fitter_data
 
+
 class TomographyAnalysis(Analysis):
+    """
+    Base tomography experiment analysis class
+    """
     _HAS_SDP_SOLVER = None
 
     def __init__(self,
@@ -40,6 +62,9 @@ class TomographyAnalysis(Analysis):
         self._target_qubits = None
 
     def set_target_qubits(self, qubits: List[int]):
+        """
+        Sets the qubits on which tomography will be performed
+        """
         self._target_qubits = qubits
 
     def _set_target_meta(self, metadata: Dict[str, any]):
@@ -74,6 +99,10 @@ class TomographyAnalysis(Analysis):
             trace: Optional[int] = None,
             trace_preserving: bool = False,
             **kwargs) -> np.array:
+        """
+        Performs the tomography fit: converts the raw data into an optimization problem,
+        and solves it
+        """
         if method is None:
             method = self._method
 
