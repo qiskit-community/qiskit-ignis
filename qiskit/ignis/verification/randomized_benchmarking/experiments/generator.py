@@ -147,7 +147,7 @@ class RBGeneratorBase(Generator):
             current_element_list.append(element)
             if index == stop_indexes[0]:
                 element_lists.append(current_element_list)
-                current_element_list = copy.copy(current_element_list)
+                current_element_list = []
                 stop_indexes.pop(0)
         return element_lists
 

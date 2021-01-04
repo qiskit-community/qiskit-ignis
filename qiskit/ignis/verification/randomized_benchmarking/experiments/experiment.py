@@ -38,7 +38,7 @@ class RBExperiment(Experiment):
         self._jobs = []
         self._kwargs = None
         self._backend = None
-        self._basis_gates = None
+        self._basis_gates = self.default_basis_gates()
         self._transpiled_circuits = None
 
     def run(self, backend: BaseBackend, reset=True, seeds=None, **kwargs) -> any:
@@ -46,7 +46,7 @@ class RBExperiment(Experiment):
         if reset:
             self.reset()
         self._backend = backend
-        self._basis_gates = kwargs.pop('basis_gates', self.default_basis_gates())
+        self._basis_gates = kwargs.pop('basis_gates', self._basis_gates)
         self._kwargs = kwargs
         job = self.execute(backend, seeds, **kwargs)
         self._jobs.append(job)
@@ -113,7 +113,6 @@ class RBExperiment(Experiment):
     def gates_per_clifford(self):
         qubits = self.generator.meas_qubits()
         ngates = {qubit: {base: 0 for base in self._basis_gates} for qubit in qubits}
-
         transpiled_circuits_list = transpile(self.generator.circuits(),
                                              backend=self._backend,
                                              basis_gates=self._basis_gates
