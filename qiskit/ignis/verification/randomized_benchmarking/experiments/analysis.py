@@ -167,12 +167,10 @@ class RBResult():
     def num_qubits(self):
         return len(self._qubits)
 
-    def plot(self, pattern_index=0, ax=None,
-                     add_label=True, show_plt=True):
+    def plot(self, ax=None, add_label=True, show_plt=True):
         """Plot randomized benchmarking data of a single pattern.
 
         Args:
-            pattern_index (int): which RB pattern to plot.
             ax (Axes): plot axis (if passed in).
             add_label (bool): Add an EPC label.
             show_plt (bool): display the plot.
