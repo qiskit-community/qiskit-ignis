@@ -6,19 +6,17 @@ from qiskit.providers import BaseJob
 from qiskit.providers import BaseBackend
 from qiskit import transpile, assemble
 from qiskit.exceptions import QiskitError
-from . import (RBGenerator, PurityRBGenerator, InterleavedRBGenerator, RBAnalysisBase)
+from qiskit import QuantumCircuit
+from qiskit.circuit import Instruction
+import qiskit
+from ..dihedral import CNOTDihedral
+from . import (RBGenerator, PurityRBGenerator, InterleavedRBGenerator, RBAnalysis, InterleavedRBAnalysis)
 
 
-class RBExperiment(Experiment):
+class RBExperimentBase(Experiment):
     def __init__(self,
-                 nseeds: int = 1,
-                 qubits: List[int] = [0],
-                 lengths: List[int] = [1, 10, 20],
-                 group_gates: Optional[str] = None,
-                 rand_seed: Optional[Union[int, RandomState]] = None,
-                 ):
-        generator = RBGenerator(nseeds, qubits, lengths, group_gates, rand_seed)
-        analysis = RBAnalysisBase(qubits, lengths)
+                 generator: Optional[Generator] = None,
+                 analysis: Optional[Analysis] = None):
         super().__init__(generator=generator, analysis=analysis)
         self.reset()
 
@@ -131,3 +129,32 @@ class RBExperiment(Experiment):
                 ngates[qubit][base] /= total_ncliffs
 
         return ngates
+
+class RBExperiment(RBExperimentBase):
+    def __init__(self,
+                 nseeds: int = 1,
+                 qubits: List[int] = [0],
+                 lengths: List[int] = [1, 10, 20],
+                 group_gates: Optional[str] = None,
+                 rand_seed: Optional[Union[int, RandomState]] = None,
+                 ):
+        generator = RBGenerator(nseeds, qubits, lengths, group_gates, rand_seed)
+        analysis = RBAnalysis(qubits, lengths)
+        super().__init__(generator=generator, analysis=analysis)
+
+
+class InterleavedRBExperiment(RBExperimentBase):
+    def __init__(self,
+                 interleaved_element:
+                 Union[QuantumCircuit, Instruction,
+                       qiskit.quantum_info.operators.symplectic.Clifford,
+                       CNOTDihedral],
+                 nseeds: int = 1,
+                 qubits: List[int] = [0],
+                 lengths: List[int] = [1, 10, 20],
+                 group_gates: Optional[str] = None,
+                 rand_seed: Optional[Union[int, RandomState]] = None,
+                 ):
+        generator = InterleavedRBGenerator(interleaved_element, nseeds, qubits, lengths, group_gates, rand_seed)
+        analysis = InterleavedRBAnalysis(qubits, lengths)
+        super().__init__(generator=generator, analysis=analysis)

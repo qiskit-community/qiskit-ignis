@@ -275,16 +275,18 @@ class InterleavedRBGenerator(RBGeneratorBase):
                  qubits: List[int] = [0],
                  lengths: List[int] = [1, 10, 20],
                  group_gates: Optional[str] = None,
+                 rand_seed: Optional[Union[int, RandomState]] = None,
                  ):
         super().__init__(nseeds,
                          qubits,
                          lengths,
                          group_gates,
+                         rand_seed,
                          name="interleaved randomized benchmarking")
         self.set_interleaved_element(interleaved_element)
         self.generate_circuits()
 
-    def set_interleaved_element(self, interleaved_element):
+    def set_interleaved_element(self, interleaved_element): # TODO: keep the interleaved element, only transform to Clifford in order to invert the circuit
         group_gates_type = self._rb_group.group_gates_type()
         if isinstance(interleaved_element, (QuantumCircuit, Instruction)):
             num_qubits = interleaved_element.num_qubits
