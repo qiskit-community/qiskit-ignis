@@ -154,7 +154,9 @@ class InterleavedRBExperiment(RBExperimentBase):
                  lengths: List[int] = [1, 10, 20],
                  group_gates: Optional[str] = None,
                  rand_seed: Optional[Union[int, RandomState]] = None,
+                 transform_interleaved_element: Optional[bool] = False
                  ):
-        generator = InterleavedRBGenerator(interleaved_element, nseeds, qubits, lengths, group_gates, rand_seed)
+        generator = InterleavedRBGenerator(interleaved_element, nseeds, qubits, lengths,
+                                           group_gates, rand_seed, transform_interleaved_element)
         analysis = InterleavedRBAnalysis(qubits, lengths)
         super().__init__(generator=generator, analysis=analysis)

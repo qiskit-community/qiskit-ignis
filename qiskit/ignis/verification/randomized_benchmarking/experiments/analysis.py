@@ -353,6 +353,9 @@ class InterleavedRBResult():
         self._int_fit_result = int_fit_result
         self._interleaved_result = interleaved_result
 
+    def num_qubits(self):
+        return self._std_fit_result.num_qubits()
+
     def plot(self, ax=None, add_label=True, show_plt=True):
         """
         Plot interleaved randomized benchmarking data of a single pattern.

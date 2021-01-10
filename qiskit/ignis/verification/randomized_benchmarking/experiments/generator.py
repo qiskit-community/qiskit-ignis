@@ -98,9 +98,9 @@ class RBGeneratorBase(Generator):
         current_element = self._rb_group.iden(self.num_qubits())
         for length_index, element_list in enumerate(element_lists):
             for element in element_list:
-                current_element = self._rb_group.compose(current_element, element)
+                current_element = self._rb_group.compose(current_element, element['group_element'])
                 circ += self.replace_q_indices(
-                    self._rb_group.to_circuit(element),
+                    element['circuit_element'],
                     self._meas_qubits, qr)
                 # add a barrier
                 circ.barrier(*[qr[x] for x in self._meas_qubits])
@@ -136,7 +136,9 @@ class RBGeneratorBase(Generator):
         for _ in range(length):
             if self._rand_seed is not None:
                 self._rand_seed += 1
-            element_list.append(self._rb_group.random(self.num_qubits(), self._rand_seed))
+            element = self._rb_group.random(self.num_qubits(), self._rand_seed)
+            element_list.append({'group_element': element,
+                                 'circuit_element': self._rb_group.to_circuit(element)})
         return element_list
 
     def split_element_list(self, element_list, lengths):
@@ -276,6 +278,7 @@ class InterleavedRBGenerator(RBGeneratorBase):
                  lengths: List[int] = [1, 10, 20],
                  group_gates: Optional[str] = None,
                  rand_seed: Optional[Union[int, RandomState]] = None,
+                 transform_interleaved_element: Optional[bool] = False
                  ):
         super().__init__(nseeds,
                          qubits,
@@ -283,27 +286,40 @@ class InterleavedRBGenerator(RBGeneratorBase):
                          group_gates,
                          rand_seed,
                          name="interleaved randomized benchmarking")
+        self._transform_interleaved_element = transform_interleaved_element
         self.set_interleaved_element(interleaved_element)
         self.generate_circuits()
 
-    def set_interleaved_element(self, interleaved_element): # TODO: keep the interleaved element, only transform to Clifford in order to invert the circuit
+    def set_interleaved_element(self, interleaved_element):
         group_gates_type = self._rb_group.group_gates_type()
+        interleaved_group_element = interleaved_element
         if isinstance(interleaved_element, (QuantumCircuit, Instruction)):
             num_qubits = interleaved_element.num_qubits
             qc = interleaved_element
-            interleaved_element = self._rb_group.iden(num_qubits)
-            interleaved_element = interleaved_element.from_circuit(qc)
-        if (not isinstance(interleaved_element, Clifford) and group_gates_type == 0) \
-                and not (isinstance(interleaved_element, CNOTDihedral) and group_gates_type == 1):
+            interleaved_group_element = self._rb_group.iden(num_qubits)
+            interleaved_group_element = interleaved_group_element.from_circuit(qc)
+        if (not isinstance(interleaved_group_element, Clifford) and group_gates_type == 0) \
+                and not (isinstance(interleaved_group_element, CNOTDihedral) and group_gates_type == 1):
             raise ValueError("Invalid interleaved element type.")
 
-        if not isinstance(interleaved_element, QuantumCircuit) and \
-                not isinstance(interleaved_element, Clifford) \
+        if not isinstance(interleaved_group_element, Clifford) \
                 and not isinstance(interleaved_element, CNOTDihedral):
             raise ValueError("Invalid interleaved element type. "
                              "interleaved_elem should be a list of QuantumCircuit,"
                              "or a list of Clifford / CNOTDihedral objects")
-        self._interleaved_element = interleaved_element
+        if self._transform_interleaved_element:
+            interleaved_circuit_element = self._rb_group.to_circuit(interleaved_group_element)
+        else:
+            if isinstance(interleaved_element, Instruction):
+                c = QuantumCircuit(interleaved_element.num_qubits)
+                c.append(interleaved_element, range(interleaved_element.num_qubits))
+                interleaved_circuit_element = c
+            else:
+                interleaved_circuit_element = interleaved_element
+
+        self._interleaved_element = {'group_element': interleaved_group_element,
+                                     'circuit_element': interleaved_circuit_element
+                                     }
 
     def generate_circuits_for_seed(self):
         element_list = self.generate_random_element_list(self._lengths[-1])
@@ -322,6 +338,12 @@ class InterleavedRBGenerator(RBGeneratorBase):
             'circuit_type': 'interleaved'
         })
         return circuits_and_meta + interleaved_circuits_and_meta
+
+    def element_to_group_rep(self, element):
+        return element
+
+    def element_to_circuit_rep(self, element):
+        return self._rb_group.to_circuit(element)
 
     def interleave(self, element_list):
         new_element_list = []
