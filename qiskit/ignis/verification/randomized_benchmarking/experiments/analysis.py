@@ -107,107 +107,6 @@ class RBAnalysisBase(Analysis):
         return tuple(fit_guess)
 
 
-
-class RBResult():
-    def __init__(self,
-                 params,
-                 params_err,
-                 epc,
-                 epc_err,
-                 qubits,
-                 xdata,
-                 lengths,
-                 ydata,
-                 fit_function
-                 ):
-        self._params = params
-        self._params_err = params_err
-        self._epc = epc
-        self._epc_err = epc_err
-        self._qubits = qubits
-        self._xdata = xdata
-        self._lengths = lengths
-        self._ydata = ydata
-        self._fit_function = fit_function
-
-    def num_qubits(self):
-        return len(self._qubits)
-
-    def params(self):
-        return self._params
-
-    def params_err(self):
-        return self._params_err
-
-    def lengths(self):
-        return self._lengths
-
-    def xdata(self):
-        return self._xdata
-
-    def ydata(self):
-        return self._ydata
-
-    def fit_function(self):
-        return self._fit_function
-
-    def plot(self, ax=None, add_label=True, show_plt=True):
-        """Plot randomized benchmarking data of a single pattern.
-
-        Args:
-            ax (Axes): plot axis (if passed in).
-            add_label (bool): Add an EPC label.
-            show_plt (bool): display the plot.
-
-        Raises:
-            ImportError: if matplotlib is not installed.
-        """
-
-        if not HAS_MATPLOTLIB:
-            raise ImportError('The function plot_rb_data needs matplotlib. '
-                              'Run "pip install matplotlib" before.')
-
-        if ax is None:
-            plt.figure()
-            ax = plt.gca()
-
-        # Plot the result for each sequence
-        for one_seed_data in self._xdata:
-            ax.plot(self._lengths, one_seed_data, color='gray', linestyle='none',
-                    marker='x')
-
-        # Plot the mean with error bars
-        ax.errorbar(self._lengths, self._ydata['mean'],
-                    yerr=self._ydata['std'],
-                    color='r', linestyle='--', linewidth=3)
-
-        # Plot the fit
-        ax.plot(self._lengths,
-                self._fit_function(self._lengths, *self._params),
-                color='blue', linestyle='-', linewidth=2)
-        ax.tick_params(labelsize=14)
-
-        ax.set_xlabel('Clifford Length', fontsize=16)
-        ax.set_ylabel('Ground State Population', fontsize=16)
-        ax.grid(True)
-
-        if add_label:
-            bbox_props = dict(boxstyle="round,pad=0.3",
-                              fc="white", ec="black", lw=2)
-
-            ax.text(0.6, 0.9,
-                    "alpha: %.3f(%.1e) EPC: %.3e(%.1e)" %
-                    (self._params[1],
-                     self._params_err[1],
-                     self._epc,
-                     self._epc_err),
-                    ha="center", va="center", size=14,
-                    bbox=bbox_props, transform=ax.transAxes)
-
-        if show_plt:
-            plt.show()
-
-
 class RBAnalysis(RBAnalysisBase):
     def __init__(self,
                  qubits: List[int],
@@ -247,17 +146,21 @@ class RBAnalysis(RBAnalysisBase):
         epc = (nrb - 1) / nrb * (1 - alpha)
         epc_err = (nrb - 1) / nrb * alpha_err / alpha
 
-        return RBResult(
-            params=params,
-            params_err=params_err,
-            epc=epc,
-            epc_err=epc_err,
-            qubits=self._qubits,
-            xdata=xdata,
-            ydata=ydata,
-            lengths=self._lengths,
-            fit_function=self._rb_fit_fun
-        )
+        return RBResult({
+            'A': params[0],
+            'alpha': params[1],
+            'B': params[2]
+            'A_err': params_err[0],
+            'alpha_err': params_err[1],
+            'B_err': params_err[2]
+            'epc': epc,
+            'epc_err': epc_err,
+            'qubits': self._qubits,
+            'xdata': xdata,
+            'ydata': ydata,
+            'lengths': self._lengths,
+            'fit_function': self._rb_fit_fun
+        })
 
 
 class InterleavedRBAnalysis(RBAnalysisBase):
@@ -288,7 +191,7 @@ class InterleavedRBAnalysis(RBAnalysisBase):
             if metadata is None:
                 if not hasattr(data.header, "metadata"):
                     raise QiskitError("Experiment is missing metadata.")
-                metadata = deepcopy(data.header.metadata)
+                metadata = data.header.metadata
         std_metadata = [m for m in metadata if m['circuit_type'] == 'standard']
         int_metadata = [m for m in metadata if m['circuit_type'] == 'interleaved']
         self.std_fitter.add_data(data, std_metadata)
@@ -305,11 +208,11 @@ class InterleavedRBAnalysis(RBAnalysisBase):
         nrb = 2 ** len(self._qubits)
 
         # Calculate alpha (=p) and alpha_c (=p_c):
-        alpha = std_fit_results.params()[1]
-        alpha_c = int_fit_results.params()[1]
+        alpha = std_fit_results['alpha']
+        alpha_c = int_fit_results['alpha']
         # Calculate their errors:
-        alpha_err = std_fit_results.params_err()[1]
-        alpha_c_err = int_fit_results.params_err()[1]
+        alpha_err = std_fit_results['alpha_err']
+        alpha_c_err = int_fit_results['alpha_err']
 
         # Calculate epc_est (=r_c^est) - Eq. (4):
         epc_est = (nrb - 1) * (1 - alpha_c / alpha) / nrb
@@ -330,31 +233,107 @@ class InterleavedRBAnalysis(RBAnalysisBase):
         epc_est_err = ((nrb - 1) / nrb) * (alpha_c / alpha) \
             * (np.sqrt(alpha_err_sq + alpha_c_err_sq))
 
-        interleaved_result_dict = {'alpha': alpha,
-                                  'alpha_err': alpha_err,
-                                  'alpha_c': alpha_c,
-                                  'alpha_c_err': alpha_c_err,
-                                  'epc_est': epc_est,
-                                  'epc_est_err': epc_est_err,
-                                  'systematic_err':
-                                      systematic_err,
-                                  'systematic_err_L':
-                                      systematic_err_L,
-                                  'systematic_err_R':
-                                      systematic_err_R}
+        interleaved_result = {'alpha': alpha,
+                              'alpha_err': alpha_err,
+                              'alpha_c': alpha_c,
+                              'alpha_c_err': alpha_c_err,
+                              'epc_est': epc_est,
+                              'epc_est_err': epc_est_err,
+                              'systematic_err':
+                                  systematic_err,
+                              'systematic_err_L':
+                                  systematic_err_L,
+                              'systematic_err_R':
+                                  systematic_err_R}
 
-        return InterleavedRBResult(std_fit_results, int_fit_results, interleaved_result_dict)
+        return InterleavedRBResult(std_fit_results, int_fit_results, interleaved_result)
 
 
 
-class InterleavedRBResult():
+class RBResult():
+    def __init__(self, data):
+        self._data = data
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
+    def num_qubits(self):
+        return len(self._data.get('qubits', []))
+
+    def params(self):
+        return [self._data['A'], self._data['alpha'], self._data['B']]
+
+    def plot(self, ax=None, add_label=True, show_plt=True):
+        """Plot randomized benchmarking data of a single pattern.
+
+        Args:
+            ax (Axes): plot axis (if passed in).
+            add_label (bool): Add an EPC label.
+            show_plt (bool): display the plot.
+
+        Raises:
+            ImportError: if matplotlib is not installed.
+        """
+
+        if not HAS_MATPLOTLIB:
+            raise ImportError('The function plot_rb_data needs matplotlib. '
+                              'Run "pip install matplotlib" before.')
+
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+
+        # Plot the result for each sequence
+        for one_seed_data in self._data['xdata']:
+            ax.plot(self._data['lengths'], one_seed_data, color='gray', linestyle='none',
+                    marker='x')
+
+        # Plot the mean with error bars
+        ax.errorbar(self._data['lengths'], self._data['ydata']['mean'],
+                    yerr=self._data['ydata']['std'],
+                    color='r', linestyle='--', linewidth=3)
+
+        # Plot the fit
+        ax.plot(self._data['lengths'],
+                self._data['fit_function'](self._data['lengths'], *self.params()),
+                color='blue', linestyle='-', linewidth=2)
+        ax.tick_params(labelsize=14)
+
+        ax.set_xlabel('Clifford Length', fontsize=16)
+        ax.set_ylabel('Ground State Population', fontsize=16)
+        ax.grid(True)
+
+        if add_label:
+            bbox_props = dict(boxstyle="round,pad=0.3",
+                              fc="white", ec="black", lw=2)
+
+            ax.text(0.6, 0.9,
+                    "alpha: %.3f(%.1e) EPC: %.3e(%.1e)" %
+                    (self._data['alpha'][1],
+                     self._data['alpha_err'][1],
+                     self._data['epc'],
+                     self._data['epc_err']),
+                    ha="center", va="center", size=14,
+                    bbox=bbox_props, transform=ax.transAxes)
+
+        if show_plt:
+            plt.show()
+
+
+class InterleavedRBResult(RBResult):
     def __init__(self, std_fit_result, int_fit_result, interleaved_result):
         self._std_fit_result = std_fit_result
         self._int_fit_result = int_fit_result
-        self._interleaved_result = interleaved_result
+        self._data = interleaved_result
 
     def num_qubits(self):
         return self._std_fit_result.num_qubits()
+
+    def params(self):
+        raise QiskitError("params() is not fully determined in results of interleaved RB")
 
     def plot(self, ax=None, add_label=True, show_plt=True):
         """
@@ -413,12 +392,12 @@ class InterleavedRBResult():
             ax.text(0.6, 0.9,
                     "alpha: %.3f(%.1e) alpha_c: %.3e(%.1e) \n \
                     EPC_est: %.3e(%.1e)" %
-                    (self._interleaved_result['alpha'],
-                     self._interleaved_result['alpha_err'],
-                     self._interleaved_result['alpha_c'],
-                     self._interleaved_result['alpha_c_err'],
-                     self._interleaved_result['epc_est'],
-                     self._interleaved_result['epc_est_err']),
+                    (self._data['alpha'],
+                     self._data['alpha_err'],
+                     self._data['alpha_c'],
+                     self._data['alpha_c_err'],
+                     self._data['epc_est'],
+                     self._data['epc_est_err']),
                     ha="center", va="center", size=14,
                     bbox=bbox_props, transform=ax.transAxes)
 
