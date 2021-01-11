@@ -10,7 +10,7 @@ from qiskit import QuantumCircuit
 from qiskit.circuit import Instruction
 import qiskit
 from ..dihedral import CNOTDihedral
-from . import (RBGenerator, PurityRBGenerator, InterleavedRBGenerator, RBAnalysis, InterleavedRBAnalysis)
+from . import (RBGenerator, PurityRBGenerator, InterleavedRBGenerator, RBAnalysis, InterleavedRBAnalysis, CNOTDihedralRBAnalysis)
 
 
 class RBExperimentBase(Experiment):
@@ -30,7 +30,7 @@ class RBExperimentBase(Experiment):
         return (circuits, metadata)
 
     def default_basis_gates(self):
-        return ['u1', 'u2', 'u3', 'cx']
+        return ['id', 'u1', 'u2', 'u3', 'cx']
 
     def reset(self):
         self._jobs = []
@@ -139,7 +139,10 @@ class RBExperiment(RBExperimentBase):
                  rand_seed: Optional[Union[int, RandomState]] = None,
                  ):
         generator = RBGenerator(nseeds, qubits, lengths, group_gates, rand_seed)
-        analysis = RBAnalysis(qubits, lengths)
+        if generator.rb_group_type() == 'clifford':
+            analysis = RBAnalysis(qubits, lengths)
+        if generator.rb_group_type() == 'cnot_dihedral':
+            analysis = CNOTDihedralRBAnalysis(qubits, lengths)
         super().__init__(generator=generator, analysis=analysis)
 
 
@@ -158,5 +161,5 @@ class InterleavedRBExperiment(RBExperimentBase):
                  ):
         generator = InterleavedRBGenerator(interleaved_element, nseeds, qubits, lengths,
                                            group_gates, rand_seed, transform_interleaved_element)
-        analysis = InterleavedRBAnalysis(qubits, lengths)
+        analysis = InterleavedRBAnalysis(qubits, lengths, group_type=generator.rb_group_type())
         super().__init__(generator=generator, analysis=analysis)

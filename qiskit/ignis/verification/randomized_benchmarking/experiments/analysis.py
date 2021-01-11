@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.optimize import curve_fit
-from copy import deepcopy
 from typing import Dict, Optional, List, Union, Callable
 from qiskit.result import Result, Counts
 from qiskit.providers import BaseJob
@@ -55,6 +54,19 @@ class RBAnalysisBase(Analysis):
         """Function used to fit RB."""
         # pylint: disable=invalid-name
         return a * alpha ** x + b
+
+    def extract_data_and_metadata(self, data, metadata):
+        if data is None:
+            return (None, None)
+        if isinstance(data, BaseJob):
+            data = data.result()
+        if isinstance(data, Result):
+            # Extract metadata from result object if not provided
+            if metadata is None:
+                if not hasattr(data.header, "metadata"):
+                    raise QiskitError("Experiment is missing metadata.")
+                metadata = data.header.metadata
+        return (data, metadata)
 
     def collect_data(self, data, metadata, key_fn, conversion_fn=None):
         result = {}
@@ -149,10 +161,10 @@ class RBAnalysis(RBAnalysisBase):
         return RBResult({
             'A': params[0],
             'alpha': params[1],
-            'B': params[2]
+            'B': params[2],
             'A_err': params_err[0],
             'alpha_err': params_err[1],
-            'B_err': params_err[2]
+            'B_err': params_err[2],
             'epc': epc,
             'epc_err': epc_err,
             'qubits': self._qubits,
@@ -162,8 +174,7 @@ class RBAnalysis(RBAnalysisBase):
             'fit_function': self._rb_fit_fun
         })
 
-
-class InterleavedRBAnalysis(RBAnalysisBase):
+class CNOTDihedralRBAnalysis(RBAnalysisBase):
     def __init__(self,
                  qubits: List[int],
                  lengths: List[int],
@@ -174,28 +185,88 @@ class InterleavedRBAnalysis(RBAnalysisBase):
                  ):
         self._qubits = qubits
         self._lengths = lengths
-        self.std_fitter = RBAnalysis(self._qubits, self._lengths)
-        self.int_fitter = RBAnalysis(self._qubits, self._lengths)
+        self.z_fitter = RBAnalysis(self._qubits, self._lengths)
+        self.x_fitter = RBAnalysis(self._qubits, self._lengths)
+        super().__init__(qubits, lengths, self.fit, data, metadata, name, exp_id)
+
+    def add_data(self,
+                 data: Union[BaseJob, Result, any],
+                 metadata: Optional[Dict[str, any]] = None):
+        data, metadata = self.extract_data_and_metadata(data, metadata)
+        if data is not None:
+            z_metadata = [m for m in metadata if m['cnot_basis'] == 'Z']
+            x_metadata = [m for m in metadata if m['cnot_basis'] == 'X']
+            self.z_fitter.add_data(data, z_metadata)
+            self.x_fitter.add_data(data, x_metadata)
+
+    def run(self, **params) -> any:
+        z_fit_results = self.z_fitter.run()
+        x_fit_results = self.x_fitter.run()
+        self._result = self._analysis_fn(z_fit_results, x_fit_results)
+        return self._result
+
+    def fit(self, z_fit_results, x_fit_results):
+        # calculate nrb=d=2^n:
+        nrb = 2 ** len(self._qubits)
+
+        # Calculate alpha_Z and alpha_R:
+        alpha_Z = z_fit_results['alpha']
+        alpha_R = x_fit_results['alpha']
+        # Calculate their errors:
+        alpha_Z_err = z_fit_results['alpha_err']
+        alpha_R_err = x_fit_results['alpha_err']
+
+        # Calculate alpha:
+        alpha = (alpha_Z + nrb * alpha_R) / (nrb + 1)
+
+        # Calculate alpha_err:
+        alpha_Z_err_sq = (alpha_Z_err / alpha_Z / (nrb + 1)) ** 2
+        alpha_R_err_sq = (nrb * alpha_R_err / alpha_R / (nrb + 1)) ** 2
+        alpha_err = np.sqrt(alpha_Z_err_sq + alpha_R_err_sq)
+
+        # Calculate epg_est:
+        epg_est = (nrb - 1) * (1 - alpha) / nrb
+
+        # Calculate epg_est_error
+        epg_est_err = (nrb - 1) / nrb * alpha_err / alpha
+
+        cnotdihedral_result = {'alpha': alpha,
+                               'alpha_err': alpha_err,
+                               'epg_est': epg_est,
+                               'epg_est_err': epg_est_err}
+
+        return CNOTDihedralRBResult(z_fit_results, x_fit_results, cnotdihedral_result)
+
+class InterleavedRBAnalysis(RBAnalysisBase):
+    def __init__(self,
+                 qubits: List[int],
+                 lengths: List[int],
+                 data: Optional[Union[BaseJob, Result, List[any], any]] = None,
+                 metadata: Optional[Union[List[Dict[str, any]], Dict[str, any]]] = None,
+                 name: Optional[str] = None,
+                 exp_id: Optional[str] = None,
+                 group_type: Optional[str] = 'clifford'
+                 ):
+        self._qubits = qubits
+        self._lengths = lengths
+        if group_type == 'clifford':
+            self.std_fitter = RBAnalysis(self._qubits, self._lengths)
+            self.int_fitter = RBAnalysis(self._qubits, self._lengths)
+        if group_type == 'cnot_dihedral':
+            self.std_fitter = CNOTDihedralRBAnalysis(self._qubits, self._lengths)
+            self.int_fitter = CNOTDihedralRBAnalysis(self._qubits, self._lengths)
         super().__init__(qubits, lengths, self.fit, data, metadata, name, exp_id)
 
     def add_data(self,
                  data: Union[BaseJob, Result, any],
                  metadata: Optional[Dict[str, any]] = None):
 
-        if data is None:
-            return
-        if isinstance(data, BaseJob):
-            data = data.result()
-        if isinstance(data, Result):
-            # Extract metadata from result object if not provided
-            if metadata is None:
-                if not hasattr(data.header, "metadata"):
-                    raise QiskitError("Experiment is missing metadata.")
-                metadata = data.header.metadata
-        std_metadata = [m for m in metadata if m['circuit_type'] == 'standard']
-        int_metadata = [m for m in metadata if m['circuit_type'] == 'interleaved']
-        self.std_fitter.add_data(data, std_metadata)
-        self.int_fitter.add_data(data, int_metadata)
+        data, metadata = self.extract_data_and_metadata(data, metadata)
+        if data is not None:
+            std_metadata = [m for m in metadata if m['circuit_type'] == 'standard']
+            int_metadata = [m for m in metadata if m['circuit_type'] == 'interleaved']
+            self.std_fitter.add_data(data, std_metadata)
+            self.int_fitter.add_data(data, int_metadata)
 
     def run(self, **params) -> any:
         std_fit_results = self.std_fitter.run()
@@ -312,8 +383,8 @@ class RBResult():
 
             ax.text(0.6, 0.9,
                     "alpha: %.3f(%.1e) EPC: %.3e(%.1e)" %
-                    (self._data['alpha'][1],
-                     self._data['alpha_err'][1],
+                    (self._data['alpha'],
+                     self._data['alpha_err'],
                      self._data['epc'],
                      self._data['epc_err']),
                     ha="center", va="center", size=14,
@@ -356,26 +427,24 @@ class InterleavedRBResult(RBResult):
             plt.figure()
             ax = plt.gca()
 
-        xdata = self._std_fit_result.lengths()
+        xdata = self._std_fit_result['lengths']
 
         # Plot the original and interleaved result for each sequence
-        for one_seed_data in self._std_fit_result.xdata():
+        for one_seed_data in self._std_fit_result['xdata']:
             ax.plot(xdata, one_seed_data, color='blue', linestyle='none',
                     marker='x')
-        for one_seed_data in self._int_fit_result.xdata():
+        for one_seed_data in self._int_fit_result['xdata']:
             ax.plot(xdata, one_seed_data, color='red', linestyle='none',
                     marker='+')
 
         # Plot the fit
-        std_fit_function = self._std_fit_result.fit_function()
-        int_fit_function = self._int_fit_result.fit_function()
-        ax.plot(xdata, std_fit_function(xdata,
-                                        *self._std_fit_result.params()),
+        std_fit_function = self._std_fit_result['fit_function']
+        int_fit_function = self._int_fit_result['fit_function']
+        ax.plot(xdata, std_fit_function(xdata, *self._std_fit_result.params()),
                 color='blue', linestyle='-', linewidth=2,
                 label='Standard RB')
         ax.tick_params(labelsize=14)
-        ax.plot(xdata, int_fit_function(xdata,
-                                        *self._int_fit_result.params()),
+        ax.plot(xdata, int_fit_function(xdata, *self._int_fit_result.params()),
                 color='red', linestyle='-', linewidth=2,
                 label='Interleaved RB')
         ax.tick_params(labelsize=14)
@@ -398,6 +467,83 @@ class InterleavedRBResult(RBResult):
                      self._data['alpha_c_err'],
                      self._data['epc_est'],
                      self._data['epc_est_err']),
+                    ha="center", va="center", size=14,
+                    bbox=bbox_props, transform=ax.transAxes)
+
+        if show_plt:
+            plt.show()
+
+class CNOTDihedralRBResult(RBResult):
+    def __init__(self, z_fit_result, x_fit_result, cnotdihedral_result):
+        self._z_fit_result = z_fit_result
+        self._x_fit_result = x_fit_result
+        self._data = cnotdihedral_result
+
+    def num_qubits(self):
+        return self._z_fit_result.num_qubits()
+
+    def params(self):
+        raise QiskitError("params() is not fully determined in results of cnot dihedral RB")
+
+    def plot(self, ax=None, add_label=True, show_plt=True):
+        """
+        Plot non-Clifford cnot-dihedral randomized benchmarking data
+        of a single pattern.
+
+        Args:
+            ax (Axes): plot axis (if passed in).
+            add_label (bool): Add an EPG label.
+            show_plt (bool): display the plot.
+
+        Raises:
+            ImportError: if matplotlib is not installed.
+        """
+
+        if not HAS_MATPLOTLIB:
+            raise ImportError('The function plot_interleaved_rb_data \
+            needs matplotlib. Run "pip install matplotlib" before.')
+
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+
+        xdata = self._z_fit_result['lengths']
+
+        # Plot the original and interleaved result for each sequence
+        for one_seed_data in self._z_fit_result['xdata']:
+            ax.plot(xdata, one_seed_data, color='blue', linestyle='none',
+                    marker='x')
+        for one_seed_data in self._x_fit_result['xdata']:
+            ax.plot(xdata, one_seed_data, color='red', linestyle='none',
+                    marker='+')
+
+        # Plot the fit
+        z_fit_function = self._z_fit_result['fit_function']
+        x_fit_function = self._x_fit_result['fit_function']
+        ax.plot(xdata, z_fit_function(xdata, *self._z_fit_result.params()),
+                color='blue', linestyle='-', linewidth=2,
+                label='Measure state |0...0>')
+        ax.tick_params(labelsize=14)
+        ax.plot(xdata, x_fit_function(xdata, *self._x_fit_result.params()),
+                color='red', linestyle='-', linewidth=2,
+                label='Measure state |+...+>')
+        ax.tick_params(labelsize=14)
+
+        ax.set_xlabel('CNOT-Dihedral Length', fontsize=16)
+        ax.set_ylabel('Ground State Population', fontsize=16)
+        ax.grid(True)
+        ax.legend(loc='lower left')
+
+        if add_label:
+            bbox_props = dict(boxstyle="round,pad=0.3",
+                              fc="white", ec="black", lw=2)
+
+            ax.text(0.6, 0.9,
+                    "alpha: %.3f(%.1e) EPG_est: %.3e(%.1e)" %
+                    (self._data['alpha'],
+                     self._data['alpha_err'],
+                     self._data['epg_est'],
+                     self._data['epg_est_err']),
                     ha="center", va="center", size=14,
                     bbox=bbox_props, transform=ax.transAxes)
 

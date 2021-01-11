@@ -37,7 +37,7 @@ class RBgroup():
                                                   'clifford'):
             self._rb_group = Clifford
         elif group_gates in ('1', 'Non-Clifford',
-                             'NonClifford'
+                             'NonClifford',
                              'CNOTDihedral',
                              'CNOT-Dihedral'):
             self._rb_group = CNOTDihedral

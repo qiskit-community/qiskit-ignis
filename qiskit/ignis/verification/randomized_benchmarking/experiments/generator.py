@@ -49,6 +49,9 @@ class RBGeneratorBase(Generator):
     def nseeds(self):
         return self._nseeds
 
+    def rb_group_type(self):
+        return self._rb_group_type
+
     def add_seeds(self, num_of_seeds):
         current_seed_number = self._nseeds
         self._nseeds += num_of_seeds
