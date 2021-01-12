@@ -331,6 +331,9 @@ class RBResult():
     def __setitem__(self, key, value):
         self._data[key] = value
 
+    def __str__(self):
+        return str(self._data)
+
     def num_qubits(self):
         return len(self._data.get('qubits', []))
 

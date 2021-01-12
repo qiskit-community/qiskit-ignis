@@ -306,7 +306,7 @@ class InterleavedRBGenerator(RBGeneratorBase):
             raise ValueError("Invalid interleaved element type.")
 
         if not isinstance(interleaved_group_element, Clifford) \
-                and not isinstance(interleaved_element, CNOTDihedral):
+                and not isinstance(interleaved_group_element, CNOTDihedral):
             raise ValueError("Invalid interleaved element type. "
                              "interleaved_elem should be a list of QuantumCircuit,"
                              "or a list of Clifford / CNOTDihedral objects")
