@@ -24,9 +24,11 @@ class RBAnalysisBase(Analysis):
                  metadata: Optional[Union[List[Dict[str, any]], Dict[str, any]]] = None,
                  name: Optional[str] = None,
                  exp_id: Optional[str] = None,
+                 group_type: Optional[str] = 'clifford'
                  ):
         self._qubits = qubits
         self._lengths = lengths
+        self._group_type = group_type
         super().__init__(data, metadata, name, exp_id, analysis_fn=analysis_fn)
 
     def num_qubits(self):
@@ -171,7 +173,8 @@ class RBAnalysis(RBAnalysisBase):
             'xdata': xdata,
             'ydata': ydata,
             'lengths': self._lengths,
-            'fit_function': self._rb_fit_fun
+            'fit_function': self._rb_fit_fun,
+            'group_type': self._group_type
         })
 
 class CNOTDihedralRBAnalysis(RBAnalysisBase):
@@ -187,7 +190,7 @@ class CNOTDihedralRBAnalysis(RBAnalysisBase):
         self._lengths = lengths
         self.z_fitter = RBAnalysis(self._qubits, self._lengths)
         self.x_fitter = RBAnalysis(self._qubits, self._lengths)
-        super().__init__(qubits, lengths, self.fit, data, metadata, name, exp_id)
+        super().__init__(qubits, lengths, self.fit, data, metadata, name, exp_id, group_type='cnot_dihedral')
 
     def add_data(self,
                  data: Union[BaseJob, Result, any],
@@ -233,7 +236,9 @@ class CNOTDihedralRBAnalysis(RBAnalysisBase):
         cnotdihedral_result = {'alpha': alpha,
                                'alpha_err': alpha_err,
                                'epg_est': epg_est,
-                               'epg_est_err': epg_est_err}
+                               'epg_est_err': epg_est_err,
+                               'lengths': self._lengths,
+                               'group_type': self._group_type}
 
         return CNOTDihedralRBResult(z_fit_results, x_fit_results, cnotdihedral_result)
 
@@ -255,7 +260,7 @@ class InterleavedRBAnalysis(RBAnalysisBase):
         if group_type == 'cnot_dihedral':
             self.std_fitter = CNOTDihedralRBAnalysis(self._qubits, self._lengths)
             self.int_fitter = CNOTDihedralRBAnalysis(self._qubits, self._lengths)
-        super().__init__(qubits, lengths, self.fit, data, metadata, name, exp_id)
+        super().__init__(qubits, lengths, self.fit, data, metadata, name, exp_id, group_type)
 
     def add_data(self,
                  data: Union[BaseJob, Result, any],
@@ -315,9 +320,13 @@ class InterleavedRBAnalysis(RBAnalysisBase):
                               'systematic_err_L':
                                   systematic_err_L,
                               'systematic_err_R':
-                                  systematic_err_R}
-
-        return InterleavedRBResult(std_fit_results, int_fit_results, interleaved_result)
+                                  systematic_err_R,
+                              'lengths': self._lengths,
+                              'group_type': self._group_type}
+        if self._group_type == 'clifford':
+            return InterleavedRBResult(std_fit_results, int_fit_results, interleaved_result)
+        if self._group_type == 'cnot_dihedral':
+            return InterleavedCNOTDihedralRBResult(std_fit_results, int_fit_results, interleaved_result)
 
 
 
@@ -334,11 +343,43 @@ class RBResult():
     def __str__(self):
         return str(self._data)
 
+    def group_type_name(self):
+        names_dict = {
+            'clifford': 'Clifford',
+            'cnot_dihedral': 'CNOT-Dihedral'
+        }
+        return names_dict[self._data['group_type']]
+
     def num_qubits(self):
         return len(self._data.get('qubits', []))
 
     def params(self):
         return [self._data['A'], self._data['alpha'], self._data['B']]
+
+    def lengths(self):
+        return self._data['lengths']
+
+    def plot_data_series(self, ax, error_bar = False, color='blue', label=None):
+        for one_seed_data in self._data['xdata']:
+            ax.plot(self.lengths(), one_seed_data, color=color, linestyle='none',
+                    marker='x')
+        if error_bar:
+            ax.errorbar(self.lengths(), self._data['ydata']['mean'],
+                        yerr=self._data['ydata']['std'],
+                        color='red', linestyle='--', linewidth=3)
+        ax.plot(self.lengths(),
+                self._data['fit_function'](self._data['lengths'], *self.params()),
+                color=color, linestyle='-', linewidth=2,
+                label=label)
+
+    def plot_all_data_series(self, ax):
+        self.plot_data_series(ax, error_bar=True)
+
+    def plot_label(self):
+        return "alpha: %.3f(%.1e) EPC: %.3e(%.1e)" % (self._data['alpha'],
+                                                      self._data['alpha_err'],
+                                                      self._data['epc'],
+                                                      self._data['epc_err'])
 
     def plot(self, ax=None, add_label=True, show_plt=True):
         """Plot randomized benchmarking data of a single pattern.
@@ -360,23 +401,11 @@ class RBResult():
             plt.figure()
             ax = plt.gca()
 
-        # Plot the result for each sequence
-        for one_seed_data in self._data['xdata']:
-            ax.plot(self._data['lengths'], one_seed_data, color='gray', linestyle='none',
-                    marker='x')
+        self.plot_all_data_series(ax)
 
-        # Plot the mean with error bars
-        ax.errorbar(self._data['lengths'], self._data['ydata']['mean'],
-                    yerr=self._data['ydata']['std'],
-                    color='r', linestyle='--', linewidth=3)
-
-        # Plot the fit
-        ax.plot(self._data['lengths'],
-                self._data['fit_function'](self._data['lengths'], *self.params()),
-                color='blue', linestyle='-', linewidth=2)
         ax.tick_params(labelsize=14)
 
-        ax.set_xlabel('Clifford Length', fontsize=16)
+        ax.set_xlabel('{} Length'.format(self.group_type_name()), fontsize=16)
         ax.set_ylabel('Ground State Population', fontsize=16)
         ax.grid(True)
 
@@ -384,12 +413,7 @@ class RBResult():
             bbox_props = dict(boxstyle="round,pad=0.3",
                               fc="white", ec="black", lw=2)
 
-            ax.text(0.6, 0.9,
-                    "alpha: %.3f(%.1e) EPC: %.3e(%.1e)" %
-                    (self._data['alpha'],
-                     self._data['alpha_err'],
-                     self._data['epc'],
-                     self._data['epc_err']),
+            ax.text(0.6, 0.9, self.plot_label(),
                     ha="center", va="center", size=14,
                     bbox=bbox_props, transform=ax.transAxes)
 
@@ -409,72 +433,19 @@ class InterleavedRBResult(RBResult):
     def params(self):
         raise QiskitError("params() is not fully determined in results of interleaved RB")
 
-    def plot(self, ax=None, add_label=True, show_plt=True):
-        """
-        Plot interleaved randomized benchmarking data of a single pattern.
-
-        Args:
-            ax (Axes): plot axis (if passed in).
-            add_label (bool): Add an EPC label.
-            show_plt (bool): display the plot.
-
-        Raises:
-            ImportError: if matplotlib is not installed.
-        """
-
-        if not HAS_MATPLOTLIB:
-            raise ImportError('The function plot_interleaved_rb_data \
-            needs matplotlib. Run "pip install matplotlib" before.')
-
-        if ax is None:
-            plt.figure()
-            ax = plt.gca()
-
-        xdata = self._std_fit_result['lengths']
-
-        # Plot the original and interleaved result for each sequence
-        for one_seed_data in self._std_fit_result['xdata']:
-            ax.plot(xdata, one_seed_data, color='blue', linestyle='none',
-                    marker='x')
-        for one_seed_data in self._int_fit_result['xdata']:
-            ax.plot(xdata, one_seed_data, color='red', linestyle='none',
-                    marker='+')
-
-        # Plot the fit
-        std_fit_function = self._std_fit_result['fit_function']
-        int_fit_function = self._int_fit_result['fit_function']
-        ax.plot(xdata, std_fit_function(xdata, *self._std_fit_result.params()),
-                color='blue', linestyle='-', linewidth=2,
-                label='Standard RB')
-        ax.tick_params(labelsize=14)
-        ax.plot(xdata, int_fit_function(xdata, *self._int_fit_result.params()),
-                color='red', linestyle='-', linewidth=2,
-                label='Interleaved RB')
-        ax.tick_params(labelsize=14)
-
-        ax.set_xlabel('Clifford Length', fontsize=16)
-        ax.set_ylabel('Ground State Population', fontsize=16)
-        ax.grid(True)
+    def plot_all_data_series(self, ax):
+        self._std_fit_result.plot_data_series(ax, color='blue', label='Standard RB')
+        self._int_fit_result.plot_data_series(ax, color='red', label='Interleaved RB')
         ax.legend(loc='lower left')
 
-        if add_label:
-            bbox_props = dict(boxstyle="round,pad=0.3",
-                              fc="white", ec="black", lw=2)
-
-            ax.text(0.6, 0.9,
-                    "alpha: %.3f(%.1e) alpha_c: %.3e(%.1e) \n \
-                    EPC_est: %.3e(%.1e)" %
-                    (self._data['alpha'],
-                     self._data['alpha_err'],
-                     self._data['alpha_c'],
-                     self._data['alpha_c_err'],
-                     self._data['epc_est'],
-                     self._data['epc_est_err']),
-                    ha="center", va="center", size=14,
-                    bbox=bbox_props, transform=ax.transAxes)
-
-        if show_plt:
-            plt.show()
+    def plot_label(self):
+        return "alpha: %.3f(%.1e) alpha_c: %.3e(%.1e) \n \
+                            EPC_est: %.3e(%.1e)" % (self['alpha'],
+                                                    self['alpha_err'],
+                                                    self['alpha_c'],
+                                                    self['alpha_c_err'],
+                                                    self['epc_est'],
+                                                    self['epc_est_err'])
 
 class CNOTDihedralRBResult(RBResult):
     def __init__(self, z_fit_result, x_fit_result, cnotdihedral_result):
@@ -488,67 +459,41 @@ class CNOTDihedralRBResult(RBResult):
     def params(self):
         raise QiskitError("params() is not fully determined in results of cnot dihedral RB")
 
-    def plot(self, ax=None, add_label=True, show_plt=True):
-        """
-        Plot non-Clifford cnot-dihedral randomized benchmarking data
-        of a single pattern.
-
-        Args:
-            ax (Axes): plot axis (if passed in).
-            add_label (bool): Add an EPG label.
-            show_plt (bool): display the plot.
-
-        Raises:
-            ImportError: if matplotlib is not installed.
-        """
-
-        if not HAS_MATPLOTLIB:
-            raise ImportError('The function plot_interleaved_rb_data \
-            needs matplotlib. Run "pip install matplotlib" before.')
-
-        if ax is None:
-            plt.figure()
-            ax = plt.gca()
-
-        xdata = self._z_fit_result['lengths']
-
-        # Plot the original and interleaved result for each sequence
-        for one_seed_data in self._z_fit_result['xdata']:
-            ax.plot(xdata, one_seed_data, color='blue', linestyle='none',
-                    marker='x')
-        for one_seed_data in self._x_fit_result['xdata']:
-            ax.plot(xdata, one_seed_data, color='red', linestyle='none',
-                    marker='+')
-
-        # Plot the fit
-        z_fit_function = self._z_fit_result['fit_function']
-        x_fit_function = self._x_fit_result['fit_function']
-        ax.plot(xdata, z_fit_function(xdata, *self._z_fit_result.params()),
-                color='blue', linestyle='-', linewidth=2,
-                label='Measure state |0...0>')
-        ax.tick_params(labelsize=14)
-        ax.plot(xdata, x_fit_function(xdata, *self._x_fit_result.params()),
-                color='red', linestyle='-', linewidth=2,
-                label='Measure state |+...+>')
-        ax.tick_params(labelsize=14)
-
-        ax.set_xlabel('CNOT-Dihedral Length', fontsize=16)
-        ax.set_ylabel('Ground State Population', fontsize=16)
-        ax.grid(True)
+    def plot_all_data_series(self, ax):
+        self._z_fit_result.plot_data_series(ax, color='blue', label='Measure state |0...0>')
+        self._x_fit_result.plot_data_series(ax, color='red', label='Measure state |+...+>')
         ax.legend(loc='lower left')
 
-        if add_label:
-            bbox_props = dict(boxstyle="round,pad=0.3",
-                              fc="white", ec="black", lw=2)
+    def plot_label(self):
+        "alpha: %.3f(%.1e) EPG_est: %.3e(%.1e)" % (self['alpha'],
+                                                   self['alpha_err'],
+                                                   self['epg_est'],
+                                                   self['epg_est_err'])
 
-            ax.text(0.6, 0.9,
-                    "alpha: %.3f(%.1e) EPG_est: %.3e(%.1e)" %
-                    (self._data['alpha'],
-                     self._data['alpha_err'],
-                     self._data['epg_est'],
-                     self._data['epg_est_err']),
-                    ha="center", va="center", size=14,
-                    bbox=bbox_props, transform=ax.transAxes)
+class InterleavedCNOTDihedralRBResult(RBResult):
+    def __init__(self, cnot_std_fit_result, cnot_int_fit_result ,interleaved_result):
+        self._cnot_std_fit_result = cnot_std_fit_result
+        self._cnot_int_fit_result = cnot_int_fit_result
+        self._data = interleaved_result
 
-        if show_plt:
-            plt.show()
+    def num_qubits(self):
+        return self._cnot_std_fit_result.num_qubits()
+
+    def params(self):
+        raise QiskitError("params() is not fully determined in results of interleaved RB")
+
+    def plot_all_data_series(self, ax):
+        self._cnot_std_fit_result._z_fit_result.plot_data_series(ax, color='cyan', label='Standard RB in |0...0>')
+        self._cnot_int_fit_result._z_fit_result.plot_data_series(ax, color='blue', label='Standard RB in |+...+>')
+        self._cnot_std_fit_result._x_fit_result.plot_data_series(ax, color='yellow', label='Interleaved RB in |0...0>')
+        self._cnot_int_fit_result._x_fit_result.plot_data_series(ax, color='red', label='Interleaved RB in |+...+>')
+        ax.legend(loc='lower left')
+
+    def plot_label(self):
+        return "alpha: %.3f(%.1e) alpha_c: %.3e(%.1e) \n \
+                                    EPC_est: %.3e(%.1e)" % (self['alpha'],
+                                                            self['alpha_err'],
+                                                            self['alpha_c'],
+                                                            self['alpha_c_err'],
+                                                            self['epc_est'],
+                                                            self['epc_est_err'])
