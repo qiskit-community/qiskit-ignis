@@ -27,7 +27,7 @@ import numpy as np
 from qiskit import QuantumCircuit, execute
 
 try:
-    from qiskit import Aer
+    from qiskit.providers.aer import Aer
     HAS_AER = True
 except ImportError:
     from qiskit import BasicAer
