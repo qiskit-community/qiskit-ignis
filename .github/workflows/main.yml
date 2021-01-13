@@ -67,7 +67,8 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        # TODO: Add 3.9 to the list after aer 0.8.0 release
+        python-version: [3.6, 3.7, 3.8]
     steps:
       - uses: actions/checkout@v2
       - name: Add msbuild to PATH
@@ -91,11 +92,7 @@ jobs:
       - name: Install and Run Tests
         run: tox --sitepackages -epy
         shell: bash -l {0}
-        if: matrix.python-version != '3.9'
-      - name: Install and Run Tests
-        run: tox --sitepackages -epy39
-        shell: bash -l {0}
-        if: matrix.python-version == '3.9'
+
   lint:
     name: lint
     runs-on: ubuntu-latest
