@@ -34,7 +34,7 @@ jobs:
         if: runner.os != 'macOS'
       - name: Install and Run Tests
         run: tox -e py39
-        if: matrix.python-version == '3.9'
+        if: ${{matrix.python-version}} == 3.9
 
   tests-no-opt:
     name: tests-python3.8-no-optional-dependencies
@@ -94,7 +94,7 @@ jobs:
       - name: Install and Run Tests
         run: tox --sitepackages -epy39
         shell: bash -l {0}
-        if: matrix.python-version == '3.9'
+        if: ${{matrix.python-version}} == 3.9
   lint:
     name: lint
     runs-on: ubuntu-latest
