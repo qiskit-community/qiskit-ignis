@@ -1,6 +1,8 @@
 pylint==2.4.4
 pycodestyle
-qiskit-aer>=0.3.0
+qiskit-aer>=0.3.0;python_version<'3.9'
+# Remove after qiskit-aer 0.8.0 release:
+git+https://github.com/Qiskit/qiskit-aer;python_version>='3.9'
 scikit-learn>=0.17
 Sphinx>=2.1
 sphinx-rtd-theme>=0.4.0
