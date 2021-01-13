@@ -112,7 +112,7 @@ class MeasurementFilter():
                 if data_label not in self._state_labels:
                     raise QiskitError("Unexpected state label '" + data_label +
                                       "', verify the fitter's state labels "
-                                      "correpsond to the input data")
+                                      "correspond to the input data")
             data_format = 0
             # convert to form2
             raw_data2 = [np.zeros(len(self._state_labels), dtype=float)]
