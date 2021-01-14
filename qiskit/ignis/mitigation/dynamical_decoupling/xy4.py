@@ -58,13 +58,15 @@ class XY4(TransformationPass):
         Args:
             qubit (int): The qubit unrolling for.
             gate (str): Must be either 'X' or 'Y'.
+        Return:
+            Sequence of nodes implementing the operation.
         """
         if qubit not in self._unrolled_sequence:
             self._initialize_cycle_time(qubit)
         if gate == 'X':
             return self._unrolled_sequence[qubit][0]
-        elif gate == 'Y':
-            return self._unrolled_sequence[qubit][1]
+        # gate == 'Y':
+        return self._unrolled_sequence[qubit][1]
 
     def _initialize_cycle_time(self, qubit):
         """Update the time, in seconds, of one XY4 sequence::
