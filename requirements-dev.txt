@@ -1,6 +1,6 @@
 pylint==2.4.4
 pycodestyle
-qiskit-aer>=0.3.0
+qiskit-aer>=0.3.0;python_version<'3.9'
 scikit-learn>=0.17
 Sphinx>=2.1
 sphinx-rtd-theme>=0.4.0
@@ -8,8 +8,8 @@ sphinx-tabs>=1.1.11
 sphinx-autodoc-typehints
 stestr>=2.5.0
 ddt>=1.2.0,!=1.4.0
-jupyter
-jupyter-sphinx
+jupyter;python_version<'3.9'
+jupyter-sphinx;python_version<'3.9'
 reno
 matplotlib
 pyfakefs
