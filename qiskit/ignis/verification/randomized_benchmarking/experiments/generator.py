@@ -226,13 +226,13 @@ class PurityRBGenerator(RBGeneratorBase):
                  nseeds: int = 1,
                  qubits: List[int] = [0],
                  lengths: List[int] = [1, 10, 20],
-                 group_gates: Optional[str] = None,
+                 rand_seed: Optional[Union[int, RandomState]] = None,
                  ):
         super().__init__(nseeds,
                          qubits,
                          lengths,
-                         group_gates,
-                         name="purity randomized benchmarking")
+                         name="purity randomized benchmarking",
+                         rand_seed=rand_seed)
         self.generate_circuits()
 
     def generate_circuits_for_seed(self):

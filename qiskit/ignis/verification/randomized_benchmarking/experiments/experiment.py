@@ -10,7 +10,8 @@ from qiskit import QuantumCircuit
 from qiskit.circuit import Instruction
 import qiskit
 from ..dihedral import CNOTDihedral
-from . import (RBGenerator, PurityRBGenerator, InterleavedRBGenerator, RBAnalysis, InterleavedRBAnalysis, CNOTDihedralRBAnalysis)
+from . import (RBGenerator, PurityRBGenerator, InterleavedRBGenerator,
+               RBAnalysis, InterleavedRBAnalysis, CNOTDihedralRBAnalysis, PurityRBAnalysis)
 
 
 class RBExperimentBase(Experiment):
@@ -162,4 +163,15 @@ class InterleavedRBExperiment(RBExperimentBase):
         generator = InterleavedRBGenerator(interleaved_element, nseeds, qubits, lengths,
                                            group_gates, rand_seed, transform_interleaved_element)
         analysis = InterleavedRBAnalysis(qubits, lengths, group_type=generator.rb_group_type())
+        super().__init__(generator=generator, analysis=analysis)
+
+class PurityRBExperiment(RBExperimentBase):
+    def __init__(self,
+                 nseeds: int = 1,
+                 qubits: List[int] = [0],
+                 lengths: List[int] = [1, 10, 20],
+                 rand_seed: Optional[Union[int, RandomState]] = None,
+                 ):
+        generator = PurityRBGenerator(nseeds, qubits, lengths, rand_seed)
+        analysis = PurityRBAnalysis(qubits, lengths)
         super().__init__(generator=generator, analysis=analysis)
