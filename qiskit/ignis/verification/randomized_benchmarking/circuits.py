@@ -211,7 +211,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                     Union[List[QuantumCircuit], List[Instruction],
                                           List[qiskit.quantum_info.operators.symplectic.Clifford],
                                           List[CNOTDihedral]]] = None,
-                                keep_original_interleaved_elem: Optional[bool] = False,
+                                keep_original_interleaved_elem: Optional[bool] = True,
                                 is_purity: bool = False,
                                 group_gates: Optional[str] = None,
                                 rand_seed: Optional[Union[int, RandomState]] = None) -> \
