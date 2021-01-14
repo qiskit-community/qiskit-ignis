@@ -167,14 +167,15 @@ def handle_interleaved_elem(interleaved_elem, rb_group, keep_original_interleave
             raise ValueError("Invalid interleaved element type. "
                              "interleaved_elem should be a list of QuantumCircuit,"
                              "or a list of Clifford / CNOTDihedral objects")
+
+        circuit_elem = rb_group.to_circuit(group_elem)
         if keep_original_interleaved_elem:
             if isinstance(elem, Instruction):
                 circuit_elem = QuantumCircuit(elem.num_qubits)
                 circuit_elem.append(elem, range(elem.num_qubits))
-            else:
+            elif isinstance(elem, QuantumCircuit):
                 circuit_elem = elem
-        else:
-            circuit_elem = rb_group.to_circuit(group_elem)
+
         interleaved_elem_list.append((circuit_elem, group_elem))
 
     return interleaved_elem_list
