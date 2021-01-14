@@ -15,7 +15,6 @@ import numpy as np
 
 from qiskit import QuantumCircuit
 from qiskit.transpiler import PassManager
-from qiskit.transpiler.passmanager_config import PassManagerConfig
 
 from qiskit.ignis.mitigation.dynamical_decoupling import XY4
 
