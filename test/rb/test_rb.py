@@ -729,6 +729,7 @@ class TestRB(unittest.TestCase):
         rb_opts['length_vector'] = [vec_len]
         rb_opts['length_multiplier'] = 1
         rb_opts['interleaved_elem'] = [gate[0]]
+        rb_opts['keep_original_interleaved_elem'] = False
         seed = 0
         circ_index = 0
 
@@ -755,6 +756,7 @@ class TestRB(unittest.TestCase):
         rb_opts['length_vector'] = [vec_len]
         rb_opts['length_multiplier'] = 1
         rb_opts['interleaved_elem'] = [gate]
+        rb_opts['keep_original_interleaved_elem'] = False
         seed = 0
         circ_index = 0
 
@@ -784,6 +786,7 @@ class TestRB(unittest.TestCase):
         rb_opts['length_vector'] = [vec_len]
         rb_opts['length_multiplier'] = 1
         rb_opts['interleaved_elem'] = [gate]
+        rb_opts['keep_original_interleaved_elem'] = False
         seed = 0
         circ_index = 0
         self.assertEqual(rb_cnotdihedral_Z_circs[seed][circ_index].name,
@@ -824,6 +827,7 @@ class TestRB(unittest.TestCase):
         rb_opts['length_vector'] = [vec_len]
         rb_opts['length_multiplier'] = 1
         rb_opts['interleaved_elem'] = [gate]
+        rb_opts['keep_original_interleaved_elem'] = False
         seed = 0
         circ_index = 0
         self.assertEqual(rb_cnotdihedral_Z_circs[seed][circ_index].name,
@@ -873,6 +877,7 @@ class TestRB(unittest.TestCase):
                          'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         rb_opts['interleaved_elem'] = [clifford]
+        rb_opts['keep_original_interleaved_elem'] = False
         self.compare_interleaved_circuit(rb_original_circs[seed][circ_index],
                                          rb_interleaved_circs[seed][circ_index],
                                          num_qubits, rb_opts, None, vec_len)
@@ -887,6 +892,7 @@ class TestRB(unittest.TestCase):
                          'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         rb_opts['interleaved_elem'] = [test_circ]
+        rb_opts['keep_original_interleaved_elem'] = False
         self.compare_interleaved_circuit(rb_original_circs[seed][circ_index],
                                          rb_interleaved_circs[seed][circ_index],
                                          num_qubits, rb_opts, None, vec_len)
@@ -901,6 +907,7 @@ class TestRB(unittest.TestCase):
                          'rb_interleaved_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         rb_opts['interleaved_elem'] = [test_gates]
+        rb_opts['keep_original_interleaved_elem'] = False
         self.compare_interleaved_circuit(rb_original_circs[seed][circ_index],
                                          rb_interleaved_circs[seed][circ_index],
                                          num_qubits, rb_opts, None, vec_len)
@@ -941,6 +948,7 @@ class TestRB(unittest.TestCase):
                          'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         rb_opts['interleaved_elem'] = [elem]
+        rb_opts['keep_original_interleaved_elem'] = False
         self.compare_interleaved_circuit(rb_cnotdihedral_Z_circs[seed][circ_index],
                                          rb_cnotdihedral_interleaved_Z_circs[seed][circ_index],
                                          num_qubits, rb_opts, None, vec_len)
@@ -970,6 +978,7 @@ class TestRB(unittest.TestCase):
                          'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         rb_opts['interleaved_elem'] = [test_circ]
+        rb_opts['keep_original_interleaved_elem'] = False
         self.compare_interleaved_circuit(rb_cnotdihedral_Z_circs[seed][circ_index],
                                          rb_cnotdihedral_interleaved_Z_circs[seed][circ_index],
                                          num_qubits, rb_opts, None, vec_len)
@@ -999,6 +1008,7 @@ class TestRB(unittest.TestCase):
                          'rb_cnotdihedral_interleaved_X_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
         rb_opts['interleaved_elem'] = [test_gates]
+        rb_opts['keep_original_interleaved_elem'] = False
         self.compare_interleaved_circuit(rb_cnotdihedral_Z_circs[seed][circ_index],
                                          rb_cnotdihedral_interleaved_Z_circs[seed][circ_index],
                                          num_qubits, rb_opts, None, vec_len)
