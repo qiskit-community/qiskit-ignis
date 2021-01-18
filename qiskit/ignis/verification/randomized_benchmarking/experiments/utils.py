@@ -18,7 +18,9 @@ from typing import List, Dict, Optional
 import numpy as np
 from qiskit import QiskitError
 
+
 class RBUtils():
+    """Utilities for randomized benchmarking"""
     @staticmethod
     def coherence_limit(nQ=2, T1_list=None, T2_list=None,
                         gatelen=0.1):
@@ -39,6 +41,7 @@ class RBUtils():
         Raises:
             ValueError: if there are invalid inputs
         """
+        # pylint: disable=invalid-name
 
         T1 = np.array(T1_list)
 
@@ -76,7 +79,6 @@ class RBUtils():
             raise ValueError('Not a valid number of qubits')
 
         return coherence_limit_err
-
 
     @staticmethod
     def calculate_1q_epg(gate_per_cliff: Dict[int, Dict[str, float]],
@@ -170,7 +172,6 @@ class RBUtils():
 
         return {'u1': 0, 'u2': epc_1q / (n_u2 + 2 * n_u3), 'u3': 2 * epc_1q / (n_u2 + 2 * n_u3)}
 
-
     @staticmethod
     def calculate_2q_epg(gate_per_cliff: Dict[int, Dict[str, float]],
                          epc_2q: float,
@@ -226,7 +227,7 @@ class RBUtils():
                 qubit_pair=[0, 1],
                 list_epgs_1q=[epgs_q0, epgs_q1])
 
-            print('EPG without `list_epgs_1q`: %f, with `list_epgs_1q`: %f' % (epg_no_comp, epg_comp))
+            print('EPG without `list_epgs_1q`: %f, with `list_epgs_1q`: %f'%(epg_no_comp, epg_comp))
 
         Note:
             This function presupposes the basis gate consists
@@ -276,7 +277,6 @@ class RBUtils():
 
         raise QiskitError('Two qubit gate %s is not included in the `gate_per_cliff`. '
                           'Set correct `two_qubit_name` or use 2Q RB gate count.' % two_qubit_name)
-
 
     @staticmethod
     def calculate_1q_epc(gate_per_cliff: Dict[int, Dict[str, float]],
@@ -338,7 +338,6 @@ class RBUtils():
             fid *= (1 - epg) ** n_gate
 
         return 1 - fid
-
 
     @staticmethod
     def calculate_2q_epc(gate_per_cliff: Dict[int, Dict[str, float]],
@@ -423,7 +422,8 @@ class RBUtils():
         n_gate_2q = gate_per_cliff[qubit_pair[0]].get(two_qubit_name, 0)
         if n_gate_2q == 0:
             raise QiskitError('Two qubit gate %s is not included in the `gate_per_cliff`. '
-                              'Set correct `two_qubit_name` or use 2Q RB gate count.' % two_qubit_name)
+                              'Set correct `two_qubit_name` or use 2Q RB gate count.'
+                              % two_qubit_name)
 
         # estimate single qubit gate error contribution
         alpha_1q = [1.0, 1.0]

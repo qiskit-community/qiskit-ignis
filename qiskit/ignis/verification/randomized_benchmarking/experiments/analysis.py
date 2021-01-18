@@ -73,11 +73,11 @@ class RBAnalysisBase(Analysis):
 
     def collect_data(self, data, metadata, key_fn, conversion_fn=None):
         result = {}
-        for (d, m) in zip(data, metadata):
-            key = key_fn(m)
+        for (data_elem, meta_elem) in zip(data, metadata):
+            key = key_fn(meta_elem)
             if key not in result:
                 result[key] = []
-            result[key].append(d)
+            result[key].append(data_elem)
 
         for key in result:
             result[key] = build_counts_dict_from_list(result[key])
@@ -89,12 +89,14 @@ class RBAnalysisBase(Analysis):
     def organize_data(self, data, metadata):
         # changes the flat probability list to a list [seed_0_probs, seed_1_probs...]
         # where seed_i_prob is a list of the probs for seed i for every length
-        seeds = sorted(list(set([m['seed'] for m in metadata])))
-        length_indices = sorted(list(set([m['length_index'] for m in metadata])))
+        seeds = sorted(list({m['seed'] for m in metadata}))
+        length_indices = sorted(list({m['length_index'] for m in metadata}))
         prob_dict = self.collect_data(data, metadata,
                                       key_fn=lambda m: (m['seed'], m['length_index']),
                                       conversion_fn=self.compute_prob)
-        return np.array([[prob_dict[(seed, length_index)] for length_index in length_indices] for seed in seeds])
+        return np.array([[prob_dict[(seed, length_index)]
+                          for length_index in length_indices]
+                         for seed in seeds])
 
     def calc_statistics(self, xdata):
         ydata = {}
@@ -105,6 +107,7 @@ class RBAnalysisBase(Analysis):
         return ydata
 
     def generate_fit_guess(self, ydata):
+        # pylint: disable=invalid-name
         fit_guess = [0.95, 0.99, 1 / 2 ** self.num_qubits()]
         # Use the first two points to guess the decay param
         y0 = ydata['mean'][0]
@@ -181,6 +184,7 @@ class RBAnalysis(RBAnalysisBase):
             'group_type': self._group_type
         })
 
+
 class CNOTDihedralRBAnalysis(RBAnalysisBase):
     def __init__(self,
                  qubits: List[int],
@@ -194,7 +198,8 @@ class CNOTDihedralRBAnalysis(RBAnalysisBase):
         self._lengths = lengths
         self.z_fitter = RBAnalysis(self._qubits, self._lengths)
         self.x_fitter = RBAnalysis(self._qubits, self._lengths)
-        super().__init__(qubits, lengths, self.fit, data, metadata, name, exp_id, group_type='cnot_dihedral')
+        super().__init__(qubits, lengths, self.fit, data, metadata,
+                         name, exp_id, group_type='cnot_dihedral')
 
     def add_data(self,
                  data: Union[BaseJob, Result, any],
@@ -245,6 +250,7 @@ class CNOTDihedralRBAnalysis(RBAnalysisBase):
                                'group_type': self._group_type}
 
         return CNOTDihedralRBResult(z_fit_results, x_fit_results, cnotdihedral_result)
+
 
 class InterleavedRBAnalysis(RBAnalysisBase):
     def __init__(self,
@@ -330,7 +336,10 @@ class InterleavedRBAnalysis(RBAnalysisBase):
         if self._group_type == 'clifford':
             return InterleavedRBResult(std_fit_results, int_fit_results, interleaved_result)
         if self._group_type == 'cnot_dihedral':
-            return InterleavedCNOTDihedralRBResult(std_fit_results, int_fit_results, interleaved_result)
+            return InterleavedCNOTDihedralRBResult(std_fit_results,
+                                                   int_fit_results,
+                                                   interleaved_result)
+
 
 class PurityRBAnalysis(RBAnalysisBase):
     def __init__(self,
@@ -368,6 +377,7 @@ class PurityRBAnalysis(RBAnalysisBase):
         (a,b) --> c where
         a in 2^n, b in 3^n, c in 4^n
         """
+        # pylint: disable=invalid-name
         # 0 <--> I
         # 1 <--> X
         # 2 <--> Y
@@ -394,17 +404,20 @@ class PurityRBAnalysis(RBAnalysisBase):
 
     def purity_op_key(self, op):
         op_vals = {'Z': 0, 'X': 1, 'Y': 2}
-        return sum([op_vals[o] * (3**k) for (k,o) in enumerate(op)])
+        return sum([op_vals[o] * (3**k) for (k, o) in enumerate(op)])
 
     def organize_data(self, data, metadata):
         seeds = sorted(list(set([m['seed'] for m in metadata])))
         length_indices = sorted(list(set([m['length_index'] for m in metadata])))
-        purity_ops = sorted(list(set([m['purity_meas_ops'] for m in metadata])), key=self.purity_op_key)
+        purity_ops = sorted(list(set([m['purity_meas_ops'] for m in metadata])),
+                            key=self.purity_op_key)
         shots_dict = self.collect_data(data, metadata,
-                                      key_fn=lambda m: (m['seed'], m['length_index'], m['purity_meas_ops']))
+                                       key_fn=lambda m: (m['seed'],
+                                                         m['length_index'],
+                                                         m['purity_meas_ops']))
         return np.array([[self.compute_purity_data(shots_dict, seed, length_index, purity_ops)
                           for length_index in length_indices]
-                          for seed in seeds])
+                         for seed in seeds])
 
     def compute_purity_data(self, shots_dict, seed, length_index, purity_ops):
         corr_vec = [0] * (4 ** self.num_qubits())
@@ -468,6 +481,7 @@ class PurityRBAnalysis(RBAnalysisBase):
             'group_type': self._group_type
         })
 
+
 class RBResult():
     def __init__(self, data):
         self._data = data
@@ -497,7 +511,7 @@ class RBResult():
     def lengths(self):
         return self._data['lengths']
 
-    def plot_data_series(self, ax, error_bar = False, color='blue', label=None):
+    def plot_data_series(self, ax, error_bar=False, color='blue', label=None):
         for one_seed_data in self._data['xdata']:
             ax.plot(self.lengths(), one_seed_data, color=color, linestyle='none',
                     marker='x')
@@ -588,6 +602,7 @@ class InterleavedRBResult(RBResult):
                                                     self['epc_est'],
                                                     self['epc_est_err'])
 
+
 class CNOTDihedralRBResult(RBResult):
     def __init__(self, z_fit_result, x_fit_result, cnotdihedral_result):
         self._z_fit_result = z_fit_result
@@ -607,12 +622,13 @@ class CNOTDihedralRBResult(RBResult):
 
     def plot_label(self):
         return "alpha: %.3f(%.1e) EPG_est: %.3e(%.1e)" % (self['alpha'],
-                                                   self['alpha_err'],
-                                                   self['epg_est'],
-                                                   self['epg_est_err'])
+                                                          self['alpha_err'],
+                                                          self['epg_est'],
+                                                          self['epg_est_err'])
+
 
 class InterleavedCNOTDihedralRBResult(RBResult):
-    def __init__(self, cnot_std_fit_result, cnot_int_fit_result ,interleaved_result):
+    def __init__(self, cnot_std_fit_result, cnot_int_fit_result, interleaved_result):
         self._cnot_std_fit_result = cnot_std_fit_result
         self._cnot_int_fit_result = cnot_int_fit_result
         self._data = interleaved_result
@@ -624,10 +640,13 @@ class InterleavedCNOTDihedralRBResult(RBResult):
         raise QiskitError("params() is not fully determined in results of interleaved RB")
 
     def plot_all_data_series(self, ax):
-        self._cnot_std_fit_result._z_fit_result.plot_data_series(ax, color='cyan', label='Standard RB in |0...0>')
-        self._cnot_int_fit_result._z_fit_result.plot_data_series(ax, color='blue', label='Standard RB in |+...+>')
-        self._cnot_std_fit_result._x_fit_result.plot_data_series(ax, color='yellow', label='Interleaved RB in |0...0>')
-        self._cnot_int_fit_result._x_fit_result.plot_data_series(ax, color='red', label='Interleaved RB in |+...+>')
+        std_fit = self._cnot_std_fit_result
+        int_fit = self._cnot_int_fit_result
+
+        std_fit._z_fit_result.plot_data_series(ax, color='cyan', label='Standard RB in |0...0>')
+        int_fit._z_fit_result.plot_data_series(ax, color='blue', label='Interleaved RB in |0...0>')
+        std_fit._x_fit_result.plot_data_series(ax, color='yellow', label='Standard RB in |+...+>')
+        int_fit._x_fit_result.plot_data_series(ax, color='red', label='Interleaved RB in |+...+>')
         ax.legend(loc='lower left')
 
     def plot_label(self):
@@ -638,6 +657,7 @@ class InterleavedCNOTDihedralRBResult(RBResult):
                                                             self['alpha_c_err'],
                                                             self['epc_est'],
                                                             self['epc_est_err'])
+
 
 class PurityRBResult(RBResult):
     def __init__(self, data):

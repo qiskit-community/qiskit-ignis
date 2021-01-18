@@ -1,6 +1,6 @@
 import uuid
-from numpy.random import RandomState
 from typing import List, Optional, Union
+from numpy.random import RandomState
 from qiskit.ignis.experiments.base import Experiment, Analysis, Generator
 from qiskit.providers import BaseJob
 from qiskit.providers import BaseBackend
@@ -39,6 +39,8 @@ class RBExperimentBase(Experiment):
         self._backend = None
         self._basis_gates = self.default_basis_gates()
         self._transpiled_circuits = None
+        self._backend = None
+        self._kwargs = None
 
     def run(self, backend: BaseBackend, reset=True, seeds=None, **kwargs) -> any:
         """Run an experiment and perform analysis"""
@@ -124,18 +126,20 @@ class RBExperimentBase(Experiment):
                         ngates[qreg.index][instr.name] += 1
 
         # include inverse, ie + 1 for all clifford length
-        total_ncliffs = self.generator.nseeds() * sum([length + 1 for length in self.generator.lengths()])
+        length_per_seed = sum([length + 1 for length in self.generator.lengths()])
+        total_ncliffs = self.generator.nseeds() * length_per_seed
         for qubit in qubits:
             for base in self._basis_gates:
                 ngates[qubit][base] /= total_ncliffs
 
         return ngates
 
+
 class RBExperiment(RBExperimentBase):
     def __init__(self,
                  nseeds: int = 1,
-                 qubits: List[int] = [0],
-                 lengths: List[int] = [1, 10, 20],
+                 qubits: List[int] = (0,),
+                 lengths: List[int] = (1, 10, 20),
                  group_gates: Optional[str] = None,
                  rand_seed: Optional[Union[int, RandomState]] = None,
                  ):
@@ -154,8 +158,8 @@ class InterleavedRBExperiment(RBExperimentBase):
                        qiskit.quantum_info.operators.symplectic.Clifford,
                        CNOTDihedral],
                  nseeds: int = 1,
-                 qubits: List[int] = [0],
-                 lengths: List[int] = [1, 10, 20],
+                 qubits: List[int] = (0,),
+                 lengths: List[int] = (1, 10, 20),
                  group_gates: Optional[str] = None,
                  rand_seed: Optional[Union[int, RandomState]] = None,
                  transform_interleaved_element: Optional[bool] = False
@@ -165,11 +169,12 @@ class InterleavedRBExperiment(RBExperimentBase):
         analysis = InterleavedRBAnalysis(qubits, lengths, group_type=generator.rb_group_type())
         super().__init__(generator=generator, analysis=analysis)
 
+
 class PurityRBExperiment(RBExperimentBase):
     def __init__(self,
                  nseeds: int = 1,
-                 qubits: List[int] = [0],
-                 lengths: List[int] = [1, 10, 20],
+                 qubits: List[int] = (0,),
+                 lengths: List[int] = (1, 10, 20),
                  rand_seed: Optional[Union[int, RandomState]] = None,
                  ):
         generator = PurityRBGenerator(nseeds, qubits, lengths, rand_seed)
