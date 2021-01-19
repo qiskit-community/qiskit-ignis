@@ -58,8 +58,6 @@ class XY4(TransformationPass):
         Args:
             qubit (int): The qubit unrolling for.
             gate (str): Must be either 'X' or 'Y'.
-        Return:
-            Sequence of nodes implementing the operation.
         """
         if qubit not in self._unrolled_sequence:
             self._initialize_cycle_time(qubit)
