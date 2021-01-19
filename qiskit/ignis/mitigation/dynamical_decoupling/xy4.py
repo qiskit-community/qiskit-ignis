@@ -75,7 +75,7 @@ class XY4(TransformationPass):
 
         on qubit labeled ``qubit`` and save the X, Y gates unrolled to the target basis.
         """
-        basis = self.backend_properties.gate_names()
+        basis = list(self.backend_properties._gates.keys())
 
         # Duration of an X gate in the target basis
         x_gate = circuit.QuantumCircuit(qubit + 1)
