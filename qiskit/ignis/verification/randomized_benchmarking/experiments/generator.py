@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # This code is part of Qiskit.
 #
 # (C) Copyright IBM 2020.
@@ -20,7 +18,6 @@ import copy
 from itertools import product
 import numpy as np
 from numpy.random import RandomState
-import qiskit
 from qiskit import (QuantumCircuit, QuantumRegister, ClassicalRegister)
 from qiskit.ignis.experiments.base import Generator
 from qiskit.quantum_info.operators.symplectic.clifford import Clifford
@@ -156,7 +153,7 @@ class RBGeneratorBase(Generator):
 
     def circuit_type_string(self, meta: Optional[Dict[str, any]]) -> str:
         """Returns an additional string describing the exact type of the circuit
-        for non-standard RB experiment; meant to be overriden by derived classes
+        for non-standard RB experiment; meant to be overridden by derived classes
         Args:
             meta: The metadata of the circuit
         """
@@ -409,7 +406,7 @@ class PurityRBGenerator(RBGeneratorBase):
                          rand_seed=rand_seed)
         self.generate_circuits()
 
-    def generate_circuits_for_seed(self)  -> List[Dict]:
+    def generate_circuits_for_seed(self) -> List[Dict]:
         """Generates the purity RB circuits for a single seed
             Returns:
                 The list of {'circuit': c, 'metadata': m} pairs
@@ -476,8 +473,7 @@ class InterleavedRBGenerator(RBGeneratorBase):
     def __init__(self,
                  interleaved_element:
                  Union[QuantumCircuit, Instruction,
-                       qiskit.quantum_info.operators.symplectic.Clifford,
-                       CNOTDihedral],
+                       Clifford, CNOTDihedral],
                  nseeds: int = 1,
                  qubits: List[int] = (0,),
                  lengths: List[int] = (1, 10, 20),
@@ -485,7 +481,7 @@ class InterleavedRBGenerator(RBGeneratorBase):
                  rand_seed: Optional[Union[int, RandomState]] = None,
                  transform_interleaved_element: Optional[bool] = False
                  ):
-        """Initialize the circuit generator for a standard randomized banchmarking experiment.
+        """Initialize the circuit generator for a standard randomized benchmarking experiment.
            Args:
                interleaved_element: the element to interleave, given either as a group element
                or as an instruction/circuit
