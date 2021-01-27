@@ -346,26 +346,30 @@ class TensoredFilter():
 
             if method == 'pseudo_inverse':
                 for i, pinv_cal_mat in enumerate(pinv_cal_matrices):
-                    i = self.nqubits - 1 - i # reverse endian
+                    i = self.nqubits - 1 - i  # reverse endian
                     inv_mat_dot_x = np.zeros([num_of_states], dtype=float)
                     for state_idx, state in enumerate(all_states):
-                        inv_mat_dot_x[state_idx] += pinv_cal_mat[int(state[i]), int(state[i])] * raw_data2[data_idx][state_idx]
+                        inv_mat_dot_x[state_idx] += pinv_cal_mat[int(state[i]), int(state[i])]\
+                            * raw_data2[data_idx][state_idx]
                         flip_state = state[:i] + str(int(state[i]) ^ 1) + state[i+1:]
-                        inv_mat_dot_x[state_idx] += pinv_cal_mat[int(state[i]), int(state[i]) ^ 1] * raw_data2[data_idx][int(flip_state, 2)]
+                        inv_mat_dot_x[state_idx] += pinv_cal_mat[int(state[i]), int(state[i]) ^ 1]\
+                            * raw_data2[data_idx][int(flip_state, 2)]
                     raw_data2[data_idx] = inv_mat_dot_x
 
             elif method == 'least_squares':
                 def fun(x):
                     mat_dot_x = deepcopy(x)
                     for i, cal_mat in enumerate(self._cal_matrices):
-                        i = self.nqubits - 1 - i # reverse endian
+                        i = self.nqubits - 1 - i  # reverse endian
                         res_mat_dot_x = np.zeros([num_of_states], dtype=float)
                         for state_idx, state in enumerate(all_states):
-                            res_mat_dot_x[state_idx] += cal_mat[int(state[i]), int(state[i])] * mat_dot_x[state_idx]
+                            res_mat_dot_x[state_idx]\
+                                += cal_mat[int(state[i]), int(state[i])] * mat_dot_x[state_idx]
                             flip_state = state[:i] + str(int(state[i]) ^ 1) + state[i+1:]
-                            res_mat_dot_x[int(flip_state, 2)] += cal_mat[int(state[i]) ^ 1, int(state[i])] * mat_dot_x[state_idx]
+                            res_mat_dot_x[int(flip_state, 2)]\
+                                += cal_mat[int(state[i]) ^ 1, int(state[i])] * mat_dot_x[state_idx]
                         mat_dot_x = res_mat_dot_x
-                    return sum( (raw_data2[data_idx] - mat_dot_x) ** 2 )
+                    return sum((raw_data2[data_idx] - mat_dot_x) ** 2)
 
                 x0 = np.random.rand(num_of_states)
                 x0 = x0 / sum(x0)
