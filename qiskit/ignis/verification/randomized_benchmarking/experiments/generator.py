@@ -12,6 +12,7 @@
 """
 Randomized benchmarking generator classes
 """
+# pylint: disable=no-name-in-module,import-error
 
 from typing import List, Dict, Union, Optional, Tuple
 import copy

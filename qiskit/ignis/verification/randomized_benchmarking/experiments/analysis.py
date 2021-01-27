@@ -14,6 +14,7 @@
 """
 Randomized benchmarking analysis classes
 """
+# pylint: disable=no-name-in-module,import-error
 
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, List, Union, Callable, Tuple
@@ -78,6 +79,7 @@ class RBAnalysisBase(Analysis):
             Returns:
                 The formatted counts dictionary
         """
+        # pylint: disable=unused-argument
         counts = data.get_counts(metadata['circuit_name'])
         if 'meas_clbits' in metadata:
             counts = marginal_counts(counts, metadata['meas_clbits'])
@@ -560,6 +562,7 @@ class CNOTDihedralRBAnalysis(RBAnalysisBase):
         """
         self._qubits = qubits
         self._lengths = lengths
+        self._result = None
         self.z_fitter = RBAnalysis(self._qubits, self._lengths)
         self.x_fitter = RBAnalysis(self._qubits, self._lengths)
         super().__init__(qubits, lengths, self.fit, data, metadata,
@@ -585,8 +588,9 @@ class CNOTDihedralRBAnalysis(RBAnalysisBase):
             Returns:
                 The fitting result object
         """
-        z_fit_results = self.z_fitter.run()
-        x_fit_results = self.x_fitter.run()
+        # pylint: disable=unused-argument
+        z_fit_results = self.z_fitter.run(**params)
+        x_fit_results = self.x_fitter.run(**params)
         self._result = self._analysis_fn(z_fit_results, x_fit_results)
         return self._result
 
@@ -659,6 +663,7 @@ class InterleavedRBAnalysis(RBAnalysisBase):
         """
         self._qubits = qubits
         self._lengths = lengths
+        self._result = None
         if group_type == 'clifford':
             self.std_fitter = RBAnalysis(self._qubits, self._lengths)
             self.int_fitter = RBAnalysis(self._qubits, self._lengths)
@@ -687,8 +692,8 @@ class InterleavedRBAnalysis(RBAnalysisBase):
             Returns:
                 The fitting result object
         """
-        std_fit_results = self.std_fitter.run()
-        int_fit_results = self.int_fitter.run()
+        std_fit_results = self.std_fitter.run(**params)
+        int_fit_results = self.int_fitter.run(**params)
         self._result = self._analysis_fn(std_fit_results, int_fit_results)
         return self._result
 
