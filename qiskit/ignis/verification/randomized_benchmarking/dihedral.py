@@ -401,8 +401,7 @@ class CNOTDihedral(BaseOperator):
             self.shift = elem.shift
 
         # Initialize BaseOperator
-        dims = self._num_qubits * (2,)
-        super().__init__(dims, dims)
+        super().__init__(num_qubits=self._num_qubits)
 
         # Validate the CNOTDihedral element
         if validate and not self.is_cnotdihedral():
@@ -591,7 +590,7 @@ class CNOTDihedral(BaseOperator):
             circuit = circuit.to_instruction()
 
         # Initialize an identity CNOTDihedral object
-        elem = CNOTDihedral(self.num_qubits)
+        elem = CNOTDihedral(self._num_qubits)
         append_circuit(elem, circuit)
         return elem
 
@@ -655,7 +654,7 @@ class CNOTDihedral(BaseOperator):
         other.poly.weight_0 = 0  # set global phase
         return other
 
-    def _tensor_product(self, other, reverse=False):
+    def _tensor(self, other, reverse=False):
         """Returns the tensor product operator.
 
          Args:
@@ -719,7 +718,7 @@ class CNOTDihedral(BaseOperator):
              CNOTDihedral: the tensor product operator: self tensor other.
          """
 
-        return self._tensor_product(other, reverse=True)
+        return self._tensor(other, reverse=True)
 
     def expand(self, other):
         """Return the tensor product operator: other tensor self.
@@ -730,7 +729,7 @@ class CNOTDihedral(BaseOperator):
              CNOTDihedral: the tensor product operator: other tensor other.
          """
 
-        return self._tensor_product(other, reverse=False)
+        return self._tensor(other, reverse=False)
 
     def adjoint(self):
         """Return the conjugate transpose of the CNOTDihedral element"""
