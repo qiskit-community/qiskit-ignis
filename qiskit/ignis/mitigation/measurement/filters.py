@@ -345,69 +345,27 @@ class TensoredFilter():
         for data_idx, _ in enumerate(raw_data2):
 
             if method == 'pseudo_inverse':
-                inv_mat_dot_raw = np.zeros([num_of_states], dtype=float)
-                for state1_idx, state1 in enumerate(all_states):
-                    for state2_idx, state2 in enumerate(all_states):
-                        if raw_data2[data_idx][state2_idx] == 0:
-                            continue
-
-                        product = 1.
-                        end_index = self.nqubits
-                        for p_ind, pinv_mat in enumerate(pinv_cal_matrices):
-
-                            start_index = end_index - \
-                                self._qubit_list_sizes[p_ind]
-
-                            state1_as_int = \
-                                self._indices_list[p_ind][
-                                    state1[start_index:end_index]]
-
-                            state2_as_int = \
-                                self._indices_list[p_ind][
-                                    state2[start_index:end_index]]
-
-                            end_index = start_index
-                            product *= \
-                                pinv_mat[state1_as_int][state2_as_int]
-                            if product == 0:
-                                break
-                        inv_mat_dot_raw[state1_idx] += \
-                            (product * raw_data2[data_idx][state2_idx])
-                raw_data2[data_idx] = inv_mat_dot_raw
+                for i, pinv_cal_mat in enumerate(pinv_cal_matrices):
+                    i = self.nqubits - 1 - i # reverse endian
+                    inv_mat_dot_x = np.zeros([num_of_states], dtype=float)
+                    for state_idx, state in enumerate(all_states):
+                        inv_mat_dot_x[state_idx] += pinv_cal_mat[int(state[i]), int(state[i])] * raw_data2[data_idx][state_idx]
+                        flip_state = state[:i] + str(int(state[i]) ^ 1) + state[i+1:]
+                        inv_mat_dot_x[state_idx] += pinv_cal_mat[int(state[i]), int(state[i]) ^ 1] * raw_data2[data_idx][int(flip_state, 2)]
+                    raw_data2[data_idx] = inv_mat_dot_x
 
             elif method == 'least_squares':
-
                 def fun(x):
-                    mat_dot_x = np.zeros([num_of_states], dtype=float)
-                    for state1_idx, state1 in enumerate(all_states):
-                        mat_dot_x[state1_idx] = 0.
-                        for state2_idx, state2 in enumerate(all_states):
-                            if x[state2_idx] != 0:
-                                product = 1.
-                                end_index = self.nqubits
-                                for c_ind, cal_mat in \
-                                        enumerate(self._cal_matrices):
-
-                                    start_index = end_index - \
-                                        self._qubit_list_sizes[c_ind]
-
-                                    state1_as_int = \
-                                        self._indices_list[c_ind][
-                                            state1[start_index:end_index]]
-
-                                    state2_as_int = \
-                                        self._indices_list[c_ind][
-                                            state2[start_index:end_index]]
-
-                                    end_index = start_index
-                                    product *= \
-                                        cal_mat[state1_as_int][state2_as_int]
-                                    if product == 0:
-                                        break
-                                mat_dot_x[state1_idx] += \
-                                    (product * x[state2_idx])
-                    return sum(
-                        (raw_data2[data_idx] - mat_dot_x)**2)
+                    mat_dot_x = deepcopy(x)
+                    for i, cal_mat in enumerate(self._cal_matrices):
+                        i = self.nqubits - 1 - i # reverse endian
+                        res_mat_dot_x = np.zeros([num_of_states], dtype=float)
+                        for state_idx, state in enumerate(all_states):
+                            res_mat_dot_x[state_idx] += cal_mat[int(state[i]), int(state[i])] * mat_dot_x[state_idx]
+                            flip_state = state[:i] + str(int(state[i]) ^ 1) + state[i+1:]
+                            res_mat_dot_x[int(flip_state, 2)] += cal_mat[int(state[i]) ^ 1, int(state[i])] * mat_dot_x[state_idx]
+                        mat_dot_x = res_mat_dot_x
+                    return sum( (raw_data2[data_idx] - mat_dot_x) ** 2 )
 
                 x0 = np.random.rand(num_of_states)
                 x0 = x0 / sum(x0)
