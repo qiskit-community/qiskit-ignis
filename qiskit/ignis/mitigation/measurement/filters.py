@@ -19,6 +19,8 @@
 Measurement correction filters.
 
 """
+
+from typing import List, Union
 from copy import deepcopy
 from scipy.optimize import minimize
 import scipy.linalg as la
@@ -283,7 +285,10 @@ class TensoredFilter():
         """Return the number of qubits. See also MeasurementFilter.apply() """
         return sum(self._qubit_list_sizes)
 
-    def apply(self, raw_data, method='least_squares', meas_layout=None):
+    def apply(self,
+              raw_data: Union[qiskit.result.result.Result, dict],
+              method: str = 'least_squares',
+              meas_layout: List[int] = None):
         """
         Apply the calibration matrices to results.
 
@@ -414,7 +419,7 @@ class TensoredFilter():
 
         return new_count_dict
 
-    def flip_state(self, state: str, mat_index: int, flip_poses: list) -> str:
+    def flip_state(self, state: str, mat_index: int, flip_poses: List[int]) -> str:
         """Flip the state according to the chosen qubit positions"""
         flip_poses = [pos for i, pos in enumerate(flip_poses) if (mat_index >> i) & 1]
         flip_poses = sorted(flip_poses)
@@ -427,14 +432,18 @@ class TensoredFilter():
         new_state += state[pos:]
         return new_state
 
-    def compute_index_of_cal_mat(self, state: str, pos_qubits: list) -> int:
+    def compute_index_of_cal_mat(self, state: str, pos_qubits: List[int]) -> int:
         """Return the index of (pseudo inverse) calibration matrix for the input quantum state"""
         sub_state = ""
         for pos in pos_qubits:
             sub_state += state[pos]
         return int(sub_state, 2)
 
-    def _apply_correction(self, resultidx, raw_data, meas_layout, method):
+    def _apply_correction(self,
+                          resultidx: int,
+                          raw_data: qiskit.result.result.Result,
+                          method: str,
+                          meas_layout: List[int]):
         """Wrapper to call apply with a counts dictionary."""
         new_counts = self.apply(
             raw_data.get_counts(resultidx), method=method, meas_layout=meas_layout)
