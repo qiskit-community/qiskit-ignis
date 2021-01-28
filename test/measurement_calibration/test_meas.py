@@ -430,7 +430,9 @@ class TestMeasCal(unittest.TestCase):
 
         # Calculate the results after mitigation
         output_results_pseudo_inverse = meas_filter.apply(
-            saved_info['results'].get_counts(0), method='pseudo_inverse', meas_layout=saved_info['meas_layout'])
+            saved_info['results'].get_counts(0),
+            method='pseudo_inverse',
+            meas_layout=saved_info['meas_layout'])
         output_results_least_square = meas_filter.apply(
             saved_info['results'], method='least_squares', meas_layout=saved_info['meas_layout'])
 
@@ -470,7 +472,9 @@ class TestMeasCal(unittest.TestCase):
 
         # Calculate the results after mitigation
         output_results_pseudo_inverse = meas_filter.apply(
-            saved_info['results'].get_counts(0), method='pseudo_inverse', meas_layout=saved_info['meas_layout'])
+            saved_info['results'].get_counts(0),
+            method='pseudo_inverse',
+            meas_layout=saved_info['meas_layout'])
         output_results_least_square = meas_filter.apply(
             saved_info['results'], method='least_squares', meas_layout=saved_info['meas_layout'])
 

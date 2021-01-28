@@ -27,7 +27,6 @@ import qiskit
 from qiskit import QiskitError
 from qiskit.tools import parallel_map
 from qiskit.ignis.verification.tomography import count_keys
-from typing import List, Union
 
 
 class MeasurementFilter():
@@ -303,9 +302,9 @@ class TensoredFilter():
 
                 * If `None`, 'least_squares' is used.
 
-            meas_layout (list of int): The QuantumRegister-ClassicalRegister mapping in the measurement 
+            meas_layout (list of int): the mapping from classical registers to qubits
 
-                * If you measure qubit 2 to clbit 0, 0 to 1, and 1 to 2, then the list becomes [2, 0, 1]
+                * If you measure qubit 2 to clbit 0, 0 to 1, and 1 to 2, the list becomes [2, 0, 1]
 
                 * If `None`, flatten(mit_pattern) is used.
 
@@ -358,7 +357,7 @@ class TensoredFilter():
                 pinv_cal_matrices.append(la.pinv(cal_mat))
 
         meas_layout = meas_layout[::-1]  # reverse endian
-        qubits_to_clbits = [-1] * (max(meas_layout) + 1)
+        qubits_to_clbits = [-1 for _ in range(max(meas_layout) + 1)]
         for i, qubit in enumerate(meas_layout):
             qubits_to_clbits[qubit] = i
 
@@ -388,9 +387,10 @@ class TensoredFilter():
                             second_index = self.compute_index_of_cal_mat(state, pos_clbits)
                             for i in range(len(cal_mat)):
                                 target_state = self.flip_state(state, i, pos_clbits)
-                                first_index = self.compute_index_of_cal_mat(target_state, pos_clbits)
-                                res_mat_dot_x[int(target_state, 2)] += cal_mat[first_index, second_index]\
-                                    * mat_dot_x[state_idx]
+                                first_index =\
+                                    self.compute_index_of_cal_mat(target_state, pos_clbits)
+                                res_mat_dot_x[int(target_state, 2)]\
+                                    += cal_mat[first_index, second_index] * mat_dot_x[state_idx]
                         mat_dot_x = res_mat_dot_x
                     return sum((raw_data2[data_idx] - mat_dot_x) ** 2)
 
@@ -426,7 +426,7 @@ class TensoredFilter():
             pos = flip_pos + 1
         new_state += state[pos:]
         return new_state
-    
+
     def compute_index_of_cal_mat(self, state: str, pos_qubits: list) -> int:
         """Return the index of (pseudo inverse) calibration matrix for the input quantum state"""
         sub_state = ""
