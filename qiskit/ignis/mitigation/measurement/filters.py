@@ -27,6 +27,7 @@ import qiskit
 from qiskit import QiskitError
 from qiskit.tools import parallel_map
 from qiskit.ignis.verification.tomography import count_keys
+from typing import List, Union
 
 
 class MeasurementFilter():
@@ -219,7 +220,8 @@ class TensoredFilter():
 
     def __init__(self,
                  cal_matrices: np.matrix,
-                 substate_labels_list: list):
+                 substate_labels_list: list,
+                 mit_pattern: list):
         """
         Initialize a tensored measurement error mitigation filter using
         the cal_matrices from a tensored measurement calibration fitter.
@@ -228,6 +230,8 @@ class TensoredFilter():
             cal_matrices: the calibration matrices for applying the correction.
             substate_labels_list: for each calibration matrix
                 a list of the states (as strings, states in the subspace)
+            mit_pattern: for each calibration matrix
+                a list of the logical qubit indices (as int, states in the subspace)
         """
 
         self._cal_matrices = cal_matrices
@@ -235,6 +239,7 @@ class TensoredFilter():
         self._indices_list = []
         self._substate_labels_list = []
         self.substate_labels_list = substate_labels_list
+        self._mit_pattern = mit_pattern
 
     @property
     def cal_matrices(self):
@@ -279,7 +284,7 @@ class TensoredFilter():
         """Return the number of qubits. See also MeasurementFilter.apply() """
         return sum(self._qubit_list_sizes)
 
-    def apply(self, raw_data, method='least_squares'):
+    def apply(self, raw_data, method='least_squares', meas_layout=None):
         """
         Apply the calibration matrices to results.
 
@@ -298,6 +303,12 @@ class TensoredFilter():
 
                 * If `None`, 'least_squares' is used.
 
+            meas_layout (list of int): The QuantumRegister-ClassicalRegister mapping in the measurement 
+
+                * If you measure qubit 2 to clbit 0, 0 to 1, and 1 to 2, then the list becomes [2, 0, 1]
+
+                * If `None`, flatten(mit_pattern) is used.
+
         Returns:
             dict or Result: The corrected data in the same form as raw_data
 
@@ -307,6 +318,11 @@ class TensoredFilter():
 
         all_states = count_keys(self.nqubits)
         num_of_states = 2**self.nqubits
+
+        if meas_layout is None:
+            meas_layout = []
+            for qubits in self._mit_pattern:
+                meas_layout += qubits
 
         # check forms of raw_data
         if isinstance(raw_data, dict):
@@ -326,7 +342,7 @@ class TensoredFilter():
             new_counts_list = parallel_map(
                 self._apply_correction,
                 [resultidx for resultidx, _ in enumerate(raw_data.results)],
-                task_args=(raw_data, method))
+                task_args=(raw_data, method, meas_layout))
 
             for resultidx, new_counts in new_counts_list:
                 new_result.results[resultidx].data.counts = new_counts
@@ -341,33 +357,40 @@ class TensoredFilter():
             for cal_mat in self._cal_matrices:
                 pinv_cal_matrices.append(la.pinv(cal_mat))
 
+        meas_layout = meas_layout[::-1]  # reverse endian
+        qubits_to_clbits = [-1] * (max(meas_layout) + 1)
+        for i, qubit in enumerate(meas_layout):
+            qubits_to_clbits[qubit] = i
+
         # Apply the correction
         for data_idx, _ in enumerate(raw_data2):
 
             if method == 'pseudo_inverse':
-                for i, pinv_cal_mat in enumerate(pinv_cal_matrices):
-                    i = self.nqubits - 1 - i  # reverse endian
+                for pinv_cal_mat, pos_qubits in zip(pinv_cal_matrices, self._mit_pattern):
                     inv_mat_dot_x = np.zeros([num_of_states], dtype=float)
+                    pos_clbits = [qubits_to_clbits[qubit] for qubit in pos_qubits]
                     for state_idx, state in enumerate(all_states):
-                        inv_mat_dot_x[state_idx] += pinv_cal_mat[int(state[i]), int(state[i])]\
-                            * raw_data2[data_idx][state_idx]
-                        flip_state = state[:i] + str(int(state[i]) ^ 1) + state[i+1:]
-                        inv_mat_dot_x[state_idx] += pinv_cal_mat[int(state[i]), int(state[i]) ^ 1]\
-                            * raw_data2[data_idx][int(flip_state, 2)]
+                        first_index = self.compute_index_of_cal_mat(state, pos_clbits)
+                        for i in range(len(pinv_cal_mat)):  # i is index of pinv_cal_mat
+                            source_state = self.flip_state(state, i, pos_clbits)
+                            second_index = self.compute_index_of_cal_mat(source_state, pos_clbits)
+                            inv_mat_dot_x[state_idx] += pinv_cal_mat[first_index, second_index]\
+                                * raw_data2[data_idx][int(source_state, 2)]
                     raw_data2[data_idx] = inv_mat_dot_x
 
             elif method == 'least_squares':
                 def fun(x):
                     mat_dot_x = deepcopy(x)
-                    for i, cal_mat in enumerate(self._cal_matrices):
-                        i = self.nqubits - 1 - i  # reverse endian
+                    for cal_mat, pos_qubits in zip(self._cal_matrices, self._mit_pattern):
                         res_mat_dot_x = np.zeros([num_of_states], dtype=float)
+                        pos_clbits = [qubits_to_clbits[qubit] for qubit in pos_qubits]
                         for state_idx, state in enumerate(all_states):
-                            res_mat_dot_x[state_idx]\
-                                += cal_mat[int(state[i]), int(state[i])] * mat_dot_x[state_idx]
-                            flip_state = state[:i] + str(int(state[i]) ^ 1) + state[i+1:]
-                            res_mat_dot_x[int(flip_state, 2)]\
-                                += cal_mat[int(state[i]) ^ 1, int(state[i])] * mat_dot_x[state_idx]
+                            second_index = self.compute_index_of_cal_mat(state, pos_clbits)
+                            for i in range(len(cal_mat)):
+                                target_state = self.flip_state(state, i, pos_clbits)
+                                first_index = self.compute_index_of_cal_mat(target_state, pos_clbits)
+                                res_mat_dot_x[int(target_state, 2)] += cal_mat[first_index, second_index]\
+                                    * mat_dot_x[state_idx]
                         mat_dot_x = res_mat_dot_x
                     return sum((raw_data2[data_idx] - mat_dot_x) ** 2)
 
@@ -391,8 +414,28 @@ class TensoredFilter():
 
         return new_count_dict
 
-    def _apply_correction(self, resultidx, raw_data, method):
+    def flip_state(self, state: str, mat_index: int, flip_poses: list) -> str:
+        """Flip the state according to the chosen qubit positions"""
+        flip_poses = [pos for i, pos in enumerate(flip_poses) if (mat_index >> i) & 1]
+        flip_poses = sorted(flip_poses)
+        new_state = ""
+        pos = 0
+        for flip_pos in flip_poses:
+            new_state += state[pos:flip_pos]
+            new_state += str(int(state[flip_pos], 2) ^ 1)  # flip the state
+            pos = flip_pos + 1
+        new_state += state[pos:]
+        return new_state
+    
+    def compute_index_of_cal_mat(self, state: str, pos_qubits: list) -> int:
+        """Return the index of (pseudo inverse) calibration matrix for the input quantum state"""
+        sub_state = ""
+        for pos in pos_qubits:
+            sub_state += state[pos]
+        return int(sub_state, 2)
+
+    def _apply_correction(self, resultidx, raw_data, meas_layout, method):
         """Wrapper to call apply with a counts dictionary."""
         new_counts = self.apply(
-            raw_data.get_counts(resultidx), method=method)
+            raw_data.get_counts(resultidx), method=method, meas_layout=meas_layout)
         return resultidx, new_counts
