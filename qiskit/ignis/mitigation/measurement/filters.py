@@ -370,14 +370,18 @@ class TensoredFilter():
         for data_idx, _ in enumerate(raw_data2):
 
             if method == 'pseudo_inverse':
-                for pinv_cal_mat, pos_qubits, indices in zip(pinv_cal_matrices, self._mit_pattern, self._indices_list):
+                for pinv_cal_mat, pos_qubits, indices in zip(pinv_cal_matrices,
+                                                             self._mit_pattern,
+                                                             self._indices_list):
                     inv_mat_dot_x = np.zeros([num_of_states], dtype=float)
                     pos_clbits = [qubits_to_clbits[qubit] for qubit in pos_qubits]
                     for state_idx, state in enumerate(all_states):
                         first_index = self.compute_index_of_cal_mat(state, pos_clbits, indices)
                         for i in range(len(pinv_cal_mat)):  # i is index of pinv_cal_mat
                             source_state = self.flip_state(state, i, pos_clbits)
-                            second_index = self.compute_index_of_cal_mat(source_state, pos_clbits, indices)
+                            second_index = self.compute_index_of_cal_mat(source_state,
+                                                                         pos_clbits,
+                                                                         indices)
                             inv_mat_dot_x[state_idx] += pinv_cal_mat[first_index, second_index]\
                                 * raw_data2[data_idx][int(source_state, 2)]
                     raw_data2[data_idx] = inv_mat_dot_x
@@ -385,7 +389,9 @@ class TensoredFilter():
             elif method == 'least_squares':
                 def fun(x):
                     mat_dot_x = deepcopy(x)
-                    for cal_mat, pos_qubits, indices in zip(self._cal_matrices, self._mit_pattern, self._indices_list):
+                    for cal_mat, pos_qubits, indices in zip(self._cal_matrices,
+                                                            self._mit_pattern,
+                                                            self._indices_list):
                         res_mat_dot_x = np.zeros([num_of_states], dtype=float)
                         pos_clbits = [qubits_to_clbits[qubit] for qubit in pos_qubits]
                         for state_idx, state in enumerate(all_states):
