@@ -3,3 +3,4 @@ astroid==2.3.3
 pywin32==225
 setuptools==49.6.0
 pyfakefs==4.1.0
+cvxpy==1.1.7
