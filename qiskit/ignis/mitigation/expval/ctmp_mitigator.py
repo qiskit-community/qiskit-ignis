@@ -184,7 +184,7 @@ class CTMPExpvalMeasMitigator(BaseExpvalMeasMitigator):
         if qubits not in self._generator_mats:
             # Construct G from subset generators
             qubits_set = set(qubits)
-            g_mat = sps.coo_matrix(2 * (2**len(qubits),), dtype=np.float)
+            g_mat = sps.coo_matrix(2 * (2**len(qubits),), dtype=float)
             for gen, rate in zip(self._generators, self._rates):
                 if qubits_set.issuperset(gen[2]):
                     # Keep generator
