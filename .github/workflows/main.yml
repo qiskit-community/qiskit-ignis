@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
-        os: ["macOS-latest", "ubuntu-latest"]
+        os: ["ubuntu-latest"]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -29,22 +29,43 @@ jobs:
             ${{ runner.os }}-${{ matrix.python-version }}
       - name: Install Deps
         run: python -m pip install -U tox setuptools virtualenv wheel
-      - name: Install Deps
-        run: python -m pip install -U cvxopt
-        if: matrix.os == 'macOS-latest'
       - name: Install and Run Tests
         run: tox -e py
         if: matrix.python-version != '3.9'
       - name: Install and Run Tests
         run: tox -e py39
         if: matrix.python-version == '3.9'
+
+  tests-macos:
+    name: tests-python${{ matrix.python-version }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        os: ["macOS-latest"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Pip cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-tests-${{ hashFiles('setup.py','requirements-dev.txt','constraints.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.python-version }}-pip-tests-
+            ${{ runner.os }}-${{ matrix.python-version }}-pip-
+            ${{ runner.os }}-${{ matrix.python-version }}
+      - name: Install Deps
+        run: python -m pip install -U tox setuptools virtualenv wheel cvxopt
       - name: Install and Run Tests
         run: tox --sitepackages -e py
         if: matrix.python-version != '3.9'
-        if: matrix.os == 'macOS-latest'
       - name: Install and Run Tests
         run: tox --sitepackages -e py39
-        if: matrix.os == 'macOS-latest'
+        if: matrix.python-version == '3.9'
 
   tests-no-opt:
     name: tests-python3.8-no-optional-dependencies
