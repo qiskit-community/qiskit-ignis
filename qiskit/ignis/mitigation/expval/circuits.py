@@ -65,19 +65,19 @@ def expval_meas_mitigator_circuits(num_qubits: int,
           the following procedure: For each qubits, write its index in binary
           form, horizontically. For example: with 8 qubits `0, 1, 2,..., 7`,
           for qubit 7 we write:
-              1
-              1
-              1
+          1
+          1
+          1
           And for all 8 qubits, we obtain `ceil(log(n))=3` lines:
-              00001111
-              00110011
-              01010101
+          00001111
+          00110011
+          01010101
           One can see that the every column is the binary form of the column
           number.
           Then write again, the same lines, negated:
-              11110000
-              11001100
-              10101010
+          11110000
+          11001100
+          10101010
           The all 0 and all 1 states guarantee that each pair of qubits has
           input states with projections `00` and `11`. The other lines
           guarantee the projections `01` and `10` (since the qubits are
