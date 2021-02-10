@@ -312,7 +312,7 @@ class TensoredFilter():
                     For example, assume we are mitigating the 3rd bit of the 4-bit counts
                     using '2\times 2' calibration matrix `A_3`.
                     For the count '0110', we use the following formula:
-                    `count['0110'] = A_3^{-1}[1, 0] * count['0100'] + A_3^{-1}[1, 1] * count['0110']`.
+                    `count['0110'] = A_3^{-1}[1, 0]*count['0100'] + A_3^{-1}[1, 1]*count['0110']`.
                     The total time complexity of this method is `O(n2^n)`
                     to the size of calibrated qubits `n`.
 
