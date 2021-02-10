@@ -315,14 +315,16 @@ class TensoredFilter():
                     the following formula is applied:
                     `count['0110'] = A_3^{-1}[1, 0]*count['0100'] + A_3^{-1}[1, 1]*count['0110']`.
 
-                    The total time complexity of this method is `O(n2^{n + t})`
-                    to the size of calibrated qubits `n` and
-                    the largest size of calibration matrices `t`.
-                    If the `mit_pattern` is shaped like `[[0], [1], [2], ..., [n-1]]`
+                    The total time complexity of this method is `O(m2^{n + t})`,
+                    where `n` is the size of calibrated qubits,
+                    `m` is the number of sets in `mit_pattern`,
+                    and `t` is the size of largest set of mit_pattern.
+                    If the `mit_pattern` is shaped like `[[0], [1], [2], ..., [n-1]]`,
+                    which corresponds to the tensor product noise model without cross-talk,
                     then the time complexity would be `O(n2^n)`.
                     If the `mit_pattern` is shaped like `[[0, 1, 2, ..., n-1]]`,
                     which exactly corresponds to the complete error mitigation,
-                    then the time complexity would be `O(n2^(n+n)) = O(n4^n)`.
+                    then the time complexity would be `O(2^(n+n)) = O(4^n)`.
 
 
                 * 'least_squares': constrained to have physical probabilities.
@@ -331,9 +333,10 @@ class TensoredFilter():
                     the closest probability vector to the result from 'pseudo_inverse' method.
                     Sequential least square quadratic programming (SLSQP) is used
                     in the internal process.
-                    Every updating step in SLSQP takes `O(n2^{n+t})` time.
+                    Every updating step in SLSQP takes `O(m2^{n+t})` time.
                     Since this method is using the SLSQP optimization over
-                    the vector with lenght `2^n`, the mitigation for 8-qubit results would
+                    the vector with lenght `2^n`, the mitigation for 8 bit counts
+                    with the `mit_pattern = [[0], [1], [2], ..., [n-1]]` would
                     take 10 seconds or more.
 
                 * If `None`, 'least_squares' is used.
