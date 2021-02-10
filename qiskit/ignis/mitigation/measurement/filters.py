@@ -311,23 +311,37 @@ class TensoredFilter():
                     which affect the corresponding qubit.
                     For example, assume we are mitigating the 3rd bit of the 4-bit counts
                     using '2\times 2' calibration matrix `A_3`.
-                    For the count '0110', we use the following formula:
+                    When mitigating the count of '0110' in this step,
+                    the following formula is applied:
                     `count['0110'] = A_3^{-1}[1, 0]*count['0100'] + A_3^{-1}[1, 1]*count['0110']`.
-                    The total time complexity of this method is `O(n2^n)`
-                    to the size of calibrated qubits `n`.
+
+                    The total time complexity of this method is `O(n2^{n + t})`
+                    to the size of calibrated qubits `n` and
+                    the largest size of calibration matrices `t`.
+                    If the `mit_pattern` is shaped like `[[0], [1], [2], ..., [n-1]]`
+                    then the time complexity would be `O(n2^n)`.
+                    If the `mit_pattern` is shaped like `[[0, 1, 2, ..., n-1]]`,
+                    which exactly corresponds to the complete error mitigation,
+                    then the time complexity would be `O(n2^(n+n)) = O(n4^n)`.
+
 
                 * 'least_squares': constrained to have physical probabilities.
                     Instead of directly applying inverse calibration matrices,
-                    sequential least square quadratic programming (SLSQP) is used
-                    for finding the closest probability vector to the result
-                    from 'pseudo_inverse' method.
-                    Each step in SLSQP costs `O(n2^n)` time to the size of calibrated qubits `n`.
+                    this method solve a constrained optimization problem to find
+                    the closest probability vector to the result from 'pseudo_inverse' method.
+                    Sequential least square quadratic programming (SLSQP) is used
+                    in the internal process.
+                    Every updating step in SLSQP takes `O(n2^{n+t})` time.
+                    Since this method is using the SLSQP optimization over
+                    the vector with lenght `2^n`, the mitigation for 8-qubit results would
+                    take 10 seconds or more.
 
                 * If `None`, 'least_squares' is used.
 
             meas_layout (list of int): the mapping from classical registers to qubits
 
-                * If you measure qubit 2 to clbit 0, 0 to 1, and 1 to 2, the list becomes [2, 0, 1]
+                * If you measure qubit `2` to clbit `0`, `0` to `1`, and `1` to `2`,
+                    the list becomes `[2, 0, 1]`
 
                 * If `None`, flatten(mit_pattern) is used.
 
