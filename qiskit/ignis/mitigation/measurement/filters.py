@@ -226,6 +226,8 @@ class TensoredFilter():
         """
         Initialize a tensored measurement error mitigation filter using
         the cal_matrices from a tensored measurement calibration fitter.
+        A simple usage this class is explained [here]
+        (https://qiskit.org/documentation/tutorials/noise/3_measurement_error_mitigation.html).
 
         Args:
             cal_matrices: the calibration matrices for applying the correction.
@@ -302,8 +304,24 @@ class TensoredFilter():
             method (str): fitting method. The following methods are supported:
 
                 * 'pseudo_inverse': direct inversion of the cal matrices.
+                    Mitigated counts can contain negative values
+                    and the sum of counts would not equal to the shots.
+                    Mitigation is conducted qubit wise:
+                    For each qubit, mitigate the whole counts using the calibration matrices
+                    which affect the corresponding qubit.
+                    For example, assume we are mitigating the 3rd bit of the 4-bit counts
+                    using '2\times 2' calibration matrix `A_3`.
+                    For the count '0110', we use the following formula:
+                    `count['0110'] = A_3^{-1}[1, 0] * count['0100'] + A_3^{-1}[1, 1] * count['0110']`.
+                    The total time complexity of this method is `O(n2^n)`
+                    to the size of calibrated qubits `n`.
 
                 * 'least_squares': constrained to have physical probabilities.
+                    Instead of directly applying inverse calibration matrices,
+                    sequential least square quadratic programming (SLSQP) is used
+                    for finding the closest probability vector to the result
+                    from 'pseudo_inverse' method.
+                    Each step in SLSQP costs `O(n2^n)` time to the size of calibrated qubits `n`.
 
                 * If `None`, 'least_squares' is used.
 
