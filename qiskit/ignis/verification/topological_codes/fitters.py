@@ -332,10 +332,10 @@ class GraphDecoder():
                         E_matching.remove_edge(node_map[source], node_map[target])
                         E_matching.add_edge(node_map[source], node_map[target], 0)
         # do the matching on this
-        match_dict = rx.max_weight_matching(E_matching, max_cardinality=True)
-        matches = set()
-        for u, v in match_dict.items():
-            matches.add(tuple(frozenset((E_matching[u], E_matching[v]))))
+        matches = {
+            (E_matching[x[0]],
+             E_matching[x[1]]) for x in rx.max_weight_matching(
+                E_matching, max_cardinality=True)}
         # use it to construct and return a corrected logical string
         logicals = self._separate_string(string)[0]
         for (source, target) in matches:
