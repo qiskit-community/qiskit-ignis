@@ -294,6 +294,7 @@ class TestMeasCal(unittest.TestCase):
         """Test ideal execution, without noise."""
 
         mit_pattern = [[1, 2], [3, 4, 5], [6]]
+        meas_layout = [1, 2, 3, 4, 5, 6]
 
         # Generate the calibration circuits
         meas_calibs, _ = tensored_meas_cal(mit_pattern=mit_pattern)
@@ -332,9 +333,11 @@ class TestMeasCal(unittest.TestCase):
         # Apply the calibration matrix to results
         # in list and dict forms using different methods
         results_dict_1 = meas_filter.apply(results_dict,
-                                           method='least_squares')
+                                           method='least_squares',
+                                           meas_layout=meas_layout)
         results_dict_0 = meas_filter.apply(results_dict,
-                                           method='pseudo_inverse')
+                                           method='pseudo_inverse',
+                                           meas_layout=meas_layout)
 
         # Assert that the results are equally distributed
         self.assertDictEqual(results_dict, results_dict_0)
@@ -347,7 +350,7 @@ class TestMeasCal(unittest.TestCase):
         """Test an execution on a circuit."""
 
         # Generate the calibration circuits
-        meas_calibs, mit_pattern, ghz = tensored_calib_circ_creation()
+        meas_calibs, mit_pattern, ghz, meas_layout = tensored_calib_circ_creation()
 
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
@@ -375,9 +378,9 @@ class TestMeasCal(unittest.TestCase):
 
         # Calculate the results after mitigation
         output_results_pseudo_inverse = meas_filter.apply(
-            results, method='pseudo_inverse').get_counts(0)
+            results, method='pseudo_inverse', meas_layout=meas_layout).get_counts(0)
         output_results_least_square = meas_filter.apply(
-            results, method='least_squares').get_counts(0)
+            results, method='least_squares', meas_layout=meas_layout).get_counts(0)
 
         # Compare with expected fidelity and expected results
         self.assertAlmostEqual(fidelity, 1.0)
@@ -427,9 +430,11 @@ class TestMeasCal(unittest.TestCase):
 
         # Calculate the results after mitigation
         output_results_pseudo_inverse = meas_filter.apply(
-            saved_info['results'].get_counts(0), method='pseudo_inverse')
+            saved_info['results'].get_counts(0),
+            method='pseudo_inverse',
+            meas_layout=saved_info['meas_layout'])
         output_results_least_square = meas_filter.apply(
-            saved_info['results'], method='least_squares')
+            saved_info['results'], method='least_squares', meas_layout=saved_info['meas_layout'])
 
         self.assertAlmostEqual(
             output_results_pseudo_inverse['000'],
@@ -467,9 +472,11 @@ class TestMeasCal(unittest.TestCase):
 
         # Calculate the results after mitigation
         output_results_pseudo_inverse = meas_filter.apply(
-            saved_info['results'].get_counts(0), method='pseudo_inverse')
+            saved_info['results'].get_counts(0),
+            method='pseudo_inverse',
+            meas_layout=saved_info['meas_layout'])
         output_results_least_square = meas_filter.apply(
-            saved_info['results'], method='least_squares')
+            saved_info['results'], method='least_squares', meas_layout=saved_info['meas_layout'])
 
         self.assertAlmostEqual(
             output_results_pseudo_inverse['000'],

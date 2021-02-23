@@ -67,6 +67,7 @@ def tensored_calib_circ_creation():
 
     """
     mit_pattern = [[2], [4, 1]]
+    meas_layout = [2, 4, 1]
     qr = qiskit.QuantumRegister(5)
     # Generate the calibration circuits
     meas_calibs, mit_pattern = tensored_meas_cal(mit_pattern, qr=qr)
@@ -79,7 +80,7 @@ def tensored_calib_circ_creation():
     ghz_circ.measure(mit_pattern[0][0], cr[0])
     ghz_circ.measure(mit_pattern[1][0], cr[1])
     ghz_circ.measure(mit_pattern[1][1], cr[2])
-    return meas_calibs, mit_pattern, ghz_circ
+    return meas_calibs, mit_pattern, ghz_circ, meas_layout
 
 
 def meas_calibration_circ_execution(shots: int, seed: int):
@@ -127,7 +128,7 @@ def tensored_calib_circ_execution(shots: int, seed: int):
         dict: dictionary of results counts of GHZ circuit simulation with measurement errors
     """
     # define the circuits
-    meas_calibs, mit_pattern, ghz_circ = tensored_calib_circ_creation()
+    meas_calibs, mit_pattern, ghz_circ, meas_layout = tensored_calib_circ_creation()
     # define noise
     prob = 0.2
     error_meas = pauli_error([('X', prob), ('I', 1 - prob)])
@@ -142,7 +143,7 @@ def tensored_calib_circ_execution(shots: int, seed: int):
     ghz_results = qiskit.execute(ghz_circ, backend=backend, shots=shots, noise_model=noise_model,
                                  seed_simulator=seed).result()
 
-    return cal_results, mit_pattern, ghz_results
+    return cal_results, mit_pattern, ghz_results, meas_layout
 
 
 def generate_meas_calibration(results_file_path: str, runs: int):
@@ -198,7 +199,7 @@ def generate_tensormeas_calibration(results_file_path: str):
     Args:
         results_file_path: path of the json file of the results file
     """
-    cal_results, mit_pattern, circuit_results = \
+    cal_results, mit_pattern, circuit_results, meas_layout = \
         tensored_calib_circ_execution(1000, SEED)
 
     meas_cal = TensoredMeasFitter(cal_results, mit_pattern=mit_pattern)
@@ -206,12 +207,13 @@ def generate_tensormeas_calibration(results_file_path: str):
 
     # Calculate the results after mitigation
     results_pseudo_inverse = meas_filter.apply(
-        circuit_results.get_counts(), method='pseudo_inverse')
+        circuit_results.get_counts(), method='pseudo_inverse', meas_layout=meas_layout)
     results_least_square = meas_filter.apply(
-        circuit_results.get_counts(), method='least_squares')
+        circuit_results.get_counts(), method='least_squares', meas_layout=meas_layout)
     results = {"cal_results": cal_results.to_dict(),
                "results": circuit_results.to_dict(),
                "mit_pattern": mit_pattern,
+               "meas_layout": meas_layout,
                "fidelity": meas_cal.readout_fidelity(),
                "results_pseudo_inverse": results_pseudo_inverse,
                "results_least_square": results_least_square}
