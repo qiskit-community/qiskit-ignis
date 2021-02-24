@@ -97,7 +97,7 @@ class GraphDecoder():
         elements that can be created by the same error.
         """
 
-        S = rx.PyGraph()
+        S = rx.PyGraph(multigraph=False)
 
         qc = self.code.circuit['0']
 
@@ -130,7 +130,6 @@ class GraphDecoder():
         job = execute(list(error_circuit.values()), simulator)
 
         node_map = {}
-        edge_set = set()
         for j in range(depth):
             qubits = qc.data[j][1]
             for qubit in qubits:
@@ -154,12 +153,9 @@ class GraphDecoder():
                                 node_map[node] = S.add_node(node)
                         for source in nodes:
                             for target in nodes:
-                                # Avoid a multigraph/parallel edges until
-                                # Qiskit/retworkx#118 is released
-                                if source != target and frozenset((source, target)) not in edge_set:
+                                if target != source:
                                     S.add_edge(node_map[source],
                                                node_map[target], 1)
-                                    edge_set.add(frozenset((source, target)))
 
         return S
 
@@ -227,10 +223,10 @@ class GraphDecoder():
         E = {}
         node_sets = {}
         for subgraph in set_subgraphs:
-            E[subgraph] = rx.PyGraph()
+            E[subgraph] = rx.PyGraph(multigraph=False)
             node_sets[subgraph] = set()
 
-        E = {subgraph: rx.PyGraph() for subgraph in set_subgraphs}
+        E = {subgraph: rx.PyGraph(multigraph=False) for subgraph in set_subgraphs}
         separated_string = self._separate_string(string)
         for syndrome_type, _ in enumerate(separated_string):
             for syndrome_round in range(len(separated_string[syndrome_type])):
@@ -247,22 +243,17 @@ class GraphDecoder():
         # for each pair of nodes in error create an edge and weight with the
         # distance
         distance_matrix = rx.graph_floyd_warshall_numpy(self.S, weight_fn=lambda e: float(e))
+        s_node_map = {self.S[index]: index for index in self.S.node_indexes()}
+
         for subgraph in set_subgraphs:
-            edge_set = set()
             for source_index in E[subgraph].node_indexes():
                 for target_index in (E[subgraph].node_indexes()):
                     source = E[subgraph][source_index]
                     target = E[subgraph][target_index]
                     if target != source:
-                        distance = int(distance_matrix[source_index][target_index])
-                        if frozenset((source_index, target_index)) not in edge_set:
-                            E[subgraph].add_edge(source_index, target_index,
-                                                 -distance)
-                            edge_set.add(frozenset((source_index, target_index)))
-                        else:
-                            E[subgraph].remove_edge(source_index, target_index)
-                            E[subgraph].add_edge(source_index, target_index,
-                                                 -distance)
+                        distance = int(distance_matrix[s_node_map[source]][s_node_map[target]])
+                        E[subgraph].add_edge(source_index, target_index,
+                                             -distance)
         return E
 
     def matching(self, string):
@@ -281,15 +272,17 @@ class GraphDecoder():
 
         # this matching algorithm is designed for a single graph
         E = self.make_error_graph(string)['0']
+        E.to_dot(node_attr=lambda x: {'label': str(x)},
+                 edge_attr=lambda x: {'label': str(x)},
+                 filename='E.dot')
 
         # set up graph that is like E, but each syndrome node is connected to a
         # separate copy of the nearest logical node
-        E_matching = rx.PyGraph()
+        E_matching = rx.PyGraph(multigraph=False)
         syndrome_nodes = []
         logical_nodes = []
         logical_neighbours = []
         node_map = {}
-        edge_set = set()
         for node in E.nodes():
             node_map[node] = E_matching.add_node(node)
             if node[0] == 0:
@@ -299,13 +292,11 @@ class GraphDecoder():
         for source in syndrome_nodes:
             for target in syndrome_nodes:
                 if target != (source):
-                    if frozenset((node_map[source], node_map[target])) not in edge_set:
-                        E_matching.add_edge(
-                            node_map[source],
-                            node_map[target],
-                            E.get_edge_data(node_map[source],
-                                            node_map[target]))
-                        edge_set.add(frozenset((node_map[source], node_map[target])))
+                    E_matching.add_edge(
+                        node_map[source],
+                        node_map[target],
+                        E.get_edge_data(node_map[source],
+                                        node_map[target]))
 
             potential_logical = {}
             for target in logical_nodes:
@@ -315,22 +306,15 @@ class GraphDecoder():
             nl_target = nearest_logical + source
             if nl_target not in node_map:
                 node_map[nl_target] = E_matching.add_node(nl_target)
-            if frozenset((node_map[source], node_map[nl_target])) not in edge_set:
-                E_matching.add_edge(
-                    node_map[source],
-                    node_map[nl_target],
-                    potential_logical[nearest_logical])
-                edge_set.add(frozenset((node_map[source], node_map[nl_target])))
+            E_matching.add_edge(
+                node_map[source],
+                node_map[nl_target],
+                potential_logical[nearest_logical])
             logical_neighbours.append(nl_target)
         for source in logical_neighbours:
             for target in logical_neighbours:
                 if target != (source):
-                    if frozenset((node_map[source], node_map[target])) not in edge_set:
-                        E_matching.add_edge(node_map[source], node_map[target], 0)
-                        edge_set.add(frozenset((node_map[source], node_map[target])))
-                    else:
-                        E_matching.remove_edge(node_map[source], node_map[target])
-                        E_matching.add_edge(node_map[source], node_map[target], 0)
+                    E_matching.add_edge(node_map[source], node_map[target], 0)
         # do the matching on this
         matches = {
             (E_matching[x[0]],
