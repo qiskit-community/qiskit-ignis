@@ -272,9 +272,6 @@ class GraphDecoder():
 
         # this matching algorithm is designed for a single graph
         E = self.make_error_graph(string)['0']
-        E.to_dot(node_attr=lambda x: {'label': str(x)},
-                 edge_attr=lambda x: {'label': str(x)},
-                 filename='E.dot')
 
         # set up graph that is like E, but each syndrome node is connected to a
         # separate copy of the nearest logical node
