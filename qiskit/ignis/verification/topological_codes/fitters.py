@@ -239,15 +239,15 @@ class GraphDecoder():
                                 E[subgraph].add_node(node_data)
                                 node_sets[subgraph].add(node_data)
 
-
         # for each pair of nodes in error create an edge and weight with the
         # distance
-        distance_matrix = rx.graph_floyd_warshall_numpy(self.S, weight_fn=lambda e: float(e))
+        distance_matrix = rx.graph_floyd_warshall_numpy(
+            self.S, weight_fn=lambda e: float(e))  # pylint: disable=unnecessary-lambda
         s_node_map = {self.S[index]: index for index in self.S.node_indexes()}
 
         for subgraph in set_subgraphs:
             for source_index in E[subgraph].node_indexes():
-                for target_index in (E[subgraph].node_indexes()):
+                for target_index in E[subgraph].node_indexes():
                     source = E[subgraph][source_index]
                     target = E[subgraph][target_index]
                     if target != source:
@@ -297,8 +297,8 @@ class GraphDecoder():
 
             potential_logical = {}
             for target in logical_nodes:
-                    potential_logical[target] = E.get_edge_data(node_map[source],
-                                                                node_map[target])
+                potential_logical[target] = E.get_edge_data(node_map[source],
+                                                            node_map[target])
             nearest_logical = max(potential_logical, key=potential_logical.get)
             nl_target = nearest_logical + source
             if nl_target not in node_map:
