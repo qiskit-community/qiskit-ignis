@@ -316,7 +316,7 @@ class GraphDecoder():
         matches = {
             (E_matching[x[0]],
              E_matching[x[1]]) for x in rx.max_weight_matching(
-                E_matching, max_cardinality=True)}
+                 E_matching, max_cardinality=True, weight_fn=lambda x: x)}
         # use it to construct and return a corrected logical string
         logicals = self._separate_string(string)[0]
         for (source, target) in matches:
