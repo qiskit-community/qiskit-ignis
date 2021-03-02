@@ -241,8 +241,7 @@ class GraphDecoder():
 
         # for each pair of nodes in error create an edge and weight with the
         # distance
-        distance_matrix = rx.graph_floyd_warshall_numpy(
-            self.S, weight_fn=lambda e: float(e))  # pylint: disable=unnecessary-lambda
+        distance_matrix = rx.graph_floyd_warshall_numpy(self.S, weight_fn=float)
         s_node_map = {self.S[index]: index for index in self.S.node_indexes()}
 
         for subgraph in set_subgraphs:
