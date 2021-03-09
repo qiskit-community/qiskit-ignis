@@ -15,7 +15,7 @@
 Expectation value measurement error migitation generator.
 """
 
-from math import ceil, log
+from math import ceil, log2
 from typing import Optional, Tuple, List, Dict
 
 from qiskit import QuantumCircuit
@@ -61,14 +61,14 @@ def expval_meas_mitigator_circuits(num_qubits: int,
           would be the all 1 state and the :math:`n` states with a
           single qubit in the 1 state and all others in the 0 state (also
           the all 0 state, if n<3). For `n>=7`, these would be the all 0
-          state, the all 1 state, and 2*ceil(log(n)) states resulting from
+          state, the all 1 state, and 2*ceil(log2(n)) states resulting from
           the following procedure: For each qubits, write its index in binary
           form, horizontically. For example: with 8 qubits `0, 1, 2,..., 7`,
           for qubit 7 we write:
           1
           1
           1
-          And for all 8 qubits, we obtain `ceil(log(n))=3` lines:
+          And for all 8 qubits, we obtain `ceil(log2(n))=3` lines:
           00001111
           00110011
           01010101
@@ -182,7 +182,7 @@ class ExpvalMeasMitigatorCircuits:
         if method in ['CTMP', 'ctmp']:
             # See details at the docstring of expval_meas_mitigator_circuits
             if self._num_qubits >= 7:
-                length = ceil(log(self._num_qubits))
+                length = ceil(log2(self._num_qubits))
                 labels = ['']*2*length
                 labels.extend([self._num_qubits * '0', self._num_qubits * '1'])
                 for i in range(self._num_qubits):
