@@ -21,6 +21,7 @@ import unittest
 import numpy
 import qiskit
 from qiskit import QuantumRegister, QuantumCircuit, Aer
+from qiskit.circuit.library import U3Gate
 from qiskit.quantum_info import state_fidelity, partial_trace, Statevector
 import qiskit.ignis.verification.tomography as tomo
 import qiskit.ignis.verification.tomography.fitters.cvx_fit as cvx_fit
@@ -109,7 +110,7 @@ class TestStateTomography(unittest.TestCase):
     def test_complex_1_qubit_circuit(self):
         q = QuantumRegister(1)
         circ = QuantumCircuit(q)
-        circ.u3(1, 1, 1, q[0])
+        circ.append(U3Gate(1, 1, 1), [q[0]])
 
         rho, psi = run_circuit_and_tomography(circ, q, self.method)
         F_bell = state_fidelity(psi, rho, validate=False)
@@ -123,7 +124,7 @@ class TestStateTomography(unittest.TestCase):
         q = QuantumRegister(3)
         circ = QuantumCircuit(q)
         for j in range(3):
-            circ.u3(*rand_angles(), q[j])
+            circ.append(U3Gate(*rand_angles()), [q[j]])
 
         rho, psi = run_circuit_and_tomography(circ, q, self.method)
         F_bell = state_fidelity(psi, rho, validate=False)

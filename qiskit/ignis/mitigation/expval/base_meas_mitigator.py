@@ -166,13 +166,13 @@ class BaseExpvalMeasMitigator(ABC):
         return gamma / np.sqrt(shots)
 
     def plot_assignment_matrix(self,
-                               qubits: Optional[List[int]] = None,
-                               ax: Optional[plt.axes] = None) -> plt.axes:
+                               qubits=None,
+                               ax=None):
         """Matrix plot of the readout error assignment matrix.
 
         Args:
-            qubits: Optional, qubits being measured for operator expval.
-            ax: Optional. Axes object to add plot to.
+            qubits (list(int)): Optional, qubits being measured for operator expval.
+            ax (axes): Optional. Axes object to add plot to.
 
         Returns:
             plt.axes: the figure axes object.
@@ -195,13 +195,13 @@ class BaseExpvalMeasMitigator(ABC):
         return ax
 
     def plot_mitigation_matrix(self,
-                               qubits: Optional[List[int]] = None,
-                               ax: Optional[plt.axes] = None) -> plt.axes:
+                               qubits=None,
+                               ax=None):
         """Matrix plot of the readout error mitigation matrix.
 
         Args:
-            qubits: Optional, qubits being measured for operator expval.
-            ax: Optional. Axes object to add plot to.
+            qubits (list(int)): Optional, qubits being measured for operator expval.
+            ax (plt.axes): Optional. Axes object to add plot to.
 
         Returns:
             plt.axes: the figure axes object.
@@ -247,12 +247,12 @@ class BaseExpvalMeasMitigator(ABC):
         return label
 
     @staticmethod
-    def _plot_axis(mat: np.ndarray, ax: plt.axes) -> plt.axes:
+    def _plot_axis(mat, ax):
         """Helper function for setting up axes for plots.
 
         Args:
-            mat: the N-qubit matrix to plot.
-            ax: Optional. Axes object to add plot to.
+            mat (np.ndarray): the N-qubit matrix to plot.
+            ax (plt.axes): Optional. Axes object to add plot to.
 
         Returns:
             plt.axes: the figure object and axes object.

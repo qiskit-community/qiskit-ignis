@@ -203,6 +203,8 @@ def cvx_fit(data: np.array,
     if 'solver' not in kwargs:
         if 'CVXOPT' in cvxpy.installed_solvers():
             kwargs['solver'] = 'CVXOPT'
+        elif 'MOSEK' in cvxpy.installed_solvers():
+            kwargs['solver'] = 'MOSEK'
 
     problem_solved = False
     while not problem_solved:

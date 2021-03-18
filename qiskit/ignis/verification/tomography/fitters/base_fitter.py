@@ -41,6 +41,7 @@ class TomographyFitter:
     """Base maximum-likelihood estimate tomography fitter class"""
 
     _HAS_SDP_SOLVER = None
+    _HAS_SDP_SOLVER_NOT_SCS = False
 
     def __init__(self,
                  result: Union[Result, List[Result]],
@@ -122,12 +123,14 @@ class TomographyFitter:
             **kwargs) -> np.array:
         r"""Reconstruct a quantum state using CVXPY convex optimization.
 
-                **Fitter method**
+        **Fitter method**
 
-        The ``cvx`` fitter method used CVXPY convex optimization package.
-        The ``lstsq`` method uses least-squares fitting (linear inversion).
-        The ``auto`` method will use 'cvx' if the CVXPY package is found on
-        the system, otherwise it will default to 'lstsq'.
+        The ``'cvx'`` fitter method uses the CVXPY convex optimization package
+        with a SDP solver.
+        The ``'lstsq'`` method uses least-squares fitting.
+        The ``'auto'`` method will use ``'cvx'`` if the both the CVXPY and a suitable
+        SDP solver packages are found on the system, otherwise it will default
+        to ``'lstsq'``.
 
         **Objective function**
 
@@ -167,9 +170,14 @@ class TomographyFitter:
         **CVXPY Solvers:**
 
         Various solvers can be called in CVXPY using the `solver` keyword
-        argument. See the `CVXPY documentation
+        argument. If ``psd=True`` an SDP solver is required other an SOCP
+        solver is required. See the `CVXPY documentation
         <https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options>`_
         for more information on solvers.
+        Note that the default SDP solver ('SCS') distributed
+        with CVXPY will not be used for the ``'auto'`` method due its reduced
+        accuracy compared to other solvers. When using the ``'cvx'`` method we
+        strongly recommend installing one of the other supported SDP solvers.
 
         References:
 
@@ -202,7 +210,11 @@ class TomographyFitter:
         # Choose automatic method
         if method == 'auto':
             self._check_for_sdp_solver()
-            if self._HAS_SDP_SOLVER:
+            if self._HAS_SDP_SOLVER_NOT_SCS:
+                # We don't use the SCS solver for automatic method as it has
+                # lower accuracy than the other supported SDP solvers which
+                # typically results in the returned matrix not being
+                # completely positive.
                 method = 'cvx'
             else:
                 method = 'lstsq'
@@ -516,7 +528,9 @@ class TomographyFitter:
                 # pylint:disable=import-error
                 import cvxpy
                 solvers = cvxpy.installed_solvers()
-                if 'CVXOPT' in solvers:
+                # Check for other SDP solvers cvxpy supports
+                if 'CVXOPT' in solvers or 'MOSEK' in solvers:
+                    cls._HAS_SDP_SOLVER_NOT_SCS = True
                     cls._HAS_SDP_SOLVER = True
                     return
                 if 'SCS' in solvers:
@@ -524,7 +538,7 @@ class TomographyFitter:
                     # SCS solver cannot solver larger than 2x2 matrix
                     # problems without BLAS
                     try:
-                        var = cvxpy.Variable((4, 4), PSD=True)
+                        var = cvxpy.Variable((5, 5), PSD=True)
                         obj = cvxpy.Minimize(cvxpy.norm(var))
                         cvxpy.Problem(obj).solve(solver='SCS')
                         cls._HAS_SDP_SOLVER = True
