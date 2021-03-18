@@ -144,8 +144,8 @@ class ProcessTomographyFitter(TomographyFitter):
                 method = 'lstsq'
         if method == 'lstsq':
             return Choi(lstsq_fit(data, basis_matrix, weights=weights,
-                                  trace=None, **kwargs))
+                                  trace=dim, **kwargs))
         if method == 'cvx':
             return Choi(cvx_fit(data, basis_matrix, weights=weights, trace=dim,
-                                trace_preserving=False, **kwargs))
+                                trace_preserving=True, **kwargs))
         raise QiskitError('Unrecognized fit method {}'.format(method))

@@ -26,6 +26,7 @@ import numpy as np
 
 from qiskit import QiskitError
 from qiskit import QuantumCircuit
+from qiskit import QuantumRegister
 from qiskit.result import Result
 from ..basis import TomographyBasis, default_basis
 from ..data import marginal_counts, combine_counts, count_keys
@@ -44,6 +45,7 @@ class TomographyFitter:
     def __init__(self,
                  result: Union[Result, List[Result]],
                  circuits: Union[List[QuantumCircuit], List[str]],
+                 measured_qubits: QuantumRegister,
                  meas_basis: Union[TomographyBasis, str] = 'Pauli',
                  prep_basis: Union[TomographyBasis, str] = 'Pauli'):
         """Initialize tomography fitter with experimental data.
@@ -71,7 +73,7 @@ class TomographyFitter:
         self._data = {}
         if isinstance(result, Result):
             result = [result]  # unify results handling
-        self.add_data(result, circuits)
+        self.add_data(result, circuits,measured_qubits)
 
     def set_measure_basis(self, basis: Union[TomographyBasis, str]):
         """Set the measurement basis
@@ -230,7 +232,8 @@ class TomographyFitter:
 
     def add_data(self,
                  results: List[Result],
-                 circuits: List[Union[QuantumCircuit, str]]
+                 circuits: List[Union[QuantumCircuit, str]],
+                 measured_qubits: QuantumRegister,
                  ):
         """Add tomography data from a Qiskit Result object.
 
@@ -245,11 +248,6 @@ class TomographyFitter:
         """
         if len(circuits) == 0:
             raise QiskitError("No circuit data given")
-
-        if isinstance(circuits[0], str) or len(circuits[0].cregs) == 1:
-            marginalize = False
-        else:
-            marginalize = True
 
         # Process measurement counts into probabilities
         for circ in circuits:
@@ -267,8 +265,8 @@ class TomographyFitter:
                 tup = literal_eval(circ.name)
             else:
                 tup = circ
-            if marginalize:
-                counts = marginal_counts(counts, range(len(tup[0])))
+            if counts != {}:
+                counts = marginal_counts(counts, measured_qubits)
             if tup in self._data:
                 self._data[tup] = combine_counts(self._data[tup], counts)
             else:
@@ -326,21 +324,23 @@ class TomographyFitter:
         else:
             ctkeys = count_keys(len(label))
         for label, cts in self._data.items():
-
             # Convert counts dict to numpy array
             if isinstance(cts, dict):
                 cts = np.array([cts.get(key, 0) for key in ctkeys])
 
             # Get probabilities
             shots = np.sum(cts)
-            probs = np.array(cts) / shots
+            
+            if shots==0:
+                probs = 0*np.array(cts)
+            else:
+                probs = np.array(cts) / shots
             data += list(probs)
 
             # Compute binomial weights
             if standard_weights is True:
                 wts = self._binomial_weights(cts, beta)
                 weights += list(wts)
-
             # Get reconstruction basis operators
             if is_qpt:
                 prep_label = label[0]
@@ -353,7 +353,7 @@ class TomographyFitter:
             block = self._basis_operator_matrix(
                 [np.kron(prep_op.T, mop) for mop in meas_ops])
             basis_blocks.append(block)
-
+        
         return data, np.vstack(basis_blocks), weights
 
     def _binomial_weights(self, counts: Dict[str, int],

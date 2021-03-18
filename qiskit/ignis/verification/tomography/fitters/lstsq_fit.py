@@ -26,7 +26,7 @@ def lstsq_fit(data: np.array,
               basis_matrix: np.array,
               weights: Optional[np.array] = None,
               psd: bool = True,
-              trace: Optional[int] = None
+              trace: Optional[int] = None,
               ) -> np.array:
     r"""
     Reconstruct a density matrix using MLE least-squares fitting.
@@ -110,6 +110,7 @@ def lstsq_fit(data: np.array,
     # Rescale fitted density matrix be positive-semidefinite
     if psd is True:
         rho_fit = make_positive_semidefinite(rho_fit)
+        
 
     # Rescale fitted density matrix to satisfy trace constraint
     if trace is not None:
@@ -151,16 +152,17 @@ def make_positive_semidefinite(mat: np.array,
 
     dim = len(mat)
     v, w = la.eigh(mat)
-    for j in range(dim):
-        if v[j] < epsilon:
-            tmp = v[j]
-            v[j] = 0.
-            # Rescale remaining eigenvalues
-            x = 0.
-            for k in range(j + 1, dim):
-                x += tmp / (dim - (j + 1))
-                v[k] = v[k] + tmp / (dim - (j + 1))
-
+    vmin = np.min(v)
+    if vmin < epsilon:
+        targetmin = 0.
+    else:
+        targetmin = vmin   
+    vmax = np.max(v)
+    if vmax > 1-epsilon:
+        targetmax = 1.
+    else:
+        targetmax = vmax   
+    v = (v-vmin)*(targetmax-targetmin)/(vmax-vmin) + targetmin
     # Build positive matrix from the rescaled eigenvalues
     # and the original eigenvectors
 
@@ -169,3 +171,5 @@ def make_positive_semidefinite(mat: np.array,
         mat_psd += v[j] * np.outer(w[:, j], np.conj(w[:, j]))
 
     return mat_psd
+
+

@@ -452,7 +452,7 @@ def _tomography_circuits(
     # the list of returned circuits.
     registers = qubit_registers.copy()
     if measurement is not None:
-        clbits = ClassicalRegister(num_qubits)
+        clbits = circuit.cregs[0]
         registers.add(clbits)
 
     # Generate the circuits

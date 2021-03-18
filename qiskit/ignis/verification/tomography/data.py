@@ -49,7 +49,6 @@ def marginal_counts(counts: Dict[str, int],
         meas_qubits=True the returned dictionary will have the same values as
         the input dictionary, but with whitespace trimmed from the keys.
     """
-
     # Extract total number of qubits from first count key
     # We trim the whitespace seperating classical registers
     # and count the number of digits

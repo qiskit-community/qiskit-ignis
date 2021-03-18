@@ -34,6 +34,7 @@ def cvx_fit(data: np.array,
             weights: Optional[np.array] = None,
             psd: bool = True,
             trace: Optional[int] = None,
+            povm: bool = False,
             trace_preserving: bool = False,
             **kwargs
             ) -> np.array:
@@ -143,6 +144,10 @@ def cvx_fit(data: np.array,
 
     if psd is True:
         rho = cvxpy.bmat([[rho_r, -rho_i], [rho_i, rho_r]])
+        cons.append(rho >> 0)
+
+    if povm is True:
+        rho = cvxpy.bmat([[np.identity(dim)-rho_r, rho_i], [-rho_i, np.identity(dim)-rho_r]])
         cons.append(rho >> 0)
 
     # Trace preserving constraint when fitting Choi-matrices for
