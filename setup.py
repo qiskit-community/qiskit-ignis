@@ -21,7 +21,7 @@ import sys
 requirements = [
     "numpy>=1.13",
     "qiskit-terra>=0.13.0",
-    "networkx>=2.2",
+    "retworkx>=0.8.0",
     "scipy>=0.19,!=0.19.1",
     "setuptools>=40.1.0",
     "scikit-learn>=0.17",

@@ -258,6 +258,7 @@ class TensoredMeasFitter():
         self._result_list = []
         self._cal_matrices = None
         self._circlabel = circlabel
+        self._mit_pattern = mit_pattern
 
         self._qubit_list_sizes = \
             [len(qubit_list) for qubit_list in mit_pattern]
@@ -298,7 +299,7 @@ class TensoredMeasFitter():
     @property
     def filter(self):
         """Return a measurement filter using the cal matrices."""
-        return TensoredFilter(self._cal_matrices, self._substate_labels_list)
+        return TensoredFilter(self._cal_matrices, self._substate_labels_list, self._mit_pattern)
 
     @property
     def nqubits(self):
