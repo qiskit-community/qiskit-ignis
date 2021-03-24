@@ -157,20 +157,23 @@ class GraphDecoder():
                                     S.add_edge(source, target, distance=1)
 
         return S
-
-    def weight_syndrome_graph(self, results):
-        """Generate weighted syndrome graph from result counts.
+    
+    def get_error_probs(self, results):
+        """Generate probabilities of single error events from result counts.
 
         Args:
             results (dict): A results dictionary, as produced by the
             `process_results` method of the code.
+            
+        Returns:
+            error_probs (dict): Keys are the edges for specific error
+            events, and values are the calculated probabilities
 
         Additional information:
             Uses `results` to estimate the probability of the errors that
-            create the pairs of nodes in S. The edge weights are then
-            replaced with the corresponding -log(p/(1-p).
+            create the pairs of nodes specified by the edge.
         """
-
+        
         results = results['0']
 
         count = {element: {edge: 0 for edge in self.S.edges}
@@ -189,15 +192,38 @@ class GraphDecoder():
                         element += '0'
                 count[element][edge] += results[string]
 
+        error_probs = {}
         for edge in self.S.edges:
-            edge_data = self.S.get_edge_data(edge[0], edge[1])
             ratios = []
             for elements in [('00', '11'), ('11', '00'),
                              ('01', '10'), ('10', '01')]:
                 if count[elements[1]][edge] > 0:
                     ratio = count[elements[0]][edge]/count[elements[1]][edge]
                     ratios.append(ratio)
-            edge_data['distance'] = -np.log(min(ratios))
+            ratio = min(ratios)
+            error_probs[edge] = ratio/(1+ratio)
+            
+        return error_probs
+
+    def weight_syndrome_graph(self, results):
+        """Generate weighted syndrome graph from result counts.
+
+        Args:
+            results (dict): A results dictionary, as produced by the
+            `process_results` method of the code.
+
+        Additional information:
+            Uses `results` to estimate the probability of the errors that
+            create the pairs of nodes in S. The edge weights are then
+            replaced with the corresponding -log(p/(1-p).
+        """
+
+        error_probs = self.get_error_probs(results)
+        
+        for edge in self.S.edges:
+            edge_data = self.S.get_edge_data(edge[0], edge[1])
+            p = error_probs[edge]
+            edge_data['distance'] = -np.log(p/(1-p))
 
     def make_error_graph(self, string, subgraphs=None):
         """
