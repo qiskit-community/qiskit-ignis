@@ -123,7 +123,7 @@ def check_pattern(pattern, is_purity=False, interleaved_elem=None):
     return pattern_flat, np.max(pattern_flat).item(), np.max(pattern_dim)
 
 
-def handle_interleaved_elem(interleaved_elem, rb_group):
+def handle_interleaved_elem(interleaved_elem, rb_group, keep_original_interleaved_elem):
     """ Handle the various types of the interleaved element
 
     Args:
@@ -132,6 +132,8 @@ def handle_interleaved_elem(interleaved_elem, rb_group):
             List[qiskit.quantum_info.operators.symplectic.Clifford].
             not None only for interleaved RB
         rb_group (RBgroup): the relevant RBgroup class object
+        keep_original_interleaved_elem (bool): whether to transform the
+        original element to group element or keep as it is
 
     Raises:
         ValueError: if interleaved_elem does not have one of the relevant types,
@@ -147,27 +149,35 @@ def handle_interleaved_elem(interleaved_elem, rb_group):
     if interleaved_elem is None:
         return None
 
-    else:
-        for elem in interleaved_elem:
-            if isinstance(elem, (QuantumCircuit, Instruction)):
-                num_qubits = elem.num_qubits
-                qc = elem
-                elem = rb_group.iden(num_qubits)
-                elem = elem.from_circuit(qc)
-            if (isinstance(elem, qiskit.quantum_info.operators.symplectic.clifford.Clifford)
-                    and group_gates_type == 0) or (isinstance(elem, CNOTDihedral)
-                                                   and group_gates_type == 1):
-                interleaved_elem_list.append(elem)
-            else:
-                raise ValueError("Invalid interleaved element type.")
+    for elem in interleaved_elem:
+        group_elem = elem
+        if isinstance(elem, (QuantumCircuit, Instruction)):
+            num_qubits = elem.num_qubits
+            group_elem = rb_group.iden(num_qubits)
+            group_elem = group_elem.from_circuit(elem)
+        if not (isinstance(group_elem, qiskit.quantum_info.operators.symplectic.clifford.Clifford)
+                and group_gates_type == 0) and \
+                not (isinstance(group_elem, CNOTDihedral) and group_gates_type == 1):
+            raise ValueError("Invalid interleaved element type.")
 
-            if not isinstance(elem, QuantumCircuit) and \
-                    not isinstance(elem,
-                                   qiskit.quantum_info.operators.symplectic.clifford.Clifford) \
-                    and not isinstance(elem, CNOTDihedral):
-                raise ValueError("Invalid interleaved element type. "
-                                 "interleaved_elem should be a list of QuantumCircuit,"
-                                 "or a list of Clifford / CNOTDihedral objects")
+        if not isinstance(group_elem, QuantumCircuit) and \
+                not isinstance(group_elem,
+                               qiskit.quantum_info.operators.symplectic.clifford.Clifford) \
+                and not isinstance(group_elem, CNOTDihedral):
+            raise ValueError("Invalid interleaved element type. "
+                             "interleaved_elem should be a list of QuantumCircuit,"
+                             "or a list of Clifford / CNOTDihedral objects")
+
+        circuit_elem = rb_group.to_circuit(group_elem)
+        if keep_original_interleaved_elem:
+            if isinstance(elem, Instruction):
+                circuit_elem = QuantumCircuit(elem.num_qubits)
+                circuit_elem.append(elem, range(elem.num_qubits))
+            elif isinstance(elem, QuantumCircuit):
+                circuit_elem = elem
+
+        interleaved_elem_list.append((circuit_elem, group_elem))
+
     return interleaved_elem_list
 
 
@@ -202,6 +212,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                     Union[List[QuantumCircuit], List[Instruction],
                                           List[qiskit.quantum_info.operators.symplectic.Clifford],
                                           List[CNOTDihedral]]] = None,
+                                keep_original_interleaved_elem: Optional[bool] = True,
                                 is_purity: bool = False,
                                 group_gates: Optional[str] = None,
                                 rand_seed: Optional[Union[int, RandomState]] = None) -> \
@@ -266,6 +277,10 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             It is not ``None`` only for interleaved randomized benchmarking.
             The lengths of the lists should be equal to the length of the
             lists in ``rb_pattern``.
+
+        keep_original_interleaved_elem: whether to keep the original interleaved
+        element as it is when adding it to the RB circuits or to transform
+        it to a standard representation via group elements
 
         is_purity: ``True`` only for purity randomized benchmarking
             (default is ``False``).
@@ -401,7 +416,9 @@ def randomized_benchmarking_seq(nseeds: int = 1,
     rb_circ_type = rb_group.rb_circ_type()
 
     # Handle various types of the interleaved element
-    interleaved_elem = handle_interleaved_elem(interleaved_elem, rb_group)
+    interleaved_elem = handle_interleaved_elem(interleaved_elem,
+                                               rb_group,
+                                               keep_original_interleaved_elem)
 
     # initialization: rb sequences
     circuits = [[] for e in range(nseeds)]
@@ -446,9 +463,9 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                     new_elmnt = rb_group.random(rb_q_num, rand_seed)
                     Elmnts[rb_pattern_index] = rb_group.compose(
                         Elmnts[rb_pattern_index], new_elmnt)
-                    general_circ += replace_q_indices(
+                    general_circ.compose(replace_q_indices(
                         rb_group.to_circuit(new_elmnt),
-                        rb_pattern[rb_pattern_index], qr)
+                        rb_pattern[rb_pattern_index], qr), inplace=True)
 
                     # add a barrier
                     general_circ.barrier(
@@ -460,21 +477,20 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                             rb_group.compose(
                                 Elmnts_interleaved[rb_pattern_index],
                                 new_elmnt)
-                        interleaved_circ += replace_q_indices(
+                        interleaved_circ.compose(replace_q_indices(
                             rb_group.to_circuit(
                                 new_elmnt),
-                            rb_pattern[rb_pattern_index], qr)
+                            rb_pattern[rb_pattern_index], qr), inplace=True)
                         Elmnts_interleaved[rb_pattern_index] = \
                             rb_group.compose(
                                 Elmnts_interleaved[rb_pattern_index],
-                                interleaved_elem[rb_pattern_index])
+                                interleaved_elem[rb_pattern_index][1])
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
                             *[qr[x] for x in rb_pattern[rb_pattern_index]])
-                        interleaved_circ += replace_q_indices(
-                            rb_group.to_circuit(
-                                interleaved_elem[rb_pattern_index]),
-                            rb_pattern[rb_pattern_index], qr)
+                        interleaved_circ.compose(replace_q_indices(
+                            interleaved_elem[rb_pattern_index][0],
+                            rb_pattern[rb_pattern_index], qr), inplace=True)
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
                             *[qr[x] for x in rb_pattern[rb_pattern_index]])
@@ -493,30 +509,31 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             if (elmnts_index+1) == length_vector[length_index]:
                 # circ for rb:
                 circ = QuantumCircuit(qr, cr)
-                circ += general_circ
+                circ.compose(general_circ, inplace=True)
                 # circ_interleaved for interleaved rb:
                 circ_interleaved = QuantumCircuit(qr, cr)
-                circ_interleaved += interleaved_circ
+                circ_interleaved.compose(interleaved_circ, inplace=True)
 
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
                     inv_circuit = rb_group.inverse(Elmnts[rb_pattern_index])
-                    circ += replace_q_indices(inv_circuit,
-                                              rb_pattern[rb_pattern_index], qr)
+                    circ.compose(replace_q_indices(inv_circuit,
+                                                   rb_pattern[rb_pattern_index], qr),
+                                 inplace=True)
                     # calculate the inverse and produce the circuit
                     # for interleaved rb
                     if interleaved_elem is not None:
                         inv_circuit_interleaved = rb_group.inverse(
                             Elmnts_interleaved[rb_pattern_index])
-                        circ_interleaved += replace_q_indices(
+                        circ_interleaved.compose(replace_q_indices(
                             inv_circuit_interleaved,
-                            rb_pattern[rb_pattern_index], qr)
+                            rb_pattern[rb_pattern_index], qr), inplace=True)
 
                 # Circuits for purity rb
                 if is_purity:
                     circ_purity = [[] for d in range(npurity)]
                     for d in range(npurity):
                         circ_purity[d] = QuantumCircuit(qr, cr)
-                        circ_purity[d] += circ
+                        circ_purity[d].compose(circ, inplace=True)
                         circ_purity[d].name = rb_circ_type + '_purity_'
                         ind_d = d
                         purity_qubit_num = 0
@@ -564,8 +581,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                         cnotdihedral_circ.barrier(qr[qb])
                         cnotdihedral_interleaved_circ.h(qr[qb])
                         cnotdihedral_interleaved_circ.barrier(qr[qb])
-                    cnotdihedral_circ += circ
-                    cnotdihedral_interleaved_circ += circ_interleaved
+                    cnotdihedral_circ.compose(circ, inplace=True)
+                    cnotdihedral_interleaved_circ.compose(circ_interleaved, inplace=True)
                     for _, qb in enumerate(qlist_flat):
                         cnotdihedral_circ.barrier(qr[qb])
                         cnotdihedral_circ.h(qr[qb])
