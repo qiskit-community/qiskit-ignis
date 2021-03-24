@@ -517,7 +517,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
                     inv_circuit = rb_group.inverse(Elmnts[rb_pattern_index])
                     circ.compose(replace_q_indices(inv_circuit,
-                                              rb_pattern[rb_pattern_index], qr),
+                                                   rb_pattern[rb_pattern_index], qr),
                                  inplace=True)
                     # calculate the inverse and produce the circuit
                     # for interleaved rb
