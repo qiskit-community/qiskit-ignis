@@ -720,7 +720,8 @@ class TestRB(unittest.TestCase):
     def test_interleaved_randomized_benchmarking_seq_1q_clifford_gates(self, gate):
         """interleaved 1Q Clifford gates in RB"""
         rb_original_circs, _, rb_interleaved_circs = rb.randomized_benchmarking_seq(
-            nseeds=1, length_vector=[5], rb_pattern=[[0]], interleaved_elem=[gate[0]])
+            nseeds=1, length_vector=[5], rb_pattern=[[0]],
+            interleaved_elem=[gate[0]], keep_original_interleaved_elem=False)
         # Verify the generated sequences
         rb_opts = {}
         rb_opts['nseeds'] = 1
@@ -746,7 +747,8 @@ class TestRB(unittest.TestCase):
     def test_interleaved_randomized_benchmarking_seq_2q_clifford_gates(self, gate):
         """interleaved 2Q Clifford gates in RB"""
         rb_original_circs, _, rb_interleaved_circs = rb.randomized_benchmarking_seq(
-            nseeds=1, length_vector=[5], rb_pattern=[[0, 1]], interleaved_elem=[gate])
+            nseeds=1, length_vector=[5], rb_pattern=[[0, 1]],
+            interleaved_elem=[gate], keep_original_interleaved_elem=False)
         # Verify the generated sequences
         rb_opts = {}
         rb_opts['nseeds'] = 1
@@ -775,6 +777,7 @@ class TestRB(unittest.TestCase):
             rb_cnotdihedral_interleaved_Z_circs, rb_cnotdihedral_interleaved_X_circs = \
             rb.randomized_benchmarking_seq(nseeds=1, length_vector=[5], rb_pattern=[[0]],
                                            interleaved_elem=[gate],
+                                           keep_original_interleaved_elem=False,
                                            group_gates='CNOT-Dihedral')
         # Verify the generated sequences
         rb_opts = {}
@@ -815,6 +818,7 @@ class TestRB(unittest.TestCase):
             rb_cnotdihedral_interleaved_Z_circs, rb_cnotdihedral_interleaved_X_circs = \
             rb.randomized_benchmarking_seq(nseeds=1, length_vector=[5], rb_pattern=[[0, 1]],
                                            interleaved_elem=[gate],
+                                           keep_original_interleaved_elem=False,
                                            group_gates='CNOT-Dihedral')
         # Verify the generated sequences
         rb_opts = {}
@@ -865,7 +869,9 @@ class TestRB(unittest.TestCase):
 
         rb_original_circs, _, rb_interleaved_circs = rb.randomized_benchmarking_seq(
             nseeds=1, length_vector=[5], rb_pattern=[list(range(num_qubits))],
-            interleaved_elem=[clifford])
+            interleaved_elem=[clifford],
+            keep_original_interleaved_elem=False
+        )
         self.assertEqual(rb_original_circs[seed][circ_index].name,
                          'rb_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
@@ -879,7 +885,9 @@ class TestRB(unittest.TestCase):
 
         rb_original_circs, _, rb_interleaved_circs = rb.randomized_benchmarking_seq(
             nseeds=1, length_vector=[5], rb_pattern=[list(range(num_qubits))],
-            interleaved_elem=[test_circ])
+            interleaved_elem=[test_circ],
+            keep_original_interleaved_elem=False
+        )
         self.assertEqual(rb_original_circs[seed][circ_index].name,
                          'rb_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
@@ -893,7 +901,9 @@ class TestRB(unittest.TestCase):
 
         rb_original_circs, _, rb_interleaved_circs = rb.randomized_benchmarking_seq(
             nseeds=1, length_vector=[5], rb_pattern=[list(range(num_qubits))],
-            interleaved_elem=[test_gates])
+            interleaved_elem=[test_gates],
+            keep_original_interleaved_elem=False
+        )
         self.assertEqual(rb_original_circs[seed][circ_index].name,
                          'rb_length_%d_seed_%d' % (circ_index, seed),
                          'Error: incorrect circuit name')
@@ -927,6 +937,7 @@ class TestRB(unittest.TestCase):
             rb.randomized_benchmarking_seq(nseeds=1, length_vector=[5],
                                            rb_pattern=[list(range(num_qubits))],
                                            interleaved_elem=[elem],
+                                           keep_original_interleaved_elem=False,
                                            group_gates='CNOT-Dihedral')
         self.assertEqual(rb_cnotdihedral_Z_circs[seed][circ_index].name,
                          'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
@@ -956,6 +967,7 @@ class TestRB(unittest.TestCase):
             rb.randomized_benchmarking_seq(nseeds=1, length_vector=[5],
                                            rb_pattern=[list(range(num_qubits))],
                                            interleaved_elem=[test_circ],
+                                           keep_original_interleaved_elem=False,
                                            group_gates='CNOT-Dihedral')
         self.assertEqual(rb_cnotdihedral_Z_circs[seed][circ_index].name,
                          'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
@@ -985,6 +997,7 @@ class TestRB(unittest.TestCase):
             rb.randomized_benchmarking_seq(nseeds=1, length_vector=[5],
                                            rb_pattern=[list(range(num_qubits))],
                                            interleaved_elem=[test_gates],
+                                           keep_original_interleaved_elem=False,
                                            group_gates='CNOT-Dihedral')
         self.assertEqual(rb_cnotdihedral_Z_circs[seed][circ_index].name,
                          'rb_cnotdihedral_Z_length_%d_seed_%d' % (circ_index, seed),
