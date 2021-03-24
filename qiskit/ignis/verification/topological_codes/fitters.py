@@ -158,6 +158,9 @@ class GraphDecoder():
 
         return S
     
+    def _get_averages(self,results,on_the_fly=False):
+        pass
+    
     def get_error_probs(self, results):
         """Generate probabilities of single error events from result counts.
 
@@ -176,14 +179,27 @@ class GraphDecoder():
         
         results = results['0']
 
-        count = {element: {edge: 0 for edge in self.S.edges}
-                 for element in ['00', '01', '10', '11']}
+        #count = {element: {edge: 0 for edge in self.S.edges}
+        #         for element in ['00', '01', '10', '11']}
 
+        # initialize averages
+        av_v_i = 0
+        
         for string in results:
 
+            # list of i for which v_i=1
             nodes = self._string2nodes(string)
 
+            
             for edge in self.S.edges:
+                # edge = (i,j)
+                
+                v_i = int(edge[0] in nodes) # i in nodes
+                v_j = int(edge[1] in nodes) # j in nodes
+                
+                av_v_i += results[string]
+                
+                '''
                 element = ''
                 for j in range(2):
                     if edge[j] in nodes:
@@ -191,7 +207,11 @@ class GraphDecoder():
                     else:
                         element += '0'
                 count[element][edge] += results[string]
-
+                '''
+                
+        # normalize
+                
+        '''
         error_probs = {}
         for edge in self.S.edges:
             ratios = []
@@ -202,7 +222,9 @@ class GraphDecoder():
                     ratios.append(ratio)
             ratio = min(ratios)
             error_probs[edge] = ratio/(1+ratio)
+        '''
             
+        # p_ij   { ij:p_ij...}
         return error_probs
 
     def weight_syndrome_graph(self, results):
