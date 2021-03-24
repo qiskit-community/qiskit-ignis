@@ -463,9 +463,9 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                     new_elmnt = rb_group.random(rb_q_num, rand_seed)
                     Elmnts[rb_pattern_index] = rb_group.compose(
                         Elmnts[rb_pattern_index], new_elmnt)
-                    general_circ += replace_q_indices(
+                    general_circ.compose(replace_q_indices(
                         rb_group.to_circuit(new_elmnt),
-                        rb_pattern[rb_pattern_index], qr)
+                        rb_pattern[rb_pattern_index], qr), inplace=True)
 
                     # add a barrier
                     general_circ.barrier(
@@ -477,10 +477,10 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                             rb_group.compose(
                                 Elmnts_interleaved[rb_pattern_index],
                                 new_elmnt)
-                        interleaved_circ += replace_q_indices(
+                        interleaved_circ.compose(replace_q_indices(
                             rb_group.to_circuit(
                                 new_elmnt),
-                            rb_pattern[rb_pattern_index], qr)
+                            rb_pattern[rb_pattern_index], qr), inplace=True)
                         Elmnts_interleaved[rb_pattern_index] = \
                             rb_group.compose(
                                 Elmnts_interleaved[rb_pattern_index],
@@ -488,9 +488,9 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
                             *[qr[x] for x in rb_pattern[rb_pattern_index]])
-                        interleaved_circ += replace_q_indices(
+                        interleaved_circ.compose(replace_q_indices(
                             interleaved_elem[rb_pattern_index][0],
-                            rb_pattern[rb_pattern_index], qr)
+                            rb_pattern[rb_pattern_index], qr), inplace=True)
                         # add a barrier - interleaved rb
                         interleaved_circ.barrier(
                             *[qr[x] for x in rb_pattern[rb_pattern_index]])
@@ -509,30 +509,31 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             if (elmnts_index+1) == length_vector[length_index]:
                 # circ for rb:
                 circ = QuantumCircuit(qr, cr)
-                circ += general_circ
+                circ.compose(general_circ, inplace=True)
                 # circ_interleaved for interleaved rb:
                 circ_interleaved = QuantumCircuit(qr, cr)
-                circ_interleaved += interleaved_circ
+                circ_interleaved.compose(interleaved_circ, inplace=True)
 
                 for (rb_pattern_index, rb_q_num) in enumerate(pattern_sizes):
                     inv_circuit = rb_group.inverse(Elmnts[rb_pattern_index])
-                    circ += replace_q_indices(inv_circuit,
-                                              rb_pattern[rb_pattern_index], qr)
+                    circ.compose(replace_q_indices(inv_circuit,
+                                              rb_pattern[rb_pattern_index], qr),
+                                 inplace=True)
                     # calculate the inverse and produce the circuit
                     # for interleaved rb
                     if interleaved_elem is not None:
                         inv_circuit_interleaved = rb_group.inverse(
                             Elmnts_interleaved[rb_pattern_index])
-                        circ_interleaved += replace_q_indices(
+                        circ_interleaved.compose(replace_q_indices(
                             inv_circuit_interleaved,
-                            rb_pattern[rb_pattern_index], qr)
+                            rb_pattern[rb_pattern_index], qr), inplace=True)
 
                 # Circuits for purity rb
                 if is_purity:
                     circ_purity = [[] for d in range(npurity)]
                     for d in range(npurity):
                         circ_purity[d] = QuantumCircuit(qr, cr)
-                        circ_purity[d] += circ
+                        circ_purity[d].compose(circ, inplace=True)
                         circ_purity[d].name = rb_circ_type + '_purity_'
                         ind_d = d
                         purity_qubit_num = 0
@@ -580,8 +581,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                         cnotdihedral_circ.barrier(qr[qb])
                         cnotdihedral_interleaved_circ.h(qr[qb])
                         cnotdihedral_interleaved_circ.barrier(qr[qb])
-                    cnotdihedral_circ += circ
-                    cnotdihedral_interleaved_circ += circ_interleaved
+                    cnotdihedral_circ.compose(circ, inplace=True)
+                    cnotdihedral_interleaved_circ.compose(circ_interleaved, inplace=True)
                     for _, qb in enumerate(qlist_flat):
                         cnotdihedral_circ.barrier(qr[qb])
                         cnotdihedral_circ.h(qr[qb])
