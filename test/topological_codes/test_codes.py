@@ -147,6 +147,16 @@ class TestCodes(unittest.TestCase):
                     l_down or lookup_probs[(d, log)] == 0.0, l_error)
                 self.assertTrue(
                     p_down or post_probs[(d, log)] == 0.0, p_error)
+                
+    def test_weight():
+        error = "Error: Calculated error probability not correct for "\
+        "test result '0 0  11 00' in d=3, T=1 repetition code."
+        code = RepetitionCode(3,1)
+        dec = GraphDecoder(code)
+        test_results = {'0':{'0 0  00 00':1024, '0 0  11 00':512}}
+        p = dec.get_error_probs(test_results)
+        self.assertTrue(
+            round(p[(1, 0, 0), (1, 0, 1)],2)==0.33, error)
 
 
 if __name__ == '__main__':
