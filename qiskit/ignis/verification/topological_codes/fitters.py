@@ -232,7 +232,6 @@ class GraphDecoder():
 
         for edge in self.S.edge_list():
             p = error_probs[edge]
-            self.S.remove_edge(edge[0], edge[1])
             if p == 0:
                 w = np.inf
             elif 1-p == 1:
@@ -240,7 +239,6 @@ class GraphDecoder():
             else:
                 w = -np.log(p/(1-p))
             self.S.update_edge(edge[0], edge[1], w)
-            self.S.add_edge(edge[0], edge[1], w)
 
     def make_error_graph(self, string, subgraphs=None):
         """
