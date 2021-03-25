@@ -165,7 +165,7 @@ class GraphDecoder():
         Args:
             results (dict): A results dictionary, as produced by the
             `process_results` method of the code.
-            
+
         Returns:
             error_probs (dict): Keys are the edges for specific error
             events, and values are the calculated probabilities
@@ -176,43 +176,43 @@ class GraphDecoder():
             Calculation done using the method of Spitz, et al.
             https://doi.org/10.1002/qute.201800012
         """
-        
+
         results = results['0']
         shots = sum(results.values())
-        
+
         nodes = self.S.nodes()
-        
+
         error_probs = {}
         for edge in self.S.edge_list():
-        
+
             # initialize averages
-            av_vv = 0 # v_ij
-            av_v = [0,0] # [v_,v_j]
-            av_xor = 0 # v_{i xor j}
-        
+            av_vv = 0  # v_ij
+            av_v = [0, 0]  # [v_,v_j]
+            av_xor = 0  # v_{i xor j}
+
             for string in results:
-                
+
                 # list of i for which v_i=1
                 error_nodes = self._string2nodes(string)
 
                 # get [v_i,v_j] for edge (i,j)
                 v = [int(nodes[edge[k]] in error_nodes) for k in range(2)]
-                
+
                 # update averages
                 av_vv += v[0]*v[1]*results[string]
                 for k in range(2):
                     av_v[k] += v[k]*results[string]
-                av_xor += (v[0]!=v[1])*results[string]        
-                
+                av_xor += (v[0] != v[1])*results[string]
+
             # normalize
             av_vv /= shots
             av_v[0] /= shots
             av_v[1] /= shots
             av_xor /= shots
-        
+
             x = (av_vv - av_v[0]*av_v[1])/(1-2*av_xor)
-            error_probs[nodes[edge[0]],nodes[edge[1]]] = max(0,0.5 - np.sqrt(0.25-x))
-                
+            error_probs[nodes[edge[0]], nodes[edge[1]]] = max(0, 0.5 - np.sqrt(0.25-x))
+
         return error_probs
 
     def weight_syndrome_graph(self, results):
@@ -229,16 +229,17 @@ class GraphDecoder():
         """
 
         error_probs = self.get_error_probs(results)
-        
+
         for edge in self.S.edge_list():
             p = error_probs[edge]
             self.S.remove_edge(edge[0], edge[1])
-            if p==0:
+            if p == 0:
                 w = np.inf
-            elif 1-p==1:
+            elif 1-p == 1:
                 w = -np.inf
             else:
                 w = -np.log(p/(1-p))
+            self.S.update_edge(edge[0], edge[1], w)
             self.S.add_edge(edge[0], edge[1], w)
 
     def make_error_graph(self, string, subgraphs=None):
