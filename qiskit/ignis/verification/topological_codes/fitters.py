@@ -159,6 +159,62 @@ class GraphDecoder():
 
         return S
 
+    def get_error_probs(self, results):
+        """Generate probabilities of single error events from result counts.
+
+        Args:
+            results (dict): A results dictionary, as produced by the
+            `process_results` method of the code.
+            
+        Returns:
+            error_probs (dict): Keys are the edges for specific error
+            events, and values are the calculated probabilities
+
+        Additional information:
+            Uses `results` to estimate the probability of the errors that
+            create the pairs of nodes specified by the edge.
+            Calculation done using the method of Spitz, et al.
+            https://doi.org/10.1002/qute.201800012
+        """
+        
+        results = results['0']
+        shots = sum(results.values())
+        
+        nodes = self.S.nodes()
+        
+        error_probs = {}
+        for edge in self.S.edge_list():
+        
+            # initialize averages
+            av_vv = 0 # v_ij
+            av_v = [0,0] # [v_,v_j]
+            av_xor = 0 # v_{i xor j}
+        
+            for string in results:
+                
+                # list of i for which v_i=1
+                error_nodes = self._string2nodes(string)
+
+                # get [v_i,v_j] for edge (i,j)
+                v = [int(nodes[edge[k]] in error_nodes) for k in range(2)]
+                
+                # update averages
+                av_vv += v[0]*v[1]*results[string]
+                for k in range(2):
+                    av_v[k] += v[k]*results[string]
+                av_xor += (v[0]!=v[1])*results[string]        
+                
+            # normalize
+            av_vv /= shots
+            av_v[0] /= shots
+            av_v[1] /= shots
+            av_xor /= shots
+        
+            x = (av_vv - av_v[0]*av_v[1])/(1-2*av_xor)
+            error_probs[edge] = max(0,0.5 - np.sqrt(0.25-x))
+                
+        return error_probs
+
     def weight_syndrome_graph(self, results):
         """Generate weighted syndrome graph from result counts.
 
@@ -172,33 +228,18 @@ class GraphDecoder():
             replaced with the corresponding -log(p/(1-p).
         """
 
-        results = results['0']
-
-        count = {element: {edge: 0 for edge in self.S.edges}
-                 for element in ['00', '01', '10', '11']}
-
-        for string in results:
-
-            nodes = self._string2nodes(string)
-
-            for edge in self.S.edge_list():
-                element = ''
-                for j in range(2):
-                    if edge[j] in nodes:
-                        element += '1'
-                    else:
-                        element += '0'
-                count[element][edge] += results[string]
-
+        error_probs = self.get_error_probs(results)
+        
         for edge in self.S.edge_list():
-            ratios = []
-            for elements in [('00', '11'), ('11', '00'),
-                             ('01', '10'), ('10', '01')]:
-                if count[elements[1]][edge] > 0:
-                    ratio = count[elements[0]][edge]/count[elements[1]][edge]
-                    ratios.append(ratio)
+            p = error_probs[edge]
             self.S.remove_edge(edge[0], edge[1])
-            self.S.add_edge(edge[0], edge[1], -np.log(min(ratios)))
+            if p==0:
+                w = np.inf
+            elif 1-p==1:
+                w = -np.inf
+            else:
+                w = -np.log(p/(1-p))
+            self.S.add_edge(edge[0], edge[1], w)
 
     def make_error_graph(self, string, subgraphs=None):
         """
