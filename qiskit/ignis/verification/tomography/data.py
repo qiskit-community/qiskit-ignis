@@ -57,7 +57,7 @@ def marginal_counts(counts: Dict[str, int],
 
     # Check if we do not need to marginalize. In this case we just trim
     # whitespace from count keys
-    if num_qubits == len(meas_qubits) or (meas_qubits is True):
+    if (meas_qubits is True) or (num_qubits == len(meas_qubits)):
         ret = {}
         for key, val in counts.items():
             key = key.replace(' ', '')
@@ -73,7 +73,7 @@ def marginal_counts(counts: Dict[str, int],
     # Generate bitstring keys for measured qubits
     meas_keys = count_keys(len(qubits))
 
-    # Get regex match strings for suming outcomes of other qubits
+    # Get regex match strings for summing outcomes of other qubits
     rgx = []
     for key in meas_keys:
         def helper(x, y):

@@ -13,8 +13,7 @@
 # that they have been altered from the originals.
 
 
-"""
-In this package, there are three modules, linear.py, parallellize.py,
+"""In this package, there are three modules, linear.py, parallellize.py,
 and analysis.py. Once Terra completes design for circuit repository,
 it may be more suitable to move it there. The most important module,
 parallellize.py provides methods to parallellize CNOT gates in the
@@ -27,6 +26,44 @@ and Quantum Tomography.  Nevertheless, the module linear.py provides
 the linear preparation analogous of parallelize.py. The module
 analysis.py provides several miscellaneous tools for analysis of the
 GHZ State (most notably, Fourier Analysis)
+
+==========================================================
+Entanglement (:mod:`qiskit.ignis.verification.entanglement`)
+==========================================================
+
+.. currentmodule:: qiskit.ignis.verification.entanglement
+
+Linear GHZ
+==========
+
+.. autosummary::
+    :toctree:
+
+   get_ghz_simple
+   get_ghz_mqc
+   get_ghz_mqc_para
+   get_ghz_po
+   get_ghz_po_para
+
+Parallel GHZ
+============
+.. autosummary::
+    :toctree:
+
+   BConfig
+
+Plotter functions
+=================
+
+.. autosummary::
+    :toctree:
+
+   ordered_list_generator
+   composite_pauli_z
+   composite_pauli_z_expvalue
+   Plotter
+   rho_to_fidelity
+
 """
 
 # Entanglement functions

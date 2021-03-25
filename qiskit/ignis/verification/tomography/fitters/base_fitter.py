@@ -29,8 +29,8 @@ from qiskit import QuantumCircuit
 from qiskit.result import Result
 from ..basis import TomographyBasis, default_basis
 from ..data import marginal_counts, combine_counts, count_keys
-from .cvx_fit import cvxpy, cvx_fit
 from .lstsq_fit import lstsq_fit
+from .cvx_fit import cvx_fit, _HAS_CVX
 
 # Create logger
 logger = logging.getLogger(__name__)
@@ -39,8 +39,11 @@ logger = logging.getLogger(__name__)
 class TomographyFitter:
     """Base maximum-likelihood estimate tomography fitter class"""
 
+    _HAS_SDP_SOLVER = None
+    _HAS_SDP_SOLVER_NOT_SCS = False
+
     def __init__(self,
-                 result: Result,
+                 result: Union[Result, List[Result]],
                  circuits: Union[List[QuantumCircuit], List[str]],
                  meas_basis: Union[TomographyBasis, str] = 'Pauli',
                  prep_basis: Union[TomographyBasis, str] = 'Pauli'):
@@ -67,6 +70,8 @@ class TomographyFitter:
 
         # Add initial data
         self._data = {}
+        if isinstance(result, Result):
+            result = [result]  # unify results handling
         self.add_data(result, circuits)
 
     def set_measure_basis(self, basis: Union[TomographyBasis, str]):
@@ -116,12 +121,14 @@ class TomographyFitter:
             **kwargs) -> np.array:
         r"""Reconstruct a quantum state using CVXPY convex optimization.
 
-                **Fitter method**
+        **Fitter method**
 
-        The ``cvx`` fitter method used CVXPY convex optimization package.
-        The ``lstsq`` method uses least-squares fitting (linear inversion).
-        The ``auto`` method will use 'cvx' if the CVXPY package is found on
-        the system, otherwise it will default to 'lstsq'.
+        The ``'cvx'`` fitter method uses the CVXPY convex optimization package
+        with a SDP solver.
+        The ``'lstsq'`` method uses least-squares fitting.
+        The ``'auto'`` method will use ``'cvx'`` if the both the CVXPY and a suitable
+        SDP solver packages are found on the system, otherwise it will default
+        to ``'lstsq'``.
 
         **Objective function**
 
@@ -161,9 +168,14 @@ class TomographyFitter:
         **CVXPY Solvers:**
 
         Various solvers can be called in CVXPY using the `solver` keyword
-        argument. See the `CVXPY documentation
+        argument. If ``psd=True`` an SDP solver is required other an SOCP
+        solver is required. See the `CVXPY documentation
         <https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options>`_
         for more information on solvers.
+        Note that the default SDP solver ('SCS') distributed
+        with CVXPY will not be used for the ``'auto'`` method due its reduced
+        accuracy compared to other solvers. When using the ``'cvx'`` method we
+        strongly recommend installing one of the other supported SDP solvers.
 
         References:
 
@@ -195,10 +207,15 @@ class TomographyFitter:
                                                         beta)
         # Choose automatic method
         if method == 'auto':
-            if cvxpy is None:
-                method = 'lstsq'
-            else:
+            self._check_for_sdp_solver()
+            if self._HAS_SDP_SOLVER_NOT_SCS:
+                # We don't use the SCS solver for automatic method as it has
+                # lower accuracy than the other supported SDP solvers which
+                # typically results in the returned matrix not being
+                # completely positive.
                 method = 'cvx'
+            else:
+                method = 'lstsq'
         if method == 'lstsq':
             return lstsq_fit(data, basis_matrix,
                              weights=weights,
@@ -223,23 +240,39 @@ class TomographyFitter:
         """
         return self._data
 
-    def add_data(self, result, circuits):
+    def add_data(self,
+                 results: List[Result],
+                 circuits: List[Union[QuantumCircuit, str]]
+                 ):
         """Add tomography data from a Qiskit Result object.
 
         Args:
-            result (Result): a Qiskit Result object obtained from executing
-                tomography circuits.
-            circuits (list): a list of circuits or circuit names to extract
+            results: The results obtained from executing tomography circuits.
+            circuits: circuits or circuit names to extract
                 count information from the result object.
+
+        Raises:
+            QiskitError: In case some of the tomography data is not found
+                in the results
         """
-        if len(circuits[0].cregs) == 1:
+        if len(circuits) == 0:
+            raise QiskitError("No circuit data given")
+
+        if isinstance(circuits[0], str) or len(circuits[0].cregs) == 1:
             marginalize = False
         else:
             marginalize = True
 
         # Process measurement counts into probabilities
         for circ in circuits:
-            counts = result.get_counts(circ)
+            counts = None
+            for result in results:
+                try:
+                    counts = result.get_counts(circ)
+                except QiskitError:
+                    pass
+            if counts is None:
+                raise QiskitError("Result for {} not found".format(circ.name))
             if isinstance(circ, str):
                 tup = literal_eval(circ)
             elif isinstance(circ, QuantumCircuit):
@@ -486,3 +519,30 @@ class TomographyFitter:
                 op = np.kron(op, meas_matrix_fn(m, outcome))
             meas_ops.append(op)
         return meas_ops
+
+    @classmethod
+    def _check_for_sdp_solver(cls):
+        """Check if CVXPY solver is available"""
+        if cls._HAS_SDP_SOLVER is None:
+            if _HAS_CVX:
+                # pylint:disable=import-error
+                import cvxpy
+                solvers = cvxpy.installed_solvers()
+                # Check for other SDP solvers cvxpy supports
+                if 'CVXOPT' in solvers or 'MOSEK' in solvers:
+                    cls._HAS_SDP_SOLVER_NOT_SCS = True
+                    cls._HAS_SDP_SOLVER = True
+                    return
+                if 'SCS' in solvers:
+                    # Try example problem to see if built with BLAS
+                    # SCS solver cannot solver larger than 2x2 matrix
+                    # problems without BLAS
+                    try:
+                        var = cvxpy.Variable((5, 5), PSD=True)
+                        obj = cvxpy.Minimize(cvxpy.norm(var))
+                        cvxpy.Problem(obj).solve(solver='SCS')
+                        cls._HAS_SDP_SOLVER = True
+                        return
+                    except cvxpy.error.SolverError:
+                        pass
+            cls._HAS_SDP_SOLVER = False

@@ -21,8 +21,10 @@ import sys
 requirements = [
     "numpy>=1.13",
     "qiskit-terra>=0.13.0",
+    "retworkx>=0.8.0",
     "scipy>=0.19,!=0.19.1",
     "setuptools>=40.1.0",
+    "scikit-learn>=0.17",
 ]
 
 
@@ -43,13 +45,21 @@ version_path = os.path.abspath(
 with open(version_path, 'r') as fd:
     version = fd.read().rstrip()
 
+README_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                           'README.md')
+with open(README_PATH) as readme_file:
+    README = readme_file.read()
+
+
 setuptools.setup(
     name="qiskit-ignis",
     version=version,
     description="Qiskit tools for quantum information science",
+    long_description=README,
+    long_description_content_type='text/markdown',
     url="https://github.com/Qiskit/qiskit-ignis",
     author="Qiskit Development Team",
-    author_email="qiskit@qiskit.org",
+    author_email="hello@qiskit.org",
     license="Apache 2.0",
     classifiers=[
         "Environment :: Console",
@@ -60,16 +70,21 @@ setuptools.setup(
         "Operating System :: MacOS",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Scientific/Engineering",
     ],
     keywords="qiskit sdk quantum",
     packages=setuptools.find_namespace_packages(exclude=['test*']),
+    extras_require={
+        'visualization': ['matplotlib>=2.1'],
+        'cvx': ['cvxpy>=1.0.15'],
+        'jit': ['numba'],
+    },
     install_requires=requirements,
     include_package_data=True,
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     zip_safe=False
 )

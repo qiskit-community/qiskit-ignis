@@ -16,13 +16,18 @@
 Generates quantum volume circuits
 """
 
+import copy
+import itertools
+import warnings
+
 import numpy as np
-import qiskit
-from qiskit.quantum_info.random import random_unitary
+
+from qiskit.circuit.library import QuantumVolume
+from qiskit.circuit.quantumcircuit import QuantumCircuit
 
 
-def qv_circuits(qubit_lists=None, ntrials=1,
-                qr=None, cr=None):
+def qv_circuits(qubit_lists, ntrials=1,
+                qr=None, cr=None, seed=None):
     """
     Return a list of square quantum volume circuits (depth=width)
 
@@ -36,6 +41,7 @@ def qv_circuits(qubit_lists=None, ntrials=1,
         ntrials (int): number of random iterations
         qr (QuantumRegister): quantum register to act on (if None one is created)
         cr (ClassicalRegister): classical register to measure to (if None one is created)
+        seed (int): An optional RNG seed to use for the generated circuit
 
     Returns:
         tuple: A tuple of the type (``circuits``, ``circuits_nomeas``) wheere:
@@ -43,57 +49,56 @@ def qv_circuits(qubit_lists=None, ntrials=1,
             (separate list for each trial) and `` circuitss_nomeas`` is the
             same circuits but with no measurements for the ideal simulation
     """
+    if qr is not None:
+        warnings.warn("Passing in a custom quantum register is deprecated and "
+                      "will be removed in a future release. This argument "
+                      "never had any effect.",
+                      DeprecationWarning)
+
+    if cr is not None:
+        warnings.warn("Passing in a custom classical register is deprecated "
+                      "and will be removed in a future release. This argument "
+                      "never had any effect.",
+                      DeprecationWarning)
+    for qubit_list in qubit_lists:
+        count = itertools.count(qubit_list[0])
+        for qubit in qubit_list:
+            if qubit != next(count):
+                warnings.warn("Using a qubit list to map a virtual circuit to "
+                              "a physical layout is deprecated and will be "
+                              "removed in a future release. Instead use "
+                              "''qiskit.transpile' with the "
+                              "'initial_layout' parameter",
+                              DeprecationWarning)
+    depth_list = [len(qubit_list) for qubit_list in qubit_lists]
+
+    if seed:
+        rng = np.random.default_rng(seed)
+    else:
+        _seed = None
 
     circuits = [[] for e in range(ntrials)]
     circuits_nomeas = [[] for e in range(ntrials)]
 
-    # get the largest qubit number out of all the lists (for setting the
-    # register)
-
-    depth_list = [len(qubit_list) for qubit_list in qubit_lists]
-
-    # go through for each trial
     for trial in range(ntrials):
-
-        # go through for each depth in the depth list
         for depthidx, depth in enumerate(depth_list):
-
             n_q_max = np.max(qubit_lists[depthidx])
-
-            qr = qiskit.QuantumRegister(int(n_q_max+1), 'qr')
-            qr2 = qiskit.QuantumRegister(int(depth), 'qr')
-            cr = qiskit.ClassicalRegister(int(depth), 'cr')
-
-            qc = qiskit.QuantumCircuit(qr, cr)
-            qc2 = qiskit.QuantumCircuit(qr2, cr)
-
+            if seed:
+                _seed = rng.integers(1000)
+            qv_circ = QuantumVolume(depth, depth, seed=_seed)
+            qc2 = copy.deepcopy(qv_circ)
+            # TODO: Remove this when we remove support for doing pseudo-layout
+            # via qubit lists
+            if n_q_max != depth:
+                qc = QuantumCircuit(int(n_q_max + 1))
+                qc.compose(qv_circ, qubit_lists[depthidx], inplace=True)
+            else:
+                qc = qv_circ
+            qc.measure_active()
             qc.name = 'qv_depth_%d_trial_%d' % (depth, trial)
             qc2.name = qc.name
 
-            # build the circuit
-            for _ in range(depth):
-                # Generate uniformly random permutation Pj of [0...n-1]
-                perm = np.random.permutation(depth)
-                # For each pair p in Pj, generate Haar random SU(4)
-                for k in range(int(np.floor(depth/2))):
-                    unitary = random_unitary(4)
-                    pair = int(perm[2*k]), int(perm[2*k+1])
-                    qc.append(unitary, [qr[qubit_lists[depthidx][pair[0]]],
-                                        qr[qubit_lists[depthidx][pair[1]]]])
-                    qc2.append(unitary, [qr2[pair[0]],
-                                         qr2[pair[1]]])
-
-            # append an id to all the qubits in the ideal circuits
-            # to prevent a truncation error in the statevector
-            # simulators
-            qc2.u1(0, qr2)
-
             circuits_nomeas[trial].append(qc2)
-
-            # add measurement
-            for qind, qubit in enumerate(qubit_lists[depthidx]):
-                qc.measure(qr[qubit], cr[qind])
-
             circuits[trial].append(qc)
 
     return circuits, circuits_nomeas

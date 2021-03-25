@@ -43,11 +43,7 @@ as well as performing interleaved RB, purity RB and RB on the non-Clifford CNOT-
    InterleavedRBFitter
    PurityRBFitter
    CNOTDihedralRBFitter
-   BasicUtils
-   Clifford
-   CliffordUtils
    CNOTDihedral
-   DihedralUtils
    count_gates
    gates_per_clifford
    calculate_1q_epg
@@ -66,15 +62,34 @@ Tomography
 
    state_tomography_circuits
    process_tomography_circuits
+   gateset_tomography_circuits
    basis
    StateTomographyFitter
    ProcessTomographyFitter
+   GatesetTomographyFitter
    TomographyFitter
    marginal_counts
    combine_counts
    expectation_counts
    count_keys
 
+Entanglement
+============
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   BConfig
+   get_ghz_simple
+   get_ghz_mqc
+   get_ghz_mqc_para
+   get_ghz_po
+   get_ghz_po_para
+   ordered_list_generator
+   composite_pauli_z
+   composite_pauli_z_expvalue
+   Plotter
+   rho_to_fidelity
 
 Topological Codes
 =================
@@ -98,11 +113,9 @@ Accreditation
    AccreditationFitter
    QOTP
    QOTPCorrectCounts
-
 """
 from .quantum_volume import qv_circuits, QVFitter
-from .randomized_benchmarking import (Clifford, BasicUtils, CliffordUtils,
-                                      CNOTDihedral, DihedralUtils,
+from .randomized_benchmarking import (CNOTDihedral,
                                       randomized_benchmarking_seq,
                                       RBFitter, InterleavedRBFitter,
                                       PurityRBFitter, CNOTDihedralRBFitter,
@@ -114,10 +127,25 @@ from .topological_codes import (RepetitionCode, GraphDecoder,
                                 lookuptable_decoding,
                                 postselection_decoding)
 from .tomography import (state_tomography_circuits,
-                         process_tomography_circuits, basis,
+                         process_tomography_circuits,
+                         gateset_tomography_circuits, basis,
                          StateTomographyFitter,
                          ProcessTomographyFitter,
+                         GatesetTomographyFitter,
                          TomographyFitter,
                          marginal_counts, combine_counts,
                          expectation_counts, count_keys)
 from .accreditation import AccreditationCircuits, AccreditationFitter, QOTP, QOTPCorrectCounts
+
+from .entanglement import (ordered_list_generator,
+                           composite_pauli_z,
+                           composite_pauli_z_expvalue,
+                           Plotter,
+                           rho_to_fidelity,
+                           get_measurement_circ,
+                           get_ghz_simple,
+                           get_ghz_mqc,
+                           get_ghz_mqc_para,
+                           get_ghz_po,
+                           get_ghz_po_para,
+                           BConfig)

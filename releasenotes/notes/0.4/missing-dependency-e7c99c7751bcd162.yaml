@@ -1,0 +1,10 @@
+---
+upgrade:
+  - |
+    A new requirement `scikit-learn <https://scikit-learn.org/stable/>`__ has
+    been added to the requirements list. This dependency was added in the 0.3.0
+    release but wasn't properly exposed as a dependency in that release. This
+    would lead to an ``ImportError`` if the
+    :mod:`qiskit.ignis.measurement.discriminator.iq_discriminators` module was
+    imported. This is now correctly listed as a dependency so that
+    ``scikit-learn`` will be installed with qiskit-ignis.

@@ -30,7 +30,7 @@ from qiskit.exceptions import QiskitError
 from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
 from qiskit.ignis.measurement.discriminator.iq_discriminators import \
     LinearIQDiscriminator, SklearnIQDiscriminator
-from qiskit.ignis.mitigation.measurement import circuits
+from qiskit.ignis.mitigation.measurement import tensored_meas_cal
 from qiskit.result.models import ExperimentResultData
 
 
@@ -48,7 +48,7 @@ class BaseTestIQDiscriminator(unittest.TestCase):
         self.shots = 52
         self.qubits = [0, 1]
 
-        meas_cal, _ = circuits.tensored_meas_cal([[0], [1]])
+        meas_cal, _ = tensored_meas_cal([[0], [1]])
 
         backend = Aer.get_backend('qasm_simulator')
         job = qiskit.execute(meas_cal, backend=backend, shots=self.shots,

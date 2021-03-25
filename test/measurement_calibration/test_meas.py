@@ -31,15 +31,21 @@ expected (equally distributed) result
 
 import unittest
 import os
-import pickle
+import json
+from test.measurement_calibration.generate_data \
+    import tensored_calib_circ_creation, meas_calib_circ_creation
 import numpy as np
 import qiskit
-from qiskit import QuantumCircuit, ClassicalRegister, Aer
+from qiskit.result.result import Result
+from qiskit import Aer
 from qiskit.ignis.mitigation.measurement \
      import (CompleteMeasFitter, TensoredMeasFitter,
              complete_meas_cal, tensored_meas_cal,
              MeasurementFilter)
 from qiskit.ignis.verification.tomography import count_keys
+
+# fixed seed for tests - for both simulator and transpiler
+SEED = 42
 
 
 class TestMeasCal(unittest.TestCase):
@@ -177,20 +183,15 @@ class TestMeasCal(unittest.TestCase):
         """Test an execution on a circuit."""
         print("Testing measurement calibration on a circuit")
 
-        # Choose 3 qubits
-        q1 = 1
-        q2 = 2
-        q3 = 3
-
-        # Generate the quantum register according to the pattern
         # Generate the calibration circuits
-        meas_calibs, state_labels = \
-            complete_meas_cal(qubit_list=[1, 2, 3], qr=5)
+        meas_calibs, state_labels, ghz = meas_calib_circ_creation()
 
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
         job = qiskit.execute(meas_calibs, backend=backend,
-                             shots=self.shots)
+                             shots=self.shots,
+                             seed_simulator=SEED,
+                             seed_transpiler=SEED)
         cal_results = job.result()
 
         # Make a calibration matrix
@@ -198,17 +199,10 @@ class TestMeasCal(unittest.TestCase):
         # Calculate the fidelity
         fidelity = meas_cal.readout_fidelity()
 
-        # Make a 3Q GHZ state
-        ghz = QuantumCircuit(5, 3)
-        ghz.h(q1)
-        ghz.cx(q1, q2)
-        ghz.cx(q2, q3)
-        ghz.measure(q1, 0)
-        ghz.measure(q2, 1)
-        ghz.measure(q3, 2)
-
         job = qiskit.execute([ghz], backend=backend,
-                             shots=self.shots)
+                             shots=self.shots,
+                             seed_simulator=SEED,
+                             seed_transpiler=SEED)
         results = job.result()
 
         # Predicted equally distributed results
@@ -250,11 +244,10 @@ class TestMeasCal(unittest.TestCase):
         print("Testing MeasurementFitter with noise")
 
         # pre-generated results with noise
-        # load from pickled file
-        fo = open(os.path.join(
-            os.path.dirname(__file__), 'test_meas_results.pkl'), 'rb')
-        tests = pickle.load(fo)
-        fo.close()
+        # load from json file
+        with open(os.path.join(
+                os.path.dirname(__file__), 'test_meas_results.json'), "r") as saved_file:
+            tests = json.load(saved_file)
 
         # Set the state labels
         state_labels = ['000', '001', '010', '011',
@@ -301,6 +294,7 @@ class TestMeasCal(unittest.TestCase):
         """Test ideal execution, without noise."""
 
         mit_pattern = [[1, 2], [3, 4, 5], [6]]
+        meas_layout = [1, 2, 3, 4, 5, 6]
 
         # Generate the calibration circuits
         meas_calibs, _ = tensored_meas_cal(mit_pattern=mit_pattern)
@@ -339,9 +333,11 @@ class TestMeasCal(unittest.TestCase):
         # Apply the calibration matrix to results
         # in list and dict forms using different methods
         results_dict_1 = meas_filter.apply(results_dict,
-                                           method='least_squares')
+                                           method='least_squares',
+                                           meas_layout=meas_layout)
         results_dict_0 = meas_filter.apply(results_dict,
-                                           method='pseudo_inverse')
+                                           method='pseudo_inverse',
+                                           meas_layout=meas_layout)
 
         # Assert that the results are equally distributed
         self.assertDictEqual(results_dict, results_dict_0)
@@ -353,16 +349,15 @@ class TestMeasCal(unittest.TestCase):
     def test_tensored_meas_cal_on_circuit(self):
         """Test an execution on a circuit."""
 
-        mit_pattern = [[2], [4, 1]]
-
-        qr = qiskit.QuantumRegister(5)
         # Generate the calibration circuits
-        meas_calibs, _ = tensored_meas_cal(mit_pattern, qr=qr)
+        meas_calibs, mit_pattern, ghz, meas_layout = tensored_calib_circ_creation()
 
         # Run the calibration circuits
         backend = Aer.get_backend('qasm_simulator')
         cal_results = qiskit.execute(meas_calibs, backend=backend,
-                                     shots=self.shots).result()
+                                     shots=self.shots,
+                                     seed_simulator=SEED,
+                                     seed_transpiler=SEED).result()
 
         # Make a calibration matrix
         meas_cal = TensoredMeasFitter(cal_results,
@@ -370,18 +365,10 @@ class TestMeasCal(unittest.TestCase):
         # Calculate the fidelity
         fidelity = meas_cal.readout_fidelity(0)*meas_cal.readout_fidelity(1)
 
-        # Make a 3Q GHZ state
-        cr = ClassicalRegister(3)
-        ghz = QuantumCircuit(qr, cr)
-        ghz.h(qr[2])
-        ghz.cx(qr[2], qr[4])
-        ghz.cx(qr[2], qr[1])
-        ghz.measure(qr[2], cr[0])
-        ghz.measure(qr[4], cr[1])
-        ghz.measure(qr[1], cr[2])
-
         results = qiskit.execute([ghz], backend=backend,
-                                 shots=self.shots).result()
+                                 shots=self.shots,
+                                 seed_simulator=SEED,
+                                 seed_transpiler=SEED).result()
 
         # Predicted equally distributed results
         predicted_results = {'000': 0.5,
@@ -391,9 +378,9 @@ class TestMeasCal(unittest.TestCase):
 
         # Calculate the results after mitigation
         output_results_pseudo_inverse = meas_filter.apply(
-            results, method='pseudo_inverse').get_counts(0)
+            results, method='pseudo_inverse', meas_layout=meas_layout).get_counts(0)
         output_results_least_square = meas_filter.apply(
-            results, method='least_squares').get_counts(0)
+            results, method='least_squares', meas_layout=meas_layout).get_counts(0)
 
         # Compare with expected fidelity and expected results
         self.assertAlmostEqual(fidelity, 1.0)
@@ -417,91 +404,95 @@ class TestMeasCal(unittest.TestCase):
             predicted_results['111'],
             places=1)
 
-    @unittest.skip('Pickle files are no longer valid')
     def test_tensored_meas_fitter_with_noise(self):
         """Test the TensoredFitter with noise."""
 
         # pre-generated results with noise
-        # load from pickled file
-        fo = open(os.path.join(
-            os.path.dirname(__file__), 'test_tensored_meas_results.pkl'), 'rb')
-        pickled_info = pickle.load(fo)
-        fo.close()
+        # load from json file
+        with open(os.path.join(
+                os.path.dirname(__file__), 'test_tensored_meas_results.json'), "r") as saved_file:
+            saved_info = json.load(saved_file)
+        saved_info['cal_results'] = Result.from_dict(saved_info['cal_results'])
+        saved_info['results'] = Result.from_dict(saved_info['results'])
 
         meas_cal = TensoredMeasFitter(
-            pickled_info['cal_results'],
-            mit_pattern=pickled_info['mit_pattern'])
+            saved_info['cal_results'],
+            mit_pattern=saved_info['mit_pattern'])
 
         # Calculate the fidelity
         fidelity = meas_cal.readout_fidelity(0)*meas_cal.readout_fidelity(1)
         # Compare with expected fidelity and expected results
         self.assertAlmostEqual(fidelity,
-                               pickled_info['fidelity'],
+                               saved_info['fidelity'],
                                places=0)
 
         meas_filter = meas_cal.filter
 
         # Calculate the results after mitigation
         output_results_pseudo_inverse = meas_filter.apply(
-            pickled_info['results'].get_counts(0), method='pseudo_inverse')
+            saved_info['results'].get_counts(0),
+            method='pseudo_inverse',
+            meas_layout=saved_info['meas_layout'])
         output_results_least_square = meas_filter.apply(
-            pickled_info['results'], method='least_squares')
+            saved_info['results'], method='least_squares', meas_layout=saved_info['meas_layout'])
 
         self.assertAlmostEqual(
             output_results_pseudo_inverse['000'],
-            pickled_info['results_pseudo_inverse']['000'], places=0)
+            saved_info['results_pseudo_inverse']['000'], places=0)
 
         self.assertAlmostEqual(
             output_results_least_square.get_counts(0)['000'],
-            pickled_info['results_least_square']['000'], places=0)
+            saved_info['results_least_square']['000'], places=0)
 
         self.assertAlmostEqual(
             output_results_pseudo_inverse['111'],
-            pickled_info['results_pseudo_inverse']['111'], places=0)
+            saved_info['results_pseudo_inverse']['111'], places=0)
 
         self.assertAlmostEqual(
             output_results_least_square.get_counts(0)['111'],
-            pickled_info['results_least_square']['111'], places=0)
+            saved_info['results_least_square']['111'], places=0)
 
         substates_list = []
-        for qubit_list in pickled_info['mit_pattern']:
+        for qubit_list in saved_info['mit_pattern']:
             substates_list.append(count_keys(len(qubit_list))[::-1])
 
         fitter_other_order = TensoredMeasFitter(
-            pickled_info['cal_results'],
+            saved_info['cal_results'],
             substate_labels_list=substates_list,
-            mit_pattern=pickled_info['mit_pattern'])
+            mit_pattern=saved_info['mit_pattern'])
 
         fidelity = fitter_other_order.readout_fidelity(0) * \
             meas_cal.readout_fidelity(1)
 
         self.assertAlmostEqual(fidelity,
-                               pickled_info['fidelity'],
+                               saved_info['fidelity'],
                                places=0)
 
         meas_filter = fitter_other_order.filter
 
         # Calculate the results after mitigation
         output_results_pseudo_inverse = meas_filter.apply(
-            pickled_info['results'].get_counts(0), method='pseudo_inverse')
+            saved_info['results'].get_counts(0),
+            method='pseudo_inverse',
+            meas_layout=saved_info['meas_layout'])
         output_results_least_square = meas_filter.apply(
-            pickled_info['results'], method='least_squares')
+            saved_info['results'], method='least_squares', meas_layout=saved_info['meas_layout'])
 
         self.assertAlmostEqual(
             output_results_pseudo_inverse['000'],
-            pickled_info['results_pseudo_inverse']['000'], places=0)
+            saved_info['results_pseudo_inverse']['000'], places=0)
 
         self.assertAlmostEqual(
             output_results_least_square.get_counts(0)['000'],
-            pickled_info['results_least_square']['000'], places=0)
+            saved_info['results_least_square']['000'], places=0)
 
         self.assertAlmostEqual(
             output_results_pseudo_inverse['111'],
-            pickled_info['results_pseudo_inverse']['111'], places=0)
+            saved_info['results_pseudo_inverse']['111'], places=0)
 
         self.assertAlmostEqual(
             output_results_least_square.get_counts(0)['111'],
-            pickled_info['results_least_square']['111'], places=0)
+            saved_info['results_least_square']['111'], places=0)
 
 
 if __name__ == '__main__':
