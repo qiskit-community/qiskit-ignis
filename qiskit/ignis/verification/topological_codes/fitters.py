@@ -211,7 +211,10 @@ class GraphDecoder():
             av_v[1] /= shots
             av_xor /= shots
 
-            x = (av_vv - av_v[0]*av_v[1])/(1-2*av_xor)
+            if (1 - 2*av_xor) != 0:
+                x = (av_vv - av_v[0]*av_v[1])/(1 - 2*av_xor)
+            else:
+                x = np.nan
             error_probs[nodes[edge[0]], nodes[edge[1]]] = max(0, 0.5 - np.sqrt(0.25-x))
 
         return error_probs
@@ -231,8 +234,9 @@ class GraphDecoder():
 
         error_probs = self.get_error_probs(results)
 
+        nodes = self.S.nodes()
         for edge in self.S.edge_list():
-            p = error_probs[edge]
+            p = error_probs[nodes[edge[0]], nodes[edge[1]]]
             if p == 0:
                 w = np.inf
             elif 1-p == 1:
