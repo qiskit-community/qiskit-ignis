@@ -149,6 +149,7 @@ class TestCodes(unittest.TestCase):
                     p_down or post_probs[(d, log)] == 0.0, p_error)
 
     def test_weight(self):
+        """Error weighting code test."""
         error = "Error: Calculated error probability not correct for "\
             + "test result '0 0  11 00' in d=3, T=1 repetition code."
         code = RepetitionCode(3, 1)
