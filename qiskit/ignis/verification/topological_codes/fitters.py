@@ -211,7 +211,7 @@ class GraphDecoder():
             av_xor /= shots
         
             x = (av_vv - av_v[0]*av_v[1])/(1-2*av_xor)
-            error_probs[edge] = max(0,0.5 - np.sqrt(0.25-x))
+            error_probs[nodes[edge[0]],nodes[edge[1]]] = max(0,0.5 - np.sqrt(0.25-x))
                 
         return error_probs
 
