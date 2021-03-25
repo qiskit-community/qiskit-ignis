@@ -20,6 +20,7 @@ preparation analogous of parallelize.py.
 from typing import Tuple, List
 from qiskit.circuit import ClassicalRegister, QuantumRegister, Parameter
 from qiskit.circuit import QuantumCircuit
+from qiskit.circuit.library import U1Gate, U2Gate
 
 
 def get_measurement_circ(n: int,
@@ -106,7 +107,7 @@ def get_ghz_mqc(n: int,
     circ = get_ghz_simple(n, measure=False)
     circinv = circ.inverse()
     circ.barrier()
-    circ.u1(delta, q)
+    circ.append(U1Gate(delta), [q])
     circ.x(q)
     circ.barrier()
     circ += circinv
@@ -135,7 +136,7 @@ def get_ghz_mqc_para(n: int,
     delta = Parameter('t')
     circinv = circ.inverse()
     circ.barrier()
-    circ.u1(delta, q)
+    circ.append(U1Gate(delta), [q])
     circ.x(q)
     circ.barrier()
     circ += circinv
@@ -161,7 +162,7 @@ def get_ghz_po(n: int, delta: float) -> QuantumCircuit:
     circ = get_ghz_simple(n, measure=False)
 
     circ.barrier()
-    circ.u2(delta, -delta, q)
+    circ.append(U2Gate(delta, -delta), [q])
     circ.barrier()
     meas = get_measurement_circ(n, 'q', 'c', True)
     circ = circ + meas
@@ -187,7 +188,7 @@ def get_ghz_po_para(n: int) -> Tuple[QuantumCircuit, List[Parameter]]:
     circ = get_ghz_simple(n, measure=False)
 
     circ.barrier()
-    circ.u2(delta, deltaneg, q)
+    circ.append(U2Gate(delta, deltaneg), [q])
     meas = get_measurement_circ(n, 'q', 'c', True)
     circ = circ + meas
     return circ, [delta, deltaneg]

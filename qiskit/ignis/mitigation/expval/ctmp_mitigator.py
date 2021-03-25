@@ -131,8 +131,8 @@ class CTMPExpvalMeasMitigator(BaseExpvalMeasMitigator):
         gamma = self.noise_strength(qubits)
         bmat = self._sampling_matrix(qubits)
         values = bmat.data
-        indices = np.asarray(bmat.indices, dtype=np.int)
-        indptrs = np.asarray(bmat.indptr, dtype=np.int)
+        indices = np.asarray(bmat.indices, dtype=int)
+        indptrs = np.asarray(bmat.indptr, dtype=int)
 
         # Set a minimum number of CTMP samples
         shots = sum(counts.values())
@@ -184,7 +184,7 @@ class CTMPExpvalMeasMitigator(BaseExpvalMeasMitigator):
         if qubits not in self._generator_mats:
             # Construct G from subset generators
             qubits_set = set(qubits)
-            g_mat = sps.coo_matrix(2 * (2**len(qubits),), dtype=np.float)
+            g_mat = sps.coo_matrix(2 * (2**len(qubits),), dtype=float)
             for gen, rate in zip(self._generators, self._rates):
                 if qubits_set.issuperset(gen[2]):
                     # Keep generator
@@ -301,7 +301,7 @@ class CTMPExpvalMeasMitigator(BaseExpvalMeasMitigator):
 
         # Apply CTMP sampling
         r_vals = rng.random(size=alphas.sum())
-        y_vals = np.zeros(x_vals.size, dtype=np.int)
+        y_vals = np.zeros(x_vals.size, dtype=int)
         _markov_chain_compiled(y_vals, x_vals, r_vals, alphas, csc_data, csc_indices,
                                csc_indptrs)
 

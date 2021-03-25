@@ -20,6 +20,7 @@ import numpy as np
 
 # Import QISKit classes
 from qiskit import QuantumCircuit, QuantumRegister
+from qiskit.circuit.library import U3Gate
 from .tomographybasis import TomographyBasis
 
 
@@ -45,11 +46,11 @@ def sicpovm_preparation_circuit(op: str, qubit: QuantumRegister
     circ = QuantumCircuit(qubit.register)
     theta = -2 * np.arctan(np.sqrt(2))
     if op == 'S1':
-        circ.u3(theta, np.pi, 0.0, qubit)
+        circ.append(U3Gate(theta, np.pi, 0.0), [qubit])
     if op == 'S2':
-        circ.u3(theta, np.pi / 3, 0.0, qubit)
+        circ.append(U3Gate(theta, np.pi / 3, 0.0), [qubit])
     if op == 'S3':
-        circ.u3(theta, -np.pi / 3, 0.0, qubit)
+        circ.append(U3Gate(theta, -np.pi / 3, 0.0), [qubit])
     return circ
 
 
