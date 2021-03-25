@@ -160,14 +160,15 @@ class GraphDecoder():
         return S
 
     def get_error_probs(self, results):
-        """Generate probabilities of single error events from result counts.
+        """
+        Generate probabilities of single error events from result counts.
 
         Args:
             results (dict): A results dictionary, as produced by the
             `process_results` method of the code.
 
         Returns:
-            error_probs (dict): Keys are the edges for specific error
+            dict: Keys are the edges for specific error
             events, and values are the calculated probabilities
 
         Additional information:
