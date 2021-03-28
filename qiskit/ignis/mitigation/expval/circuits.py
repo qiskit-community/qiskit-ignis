@@ -15,6 +15,7 @@
 Expectation value measurement error migitation generator.
 """
 
+from math import ceil, log2
 from typing import Optional, Tuple, List, Dict
 
 from qiskit import QuantumCircuit
@@ -52,11 +53,37 @@ def expval_meas_mitigator_circuits(num_qubits: int,
           are specified. Ftting will return a
           :class:`~qiskit.ignis.mitigation.TensoredExpvalMeasMitigator`. This
           method assumes measurement errors are uncorrelated between qubits.
-        * The ``'CTMP'`` method will generate :math:`n+2` input state circuits
-          unless custom labels are specified. The default input states are
-          the all 0 state, the all 1 state, and the :math:`n` state with a
-          single qubit in the 1 state and all others in the 0 state.
-          Ftting will return a
+        * The ``'CTMP'`` method will generate input state circuits,
+          unless custom labels are specified. The default input states must
+          obey the following cirterion: for every pair of qubits, projection
+          of the input states on the two qubits contains all four possible
+          assignments to the qubits (`00, 01, 10, 11`). For `n<7`, these
+          would be the all 1 state and the :math:`n` states with a
+          single qubit in the 1 state and all others in the 0 state (also
+          the all 0 state, if n<3). For `n>=7`, these would be the all 0
+          state, the all 1 state, and 2*ceil(log2(n)) states resulting from
+          the following procedure: For each qubits, write its index in binary
+          form, horizontically. For example: with 8 qubits `0, 1, 2,..., 7`,
+          for qubit 7 we write:
+          1
+          1
+          1
+          And for all 8 qubits, we obtain `ceil(log2(n))=3` lines:
+          00001111
+          00110011
+          01010101
+          One can see that the every column is the binary form of the column
+          number.
+          Then write again, the same lines, negated:
+          11110000
+          11001100
+          10101010
+          The all 0 and all 1 states guarantee that each pair of qubits has
+          input states with projections `00` and `11`. The other lines
+          guarantee the projections `01` and `10` (since the qubits are
+          different, when written in binary form, there must be a digit
+          in which they differ).
+          Fitting will return a
           :class:`~qiskit.ignis.mitigation.CTMPExpvalMeasMitigator`.
 
     Example:
@@ -153,10 +180,27 @@ class ExpvalMeasMitigatorCircuits:
             return [self._num_qubits * '0', self._num_qubits * '1']
 
         if method in ['CTMP', 'ctmp']:
-            labels = [self._num_qubits * '0', self._num_qubits * '1']
-            for i in range(self._num_qubits):
-                labels.append(((self._num_qubits - i - 1) * '0') + '1' +
-                              (i * '0'))
+            # See details at the docstring of expval_meas_mitigator_circuits
+            if self._num_qubits >= 7:
+                length = ceil(log2(self._num_qubits))
+                labels = ['']*2*length
+                labels.extend([self._num_qubits * '0', self._num_qubits * '1'])
+                for i in range(self._num_qubits):
+                    bits = bin(i)[2:]
+                    bits = (length - len(bits)) * '0' + bits
+                    for j, b in enumerate(bits):
+                        labels[j] = labels[j] + b
+                        if b == '0':
+                            labels[j+length] = labels[j+length] + '1'
+                        else:
+                            labels[j+length] = labels[j+length] + '0'
+            else:
+                labels = [self._num_qubits * '1']
+                if self._num_qubits < 3:
+                    labels.append(self._num_qubits * '0')
+                for i in range(self._num_qubits):
+                    labels.append(((self._num_qubits - i - 1) * '0') + '1' +
+                                  (i * '0'))
             return labels
 
         if method == 'complete':
