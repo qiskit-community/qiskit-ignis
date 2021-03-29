@@ -236,7 +236,7 @@ class GraphDecoder():
 
         nodes = self.S.nodes()
         for edge in self.S.edge_list():
-            p = error_probs[nodes[edge[0]], nodes[edge[1]]]
+            p = error_probs[self.S[edge[0]], self.S[edge[1]]]
             if p == 0:
                 w = np.inf
             elif 1-p == 1:
