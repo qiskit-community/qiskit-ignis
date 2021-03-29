@@ -234,7 +234,6 @@ class GraphDecoder():
 
         error_probs = self.get_error_probs(results)
 
-        nodes = self.S.nodes()
         for edge in self.S.edge_list():
             p = error_probs[self.S[edge[0]], self.S[edge[1]]]
             if p == 0:
