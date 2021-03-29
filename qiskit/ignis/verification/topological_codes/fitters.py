@@ -197,7 +197,7 @@ class GraphDecoder():
                 error_nodes = self._string2nodes(string)
 
                 # get [v_i,v_j] for edge (i,j)
-                v = [int(nodes[edge[k]] in error_nodes) for k in range(2)]
+                v = [int(self.S[edge[k]] in error_nodes) for k in range(2)]
 
                 # update averages
                 av_vv += v[0]*v[1]*results[string]
