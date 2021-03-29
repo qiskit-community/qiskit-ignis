@@ -17,7 +17,6 @@ Full-matrix measurement error mitigation generator.
 from typing import Optional, List, Dict, Tuple
 import numpy as np
 
-from qiskit.exceptions import QiskitError
 from .utils import (counts_probability_vector, _expval_with_stddev)
 from .base_meas_mitigator import BaseExpvalMeasMitigator
 
@@ -95,8 +94,6 @@ class CompleteExpvalMeasMitigator(BaseExpvalMeasMitigator):
         # Get qubit mitigation matrix and mitigate probs
         if qubits is None:
             qubits = tuple(range(num_qubits))
-        if len(qubits) != num_qubits:
-            raise QiskitError("Num qubits does not match number of clbits.")
         mit_mat = self.mitigation_matrix(qubits)
 
         # Get operator coeffs
