@@ -69,9 +69,9 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 instead of the schedules. If schedules is None, then all the
                 schedules in cal_results are used.
         """
-        super().__init__(self, cal_results, qubit_mask,
-                         expected_states, standardize,
-                         schedules)
+        BaseDiscriminationFitter.__init__(self, cal_results, qubit_mask,
+                                          expected_states, standardize,
+                                          schedules)
 
     def get_xdata(self, results: Union[Result, List[Result]],
                   schedule_type_to_get: int,
@@ -443,9 +443,9 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
                                                tol=tol)
 
         # Also sets the x and y data.
-        super().__init__(self, cal_results, qubit_mask,
-                         expected_states, standardize,
-                         schedules)
+        IQDiscriminationFitter.__init__(self, cal_results, qubit_mask,
+                                        expected_states, standardize,
+                                        schedules)
 
         self._description = 'Linear IQ discriminator for measurement level 1.'
 
@@ -514,9 +514,9 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
                                                   tol=tol)
 
         # Also sets the x and y data.
-        super().__init__(self, cal_results, qubit_mask,
-                         expected_states, standardize,
-                         schedules)
+        IQDiscriminationFitter.__init__(self, cal_results, qubit_mask,
+                                        expected_states, standardize,
+                                        schedules)
 
         self._description = 'Quadratic IQ discriminator for measurement ' \
                             'level 1.'
