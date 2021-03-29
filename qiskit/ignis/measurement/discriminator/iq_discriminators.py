@@ -41,6 +41,7 @@ try:
 except ImportError:
     HAS_SKLEARN = False
 
+
 class IQDiscriminationFitter(BaseDiscriminationFitter):
     """
     Abstract discriminator that implements the data formatting for IQ
@@ -426,6 +427,8 @@ class LinearIQDiscriminator(IQDiscriminationFitter):
                 instead of the schedules. If schedules is None, then all the
                 schedules in cal_results are used.
             discriminator_parameters (dict): parameters for Sklearn's LDA.
+        Raises:
+            ImportError: If scikit-learn is not installed
         """
         if not discriminator_parameters:
             discriminator_parameters = {}
@@ -498,6 +501,8 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
                 instead of the schedules. If schedules is None, then all the
                 schedules in cal_results are used.
             discriminator_parameters (dict): parameters for Sklearn's LDA.
+        Raises:
+            ImportError: If scikit-learn is not installed
         """
         if not discriminator_parameters:
             discriminator_parameters = {}
@@ -508,7 +513,6 @@ class QuadraticIQDiscriminator(IQDiscriminationFitter):
             raise ImportError("To use the QuadraticIQDiscriminator class "
                               "scikit-learn needs to be installed. This can "
                               "be done with 'pip install scikit-learn'")
-
 
         self._qda = QuadraticDiscriminantAnalysis(store_covariance=store_cov,
                                                   tol=tol)

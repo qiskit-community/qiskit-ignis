@@ -22,7 +22,11 @@ import unittest
 
 import test.utils as utils
 
-from sklearn.svm import SVC
+try:
+    from sklearn.svm import SVC
+    HAS_SKLEARN = True
+except ImportError:
+    HAS_SKLEARN = False
 
 import qiskit
 from qiskit import Aer
@@ -34,6 +38,7 @@ from qiskit.ignis.mitigation.measurement import tensored_meas_cal
 from qiskit.result.models import ExperimentResultData
 
 
+@unittest.skipUnless(HAS_SKLEARN, 'scikit-learn is required to run these tests')
 class BaseTestIQDiscriminator(unittest.TestCase):
     """
     Base class for IQ discriminator test cases.

@@ -19,12 +19,19 @@ Test discrimination filters.
 import unittest
 from operator import getitem
 
+try:
+    import sklearn  # pylint: disable=unused-import
+    HAS_SKLEARN = True
+except ImportError:
+    HAS_SKLEARN = False
+
 from qiskit.ignis.measurement.discriminator.filters import DiscriminationFilter
 from qiskit.result import Result
 from qiskit.ignis.measurement.discriminator.iq_discriminators import \
     LinearIQDiscriminator
 
 
+@unittest.skipUnless(HAS_SKLEARN, 'scikit-learn is required for these tests')
 class TestDiscriminationFilter(unittest.TestCase):
     """
     Test methods of discrimination filters.
