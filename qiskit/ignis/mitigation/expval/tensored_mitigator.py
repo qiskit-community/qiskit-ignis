@@ -102,10 +102,10 @@ class TensoredExpvalMeasMitigator(BaseExpvalMeasMitigator):
             counts, clbits=clbits, return_shots=True)
         num_qubits = int(np.log2(probs.shape[0]))
 
-        if qubits is not None:
-            ainvs = self._mitigation_mats[list(qubits)]
-        else:
-            ainvs = self._mitigation_mats
+        # Get qubit mitigation matrix and mitigate probs
+        if qubits is None:
+            qubits = range(num_qubits)
+        ainvs = self._mitigation_mats[list(qubits)]
 
         # Get operator coeffs
         if diagonal is None:
