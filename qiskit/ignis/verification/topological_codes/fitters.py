@@ -215,7 +215,7 @@ class GraphDecoder():
                 x = (av_vv - av_v[0]*av_v[1])/(1 - 2*av_xor)
             else:
                 x = np.nan
-            error_probs[nodes[edge[0]], nodes[edge[1]]] = max(0, 0.5 - np.sqrt(0.25-x))
+            error_probs[self.S[edge[0]], self.S[edge[1]]] = max(0, 0.5 - np.sqrt(0.25-x))
 
         return error_probs
 
