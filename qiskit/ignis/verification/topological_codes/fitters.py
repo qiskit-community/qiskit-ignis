@@ -181,7 +181,6 @@ class GraphDecoder():
         results = results['0']
         shots = sum(results.values())
 
-
         error_probs = {}
         for edge in self.S.edge_list():
 
