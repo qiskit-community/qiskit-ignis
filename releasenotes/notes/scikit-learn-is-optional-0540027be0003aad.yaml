@@ -1,0 +1,12 @@
+---
+upgrade:
+  - |
+    The ``scikit-learn`` dependency is no longer required and is now an optional
+    requirement. If you're using the IQ measurement discriminators
+    (:class:`~qiskit.ignis.measurement.IQDiscriminationFitter`,
+    :class:`~qiskit.ignis.measurement.LinearIQDiscriminationFitter`,
+    :class:`~qiskit.ignis.measurement.QuadraticIQDiscriminationFitter`,
+    or :class:`~qiskit.ignis.measurement.SklearnIQDiscriminator`) you will
+    now need to manually install scikit-learn, either by running
+    ``pip install scikit-learn`` or when you're also installing
+    qiskit-ignis with ``pip install qiskit-ignis[iq]``.
