@@ -388,22 +388,22 @@ def _tomography_circuits(
         raise QiskitError(
             "prepared_qubits and measured_qubits are different length.")
     num_qubits = len(meas_qubits)
-    meas_qubit_registers = set(q.register for q in meas_qubits)
     # Check qubits being measured are defined in circuit
-    for reg in meas_qubit_registers:
-        if reg not in circuit.qregs:
+    for meas_qubit in meas_qubits:
+        if meas_qubit not in circuit.qubits:
             logger.warning('WARNING: circuit does not contain '
-                           'measured QuantumRegister: %s', reg.name)
+                           'measured qubit: %s', meas_qubit)
 
-    prep_qubit_registers = set(q.register for q in prep_qubits)
     # Check qubits being measured are defined in circuit
-    for reg in prep_qubit_registers:
-        if reg not in circuit.qregs:
+    for prep_qubit in prep_qubits:
+        if prep_qubit not in circuit.qubits:
             logger.warning('WARNING: circuit does not contain '
-                           'prepared QuantumRegister: %s', reg.name)
+                           'prepared qubit: %s', prep_qubit)
 
     # Get combined registers
-    qubit_registers = prep_qubit_registers.union(meas_qubit_registers)
+    qubit_registers = {reg for reg in circuit.qregs
+                       if any(qubit in reg
+                              for qubit in prep_qubits + meas_qubits)}
 
     # Check if there are already measurements in the circuit
     for op in circuit:
