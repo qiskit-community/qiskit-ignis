@@ -144,10 +144,13 @@ def gates_per_clifford(
         else:
             for transpiled_circuit in transpiled_circuits:
                 if isinstance(transpiled_circuit, QuantumCircuit):
+                    bit_indices = {bit: index
+                                   for index, bit in enumerate(transpiled_circuit.qubits)}
+
                     for instr, qregs, _ in transpiled_circuit.data:
                         for qreg in qregs:
                             try:
-                                ngates[qreg.index][instr.name] += 1
+                                ngates[bit_indices[qreg]][instr.name] += 1
                             except KeyError:
                                 pass
                 else:
