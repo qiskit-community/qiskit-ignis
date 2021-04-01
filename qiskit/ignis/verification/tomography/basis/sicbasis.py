@@ -43,7 +43,7 @@ def sicpovm_preparation_circuit(op: str, qubit: QuantumRegister
     Returns:
         The preparation circuit
     """
-    circ = QuantumCircuit(qubit.register)
+    circ = QuantumCircuit([qubit])
     theta = -2 * np.arctan(np.sqrt(2))
     if op == 'S1':
         circ.append(U3Gate(theta, np.pi, 0.0), [qubit])

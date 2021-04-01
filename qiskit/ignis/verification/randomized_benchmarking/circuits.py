@@ -664,9 +664,11 @@ def replace_q_indices(circuit, q_nums, qr):
     """
 
     new_circuit = QuantumCircuit(qr)
+    bit_indices = {bit: index
+                   for index, bit in enumerate(circuit.qubits)}
     for instr, qargs, cargs in circuit.data:
         new_qargs = [
-            qr[q_nums[x]] for x in [arg.index for arg in qargs]]
+            qr[q_nums[x]] for x in [bit_indices[arg] for arg in qargs]]
         new_op = copy.deepcopy((instr, new_qargs, cargs))
         new_circuit.data.append(new_op)
 

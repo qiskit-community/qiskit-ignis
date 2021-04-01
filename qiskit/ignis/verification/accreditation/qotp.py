@@ -152,6 +152,9 @@ def QOTP_fromlayers(layers, rng):
     qotp_circ = QuantumCircuit(qregs, cregs)
     temp_circ = QuantumCircuit(qregs, cregs)
 
+    bit_indices = {bit: index
+                   for index, bit in enumerate(qotp_circ.qubits)}
+
     # initial z gates after prep
     paulizs = rng.randint(2, size=len(qregs))
     for qind, q in enumerate(qregs):
@@ -180,7 +183,8 @@ def QOTP_fromlayers(layers, rng):
         qotp_circ.barrier()
         twoqindices = []
         for _, qsub, _ in gates2q:
-            twoqindices.append([qsub[0].index, qsub[1].index])
+            twoqindices.append([bit_indices[qsub[0]],
+                                bit_indices[qsub[1]]])
         # update Paulis
         for inds in twoqindices:
             if twoqubitgate == 'cx':

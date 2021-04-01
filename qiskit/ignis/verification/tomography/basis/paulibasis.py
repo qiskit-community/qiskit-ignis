@@ -43,7 +43,7 @@ def pauli_measurement_circuit(
         The measurement circuit for the given Pauli.
     """
 
-    circ = QuantumCircuit(qubit.register, clbit.register)
+    circ = QuantumCircuit([qubit, clbit])
     if op == 'X':
         circ.h(qubit)
         circ.measure(qubit, clbit)
@@ -73,7 +73,7 @@ def pauli_preparation_circuit(
         The preparation circuit for the given Pauli eigenstate.
     """
 
-    circ = QuantumCircuit(qubit.register)
+    circ = QuantumCircuit([qubit])
     if op == 'Xp':
         circ.h(qubit)
     if op == 'Xm':

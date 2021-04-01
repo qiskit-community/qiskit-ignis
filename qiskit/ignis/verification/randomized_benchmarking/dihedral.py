@@ -743,8 +743,10 @@ class CNOTDihedral(BaseOperator):
         circ = self.to_instruction()
         new_circ = QuantumCircuit(self.num_qubits)
         qargs = list(range(self.num_qubits))
+        bit_indices = {bit: index
+                       for index, bit in enumerate(circ.definition.qubits)}
         for instr, qregs, _ in circ.definition:
-            new_qubits = [qargs[tup.index] for tup in qregs]
+            new_qubits = [qargs[bit_indices[tup]] for tup in qregs]
             if instr.name == 'u1':
                 params = 2 * np.pi - instr.params[0]
                 instr.params[0] = params
@@ -878,9 +880,13 @@ def append_circuit(elem, circuit, qargs=None):
         raise QiskitError('{} instruction definition is {}; expected QuantumCircuit'.format(
             gate.name, type(gate.definition)))
 
+    flat_instr = gate.definition
+    bit_indices = {bit: index
+                   for index, bit in enumerate(flat_instr.qubits)}
+
     for instr, qregs, _ in gate.definition:
         # Get the integer position of the flat register
-        new_qubits = [qargs[tup.index] for tup in qregs]
+        new_qubits = [qargs[bit_indices[tup]] for tup in qregs]
 
         if (instr.name == 'x' or gate.name == 'x'):
             if len(new_qubits) != 1:

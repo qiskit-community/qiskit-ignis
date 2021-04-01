@@ -160,7 +160,7 @@ class GateSetBasis:
         Returns:
             The measurement circuit
         """
-        circ = QuantumCircuit(qubit.register, clbit.register)
+        circ = QuantumCircuit([qubit, clbit])
         self.add_spam_to_circuit(circ, qubit, op)
         circ.measure(qubit, clbit)
         return circ
@@ -191,7 +191,7 @@ class GateSetBasis:
         Returns:
             The preperation circuit
         """
-        circ = QuantumCircuit(qubit.register)
+        circ = QuantumCircuit([qubit])
         self.add_spam_to_circuit(circ, qubit, op)
         return circ
 
