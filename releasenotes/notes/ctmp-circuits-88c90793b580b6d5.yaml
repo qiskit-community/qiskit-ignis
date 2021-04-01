@@ -1,4 +1,0 @@
----
-other:
-  - |
-    Reduced the number of circuits generated for CTMP mitigation.

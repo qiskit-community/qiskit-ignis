@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    The :func:`qiskit.ignis.verification.randomized_benchmarking_seq`
+    function is now using the upgraded CNOTDihedral class,
+    :class:`qiskit.ignis.verification.CNOTDihedral`, which enables performing
+    CNOT-Dihedral Randomized Benchmarking on more than two qubits.
