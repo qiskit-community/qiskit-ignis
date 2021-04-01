@@ -1,7 +1,11 @@
 ---
 fixes:
   - |
-    Fixes bug in expectation value error mitigation where if the `qubits`
-    kwarg was not specified it would incorrectly use the total number of
-    qubits of the mitigator, rather than the number of classical bits in the
-    count dictionary leading to greatly reduced performance.
+    Fixed an issue in the expectation value method,
+    :meth:`~qiskit.ignis.mitigation.CompleteExpvalMeasMitigator.expectation_value`, of the error mitigation classes (ie
+    :class:`~qiskit.ignis.mitigation.CompleteExpvalMeasMitigator`)
+    if the ``qubits`` kwarg was not specified it would incorrectly use the
+    total number of qubits of the mitigator, rather than the number of
+    classical bits in the count dictionary leading to greatly reduced
+    performance.
+    Fixed `#561 <https://github.com/Qiskit/qiskit-ignis/issues/561>`__
