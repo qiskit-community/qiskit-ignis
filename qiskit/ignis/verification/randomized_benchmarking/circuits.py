@@ -26,10 +26,9 @@ import numpy as np
 from numpy.random import RandomState
 import qiskit
 from qiskit.circuit import QuantumCircuit, Instruction
-
+from qiskit.quantum_info import Clifford, CNOTDihedral
 
 from .rb_groups import RBgroup
-from .dihedral import CNOTDihedral
 
 
 def handle_length_multiplier(length_multiplier, len_pattern,
@@ -151,18 +150,17 @@ def handle_interleaved_elem(interleaved_elem, rb_group, keep_original_interleave
 
     for elem in interleaved_elem:
         group_elem = elem
+        group_gates_type = rb_group.group_gates_type()
         if isinstance(elem, (QuantumCircuit, Instruction)):
-            num_qubits = elem.num_qubits
-            group_elem = rb_group.iden(num_qubits)
-            group_elem = group_elem.from_circuit(elem)
-        if not (isinstance(group_elem, qiskit.quantum_info.operators.symplectic.clifford.Clifford)
+            group_elem = rb_group._rb_group(elem)
+        if not (isinstance(group_elem, Clifford)
                 and group_gates_type == 0) and \
                 not (isinstance(group_elem, CNOTDihedral) and group_gates_type == 1):
             raise ValueError("Invalid interleaved element type.")
 
         if not isinstance(group_elem, QuantumCircuit) and \
                 not isinstance(group_elem,
-                               qiskit.quantum_info.operators.symplectic.clifford.Clifford) \
+                               Clifford) \
                 and not isinstance(group_elem, CNOTDihedral):
             raise ValueError("Invalid interleaved element type. "
                              "interleaved_elem should be a list of QuantumCircuit,"
@@ -210,7 +208,7 @@ def randomized_benchmarking_seq(nseeds: int = 1,
                                 interleaved_elem:
                                 Optional[
                                     Union[List[QuantumCircuit], List[Instruction],
-                                          List[qiskit.quantum_info.operators.symplectic.Clifford],
+                                          List[Clifford],
                                           List[CNOTDihedral]]] = None,
                                 keep_original_interleaved_elem: Optional[bool] = True,
                                 is_purity: bool = False,

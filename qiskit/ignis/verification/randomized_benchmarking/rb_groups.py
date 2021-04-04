@@ -17,9 +17,8 @@ in randomized benchmarking"""
 
 import numpy as np
 from qiskit.exceptions import QiskitError
-from qiskit.quantum_info.operators.symplectic import Clifford
-from qiskit.quantum_info.random import random_clifford
-from .dihedral import CNOTDihedral, random_cnotdihedral
+from qiskit.quantum_info import Clifford, CNOTDihedral
+from qiskit.quantum_info import random_clifford, random_cnotdihedral
 
 
 class RBgroup():
@@ -62,7 +61,7 @@ class RBgroup():
         """Initialize an identity group element"""
         self._num_qubits = num_qubits
         if self._group_gates_type:
-            return CNOTDihedral(num_qubits)
+            return CNOTDihedral(num_qubits=num_qubits)
         else:
             return Clifford(np.eye(2 * num_qubits))
 

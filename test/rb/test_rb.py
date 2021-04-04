@@ -918,7 +918,7 @@ class TestRB(unittest.TestCase):
     @data(1, 2)
     def test_interleaved_randomized_benchmarking_seq_random_cnotdihedral_gates(self, num_qubits):
         """interleaved random CNOT-Dihedral gates in RB"""
-        elem = rb.random_cnotdihedral(num_qubits)
+        elem = qiskit.quantum_info.random_cnotdihedral(num_qubits)
         test_circ = elem.to_circuit()
         test_gates = elem.to_instruction()
 
