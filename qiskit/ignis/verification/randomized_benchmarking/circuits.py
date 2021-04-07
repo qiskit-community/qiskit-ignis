@@ -277,8 +277,8 @@ def randomized_benchmarking_seq(nseeds: int = 1,
             lists in ``rb_pattern``.
 
         keep_original_interleaved_elem: whether to keep the original interleaved
-        element as it is when adding it to the RB circuits or to transform
-        it to a standard representation via group elements
+            element as it is when adding it to the RB circuits or to transform
+            it to a standard representation via group elements
 
         is_purity: ``True`` only for purity randomized benchmarking
             (default is ``False``).
