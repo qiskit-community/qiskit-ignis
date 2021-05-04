@@ -154,8 +154,8 @@ class CompleteExpvalMeasMitigator(BaseExpvalMeasMitigator):
             qubits = [qubits]
 
         # Compute marginal matrix
-        axis = tuple([self._num_qubits - 1 - i for i in set(
-            range(self._num_qubits)).difference(qubits)])
+        axis = tuple(self._num_qubits - 1 - i for i in set(
+            range(self._num_qubits)).difference(qubits))
         num_qubits = len(qubits)
         new_amat = np.zeros(2 * [2 ** num_qubits], dtype=float)
         for i, col in enumerate(self._assignment_mat.T[self._keep_indexes(qubits)]):

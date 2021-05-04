@@ -286,10 +286,10 @@ class BaseDiscriminationFitter(ABC):
 
         try:
             from sklearn.preprocessing import StandardScaler
-        except ImportError:
+        except ImportError as exc:
             raise ImportError("To scale the xdata scikit-learn must be "
                               "installed. This can be done with 'pip install "
-                              "scikit-learn'")
+                              "scikit-learn'") from exc
 
         if not self._scaler or refit:
             self._scaler = StandardScaler(with_std=True)

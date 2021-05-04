@@ -275,9 +275,9 @@ class IQDiscriminationFitter(BaseDiscriminationFitter):
                 zz = np.array(zz).astype(float).reshape(xx.shape)
                 axs[0].contourf(xx, yy, zz, alpha=.2)
 
-            except ValueError:
+            except ValueError as exc:
                 raise QiskitError('Cannot convert expected state labels to '
-                                  'float.')
+                                  'float.') from exc
 
         n_qubits = len(self._qubit_mask)
         if show_fitting_data:
