@@ -13,6 +13,7 @@
 # that they have been altered from the originals.
 
 # pylint: disable=undefined-loop-variable,invalid-name,missing-type-doc
+# pylint: disable=unbalanced-tuple-unpacking
 
 """
 Run through RB for different qubit numbers to check that it's working
