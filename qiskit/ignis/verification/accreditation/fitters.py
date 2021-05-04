@@ -128,8 +128,7 @@ class AccreditationFitter:
             bound = bound+1-self._g
         else:
             bound = 1
-        if bound > 1:
-            bound = 1
+        self.bound = min(self.bound, 1)
         return self._counts_accepted, bound, confidence
 
     def MeanAccreditation(self, confidence):
@@ -148,8 +147,7 @@ class AccreditationFitter:
         """
         theta = np.sqrt(np.log(2/(1-confidence))/(2*self._Nruns))
         bound = 2*np.sum(self._Nrejects)/self._Nruns/self._Ntraps + theta
-        if bound > 1:
-            bound = 1
+        self.bound = min(self.bound, 1)
         return self._counts_all, bound, confidence
 
     def _AppendData(self, strings, postp_list, v_zero):
