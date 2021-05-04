@@ -113,6 +113,7 @@ Accreditation
    AccreditationFitter
    QOTP
    QOTPCorrectCounts
+   QOTPCorrectString
 """
 from .quantum_volume import qv_circuits, QVFitter
 from .randomized_benchmarking import (CNOTDihedral,
