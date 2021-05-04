@@ -197,3 +197,130 @@ class RepetitionCode():
                 results[log][new_string] = raw_results[log][string]
 
         return results
+    
+    def _get_all_processed_results(self): # NEWNESS
+        """ - returns a list of all processed results stemming from single qubit errors
+            - needed so create the decoder graph
+        """
+         
+        syn = RepetitionCodeGenerator(self)  # new class
+        
+        T = syn.T # number of rounds of stabilizer measurements
+        d = syn.d # number of data qubits
+        
+        out = []
+        for r in range(T):
+            for i in range(d-1):
+                syn.bitflip_ancilla(i, r) 
+                out.append(syn.get_processed_results()) 
+                syn.bitflip_ancilla(i, r) # undo the error
+            ''' WHAT IS N?
+            for i in range(n):
+                syn.bitflip_data(i, r, True) 
+                out.append(syn.get_processed_results()) 
+                syn.bitflip_data(i, r, True)  # undo the error
+                syn.bitflip_data(i, r, False) 
+                out.append(syn.get_processed_results()) 
+                syn.bitflip_data(i, r, False)  # undo the error
+             '''
+        for i in range(d):
+            syn.bitflip_readout(i) 
+            out.append(syn.get_processed_results()) 
+            syn.bitflip_readout(i)  # undo the error
+            
+        return out
+
+# NEWNESS
+class RepetitionCodeGenerator():
+    """
+    description
+    """
+    
+    def __init__(self, code):
+        """
+        Keeps track how individually introduced bitflip errors affect the 
+        measurement outcomes of a repetition code. 
+
+        Args:
+            code (RepetitionCode): code under investigation 
+        """
+        
+        self.d = code.d # number of qubits
+        self.T = code.T # number of rounds (of stabilizer measurements)
+         
+        # List of measurement results 
+        self.m_anc = {}      # referred to as (b_r[0], ..., b_r[n-2]) in Ref [1]
+        self.m_fin = [0]*self.d   # referred to as (c[0], ..., c[n-2]) in Ref [1]
+        for r in range(self.T):
+            self.m_anc[r] = [0]*(self.d-1)
+
+    def bitflip_readout(self, i):
+        """ 
+        Introduces a bitflip error on data qubit i right before the (final) readout
+        """
+        self.m_fin[i] = (self.m_fin[i]+1)%2
+            
+    def bitflip_ancilla(self, i, r):
+        """
+        Introduces a bitflip error to ancilla i in round r.
+        """ 
+        self.m_anc[r][i] = (self.m_anc[r][i]+1)%2
+    
+    def bitflip_data(self, i, r0, middle=False):
+        """
+        Introduces a bitflip error to data qubit i in round r0.
+        Args:
+            middle: if False, the error is introduced before the first sequence of CNOTs 
+                    if True, the error is introcuded in between the two CNOT sequences
+        """ 
+        self.m_fin[i] = (self.m_fin[i]+1)%2    
+        
+        # Check for "boundary" code qubits
+        if i>0: # q[i] is not at the upper(left) boundary
+            for r in range(r0, self.T): 
+                self.m_anc[r][i-1] = (self.m_anc[r][i-1] +1 )%2   # error propagates across 2nd CNOT sequence
+            
+        if i<n-1: # q[i] is not at the lower(right) boundary
+            for r in range(r0+1, self.T):
+                self.m_anc[r][i] = (self.m_anc[r][i] +1 )%2  # error propagates across 1st CNOT sequence
+    
+            self.m_anc[r0][i] = (self.m_anc[r0][i] + middle +1 )%2  # no error induced if it occurs in the middle
+        return None
+    
+    def get_m_ancilla(self, i, r):
+        """
+        Returns the measurement result of ancilla i in round r for the current set of errors.
+        """
+        return self.m_anc[r][i]
+    
+    def get_m_data(self, i, encoded=0):
+        """
+        Returns the final measurement result of data qubit i for the current set of errors.
+        Args:
+            encoded: initial logical value of the data qubits
+
+        """ 
+        return (self.m_fin[i] + encoded)%2
+    
+    def get_raw_results(self, encoded=0): 
+        out = ''
+        for i in range(self.d-1,-1,-1): # qiskit's qubit ordering
+            out += str(self.get_m_data(i, encoded))   
+        for r in range(self.T-1,-1,-1): # qiskit's qubit register ordering
+            out += ' '
+            for i in range(self.d-2,-1,-1):
+                out+= str(self.get_m_ancilla(i,r)) 
+        return out
+    
+    def get_processed_results(self, encoded=0):
+        out = str(self.get_m_data(self.d-1, encoded))+' '+ str(self.get_m_data(0,encoded))+'  '
+        for i in range(self.d-2,-1,-1):
+            out += str(self.get_m_ancilla(i,0))
+        for r in range(1,self.T):
+            out += ' '
+            for i in range(self.d-2,-1,-1): # qiskit's qubit ordering
+                out += str((self.get_m_ancilla(i,r)+self.get_m_ancilla(i,r-1))%2)
+        out += ' '
+        for i in range(self.d-2,-1,-1): # qiskit's qubit ordering
+            out += str((self.get_m_ancilla(i,self.T-1)+self.get_m_data(i, encoded)+self.get_m_data(i+1,encoded))%2)
+        return out

@@ -40,7 +40,7 @@ class GraphDecoder():
     of a quantum error correction code, and then run suitable decoders.
     """
 
-    def __init__(self, code, S=None):
+    def __init__(self, code, S=None, auto=True):
         """
         Args:
             code (RepitionCode): The QEC Code object for which this decoder
@@ -60,8 +60,11 @@ class GraphDecoder():
 
         if S:
             self.S = S
+        elif auto and '_get_all_processed_results' in dir(code): # NEWNESS
+            self.S = self._make_syndrome_graph(results=code._get_all_processed_results())
         else:
             self.S = self._make_syndrome_graph()
+
 
     def _separate_string(self, string):
 
@@ -85,8 +88,8 @@ class GraphDecoder():
                                       syn_round,
                                       elem_num))
         return nodes
-
-    def _make_syndrome_graph(self):
+    
+    def _make_syndrome_graph(self, results=None):
         """
         This method injects all possible Pauli errors into the circuit for
         ``code``.
@@ -98,64 +101,83 @@ class GraphDecoder():
         """
 
         S = rx.PyGraph(multigraph=False)
+        
+        if results: # NEWNESS
+                    
+            node_map = {}
+            for string in results: 
+                nodes = self._string2nodes(string)
 
-        qc = self.code.circuit['0']
+                assert len(nodes) in [0, 2], ":("
 
-        blank_qc = QuantumCircuit()
-        for qreg in qc.qregs:
-            blank_qc.add_register(qreg)
-        for creg in qc.cregs:
-            blank_qc.add_register(creg)
-
-        error_circuit = {}
-        circuit_name = {}
-        depth = len(qc)
-        for j in range(depth):
-            qubits = qc.data[j][1]
-            for qubit in qubits:
-                for error in ['x', 'y', 'z']:
-                    temp_qc = copy.deepcopy(blank_qc)
-                    temp_qc.name = str((j, qubit, error))
-                    temp_qc.data = qc.data[0:j]
-                    getattr(temp_qc, error)(qubit)
-                    temp_qc.data += qc.data[j:depth + 1]
-                    circuit_name[(j, qubit, error)] = temp_qc.name
-                    error_circuit[temp_qc.name] = temp_qc
-
-        if HAS_AER:
-            simulator = Aer.get_backend('qasm_simulator')
+                for node in nodes:
+                    if node not in node_map:
+                        node_map[node] = S.add_node(node)
+                for source in nodes:
+                    for target in nodes:
+                        if target != source:
+                            S.add_edge(node_map[source],
+                                       node_map[target], 1)
+            
         else:
-            simulator = BasicAer.get_backend('qasm_simulator')
 
-        job = execute(list(error_circuit.values()), simulator)
+            qc = self.code.circuit['0']
 
-        node_map = {}
-        for j in range(depth):
-            qubits = qc.data[j][1]
-            for qubit in qubits:
-                for error in ['x', 'y', 'z']:
-                    raw_results = {}
-                    raw_results['0'] = job.result().get_counts(
-                        str((j, qubit, error)))
-                    results = self.code.process_results(raw_results)['0']
+            blank_qc = QuantumCircuit()
+            for qreg in qc.qregs:
+                blank_qc.add_register(qreg)
+            for creg in qc.cregs:
+                blank_qc.add_register(creg)
 
-                    for string in results:
+            error_circuit = {}
+            circuit_name = {}
+            depth = len(qc)
+            for j in range(depth):
+                qubits = qc.data[j][1]
+                for qubit in qubits:
+                    for error in ['x', 'y', 'z']:
+                        temp_qc = copy.deepcopy(blank_qc)
+                        temp_qc.name = str((j, qubit, error))
+                        temp_qc.data = qc.data[0:j]
+                        getattr(temp_qc, error)(qubit)
+                        temp_qc.data += qc.data[j:depth + 1]
+                        circuit_name[(j, qubit, error)] = temp_qc.name
+                        error_circuit[temp_qc.name] = temp_qc
 
-                        nodes = self._string2nodes(string)
+            if HAS_AER:
+                simulator = Aer.get_backend('qasm_simulator')
+            else:
+                simulator = BasicAer.get_backend('qasm_simulator')
 
-                        assert len(nodes) in [0, 2], "Error of type " + \
-                            error + " on qubit " + str(qubit) + \
-                            " at depth " + str(j) + " creates " + \
-                            str(len(nodes)) + \
-                            " nodes in syndrome graph, instead of 2."
-                        for node in nodes:
-                            if node not in node_map:
-                                node_map[node] = S.add_node(node)
-                        for source in nodes:
-                            for target in nodes:
-                                if target != source:
-                                    S.add_edge(node_map[source],
-                                               node_map[target], 1)
+            job = execute(list(error_circuit.values()), simulator)
+
+            node_map = {}
+            for j in range(depth):
+                qubits = qc.data[j][1]
+                for qubit in qubits:
+                    for error in ['x', 'y', 'z']:
+                        raw_results = {}
+                        raw_results['0'] = job.result().get_counts(
+                            str((j, qubit, error)))
+                        results = self.code.process_results(raw_results)['0']
+
+                        for string in results:
+
+                            nodes = self._string2nodes(string)
+
+                            assert len(nodes) in [0, 2], "Error of type " + \
+                                error + " on qubit " + str(qubit) + \
+                                " at depth " + str(j) + " creates " + \
+                                str(len(nodes)) + \
+                                " nodes in syndrome graph, instead of 2."
+                            for node in nodes:
+                                if node not in node_map:
+                                    node_map[node] = S.add_node(node)
+                            for source in nodes:
+                                for target in nodes:
+                                    if target != source:
+                                        S.add_edge(node_map[source],
+                                                   node_map[target], 1)
 
         return S
 
