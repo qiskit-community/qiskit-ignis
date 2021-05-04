@@ -19,6 +19,7 @@ Run through Accreditation
 """
 
 import unittest
+import numpy as np
 import os
 import json
 from qiskit.result.result import Result
@@ -76,30 +77,47 @@ class TestAccred(unittest.TestCase):
         all_v_zero = ideal_results['all_v_zero']
         test_1 = accred.AccreditationFitter()
         for a, b, c in zip(all_results, all_postp_list, all_v_zero):
-            test_1.single_protocol_run(a, b, c)
-            self.assertEqual(test_1.flag,
-                             'accepted',
-                             "Error: Ideal outcomes not passing accred")
+            test_1.AppendResults(a, b, c)
+            
+        (counts, bnd, conf) = test_1.FullAccreditation(0.95)
+            
+        self.assertEqual(test_1._Nruns,
+                         test_1._Nacc,
+                         "Error: Ideal outcomes not passing accred")
+        
+        theta = np.sqrt(np.log(2/(1-conf))/(2*len(all_postp_list)))     
+        bound =1.7/len(all_postp_list[0])
+        bound = bound/(1.0-theta)
+        
+        self.assertAlmostEqual(bound,
+                               bnd,
+                               msg="Error: Ideal outcomes not giving correct bound")
+        
         # noisy results
         with open(os.path.join(os.path.dirname(__file__),
                                'accred_noisy_results.json'), "r") as saved_file:
             noisy_results = json.load(saved_file)
-        all_results = [Result.from_dict(result) for result in noisy_results['all_results']]
+        all_strings = noisy_results['all_strings']
         all_postp_list = noisy_results['all_postp_list']
         all_v_zero = noisy_results['all_v_zero']
-        all_acc = noisy_results['all_acc']
+        confidence = noisy_results['confidence']
+        accred_full = noisy_results['accred_full']
+        accred_mean = noisy_results['accred_mean']
+        
         test_1 = accred.AccreditationFitter()
-        for a, b, c, d in zip(all_results, all_postp_list, all_v_zero, all_acc):
-            test_1.single_protocol_run(a, b, c)
-            self.assertEqual(test_1.flag,
-                             d,
-                             "Error: Noisy outcomes not correct accred")
-        test_1.bound_variation_distance(noisy_results['theta'])
-        bound = test_1.bound
-        self.assertEqual(bound,
-                         noisy_results['bound'],
-                         "Error: Incorrect bound for noisy outcomes")
-
+        for a, b, c in zip(all_strings, all_postp_list, all_v_zero):
+            test_1.AppendStrings(a, b, c)
+            
+        accred_full_test = test_1.FullAccreditation(confidence) 
+        accred_mean_test = test_1.MeanAccreditation(confidence)
+        self.assertEqual(accred_full_test[1],
+                         accred_full[1],
+                         "Error: Noisy outcomes fail full accred")
+        
+        self.assertEqual(accred_mean[1],
+                         accred_mean_test[1],
+                         "Error: Noisy outcomes fail mean accred")
+        
 
 if __name__ == '__main__':
     unittest.main()

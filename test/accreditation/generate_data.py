@@ -98,11 +98,11 @@ def generate_data_noisy():
     accsys = make_accred_system(seed=seed_accreditation)
     simulator = qiskit.Aer.get_backend('qasm_simulator')
     noise_model = NoiseModel()
-    p1q = 0.002
+    p1q = 0.0002
     noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u1')
     noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
     noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u3')
-    p2q = 0.02
+    p2q = 0.005
     noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
 
     basis_gates = ['u1', 'u2', 'u3', 'cx']
@@ -127,14 +127,14 @@ def generate_data_noisy():
         for ind,_ in enumerate(circuit_list):
             counts = result.get_counts(ind)
             strings.append(list(counts.keys())[0])
-        all_strings.append(job.result())
+        all_strings.append(strings)
         all_postp_list.append([postp.tolist() for postp in postp_list])
         all_v_zero.append(v_zero)
         
     # Post-process the outputs and see if the protocol accepts
     test_3 = AccreditationFitter()
-    for a, b, c in zip(all_results, all_postp_list, all_v_zero):
-        test_3.AppendString(a, b, c)
+    for a, b, c in zip(all_strings, all_postp_list, all_v_zero):
+        test_3.AppendStrings(a, b, c)
     confidence = 0.95
     accred_full = test_3.FullAccreditation(confidence)
     accred_mean = test_3.MeanAccreditation(confidence)
@@ -149,5 +149,5 @@ def generate_data_noisy():
 
 
 if __name__ == '__main__':
-    #generate_data_ideal()
+    generate_data_ideal()
     generate_data_noisy()

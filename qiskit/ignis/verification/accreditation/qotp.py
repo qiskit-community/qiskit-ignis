@@ -163,7 +163,7 @@ def QOTP_fromlayers(layers, rng):
     # step through layers
     for lnum, gates2q in enumerate(layers['twoqubitlayers']):
         # add single qubit gates to temp circuit
-        temp_circ = temp_circ+layers['singlequbitlayers'][lnum]
+        temp_circ = temp_circ.compose(layers['singlequbitlayers'][lnum])
         # generate and add single qubit paulis
         paulizs = rng.randint(2, size=len(qregs))
         paulixs = rng.randint(2, size=len(qregs))
@@ -175,11 +175,11 @@ def QOTP_fromlayers(layers, rng):
         # add to circuit and reset temp
         temp_circ = transpile(temp_circ,
                               basis_gates=['u1', 'u2', 'u3'])
-        qotp_circ = qotp_circ+temp_circ
+        qotp_circ = qotp_circ.compose(temp_circ)
         temp_circ = QuantumCircuit(qregs, cregs)
         # add two qubit layers and get indices for 2qgates
         qotp_circ.barrier()
-        qotp_circ = qotp_circ+gates2q
+        qotp_circ = qotp_circ.compose(gates2q)
         qotp_circ.barrier()
         twoqindices = []
         for _, qsub, _ in gates2q:
@@ -204,7 +204,7 @@ def QOTP_fromlayers(layers, rng):
             if paulizs[qind]:
                 temp_circ.z(q)
     # add final single qubit layer
-    temp_circ = temp_circ+layers['singlequbitlayers'][-1]
+    temp_circ = temp_circ.compose(layers['singlequbitlayers'][-1])
     # add final Paulis to create the one time pad
     paulizs = rng.randint(2, size=len(qregs))
     paulixs = rng.randint(2, size=len(qregs))
@@ -216,11 +216,11 @@ def QOTP_fromlayers(layers, rng):
     # add to circuit
     temp_circ = transpile(temp_circ,
                           basis_gates=['u1', 'u2', 'u3'])
-    qotp_circ = qotp_circ+temp_circ
+    qotp_circ = qotp_circ.compose(temp_circ)
     # post operations
     qotp_postp = np.flip(paulixs)
     # measurements
-    qotp_circ = qotp_circ+layers['measlayer']
+    qotp_circ = qotp_circ.compose(layers['measlayer'])
     return qotp_circ, qotp_postp
 
 

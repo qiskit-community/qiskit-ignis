@@ -176,7 +176,7 @@ class AccreditationFitter:
                 else:
                     self._counts_all[target_count]=1
         if flag:
-            self._Nacc
+            self._Nacc+=1
             if target_count in self._counts_accepted.keys():
                 self._counts_accepted[target_count]+=1
             else:
