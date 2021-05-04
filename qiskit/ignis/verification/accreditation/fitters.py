@@ -30,7 +30,6 @@ from qiskit import QiskitError
 from .qotp import QOTPCorrectString
 
 
-
 class AccreditationFitter:
     """
     Class for fitters for accreditation
@@ -47,20 +46,25 @@ class AccreditationFitter:
         self._counts_all = {}
         self._counts_accepted = {}
         self._Ntraps = None
-        self._Nrejects=[]
+        self._Nrejects = []
         self._Nruns = 0
         self._Nacc = 0
         self._g = 1.0
-    
-    def clear(self):
+
+    def Reset(self):
+        """
+        Reset the accreditation class object
+
+        Args:
+        """
         self._counts_all = {}
         self._counts_accepted = {}
         self._Ntraps = None
-        self._Nrejects=[]
+        self._Nrejects = []
         self._Nruns = 0
         self._Nacc = 0
         self._g = 1.0
-        
+
     def AppendResults(self, results, postp_list, v_zero):
         """
         Single run of accreditation protocol, data input as
@@ -96,7 +100,7 @@ class AccreditationFitter:
             v_zero (int): position of target
         """
         self._AppendData(strings, postp_list, v_zero)
-        
+
     def FullAccreditation(self, confidence):
         """
         This function computes the bound on variation distance based and
@@ -105,6 +109,11 @@ class AccreditationFitter:
 
         Args:
             confidence (float): number between 0 and 1
+
+        Returns:
+            dict: dict of postselected target counts
+            float: 1-norm bound from noiseless samples
+            float: confidence
         """
         if self._Nacc == 0:
             QiskitError("ERROR: Variation distance requires"
@@ -112,31 +121,33 @@ class AccreditationFitter:
         if confidence > 1 or confidence < 0:
             QiskitError("ERROR: Confidence must be"
                         "between 0 and 1")
-        theta = np.sqrt(np.log(2/(1-confidence))/(2*self._Nruns))     
+        theta = np.sqrt(np.log(2/(1-confidence))/(2*self._Nruns))
         if self._Nacc/self._Nruns > theta:
             bound = self._g*1.7/(self._Ntraps+1)
             bound = bound/(self._Nacc/self._Nruns-theta)
             bound = bound+1-self._g
-        else: 
-            bound=1
+        else:
+            bound = 1
         if bound > 1:
             bound = 1
-            
         return self._counts_accepted, bound, confidence
-      
-        
-            
+
     def MeanAccreditation(self, confidence):
         """
         This function computes the bound on variation distance based and
         the confidence interval desired.  This protocol is from the second
-        paper and assumes Markovianity 
+        paper and assumes Markovianity
 
         Args:
             confidence (float): number between 0 and 1
+
+        Returns:
+            dict: dict of corrected target counts
+            float: 1-norm bound from noiseless samples
+            float: confidence
         """
         theta = np.sqrt(np.log(2/(1-confidence))/(2*self._Nruns))
-        bound = 2*np.sum(self._Nrejects)/self._Nruns/self._Ntraps +theta
+        bound = 2*np.sum(self._Nrejects)/self._Nruns/self._Ntraps + theta
         if bound > 1:
             bound = 1
         return self._counts_all, bound, confidence
@@ -146,7 +157,7 @@ class AccreditationFitter:
         Single protocol run of accreditation protocol on simul backend
 
         Args:
-            results (Result): results of the quantum job
+            strings (list): bit string results
             postp_list (list): list of strings used to post-process outputs
             v_zero (int): position of target
         """
@@ -159,10 +170,10 @@ class AccreditationFitter:
                             "same number of traps")
         if self._Ntraps < 3:
             QiskitError("ERROR: run the protocol with at least 3 traps")
-        self._Nruns+=1   
+        self._Nruns += 1
         self._Nrejects.append(0)
         flag = True
-        for ind,(s, p) in enumerate(zip(strings, postp_list)):
+        for ind, (s, p) in enumerate(zip(strings, postp_list)):
             if ind != v_zero:
                 # Check if trap returns correct output
                 meas = QOTPCorrectString(s, p)
@@ -172,17 +183,12 @@ class AccreditationFitter:
             else:
                 target_count = QOTPCorrectString(s, p)
                 if target_count in self._counts_all.keys():
-                    self._counts_all[target_count]+=1
+                    self._counts_all[target_count] += 1
                 else:
-                    self._counts_all[target_count]=1
+                    self._counts_all[target_count] = 1
         if flag:
-            self._Nacc+=1
+            self._Nacc += 1
             if target_count in self._counts_accepted.keys():
-                self._counts_accepted[target_count]+=1
+                self._counts_accepted[target_count] += 1
             else:
-                self._counts_accepted[target_count]=1
-                
-    
-
-
-
+                self._counts_accepted[target_count] = 1

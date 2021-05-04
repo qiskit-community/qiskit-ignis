@@ -110,7 +110,6 @@ def generate_data_noisy():
     d = 20
     v = 10
 
-    
     all_strings = []
     all_postp_list = []
     all_v_zero = []
@@ -124,13 +123,13 @@ def generate_data_noisy():
                       shots=1, seed_simulator=seed_simulator + run)
         result = job.result()
         strings = []
-        for ind,_ in enumerate(circuit_list):
+        for ind, _ in enumerate(circuit_list):
             counts = result.get_counts(ind)
             strings.append(list(counts.keys())[0])
         all_strings.append(strings)
         all_postp_list.append([postp.tolist() for postp in postp_list])
         all_v_zero.append(v_zero)
-        
+
     # Post-process the outputs and see if the protocol accepts
     test_3 = AccreditationFitter()
     for a, b, c in zip(all_strings, all_postp_list, all_v_zero):
@@ -141,9 +140,9 @@ def generate_data_noisy():
     outputdict = {'all_strings': all_strings,
                   'all_postp_list': all_postp_list,
                   'all_v_zero': all_v_zero,
-                  'confidence':confidence,
-                  'accred_full':accred_full,
-                  'accred_mean':accred_mean}
+                  'confidence': confidence,
+                  'accred_full': accred_full,
+                  'accred_mean': accred_mean}
     with open('accred_noisy_results.json', "w") as results_file:
         json.dump(outputdict, results_file)
 

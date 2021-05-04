@@ -19,9 +19,9 @@ Run through Accreditation
 """
 
 import unittest
-import numpy as np
 import os
 import json
+import numpy as np
 from qiskit.result.result import Result
 # Import Qiskit classes
 import qiskit.ignis.verification.accreditation as accred
@@ -78,21 +78,17 @@ class TestAccred(unittest.TestCase):
         test_1 = accred.AccreditationFitter()
         for a, b, c in zip(all_results, all_postp_list, all_v_zero):
             test_1.AppendResults(a, b, c)
-            
-        (counts, bnd, conf) = test_1.FullAccreditation(0.95)
-            
+        (_, bnd, conf) = test_1.FullAccreditation(0.95)
         self.assertEqual(test_1._Nruns,
                          test_1._Nacc,
                          "Error: Ideal outcomes not passing accred")
-        
-        theta = np.sqrt(np.log(2/(1-conf))/(2*len(all_postp_list)))     
-        bound =1.7/len(all_postp_list[0])
+
+        theta = np.sqrt(np.log(2/(1-conf))/(2*len(all_postp_list)))
+        bound = 1.7/len(all_postp_list[0])
         bound = bound/(1.0-theta)
-        
         self.assertAlmostEqual(bound,
                                bnd,
                                msg="Error: Ideal outcomes not giving correct bound")
-        
         # noisy results
         with open(os.path.join(os.path.dirname(__file__),
                                'accred_noisy_results.json'), "r") as saved_file:
@@ -103,21 +99,21 @@ class TestAccred(unittest.TestCase):
         confidence = noisy_results['confidence']
         accred_full = noisy_results['accred_full']
         accred_mean = noisy_results['accred_mean']
-        
+
         test_1 = accred.AccreditationFitter()
         for a, b, c in zip(all_strings, all_postp_list, all_v_zero):
             test_1.AppendStrings(a, b, c)
-            
-        accred_full_test = test_1.FullAccreditation(confidence) 
+
+        accred_full_test = test_1.FullAccreditation(confidence)
         accred_mean_test = test_1.MeanAccreditation(confidence)
         self.assertEqual(accred_full_test[1],
                          accred_full[1],
                          "Error: Noisy outcomes fail full accred")
-        
+
         self.assertEqual(accred_mean[1],
                          accred_mean_test[1],
                          "Error: Noisy outcomes fail mean accred")
-        
+
 
 if __name__ == '__main__':
     unittest.main()
