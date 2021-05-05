@@ -158,6 +158,10 @@ class TestCodes(unittest.TestCase):
         p = dec.get_error_probs(test_results)
         self.assertTrue(
             round(p[(1, 0, 0), (1, 0, 1)], 2) == 0.33, error)
+        
+        
+    def test_graph(self):
+        self.assertTrue(True,':(')
 
 
 if __name__ == '__main__':

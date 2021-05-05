@@ -40,7 +40,7 @@ class GraphDecoder():
     of a quantum error correction code, and then run suitable decoders.
     """
 
-    def __init__(self, code, S=None, auto=True):
+    def __init__(self, code, S=None, brute=False):
         """
         Args:
             code (RepitionCode): The QEC Code object for which this decoder
@@ -60,7 +60,7 @@ class GraphDecoder():
 
         if S:
             self.S = S
-        elif auto and '_get_all_processed_results' in dir(code): # NEWNESS
+        elif not brute and '_get_all_processed_results' in dir(code): # NEWNESS
             self.S = self._make_syndrome_graph(results=code._get_all_processed_results())
         else:
             self.S = self._make_syndrome_graph()

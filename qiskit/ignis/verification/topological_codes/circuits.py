@@ -197,13 +197,13 @@ class RepetitionCode():
                 results[log][new_string] = raw_results[log][string]
 
         return results
-    
-    def _get_all_processed_results(self): # NEWNESS
+
+    def _get_all_processed_results(self):  # NEWNESS
         """ - returns a list of all processed results stemming from single qubit errors
             - needed so create the decoder graph
         """
          
-        syn = RepetitionCodeGenerator(self)  # new class
+        syn = RepetitionCodeSyndromeGenerator(self)  # new class
         
         T = syn.T # number of rounds of stabilizer measurements
         d = syn.d # number of data qubits
@@ -214,15 +214,13 @@ class RepetitionCode():
                 syn.bitflip_ancilla(i, r) 
                 out.append(syn.get_processed_results()) 
                 syn.bitflip_ancilla(i, r) # undo the error
-            ''' WHAT IS N?
-            for i in range(n):
+            for i in range(d):
                 syn.bitflip_data(i, r, True) 
                 out.append(syn.get_processed_results()) 
                 syn.bitflip_data(i, r, True)  # undo the error
                 syn.bitflip_data(i, r, False) 
                 out.append(syn.get_processed_results()) 
                 syn.bitflip_data(i, r, False)  # undo the error
-             '''
         for i in range(d):
             syn.bitflip_readout(i) 
             out.append(syn.get_processed_results()) 
@@ -231,7 +229,7 @@ class RepetitionCode():
         return out
 
 # NEWNESS
-class RepetitionCodeGenerator():
+class RepetitionCodeSyndromeGenerator():
     """
     description
     """
@@ -280,7 +278,7 @@ class RepetitionCodeGenerator():
             for r in range(r0, self.T): 
                 self.m_anc[r][i-1] = (self.m_anc[r][i-1] +1 )%2   # error propagates across 2nd CNOT sequence
             
-        if i<n-1: # q[i] is not at the lower(right) boundary
+        if i<self.d-1: # q[i] is not at the lower(right) boundary
             for r in range(r0+1, self.T):
                 self.m_anc[r][i] = (self.m_anc[r][i] +1 )%2  # error propagates across 1st CNOT sequence
     
