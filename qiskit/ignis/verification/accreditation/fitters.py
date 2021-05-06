@@ -27,7 +27,8 @@ https://arxiv.org/abs/2103.06603
 
 import numpy as np
 from qiskit import QiskitError
-from .qotp import QOTPCorrectString
+from .qotp import QOTPCorrectString, QOTPCorrectCounts
+from qiskit.utils.deprecation import deprecate_function
 
 
 class AccreditationFitter:
@@ -190,3 +191,77 @@ class AccreditationFitter:
                 self._counts_accepted[target_count] += 1
             else:
                 self._counts_accepted[target_count] = 1
+            
+    @deprecate_function('single_protocol_run is being deprecated. '
+                        'Use AppendResult or AppendString')            
+    def single_protocol_run(self, results, postp_list, v_zero):
+        """
+        DEPRECATED-Single protocol run of accreditation protocol on simul backend
+        Args:
+            results (Result): results of the quantum job
+            postp_list (list): list of strings used to post-process outputs
+            v_zero (int): position of target
+        """
+        self._Nruns = self._Nruns + 1
+        self.flag = 'accepted'
+
+        # Check that correct number of traps is input
+        if self._Nruns == 1:
+            self._Ntraps = len(postp_list)-1
+        else:
+            if len(postp_list)-1 != self._Ntraps:
+                QiskitError("ERROR: Run protocol with the"
+                            "same number of traps")
+
+        if self._Ntraps < 3:
+            QiskitError("ERROR: run the protocol with at least 3 traps")
+        allcounts = []
+        for ind, postp in enumerate(postp_list):
+
+            # Classical postprocessing
+            # check single shot and extract string
+            counts = results.get_counts(ind)
+            counts = QOTPCorrectCounts(counts, postp)
+            shots = 0
+            countstring = None
+            for countstring, val in counts.items():
+                shots += val
+            if shots != 1 or countstring is None:
+                QiskitError("ERROR: not single shot data")
+            allcounts.append(countstring)
+        for k, count in enumerate(allcounts):
+            if k != v_zero:
+                # Check if trap returns correct output
+                if count != '0' * len(count):
+                    self.flag = 'rejected'
+            else:
+                output_target = count
+        if self.flag == 'accepted':
+            self._Nacc += 1
+            if output_target in self._counts_accepted.keys():
+                self._counts_accepted[output_target] += 1
+            else:
+                self._counts_accepted[output_target] = 1
+        self.outputs = self._counts_accepted
+        self.num_runs = self._Nruns
+        self.N_acc=self._Nacc
+            
+    @deprecate_function('bound_variation_distance is being deprecated. '
+                        'Use FullAccreditation or MeanAccreditation')        
+    def bound_variation_distance(self, theta):
+        """
+        DEPRECATED-This function computes the bound on variation distance based and
+        the confidence
+        Args:
+            theta (float): number between 0 and 1
+        """
+        if self._Nacc == 0:
+            QiskitError("ERROR: Variation distance requires"
+                        "at least one accepted run")
+        if self._Nacc/self._Nruns > theta:
+            self.bound = self._g*1.7/(self._Ntraps+1)
+            self.bound = self.bound/(self._Nacc/self._Nruns-theta)
+            self.bound = self.bound+1-self._g
+            self.confidence = 1-2*np.exp(-2*theta*self._Nruns*self._Nruns)
+        self.bound = min(self.bound, 1)
+ 
