@@ -27,8 +27,8 @@ https://arxiv.org/abs/2103.06603
 
 import numpy as np
 from qiskit import QiskitError
-from .qotp import QOTPCorrectString, QOTPCorrectCounts
 from qiskit.utils.deprecation import deprecate_function
+from .qotp import QOTPCorrectString, QOTPCorrectCounts
 
 
 class AccreditationFitter:
@@ -52,6 +52,14 @@ class AccreditationFitter:
         self._Nacc = 0
         self._g = 1.0
 
+        # all to be deprecated
+        self.flag = None
+        self.outputs = None
+        self.num_runs = None
+        self.N_acc = None
+        self.bound = None
+        self.confidence = None
+
     def Reset(self):
         """
         Reset the accreditation class object
@@ -65,6 +73,14 @@ class AccreditationFitter:
         self._Nruns = 0
         self._Nacc = 0
         self._g = 1.0
+
+        # all to be deprecated
+        self.flag = None
+        self.outputs = None
+        self.num_runs = None
+        self.N_acc = None
+        self.bound = None
+        self.confidence = None
 
     def AppendResults(self, results, postp_list, v_zero):
         """
@@ -191,9 +207,9 @@ class AccreditationFitter:
                 self._counts_accepted[target_count] += 1
             else:
                 self._counts_accepted[target_count] = 1
-            
+
     @deprecate_function('single_protocol_run is being deprecated. '
-                        'Use AppendResult or AppendString')            
+                        'Use AppendResult or AppendString')
     def single_protocol_run(self, results, postp_list, v_zero):
         """
         DEPRECATED-Single protocol run of accreditation protocol on simul backend
@@ -244,10 +260,10 @@ class AccreditationFitter:
                 self._counts_accepted[output_target] = 1
         self.outputs = self._counts_accepted
         self.num_runs = self._Nruns
-        self.N_acc=self._Nacc
-            
+        self.N_acc = self._Nacc
+
     @deprecate_function('bound_variation_distance is being deprecated. '
-                        'Use FullAccreditation or MeanAccreditation')        
+                        'Use FullAccreditation or MeanAccreditation')
     def bound_variation_distance(self, theta):
         """
         DEPRECATED-This function computes the bound on variation distance based and
@@ -264,4 +280,3 @@ class AccreditationFitter:
             self.bound = self.bound+1-self._g
             self.confidence = 1-2*np.exp(-2*theta*self._Nruns*self._Nruns)
         self.bound = min(self.bound, 1)
- 
