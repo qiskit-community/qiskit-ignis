@@ -99,13 +99,12 @@ def generate_data_noisy():
     simulator = qiskit.Aer.get_backend('qasm_simulator')
     noise_model = NoiseModel()
     p1q = 0.0002
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u1')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u3')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'sx')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'x')
     p2q = 0.005
     noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
 
-    basis_gates = ['u1', 'u2', 'u3', 'cx']
+    basis_gates = ['rz', 'sx', 'x', 'cx']
     # Number of runs
     d = 20
     v = 10

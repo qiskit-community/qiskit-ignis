@@ -45,13 +45,19 @@ def layer_parser(circ, two_qubit_gate='cx', coupling_map=None):
 
     Raises:
         QiskitError: If a circuit element is not implemented in qotp
+
+    References:
+        1. S. Ferracin, T. Kapourniotis, A. Datta.
+           *Accrediting outputs of noisy intermediate-scale quantum computing devices*,
+           New Journal of Physics, Volume 21, 113038. (2019).
+           `NJP 113038 <https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6>`_
     """
 
     # transpile to single qubits and cx
     # TODO: replace cx with cz when that is available
     circ_internal = transpile(circ,
                               optimization_level=2,
-                              basis_gates=['u1', 'u2', 'u3', 'cx'],
+                              basis_gates=['rz', 'sx', 'x', 'cx'],
                               coupling_map=coupling_map)
     # quantum and classial registers
     qregs = circ_internal.qregs[0]
@@ -77,7 +83,7 @@ def layer_parser(circ, two_qubit_gate='cx', coupling_map=None):
                     twoqubitlayers.append(QuantumCircuit(qregs, cregs))
                     current2qs = []
                 singlequbitlayers[-2].append(circelem, qsub, csub)
-            elif n in ('u1', 'u2', 'u3'):
+            elif n in ('rz', 'sx', 'x'):
                 # single qubit gate
                 q = qsub[0]
                 if q in current2qs:
@@ -117,7 +123,7 @@ def layer_parser(circ, two_qubit_gate='cx', coupling_map=None):
         del twoqubitlayers[-1]
     for ind, circlayer in enumerate(singlequbitlayers):
         singlequbitlayers[ind] = transpile(circlayer,
-                                           basis_gates=['u1', 'u2', 'u3'])
+                                           basis_gates=['rz', 'sx', 'x'])
     parsedlayers = {'singlequbitlayers': singlequbitlayers,
                     'twoqubitlayers': twoqubitlayers,
                     'measlayer': measlayer,
@@ -174,7 +180,7 @@ def QOTP_fromlayers(layers, rng):
                 temp_circ.x(q)
         # add to circuit and reset temp
         temp_circ = transpile(temp_circ,
-                              basis_gates=['u1', 'u2', 'u3'])
+                              basis_gates=['rz', 'sx', 'x'])
         qotp_circ = qotp_circ.compose(temp_circ)
         temp_circ = QuantumCircuit(qregs, cregs)
         # add two qubit layers and get indices for 2qgates
@@ -215,7 +221,7 @@ def QOTP_fromlayers(layers, rng):
             temp_circ.x(q)
     # add to circuit
     temp_circ = transpile(temp_circ,
-                          basis_gates=['u1', 'u2', 'u3'])
+                          basis_gates=['rz', 'sx', 'x'])
     qotp_circ = qotp_circ.compose(temp_circ)
     # post operations
     qotp_postp = np.flip(paulixs)
@@ -228,11 +234,8 @@ def QOTP(circ, num, two_qubit_gate='cx', coupling_map=None, seed=None):
     """
     Performs a QOTP (or random compilation) on a generic circuit.
 
-    This is essentially the same protocol as used in
-    randomized compiling, but follows the methods in
-    Samuele Ferracin, Theodoros Kapourniotis and Animesh Datta
-    New Journal of Physics, Volume 21, November 2019
-    https://iopscience.iop.org/article/10.1088/1367-2630/ab4fd6
+    This is similar to randomized compiling,
+    but follows the methods in [1].
 
     Args:
         circ (QuantumCircuit): A generic quantum circuit
@@ -242,6 +245,7 @@ def QOTP(circ, num, two_qubit_gate='cx', coupling_map=None, seed=None):
         coupling_map (list): a particular device topology as a
             list of list (e.g. [[0,1],[1,2],[2,0]])
         seed (int): seed to the random number generator
+
     Returns:
         tuple: a tuple of type (``qotp_circ``, ``qotp_postp``) where:
             qotp_circs (list): a list of circuits with qotp applied
@@ -270,6 +274,7 @@ def QOTPCorrectString(qotp_string, qotp_postp):
     Args:
         qotp_string (str): a measurement output string
         qotp_postp (list): a binary list denoting the one time pad
+
     Returns:
         dict: the corrected counts dict
     """
@@ -286,6 +291,7 @@ def QOTPCorrectCounts(qotp_counts, qotp_postp):
     Args:
         qotp_counts (dict): a dict of exp counts
         qotp_postp (list): a binary list denoting the one time pad
+
     Returns:
         dict: the corrected counts dict
     """
