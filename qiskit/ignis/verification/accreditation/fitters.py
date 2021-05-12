@@ -111,5 +111,4 @@ class AccreditationFitter:
             self.bound = self.bound/(self.N_acc/self.num_runs-theta)
             self.bound = self.bound+1-self.g_num
             self.confidence = 1-2*np.exp(-2*theta*self.num_runs*self.num_runs)
-        if self.bound > 1:
-            self.bound = 1
+        self.bound = min(self.bound, 1)

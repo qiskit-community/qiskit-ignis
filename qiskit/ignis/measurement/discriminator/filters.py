@@ -125,9 +125,9 @@ class DiscriminationFilter:
             for char in expected_states[key]:
                 try:
                     value = int(char)
-                except ValueError:
+                except ValueError as exc:
                     raise QiskitError('Cannot parse character in ' +
-                                      expected_states[key])
+                                      expected_states[key]) from exc
 
                 base = base if base > value else value
 
