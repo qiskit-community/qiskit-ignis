@@ -43,7 +43,6 @@ as well as performing interleaved RB, purity RB and RB on the non-Clifford CNOT-
    InterleavedRBFitter
    PurityRBFitter
    CNOTDihedralRBFitter
-   CNOTDihedral
    count_gates
    gates_per_clifford
    calculate_1q_epg
@@ -115,8 +114,7 @@ Accreditation
    QOTPCorrectCounts
 """
 from .quantum_volume import qv_circuits, QVFitter
-from .randomized_benchmarking import (CNOTDihedral,
-                                      randomized_benchmarking_seq,
+from .randomized_benchmarking import (randomized_benchmarking_seq,
                                       RBFitter, InterleavedRBFitter,
                                       PurityRBFitter, CNOTDihedralRBFitter,
                                       count_gates, gates_per_clifford,
