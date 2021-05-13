@@ -98,23 +98,20 @@ def generate_data_noisy():
     accsys = make_accred_system(seed=seed_accreditation)
     simulator = qiskit.Aer.get_backend('qasm_simulator')
     noise_model = NoiseModel()
-    p1q = 0.002
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u1')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u2')
-    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'u3')
-    p2q = 0.02
+    p1q = 0.0002
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'sx')
+    noise_model.add_all_qubit_quantum_error(depolarizing_error(p1q, 1), 'x')
+    p2q = 0.005
     noise_model.add_all_qubit_quantum_error(depolarizing_error(p2q, 2), 'cx')
 
-    basis_gates = ['u1', 'u2', 'u3', 'cx']
+    basis_gates = ['rz', 'sx', 'x', 'cx']
     # Number of runs
     d = 20
     v = 10
 
-    test_3 = AccreditationFitter()
-    all_results = []
+    all_strings = []
     all_postp_list = []
     all_v_zero = []
-    all_acc = []
     for run in range(d):
         print([run, d])
         # Create target and trap circuits with random Pauli gates
@@ -123,22 +120,28 @@ def generate_data_noisy():
         job = execute(circuit_list, simulator,
                       noise_model=noise_model, basis_gates=basis_gates,
                       shots=1, seed_simulator=seed_simulator + run)
-        all_results.append(job.result())
+        result = job.result()
+        strings = []
+        for ind, _ in enumerate(circuit_list):
+            counts = result.get_counts(ind)
+            strings.append(list(counts.keys())[0])
+        all_strings.append(strings)
         all_postp_list.append([postp.tolist() for postp in postp_list])
         all_v_zero.append(v_zero)
-        # Post-process the outputs and see if the protocol accepts
-        test_3.single_protocol_run(job.result(), postp_list, v_zero)
-        all_acc.append(test_3.flag)
 
-    theta = 5/100
-    test_3.bound_variation_distance(theta)
-    bound = test_3.bound
-    outputdict = {'all_results': [result.to_dict() for result in all_results],
+    # Post-process the outputs and see if the protocol accepts
+    test_3 = AccreditationFitter()
+    for a, b, c in zip(all_strings, all_postp_list, all_v_zero):
+        test_3.AppendStrings(a, b, c)
+    confidence = 0.95
+    accred_full = test_3.FullAccreditation(confidence)
+    accred_mean = test_3.MeanAccreditation(confidence)
+    outputdict = {'all_strings': all_strings,
                   'all_postp_list': all_postp_list,
                   'all_v_zero': all_v_zero,
-                  'all_acc': all_acc,
-                  'theta': theta,
-                  'bound': bound}
+                  'confidence': confidence,
+                  'accred_full': accred_full,
+                  'accred_mean': accred_mean}
     with open('accred_noisy_results.json', "w") as results_file:
         json.dump(outputdict, results_file)
 

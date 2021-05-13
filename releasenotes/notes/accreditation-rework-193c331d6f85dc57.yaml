@@ -1,0 +1,16 @@
+---
+features:
+  - |
+    Updated the accreditation protocol to use fitting routine from
+    https://arxiv.org/abs/2103.06603.
+    :class:`~qiskit.ignis.verification.accreditation.AccreditationFitter`
+    now has methods FullAccreditation (previous protocol) and MeanAccreditation
+    (new protocol).  In addtition data entry has been changed to either
+    use the result object AppendResult or a list of strings AppendStrings.
+    :func:`qiskit.ignis.verification.QOTPCorrectString` was also added.
+deprecations:
+  - |
+    Deprecating methods in
+    :class:`~qiskit.ignis.verification.accreditation.AccreditationFitter`
+    namely bound_variation_distance and single_protocol_run
+

@@ -112,6 +112,7 @@ Accreditation
    AccreditationFitter
    QOTP
    QOTPCorrectCounts
+   QOTPCorrectString
 """
 from .quantum_volume import qv_circuits, QVFitter
 from .randomized_benchmarking import (randomized_benchmarking_seq,
@@ -133,7 +134,11 @@ from .tomography import (state_tomography_circuits,
                          TomographyFitter,
                          marginal_counts, combine_counts,
                          expectation_counts, count_keys)
-from .accreditation import AccreditationCircuits, AccreditationFitter, QOTP, QOTPCorrectCounts
+from .accreditation import (AccreditationCircuits,
+                            AccreditationFitter,
+                            QOTP,
+                            QOTPCorrectCounts,
+                            QOTPCorrectString)
 
 from .entanglement import (ordered_list_generator,
                            composite_pauli_z,
