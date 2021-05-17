@@ -472,7 +472,8 @@ def _tomography_circuits(
             if meas_label is not None:
                 meas.barrier(*qubit_registers)
                 for j in range(num_qubits):
-                    meas.compose(measurement(meas_label[j], meas_qubits[j], clbits[j]), [j], [j], inplace=True)
+                    meas.compose(measurement(meas_label[j], meas_qubits[j], clbits[j]),
+                                 [j], [j], inplace=True)
             circ = prep.compose(meas)
             if prep_label is None:
                 # state tomography circuit
