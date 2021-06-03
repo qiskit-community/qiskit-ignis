@@ -156,6 +156,16 @@ class TestCodes(unittest.TestCase):
             len(dec.S) == 8,
             'Error: Syndrome graph not correct for d=3, T=2')
 
+    def test_string2nodes(self):
+        """Test string2nodes with different logical values."""
+        code = RepetitionCode(3, 2)
+        dec = GraphDecoder(code)
+        s0 = '0 0  01 00 01'
+        s1 = '1 1  01 00 01'
+        self.assertTrue(
+            dec._string2nodes(s0, log='0') == dec._string2nodes(s1, log='1'),
+            'Error: Incorrect nodes from results string')
+
     def test_weight(self):
         """Error weighting code test."""
         error = "Error: Calculated error probability not correct for "\
