@@ -64,7 +64,7 @@ def get_noise(p_meas, p_gate):
 class TestCodes(unittest.TestCase):
     """The test class. """
 
-    def test_rep(self, weighted=False):
+    def test_rep(self, weighted=False, xbasis=False):
         """Repetition code test."""
         matching_probs = {}
         weighted_matching_probs = {}
@@ -77,7 +77,7 @@ class TestCodes(unittest.TestCase):
 
         for d in range(3, max_dist + 1, 2):
 
-            code = RepetitionCode(d, 2)
+            code = RepetitionCode(d, 2, xbasis=xbasis)
 
             results = get_syndrome(code, noise_model=noise_model, shots=8192)
 
@@ -147,6 +147,14 @@ class TestCodes(unittest.TestCase):
                     l_down or lookup_probs[(d, log)] == 0.0, l_error)
                 self.assertTrue(
                     p_down or post_probs[(d, log)] == 0.0, p_error)
+
+    def test_x_encoding(self):
+        """X basis encoding test."""
+        code = RepetitionCode(3, 2, True)
+        dec = GraphDecoder(code)
+        self.assertTrue(
+            len(dec.S) == 8,
+            'Error: Syndrome graph not correct for d=3, T=2')
 
     def test_weight(self):
         """Error weighting code test."""
