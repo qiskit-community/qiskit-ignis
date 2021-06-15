@@ -70,7 +70,7 @@ class GraphDecoder():
             separated_string.append(syndrome_type_string.split(' '))
         return separated_string
 
-    def _string2nodes(self, string, log='0'):
+    def _string2nodes(self, string, logical='0'):
 
         separated_string = self._separate_string(string)
         nodes = []
@@ -80,7 +80,7 @@ class GraphDecoder():
                 elements = \
                     separated_string[syn_type][syn_round]
                 for elem_num, element in enumerate(elements):
-                    if (syn_type == 0 and element != log) or (syn_type != 0 and element == '1'):
+                    if (syn_type == 0 and element != logical) or (syn_type != 0 and element == '1'):
                         nodes.append((syn_type,
                                       syn_round,
                                       elem_num))
@@ -159,14 +159,14 @@ class GraphDecoder():
 
         return S
 
-    def get_error_probs(self, results, log='0'):
+    def get_error_probs(self, results, logical='0'):
         """
         Generate probabilities of single error events from result counts.
 
         Args:
             results (dict): A results dictionary, as produced by the
             `process_results` method of the code.
-            log (string): Logical value whose results are used.
+            logical (string): Logical value whose results are used.
 
         Returns:
             dict: Keys are the edges for specific error
@@ -179,7 +179,7 @@ class GraphDecoder():
             https://doi.org/10.1002/qute.201800012
         """
 
-        results = results[log]
+        results = results[logical]
         shots = sum(results.values())
 
         error_probs = {}
@@ -193,7 +193,7 @@ class GraphDecoder():
             for string in results:
 
                 # list of i for which v_i=1
-                error_nodes = self._string2nodes(string, log=log)
+                error_nodes = self._string2nodes(string, logical=logical)
 
                 # get [v_i,v_j] for edge (i,j)
                 v = [int(self.S[edge[k]] in error_nodes) for k in range(2)]
