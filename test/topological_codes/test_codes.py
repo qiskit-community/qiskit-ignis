@@ -163,7 +163,7 @@ class TestCodes(unittest.TestCase):
         s0 = '0 0  01 00 01'
         s1 = '1 1  01 00 01'
         self.assertTrue(
-            dec._string2nodes(s0, log='0') == dec._string2nodes(s1, log='1'),
+            dec._string2nodes(s0, logical='0') == dec._string2nodes(s1, logical='1'),
             'Error: Incorrect nodes from results string')
 
     def test_weight(self):
