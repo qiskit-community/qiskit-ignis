@@ -26,7 +26,7 @@ class RepetitionCode():
     T syndrome measurement rounds.
     """
 
-    def __init__(self, d, T=0, xbasis=True):
+    def __init__(self, d, T=0, xbasis=False):
         """
         Creates the circuits corresponding to a logical 0 and 1 encoded
         using a repetition code.
