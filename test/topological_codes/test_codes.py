@@ -68,6 +68,8 @@ class TestCodes(unittest.TestCase):
         """Repetition code test."""
         matching_probs = {}
         weighted_matching_probs = {}
+        clustering_probs = {}
+        weighted_clustering_probs = {}
         lookup_probs = {}
         post_probs = {}
 
@@ -87,6 +89,8 @@ class TestCodes(unittest.TestCase):
 
             logical_prob_match = dec.get_logical_prob(
                 results)
+            logical_prob_cluster = dec.get_logical_prob(
+                results,'clustering')
             logical_prob_lookup = lookuptable_decoding(
                 results, results)
             logical_prob_post = postselection_decoding(
@@ -95,6 +99,8 @@ class TestCodes(unittest.TestCase):
             for log in ['0', '1']:
                 matching_probs[(d, log)] = logical_prob_match[log]
                 weighted_matching_probs[(d, log)] = logical_prob_match[log]
+                clustering_probs[(d, log)] = logical_prob_cluster[log]
+                weighted_clustering_probs[(d, log)] = logical_prob_cluster[log]
                 lookup_probs[(d, log)] = logical_prob_lookup[log]
                 post_probs[(d, log)] = logical_prob_post[log]
 
@@ -104,6 +110,10 @@ class TestCodes(unittest.TestCase):
                     > matching_probs[(d + 2, log)]
                 w_down = matching_probs[(d, log)] \
                     > weighted_matching_probs[(d + 2, log)]
+                c_down = clustering_probs[(d, log)] \
+                    > clustering_probs[(d + 2, log)]
+                cw_down = clustering_probs[(d, log)] \
+                    > weighted_clustering_probs[(d + 2, log)]
                 l_down = lookup_probs[(d, log)] \
                     > lookup_probs[(d + 2, log)]
                 p_down = post_probs[(d, log)] \
@@ -124,6 +134,22 @@ class TestCodes(unittest.TestCase):
                     + "For d="+str(d+2)+" (weighted): "\
                     + str(weighted_matching_probs[(d+2, log)])\
                     + "."
+                c_error = "Error: Clustering decoder does not improve "\
+                    + "logical error rate between repetition codes"\
+                    + " of distance " + str(d) + " and " + str(d + 2) + ".\n"\
+                    + "For d="+str(d)+": " + str(clustering_probs[(d, log)])\
+                    + ".\n"\
+                    + "For d="+str(d+2)+": " + str(clustering_probs[(d+2, log)])\
+                    + "."
+                cw_error = "Error: Clustering decoder does not improve "\
+                    + "logical error rate between repetition codes"\
+                    + " of distance " + str(d) + " and " + str(d + 2) + ".\n"\
+                    + "For d="+str(d)+" (unweighted): "\
+                    + str(clustering_probs[(d, log)]) + ".\n"\
+                    + "For d="+str(d+2)+" (weighted): "\
+                    + str(weighted_clustering_probs[(d+2, log)])\
+                    + "."  
+                    
                 l_error = "Error: Lookup decoder does not improve "\
                     + "logical error rate between repetition codes"\
                     + " of distance " + str(d) + " and " + str(d + 2) + ".\n"\
@@ -143,6 +169,10 @@ class TestCodes(unittest.TestCase):
                     m_down or matching_probs[(d, log)] == 0.0, m_error)
                 self.assertTrue(
                     w_down or matching_probs[(d + 2, log)] == 0.0, w_error)
+                self.assertTrue(
+                    c_down or clustering_probs[(d, log)] == 0.0, c_error)
+                self.assertTrue(
+                    cw_down or clustering_probs[(d + 2, log)] == 0.0, cw_error)
                 self.assertTrue(
                     l_down or lookup_probs[(d, log)] == 0.0, l_error)
                 self.assertTrue(
