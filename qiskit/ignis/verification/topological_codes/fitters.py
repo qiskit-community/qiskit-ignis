@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 
 # This code is part of Qiskit.
 #
@@ -296,6 +296,7 @@ class GraphDecoder():
                         E[subgraph].add_edge(source_index, target_index,
                                              -distance)
         return E
+    
     def draw_3d_error_graph(self, graph):
         """
             Args:
@@ -357,12 +358,11 @@ class GraphDecoder():
                 pos[i] = (y,z+2)
                 G.add_node(i,pos = (y,z+2))
                 i += 1
-                
         plt.figure(figsize = (10,10)) 
         edge_labels = {}
         for _ in graph.edge_list():
             G.add_edge(_[0],_[1])
-            edge_labels[(_[0],_[1])] = graph.get_edge_data(_[0], _[1])
+            edge_labels[(_[0],_[1])] = abs(graph.get_edge_data(_[0], _[1]))
         nx.draw_networkx_edge_labels(G, pos, edge_labels)
         return nx.draw(G, pos, with_labels = True,
                 node_color = 'red', font_size = 8)
@@ -465,8 +465,6 @@ class GraphDecoder():
                 nearest_cluster : cluster to which nearest outside node 
                 belongs
         """
-
-        
         Cluster_Graph = rx.PyGraph()
         Cluster_Graph.add_nodes_from(Error_Graph.nodes())
         Cluster_Graph.add_edges_from(Error_Graph.weighted_edge_list())        
@@ -644,7 +642,43 @@ class GraphDecoder():
         figure.scene.disable_render = False 
         return mlab.show()
 
-    def get_logical_prob(self, results, algorithm='matching'):
+    def draw_2d_decoded_graph(self, graph, Edgelist, neutral_nodelist):
+        """
+            Args:
+               Graph (Networkx Graph) : Decoded Graph to be visualised.
+                
+            Returns:
+                A 2-d graph.
+        """    
+        import matplotlib.pyplot as plt
+        import networkx as nx
+        
+        
+        G = nx.Graph()
+        pos = {}
+        i = 0
+        for x,y,z in graph.nodes():
+            if (x,y,z) in neutral_nodelist:
+                if x == 0:
+                    pos[i] = (y,z)
+                    G.add_node(i,pos = (y,z),)
+                    i += 1
+                else:
+                    pos[i] = (y,z+2)
+                    G.add_node(i,pos = (y,z+2))
+                    i += 1
+        plt.figure(figsize = (10,10)) 
+        edge_labels = {}
+        for _ in Edgelist:
+            G.add_edge(neutral_nodelist.index(_[0]),neutral_nodelist.index(_[1]))
+            edge_labels[neutral_nodelist.index(_[0]),
+                        neutral_nodelist.index(_[1])]= abs(graph.get_edge_data(
+                            graph.nodes().index(_[0]),graph.nodes().index(_[1])))
+        nx.draw_networkx_edge_labels(G, pos, edge_labels)
+        return nx.draw(G, pos, with_labels = True,
+                node_color = 'b', font_size = 8)
+
+    def get_logical_prob(self, results, algorithm = 'matching'):
         """
         Args:
             results (dict): A results dictionary, as produced by the
@@ -667,6 +701,13 @@ class GraphDecoder():
             if algorithm == 'matching':
                 for string in results[log]:
                     corr_str = self.matching(string)
+                    if corr_str in corrected_results:
+                        corrected_results[corr_str] += results[log][string]
+                    else:
+                        corrected_results[corr_str] = results[log][string]
+            elif algorithm == 'clustering':
+                for string in results[log]:
+                    corr_str = self.cluster_decoding(string)[0]
                     if corr_str in corrected_results:
                         corrected_results[corr_str] += results[log][string]
                     else:
