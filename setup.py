@@ -28,7 +28,7 @@ requirements = [
     "mayavi>=4.6.0",
     "networkx>=2.5.1",
     "matplotlib>=2.1",
-    "PyQt5>=5.15"
+    "pyqt5>=5.15"
 ]
 
 
