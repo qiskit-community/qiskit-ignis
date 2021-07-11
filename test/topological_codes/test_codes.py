@@ -148,8 +148,7 @@ class TestCodes(unittest.TestCase):
                     + str(clustering_probs[(d, log)]) + ".\n"\
                     + "For d="+str(d+2)+" (weighted): "\
                     + str(weighted_clustering_probs[(d+2, log)])\
-                    + "."  
-                    
+                    + "."
                 l_error = "Error: Lookup decoder does not improve "\
                     + "logical error rate between repetition codes"\
                     + " of distance " + str(d) + " and " + str(d + 2) + ".\n"\

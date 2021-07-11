@@ -25,6 +25,7 @@ import retworkx as rx
 import numpy as np
 
 from qiskit import QuantumCircuit, execute
+from sklearn.cluster import DBSCAN
 
 try:
     from qiskit.providers.aer import Aer
@@ -296,77 +297,6 @@ class GraphDecoder():
                         E[subgraph].add_edge(source_index, target_index,
                                              -distance)
         return E
-    
-    def draw_3d_error_graph(self, graph):
-        """
-            Args:
-               graph (Retworkx Graph) : Error Graph to be visualised.
-                
-            Returns:
-                A interactive graph window.
-        """
-        from mayavi import mlab
-        import numpy as np
-        edges = graph.edge_list()
-        nodes = graph.nodes()
-        xyz = np.array(nodes)
-        if max(xyz[:, 2]) == 0:
-            resize_factor = 1
-        else:
-            resize_factor = max(xyz[:, 2])
-        figure = mlab.figure(1, bgcolor=(1, 1, 1))
-        figure.scene.disable_render = True
-        pts = mlab.points3d(xyz[:, 0],xyz[:, 1],xyz[:, 2]/resize_factor,
-                            scale_factor=0.02,color = (1,0,0),
-                            resolution=100)
-        for x in graph.nodes():
-                mlab.text3d(x[0], x[1], x[2]/resize_factor, text = str(tuple(x)),
-                            color = (0,0,0), scale=(0.01,0.01,0.01))
-        for edge in graph.weighted_edge_list():
-                mlab.text3d((nodes[edge[0]][0]+nodes[edge[1]][0])/2,
-                            (nodes[edge[0]][1]+nodes[edge[1]][1])/2,
-                            (nodes[edge[0]][2]+nodes[edge[1]][2])/(2*resize_factor),
-                            text = str(abs(edge[2])),color = (0,0,0), 
-                            scale=(0.01,0.01,0.01))
-        pts.mlab_source.dataset.lines = np.array(edges)
-        tube = mlab.pipeline.tube(pts, tube_radius=0.0005)
-        mlab.pipeline.surface(tube, color = (0,0,0))
-        figure.scene.disable_render = False
-
-        return mlab.show()
-    
-    def draw_2d_error_graph(self, graph):
-        """
-            Args:
-               graph (Retworkx Graph) : Error Graph to be visualised.
-                
-            Returns:
-                A 2-d graph.
-        """    
-        import matplotlib.pyplot as plt
-        import networkx as nx
-        
-        G = nx.Graph()
-        pos = {}
-        i = 0
-        for x,y,z in graph.nodes():
-            if x == 0:
-                pos[i] = (y,z)
-                G.add_node(i,pos = (y,z))
-                i += 1
-            else:
-                pos[i] = (y,z+2)
-                G.add_node(i,pos = (y,z+2))
-                i += 1
-        plt.figure(figsize = (10,10)) 
-        edge_labels = {}
-        for _ in graph.edge_list():
-            G.add_edge(_[0],_[1])
-            edge_labels[(_[0],_[1])] = abs(graph.get_edge_data(_[0], _[1]))
-        nx.draw_networkx_edge_labels(G, pos, edge_labels)
-        return nx.draw(G, pos, with_labels = True,
-                node_color = 'red', font_size = 8)
-
     def matching(self, string):
         """
         Args:
@@ -442,121 +372,51 @@ class GraphDecoder():
         logical_string = logical_string[:-1]
 
         return logical_string
-    
-    def Nearest_Cluster(self,Cluster, Error_Graph, target ):
-    
-        """
-            Args:
-                Cluster (dict): Dictionary that contains clusters in the 
-                Error graph and the nodes in it
-                
-                Error_graph (Networkx Graph):Error graph in which the 
-                nearest cluster and the node will be searched
-                
-                target (int,int,int) : target cluster for which nearest
-                cluster is being searched
-                
-            Returns:
-                list : [nearest_outside_node, nearest_cluster]
-                
-                nearest_outside_node : nearest node to the target node
-                which doesn't belong to the same cluster
-                
-                nearest_cluster : cluster to which nearest outside node 
-                belongs
-        """
-        Cluster_Graph = rx.PyGraph()
-        Cluster_Graph.add_nodes_from(Error_Graph.nodes())
-        Cluster_Graph.add_edges_from(Error_Graph.weighted_edge_list())        
-        for i, __ in enumerate(Error_Graph.nodes()):
-            if __ not in Cluster[target]:
-                Cluster_Graph.remove_node(i)
-        Edges =  rx.max_weight_matching(Cluster_Graph, 
-                 max_cardinality=True, weight_fn=lambda x: x)
-        remaining_node =  list(Cluster_Graph.node_indexes())
-        for edge in Edges:
-            remaining_node.remove(edge[0])
-            remaining_node.remove(edge[1])
-        node_neigbours = {}
-        for edge in Error_Graph.weighted_edge_list():
-            if remaining_node[0] == edge[0]:
-                node_neigbours[Error_Graph[edge[1]]] = {'weight': edge[2]}
-            if remaining_node[0] == edge[1]:
-                node_neigbours[Error_Graph[edge[0]]] = {'weight': edge[2]}
-        nearest_neighbours = sorted(node_neigbours.items(), 
-                                key=lambda e: e[1]["weight"], 
-                                reverse = True)[:len(Cluster[target])]
-        nearest_outside_node = [x[0] for x in nearest_neighbours if x[0] not in 
-                                Cluster[target]]
-        for x in Cluster.keys():
-            if nearest_outside_node[0] in Cluster[x]:
-                nearest_cluster = x
-        return [nearest_outside_node[0], nearest_cluster] 
-
     def cluster_decoding(self,string, eps = 4):
-    
         """
             Args:
                 string (str): A string describing the output from the code.
-                
-                eps (int):The maximum distance between two samples for one 
-                to be considered as in the neighborhood of the other. This 
+                eps (int):The maximum distance between two samples for one
+                to be considered as in the neighborhood of the other. This
                 is not a maximum bound on the distances of points within a
-                cluster. This is the most important DBSCAN parameter to 
+                cluster. This is the most important DBSCAN parameter to
                 choose appropriately for your data set and distance function.
                 Default value here is 4.
-                
             Returns:
                 str: A string with corrected logical values,
                     computed using clustering and matching.
             Additional information:
                 This function can be run directly, or used indirectly to
-                calculate a logical error probability with `get_logical_prob`
+                calculate a logical error probability with `get_logical_prob
         """
-
-    
-        from sklearn.cluster import DBSCAN
-        
         Error_Graph = self.make_error_graph(string)['0']
-    
         logical_nodes = [(0,0,0),(0,1,0)]
         Non_neutral_nodes = list(Error_Graph.nodes())
         for _ in logical_nodes:
             Non_neutral_nodes.remove(_)
-        
         # Trivial Case
         if len(Non_neutral_nodes) == 0:
             logicals = self._separate_string(string)[0]
-    
             logical_string = ''
             for logical in logicals:
                 logical_string += logical + ' '
             logical_string = logical_string[:-1]
             return logical_string
-        
-    
         #Cluster Decoder
-        
         corrected_logical_string = []
-        
-        Clustering = DBSCAN(eps = eps, min_samples = 2, 
+        Clustering = DBSCAN(eps = eps, min_samples = 2,
                             metric = 'manhattan').fit(Non_neutral_nodes)
-    
         Cluster ={_:[] for _ in set(Clustering.labels_)}
         for _ , __ in zip(Clustering.labels_,Non_neutral_nodes):
             Cluster[_].append(__)
-    
-    
         ### appending logical nodes as separate clusters
         Cluster['logical_0'] = [logical_nodes[0]]
         Cluster['logical_1'] = [logical_nodes[1]]
-    
         Unmatched_node = True
-    
         while Unmatched_node:
             for _ in Cluster.keys():
                 if len(Cluster[_]) % 2 != 0 and _ != 'logical_0' and _ != 'logical_1':
-                    S = self.Nearest_Cluster(Cluster, Error_Graph, _)
+                    S = Nearest_Cluster(Cluster, Error_Graph, _)
                     if S[1] == 'logical_0' or S[1] == 'logical_1':
                         corrected_logical_string.append(S[1][-1])
                         Cluster[_].append(S[0])
@@ -566,15 +426,12 @@ class GraphDecoder():
                         break
                 else:
                     Unmatched_node = False
-        
-    
         neutral_nodelist = []
         Edgelist = []
-    
         for _ in Cluster.keys():
             Cluster_Graph = rx.PyGraph()
             Cluster_Graph.add_nodes_from(Error_Graph.nodes())
-            Cluster_Graph.add_edges_from(Error_Graph.weighted_edge_list())  
+            Cluster_Graph.add_edges_from(Error_Graph.weighted_edge_list())
             for i, __ in enumerate(Error_Graph.nodes()):
                 if __ not in Cluster[_]:
                     Cluster_Graph.remove_node(i)
@@ -583,7 +440,6 @@ class GraphDecoder():
                  Cluster_Graph, max_cardinality=True, weight_fn=lambda x: x)]
             Edgelist = Edgelist + Edges
             neutral_nodelist += [k[0] for k in list(Edges)] + [k[1] for k in list(Edges)]
-        
         # use it to construct and return a corrected logical string
         logicals = self._separate_string(string)[0]
         for (source, target) in Edgelist:
@@ -591,100 +447,17 @@ class GraphDecoder():
                 logicals[source[1]] = str((int(logicals[source[1]]) + 1) % 2)
             if target[0] == 0 and source[0] != 0:
                 logicals[target[1]] = str((int(logicals[target[1]]) + 1) % 2)
-    
         logical_string = ''
         for logical in logicals:
             logical_string += logical + ' '
         logical_string = logical_string[:-1]
-            
         return [logical_string,Edgelist,neutral_nodelist]
-    
-    def draw_3d_decoded_graph(self, graph, Edgelist, nodelist):
-        """
-            Args:
-               Graph (Networkx Graph) : Decoded Graph to be visualised.
-                
-            Returns:
-                A interactive graph window.
-        """    
-        from mayavi import mlab
-        import numpy as np
-        pos = {}
-        for x,i in enumerate(nodelist):
-            pos[i] = x
-        Edges = []
-        for edge in Edgelist:
-            Edges.append((pos[edge[0]],pos[edge[1]]))
-        figure = mlab.figure(1, bgcolor=(1, 1, 1))
-        xyz = np.array(list(pos.keys()))
-        figure.scene.disable_render = True 
-        if max(xyz[:, 2]) == 0:
-            resize_factor = 1
-        else:
-            resize_factor = max(xyz[:, 2])
-        pts = mlab.points3d(xyz[:, 0],xyz[:, 1],xyz[:, 2]/resize_factor,
-                            scale_factor=0.01,color = (0,0,1),
-                            resolution=100)
-        for x in nodelist:
-                mlab.text3d(x[0]-(1/max(xyz[:, 2]*4)), x[1], x[2]/resize_factor,
-                            text = str(tuple(x)),color = (0,0,0), 
-                            scale=(0.01,0.01,0.01))
-        for x in Edgelist:
-                mlab.text3d((x[0][0]+x[1][0])/2,
-                            (x[0][1]+x[1][1])/2,
-                            (x[0][2]+x[1][2])/(2*resize_factor),
-                            text = str(abs(graph.get_edge_data(
-                            graph.nodes().index(x[0]), graph.nodes().index(x[1])))),
-                            color = (0,0,0), scale=(0.01,0.01,0.01))
-        pts.mlab_source.dataset.lines = np.array(Edges)
-        tube = mlab.pipeline.tube(pts, tube_radius=0.0005)
-        mlab.pipeline.surface(tube, color = (0,0,0))
-        figure.scene.disable_render = False 
-        return mlab.show()
-
-    def draw_2d_decoded_graph(self, graph, Edgelist, neutral_nodelist):
-        """
-            Args:
-               Graph (Networkx Graph) : Decoded Graph to be visualised.
-                
-            Returns:
-                A 2-d graph.
-        """    
-        import matplotlib.pyplot as plt
-        import networkx as nx
-        
-        
-        G = nx.Graph()
-        pos = {}
-        i = 0
-        for x,y,z in graph.nodes():
-            if (x,y,z) in neutral_nodelist:
-                if x == 0:
-                    pos[i] = (y,z)
-                    G.add_node(i,pos = (y,z),)
-                    i += 1
-                else:
-                    pos[i] = (y,z+2)
-                    G.add_node(i,pos = (y,z+2))
-                    i += 1
-        plt.figure(figsize = (10,10)) 
-        edge_labels = {}
-        for _ in Edgelist:
-            G.add_edge(neutral_nodelist.index(_[0]),neutral_nodelist.index(_[1]))
-            edge_labels[neutral_nodelist.index(_[0]),
-                        neutral_nodelist.index(_[1])]= abs(graph.get_edge_data(
-                            graph.nodes().index(_[0]),graph.nodes().index(_[1])))
-        nx.draw_networkx_edge_labels(G, pos, edge_labels)
-        return nx.draw(G, pos, with_labels = True,
-                node_color = 'b', font_size = 8)
-
     def get_logical_prob(self, results, algorithm = 'matching'):
         """
         Args:
             results (dict): A results dictionary, as produced by the
             `process_results` method of the code.
             algorithm (str): Choice of which decoder to use.
-
         Returns:
             dict: Dictionary of logical error probabilities for
             each of the encoded logical states whose results were given in
@@ -727,6 +500,51 @@ class GraphDecoder():
             logical_prob[log] = incorrect_shots / shots
 
         return logical_prob
+
+
+def Nearest_Cluster(Cluster, Error_Graph, target ):
+    """
+        Args:
+            Cluster (dict): Dictionary that contains clusters in the
+            Error graph and the nodes in it.
+            Error_graph (Networkx Graph):Error graph in which the
+            nearest cluster and the node will be searched
+            target (int,int,int) : target cluster for which nearest
+            cluster is being searched
+        Returns:
+            list : [nearest_outside_node, nearest_cluster]
+            nearest_outside_node : nearest node to the target node
+            which doesn't belong to the same cluster
+            nearest_cluster : cluster to which nearest outside node
+            belongs
+    """
+    Cluster_Graph = rx.PyGraph()
+    Cluster_Graph.add_nodes_from(Error_Graph.nodes())
+    Cluster_Graph.add_edges_from(Error_Graph.weighted_edge_list())
+    for i, __ in enumerate(Error_Graph.nodes()):
+        if __ not in Cluster[target]:
+            Cluster_Graph.remove_node(i)
+    Edges =  rx.max_weight_matching(Cluster_Graph,
+             max_cardinality=True, weight_fn=lambda x: x)
+    remaining_node =  list(Cluster_Graph.node_indexes())
+    for edge in Edges:
+        remaining_node.remove(edge[0])
+        remaining_node.remove(edge[1])
+    node_neigbours = {}
+    for edge in Error_Graph.weighted_edge_list():
+        if remaining_node[0] == edge[0]:
+            node_neigbours[Error_Graph[edge[1]]] = {'weight': edge[2]}
+        if remaining_node[0] == edge[1]:
+            node_neigbours[Error_Graph[edge[0]]] = {'weight': edge[2]}
+    nearest_neighbours = sorted(node_neigbours.items(),
+                            key=lambda e: e[1]["weight"],
+                            reverse = True)[:len(Cluster[target])]
+    nearest_outside_node = [x[0] for x in nearest_neighbours if x[0] not in
+                            Cluster[target]]
+    for x in Cluster.keys():
+        if nearest_outside_node[0] in Cluster[x]:
+            nearest_cluster = x
+    return [nearest_outside_node[0], nearest_cluster]
 
 
 def postselection_decoding(results):
