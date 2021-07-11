@@ -25,12 +25,16 @@ requirements = [
     "scipy>=0.19,!=0.19.1",
     "setuptools>=40.1.0"
     "scikit-learn>=0.24.2",
+    "mayavi>=4.6.0",
+    "networkx>=2.5.1",
+    "matplotlib>=2.1",
+    "PyQt5>=5.15"
 ]
 
 
 if not hasattr(setuptools,
                'find_namespace_packages') or not inspect.ismethod(
-                    setuptools.find_namespace_packages):
+        setuptools.find_namespace_packages):
     print("Your setuptools version:'{}' does not support PEP 420 "
           "(find_namespace_packages). Upgrade it to version >='40.1.0' and "
           "repeat install.".format(setuptools.__version__))

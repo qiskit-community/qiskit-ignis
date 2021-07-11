@@ -15,5 +15,6 @@ matplotlib
 pyfakefs
 scikit-learn>=0.17
 scikit-learn>=0.24.2
+networkx
 mayavi
 PyQt5
