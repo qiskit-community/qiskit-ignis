@@ -528,13 +528,20 @@ class GraphDecoder():
         logical_string = logical_string[:-1]
         return [logical_string, Edgelist, neutral_nodelist]
 
-    def get_logical_prob(self, results, algorithm='matching'):
+    def get_logical_prob(self, results, eps=4, algorithm='matching'):
         """Calculate logical probabilty for graph decoders.
 
         Args:
             results (dict): A results dictionary, as produced by the
             `process_results` method of the code.
             algorithm (str): Choice of which decoder to use.
+            eps (int): If algorithm is set to 'clustering'. The maximum
+            distance between two samples for one to be considered as in
+            the neighborhood of the other. This is not a maximum bound
+            on the distances of points within a cluster. This is the
+            most important DBSCAN parameter to choose appropriately for
+            your data set and distance function.
+            Default value here is 4.
         Returns:
             dict: Dictionary of logical error probabilities for
             each of the encoded logical states whose results were given in
@@ -556,7 +563,7 @@ class GraphDecoder():
                         corrected_results[corr_str] = results[log][string]
             elif algorithm == 'clustering':
                 for string in results[log]:
-                    corr_str = self.cluster_decoding(string)[0]
+                    corr_str = self.cluster_decoding(string, eps=eps)[0]
                     if corr_str in corrected_results:
                         corrected_results[corr_str] += results[log][string]
                     else:
