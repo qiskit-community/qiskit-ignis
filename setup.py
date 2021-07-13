@@ -25,6 +25,9 @@ requirements = [
     "scipy>=0.19,!=0.19.1",
     "setuptools>=40.1.0"
     "scikit-learn>=0.24.2",
+    'matplotlib>=2.1',
+    'pyvista==0.31.3',
+    'networkx==2.5.1'
 ]
 
 
