@@ -25,10 +25,6 @@ requirements = [
     "scipy>=0.19,!=0.19.1",
     "setuptools>=40.1.0"
     "scikit-learn>=0.24.2",
-    "mayavi>=4.6.0",
-    "networkx>=2.5.1",
-    "matplotlib>=2.1",
-    "pyqt5>=5.15"
 ]
 
 
@@ -83,7 +79,9 @@ setuptools.setup(
     keywords="qiskit sdk quantum",
     packages=setuptools.find_namespace_packages(exclude=['test*']),
     extras_require={
-        'visualization': ['matplotlib>=2.1'],
+        'visualization': ['matplotlib>=2.1',
+                          'pyvista==0.31.3',
+                          'networkx==2.5.1'],
         'cvx': ['cvxpy>=1.0.15'],
         'jit': ['numba'],
     },

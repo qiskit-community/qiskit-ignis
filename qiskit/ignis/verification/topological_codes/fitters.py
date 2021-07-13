@@ -23,7 +23,7 @@ import copy
 import warnings
 import retworkx as rx
 import numpy as np
-from mayavi import mlab
+import pyvista as pv
 import matplotlib.pyplot as plt
 import networkx as nx
 
@@ -446,9 +446,9 @@ class GraphDecoder():
             This function can be run directly, or used indirectly to
             calculate a logical error probability with `get_logical_prob
         """
-        Error_Graph = self.make_error_graph(string)['0']
+        graph = self.make_error_graph(string)['0']
         logical_nodes = [(0, 0, 0), (0, 1, 0)]
-        Non_neutral_nodes = list(Error_Graph.nodes())
+        Non_neutral_nodes = list(graph.nodes())
         for _ in logical_nodes:
             Non_neutral_nodes.remove(_)
         # Trivial Case
@@ -473,7 +473,7 @@ class GraphDecoder():
         while Unmatched_node:
             for _ in Cluster.keys():
                 if len(Cluster[_]) % 2 != 0 and _ != 'logical_0' and _ != 'logical_1':
-                    S = self.Nearest_Cluster(Cluster, Error_Graph, _)
+                    S = self.Nearest_Cluster(Cluster, graph, _)
                     if S[1] == 'logical_0' or S[1] == 'logical_1':
                         corrected_logical_string.append(S[1][-1])
                         Cluster[_].append(S[0])
@@ -487,9 +487,9 @@ class GraphDecoder():
         Edgelist = []
         for _ in Cluster.keys():
             Cluster_Graph = rx.PyGraph()
-            Cluster_Graph.add_nodes_from(Error_Graph.nodes())
-            Cluster_Graph.add_edges_from(Error_Graph.weighted_edge_list())
-            for i, __ in enumerate(Error_Graph.nodes()):
+            Cluster_Graph.add_nodes_from(graph.nodes())
+            Cluster_Graph.add_edges_from(graph.weighted_edge_list())
+            for i, __ in enumerate(graph.nodes()):
                 if __ not in Cluster[_]:
                     Cluster_Graph.remove_node(i)
             Edges = [(Cluster_Graph[x[0]],
@@ -559,42 +559,48 @@ class GraphDecoder():
 
         return logical_prob
 
-    def draw_3d_error_graph(self, graph):
+    def draw_3d_error_graph(self, graph, notebook=False):
         """Draws a 3d Error Graph.
 
         Args:
             graph (retworkx.PyGraph) : Error Graph to be visualised.
+            notebook (bool) : Set True if using Jupyter.
 
         Returns:
-            mlab: A interactive graph window.
+            numpy.ndarray: Array containing pixel RGB and optionally alpha values.
         """
-        edges = graph.edge_list()
-        nodes = graph.nodes()
-        xyz = np.array(nodes)
-        if max(xyz[:, 2]) == 0:
-            resize_factor = 1
-        else:
-            resize_factor = max(xyz[:, 2])
-        figure = mlab.figure(1, bgcolor=(1, 1, 1))
-        figure.scene.disable_render = True
-        pts = mlab.points3d(xyz[:, 0], xyz[:, 1], xyz[:, 2]/resize_factor,
-                            scale_factor=0.02, color=(1, 0, 0),
-                            resolution=100)
-        for x in graph.nodes():
-            mlab.text3d(x[0], x[1], x[2]/resize_factor, text=str(tuple(x)),
-                        color=(0, 0, 0), scale=(0.01, 0.01, 0.01))
+        nodes = np.array(graph.nodes(), dtype='f')
+        edges = []
+        edge_label = []
         for edge in graph.weighted_edge_list():
-            mlab.text3d((nodes[edge[0]][0]+nodes[edge[1]][0])/2,
-                        (nodes[edge[0]][1]+nodes[edge[1]][1])/2,
-                        (nodes[edge[0]][2]+nodes[edge[1]][2])/(2*resize_factor),
-                        text=str(abs(edge[2])), color=(0, 0, 0),
-                        scale=(0.01, 0.01, 0.01))
-        pts.mlab_source.dataset.lines = np.array(edges)
-        tube = mlab.pipeline.tube(pts, tube_radius=0.0005)
-        mlab.pipeline.surface(tube, color=(0, 0, 0))
-        figure.scene.disable_render = False
+            edges.append(graph[edge[0]])
+            edges.append(graph[edge[1]])
+            edge_label.append(str(abs(edge[2])))
+        edges = np.array(edges, dtype='f')
+        if max(np.array(graph.nodes())[:, 2]) == 0:
+            resize = 1
+        else:
+            resize = float(max(np.array(graph.nodes())[:, 2]))
+        nodes[:, 2] = nodes[:, 2]/resize
+        edges[:, 2] = edges[:, 2]/resize
+        edge_centers = [(edges[i]+edges[i+1])/2
+                        for i in range(0, len(graph.edges())*2, 2)]
+        labels = [str(i)for i in graph.nodes()]
+        # Plotting
+        p = pv.Plotter(notebook=notebook)
+        p.set_background("white")
+        pdata = pv.PolyData(nodes)
+        edata = pv.PolyData(edge_centers)
+        p.add_point_labels(pdata, labels, point_size=10, font_size=10,
+                           text_color='black', point_color='red',
+                           render_points_as_spheres=True,
+                           shape_opacity=0, always_visible=True)
+        p.add_point_labels(edata, edge_label, show_points=False, font_size=10,
+                           text_color='black', shape_opacity=0, always_visible=True)
+        p.add_lines(np.array(edges), width=1, color='black')
+        return p.show()
 
-    def draw_2d_error_graph(self, graph):
+    def draw_2d_graph(self, graph):
         """Draws a 2d Error Graph.
 
         Args:
@@ -623,49 +629,49 @@ class GraphDecoder():
         nx.draw_networkx_edge_labels(G, pos, edge_labels)
         return nx.draw(G, pos, with_labels=True, node_color='red', font_size=8)
 
-    def draw_3d_decoded_graph(self, graph, Edgelist, nodelist):
+    def draw_3d_decoded_graph(self, graph, Edgelist, nodelist, notebook=False):
         """Draws a 3d Decoded Graph.
 
         Args:
             graph (retworkx.PyGraph) : Decoded Graph to be visualised.
             Edgelist (list) : List of matched edges.
             nodelist (list) : List of matched nodes.
+            notebook (bool) : Set True if using Jupyter.
 
         Returns:
-            mlab: A interactive graph window.
+            numpy.ndarray: Array containing pixel RGB and optionally alpha values.
         """
-        pos = {}
-        for x, i in enumerate(nodelist):
-            pos[i] = x
-        Edges = []
+        nodes = np.array(nodelist, dtype='f')
+        edges = []
+        edge_label = []
         for edge in Edgelist:
-            Edges.append((pos[edge[0]], pos[edge[1]]))
-        figure = mlab.figure(1, bgcolor=(1, 1, 1))
-        xyz = np.array(list(pos.keys()))
-        figure.scene.disable_render = True
-        if max(xyz[:, 2]) == 0:
-            resize_factor = 1
+            edges.append(edge[0])
+            edges.append(edge[1])
+        for edge in graph.weighted_edge_list():
+            edge_label.append(str(abs(edge[2])))
+        edges = np.array(edges, dtype='f')
+        if max(np.array(graph.nodes())[:, 2]) == 0:
+            resize = 1
         else:
-            resize_factor = max(xyz[:, 2])
-        pts = mlab.points3d(xyz[:, 0], xyz[:, 1], xyz[:, 2]/resize_factor,
-                            scale_factor=0.01, color=(0, 0, 1),
-                            resolution=100)
-        for x in nodelist:
-            mlab.text3d(x[0]-(1/max(xyz[:, 2]*4)), x[1], x[2]/resize_factor,
-                        text=str(tuple(x)), color=(0, 0, 0),
-                        scale=(0.01, 0.01, 0.01))
-        for x in Edgelist:
-            mlab.text3d((x[0][0]+x[1][0])/2,
-                        (x[0][1]+x[1][1])/2,
-                        (x[0][2]+x[1][2])/(2*resize_factor),
-                        text=str(abs(graph.get_edge_data(graph.nodes().index(x[0]),
-                                                         graph.nodes().index(x[1])))),
-                        color=(0, 0, 0), scale=(0.01, 0.01, 0.01))
-        pts.mlab_source.dataset.lines = np.array(Edges)
-        tube = mlab.pipeline.tube(pts, tube_radius=0.0005)
-        mlab.pipeline.surface(tube, color=(0, 0, 0))
-        figure.scene.disable_render = False
-        return mlab.show()
+            resize = float(max(np.array(graph.nodes())[:, 2]))
+        nodes[:, 2] = nodes[:, 2]/resize
+        edges[:, 2] = edges[:, 2]/resize
+        edge_centers = [(edges[i]+edges[i+1])/2
+                        for i in range(0, len(Edgelist)*2, 2)]
+        labels = [str(i)for i in graph.nodes()]
+        # Plotting
+        p = pv.Plotter(notebook=notebook)
+        p.set_background("white")
+        pdata = pv.PolyData(nodes)
+        edata = pv.PolyData(edge_centers)
+        p.add_point_labels(pdata, labels, point_size=10, font_size=10,
+                           text_color='black', point_color='blue',
+                           render_points_as_spheres=True,
+                           shape_opacity=0, always_visible=True)
+        p.add_point_labels(edata, edge_label, show_points=False, font_size=10,
+                           text_color='black', shape_opacity=0, always_visible=True)
+        p.add_lines(np.array(edges), width=1, color='blue')
+        return p.show()
 
     def draw_2d_decoded_graph(self, graph, Edgelist, neutral_nodelist):
         """Draws a 3d Decoded Graph.
