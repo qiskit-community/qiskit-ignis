@@ -448,19 +448,21 @@ class GraphDecoder():
 
         Args:
             string (str): A string describing the output from the code.
+
             eps (int):The maximum distance between two samples for one
             to be considered as in the neighborhood of the other. This
             is not a maximum bound on the distances of points within a
             cluster. This is the most important DBSCAN parameter to
             choose appropriately for your data set and distance function.
             Default value here is 4.
+
         Returns:
             str: A string with corrected logical values,
             computed using clustering and matching.
 
         Additional information:
             This function can be run directly, or used indirectly to
-            calculate a logical error probability with `get_logical_prob
+            calculate a logical error probability with `get_logical_prob`
         """
         graph = self.make_error_graph(string)['0']
         logical_nodes = [(0, 0, 0), (0, 1, 0)]
@@ -663,8 +665,11 @@ class GraphDecoder():
 
         Args:
             graph (retworkx.PyGraph) : Decoded Graph to be visualised.
+
             Edgelist (list) : List of matched edges.
+
             nodelist (list) : List of matched nodes.
+
             notebook (bool) : Set True if using Jupyter.
 
         Returns:
@@ -710,8 +715,10 @@ class GraphDecoder():
         """Draws a 3d Decoded Graph.
 
         Args:
-            graph (retworkx.PyGraph) : Decoded Graph to be visualised.
+            graph (retworkx.PyGraph) : Decoded Graph to be visualised
+
             Edgelist (list) : List of matched edges.
+
             neutral_nodelist (list) : List of matched nodes.
 
         Returns:
