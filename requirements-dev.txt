@@ -15,3 +15,5 @@ matplotlib
 pyfakefs
 scikit-learn>=0.17
 scikit-learn>=0.24.2
+pyvista==0.31.3
+networkx==2.5.1
