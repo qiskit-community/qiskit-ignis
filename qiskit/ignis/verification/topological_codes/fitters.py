@@ -23,12 +23,10 @@ import copy
 import warnings
 import retworkx as rx
 import numpy as np
-import pyvista as pv
-import matplotlib.pyplot as plt
-import networkx as nx
 
 
 from sklearn.cluster import DBSCAN
+from qiskit.exceptions import QiskitError
 from qiskit import QuantumCircuit, execute
 
 
@@ -38,6 +36,24 @@ try:
 except ImportError:
     from qiskit import BasicAer
     HAS_AER = False
+
+try:
+    from matplotlib import pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
+
+try:
+    import pyvista as pv
+    HAS_PYVISTA = True
+except ImportError:
+    HAS_PYVISTA = False
+
+try:
+    import networkx as nx
+    HAS_NETWORKX = True
+except ImportError:
+    HAS_NETWORKX = False
 
 
 class GraphDecoder():
@@ -568,7 +584,14 @@ class GraphDecoder():
 
         Returns:
             numpy.ndarray: Array containing pixel RGB and optionally alpha values.
+
+        Raises:
+            QiskitError: If pyvista is not installed, or there is
+                invalid input
         """
+        if not HAS_PYVISTA:
+            raise QiskitError('please install pyvista')
+
         nodes = np.array(graph.nodes(), dtype='f')
         edges = []
         edge_label = []
@@ -608,7 +631,13 @@ class GraphDecoder():
 
         Returns:
             networkx: A 2-d graph.
+
+        Raises:
+            QiskitError: If matplotlib and networkx is not installed, or there is
+                invalid input
         """
+        if not HAS_MATPLOTLIB and not HAS_NETWORKX:
+            raise QiskitError('please install pyvista')
         G = nx.Graph()
         pos = {}
         i = 0
@@ -640,6 +669,10 @@ class GraphDecoder():
 
         Returns:
             numpy.ndarray: Array containing pixel RGB and optionally alpha values.
+
+        Raises:
+            QiskitError: If pyvista is not installed, or there is
+                invalid input
         """
         nodes = np.array(nodelist, dtype='f')
         edges = []
@@ -683,7 +716,13 @@ class GraphDecoder():
 
         Returns:
             networkx: A 2-d graph.
+
+        Raises:
+            QiskitError: If matplotlib and networkx is not installed, or there is
+                invalid input
         """
+        if not HAS_MATPLOTLIB and not HAS_NETWORKX:
+            raise QiskitError('please install pyvista')
         G = nx.Graph()
         pos = {}
         i = 0
