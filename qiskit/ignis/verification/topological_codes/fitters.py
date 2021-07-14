@@ -652,16 +652,19 @@ class GraphDecoder():
         if not HAS_MATPLOTLIB and not HAS_NETWORKX:
             raise QiskitError('please install pyvista')
         G = nx.Graph()
+        label = {}
         pos = {}
         i = 0
         for x, y, z in graph.nodes():
             if x == 0:
                 pos[i] = (y, z)
                 G.add_node(i, pos=(y, z))
+                label[i] = graph[i]
                 i += 1
             else:
                 pos[i] = (y, z+2)
                 G.add_node(i, pos=(y, z+2))
+                label[i] = graph[i]
                 i += 1
         plt.figure(figsize=(10, 10))
         edge_labels = {}
@@ -669,7 +672,8 @@ class GraphDecoder():
             G.add_edge(_[0], _[1])
             edge_labels[(_[0], _[1])] = abs(graph.get_edge_data(_[0], _[1]))
         nx.draw_networkx_edge_labels(G, pos, edge_labels)
-        return nx.draw(G, pos, with_labels=True, node_color='red', font_size=8)
+        nx.draw_networkx_labels(G, pos, labels=label)
+        return nx.draw(G, pos, with_labels=False, node_color='red', font_size=8)
 
     def draw_3d_decoded_graph(self, graph, Edgelist, nodelist, notebook=False):
         """Draws a 3d Decoded Graph.
@@ -749,15 +753,18 @@ class GraphDecoder():
         G = nx.Graph()
         pos = {}
         i = 0
+        label = {}
         for x, y, z in graph.nodes():
             if (x, y, z) in neutral_nodelist:
                 if x == 0:
                     pos[i] = (y, z)
                     G.add_node(i, pos=(y, z))
+                    label[i] = (x, y, z)
                     i += 1
                 else:
                     pos[i] = (y, z+2)
                     G.add_node(i, pos=(y, z+2))
+                    label[i] = (x, y, z)
                     i += 1
         plt.figure(figsize=(10, 10))
         edge_labels = {}
@@ -767,7 +774,8 @@ class GraphDecoder():
                         neutral_nodelist.index(_[1])] = abs(graph.get_edge_data(
                             graph.nodes().index(_[0]), graph.nodes().index(_[1])))
         nx.draw_networkx_edge_labels(G, pos, edge_labels)
-        return nx.draw(G, pos, with_labels=True,
+        nx.draw_networkx_labels(G, pos, labels=label)
+        return nx.draw(G, pos, with_labels=False,
                        node_color='b', font_size=8)
 
 
