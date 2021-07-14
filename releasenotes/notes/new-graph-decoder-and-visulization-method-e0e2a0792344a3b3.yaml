@@ -6,8 +6,12 @@ features:
     It can be accessed similarly to matching. Change the 
     algorithm = 'matching' to algorithm = 'clustering' to use it.
     Draw 3d and 2d error garph method added.
-    for 2D::
-
+    for 2D:
+    
+    .. jupyter-execute::
+    
+      from qiskit.ignis.verification.topological_codes.fitters import *
+      
       code = RepetitionCode(3,1)
       Graph = GraphDecoder(code)
       Error_Graph = Graph.make_error_graph('1 0  00 10 00')['0']
@@ -37,4 +41,3 @@ features:
       Error_Graph = Graph.make_error_graph('1 0  00 10 00')['0']
       [logical, Edgelist, nodelist]=Graph.cluster_decoding('1 0  00 10 00')
       Graph.draw_3d_decoded_graph(Error_Graph,Edgelist,nodelist)
-
