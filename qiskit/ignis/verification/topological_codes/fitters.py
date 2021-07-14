@@ -592,7 +592,9 @@ class GraphDecoder():
             notebook (bool) : Set True if using Jupyter.
 
         Returns:
-            numpy.ndarray: Array containing pixel RGB and optionally alpha values.
+            cpos (list) – List of camera position, focal point, and view up.
+            img (numpy.ndarray) – Array containing pixel RGB and optionally
+            alpha values.
 
         Raises:
             QiskitError: If pyvista is not installed, or there is
@@ -629,10 +631,12 @@ class GraphDecoder():
                            shape_opacity=0, always_visible=True)
         p.add_point_labels(edata, edge_label, show_points=False, font_size=10,
                            text_color='black', shape_opacity=0, always_visible=True)
-        p.add_lines(np.array(edges), width=1, color='black')
+        for i in range(0, len(edges), 2):
+            p.add_lines(np.array([edges[i], edges[i+1]]),
+                        width=1, color='black')
         return p.show()
 
-    def draw_2d_graph(self, graph):
+    def draw_2d_error_graph(self, graph):
         """Draws a 2d Error Graph.
 
         Args:
@@ -680,20 +684,24 @@ class GraphDecoder():
             notebook (bool) : Set True if using Jupyter.
 
         Returns:
-            numpy.ndarray: Array containing pixel RGB and optionally alpha values.
+            cpos (list) – List of camera position, focal point, and view up.
+            img (numpy.ndarray) – Array containing pixel RGB and optionally
+            alpha values.
 
         Raises:
             QiskitError: If pyvista is not installed, or there is
                 invalid input
         """
         nodes = np.array(nodelist, dtype='f')
+        labels = [str(i)for i in nodes]
         edges = []
         edge_label = []
         for edge in Edgelist:
             edges.append(edge[0])
             edges.append(edge[1])
-        for edge in graph.weighted_edge_list():
-            edge_label.append(str(abs(edge[2])))
+            edge_label.append(abs(graph.get_edge_data(
+                    graph.nodes().index(edge[0]),
+                    graph.nodes().index(edge[1]))))
         edges = np.array(edges, dtype='f')
         if max(np.array(graph.nodes())[:, 2]) == 0:
             resize = 1
@@ -703,7 +711,6 @@ class GraphDecoder():
         edges[:, 2] = edges[:, 2]/resize
         edge_centers = [(edges[i]+edges[i+1])/2
                         for i in range(0, len(Edgelist)*2, 2)]
-        labels = [str(i)for i in graph.nodes()]
         # Plotting
         p = pv.Plotter(notebook=notebook)
         p.set_background("white")
@@ -715,7 +722,9 @@ class GraphDecoder():
                            shape_opacity=0, always_visible=True)
         p.add_point_labels(edata, edge_label, show_points=False, font_size=10,
                            text_color='black', shape_opacity=0, always_visible=True)
-        p.add_lines(np.array(edges), width=1, color='blue')
+        for i in range(0, len(edges), 2):
+            p.add_lines(np.array([edges[i], edges[i+1]]),
+                        width=1, color='blue')
         return p.show()
 
     def draw_2d_decoded_graph(self, graph, Edgelist, neutral_nodelist):
