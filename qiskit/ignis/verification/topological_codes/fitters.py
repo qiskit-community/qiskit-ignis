@@ -592,8 +592,8 @@ class GraphDecoder():
             notebook (bool) : Set True if using Jupyter.
 
         Returns:
-            cpos (list) – List of camera position, focal point, and view up.
-            img (numpy.ndarray) – Array containing pixel RGB and optionally
+            list: List of camera position, focal point, and view up.
+            numpy.ndarray: Array containing pixel RGB and optionally
             alpha values.
 
         Raises:
@@ -684,8 +684,8 @@ class GraphDecoder():
             notebook (bool) : Set True if using Jupyter.
 
         Returns:
-            cpos (list) – List of camera position, focal point, and view up.
-            img (numpy.ndarray) – Array containing pixel RGB and optionally
+            list: List of camera position, focal point, and view up.
+            numpy.ndarray: Array containing pixel RGB and optionally
             alpha values.
 
         Raises:
