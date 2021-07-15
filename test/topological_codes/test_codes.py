@@ -110,7 +110,7 @@ class TestCodes(unittest.TestCase):
                                 error + " on qubit " + str(qubit) + \
                                 " at depth " + str(j) + " creates " + \
                                 str(len(nodes)) + \
-                                " nodes in syndrome graph, instead of 2."
+                                " nodes in syndrome graph, instead of 2.")
 
     def test_string2nodes(self):
         """Test string2nodes with different logical values."""
