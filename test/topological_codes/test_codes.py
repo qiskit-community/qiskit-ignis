@@ -136,7 +136,7 @@ class TestCodes(unittest.TestCase):
             for T in [1, 2]:
                 for xbasis in [False, True]:
                     code = RepetitionCode(d, T, xbasis=xbasis)
-                    single_error_test(code)
+                    self.single_error_test(code)
 
     def test_weight(self):
         """Error weighting code test."""
