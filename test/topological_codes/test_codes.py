@@ -106,11 +106,11 @@ class TestCodes(unittest.TestCase):
                         for string in results:
                             nodes = decoder._string2nodes(string,
                                                           logical=logical)
-                            self.assertIn(len(nodes), [0, 2], "Error of type " + \
-                                error + " on qubit " + str(qubit) + \
-                                " at depth " + str(j) + " creates " + \
-                                str(len(nodes)) + \
-                                " nodes in syndrome graph, instead of 2.")
+                            self.assertIn(len(nodes), [0, 2], "Error of type " +
+                                          error + " on qubit " + str(qubit) +
+                                          " at depth " + str(j) + " creates " +
+                                          str(len(nodes)) +
+                                          " nodes in syndrome graph, instead of 2.")
 
     def test_string2nodes(self):
         """Test string2nodes with different logical values."""
