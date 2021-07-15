@@ -61,64 +61,56 @@ def get_noise(p_meas, p_gate):
     return noise_model
 
 
-def single_error_test(code):
-    """
-    Insert all possible single qubit errors into the given code,
-    and check that each creates a pair of syndrome nodes.
-    """
-    decoder = GraphDecoder(code)
-
-    for logical in ['0', '1']:
-
-        qc = code.circuit[logical]
-
-        blank_qc = QuantumCircuit()
-        for qreg in qc.qregs:
-            blank_qc.add_register(qreg)
-        for creg in qc.cregs:
-            blank_qc.add_register(creg)
-
-        error_circuit = {}
-        circuit_name = {}
-        depth = len(qc)
-        for j in range(depth):
-            qubits = qc.data[j][1]
-            for qubit in qubits:
-                for error in ['x', 'y', 'z']:
-                    temp_qc = blank_qc.copy()
-                    temp_qc.name = str((j, qubit, error))
-                    temp_qc.data = qc.data[0:j]
-                    getattr(temp_qc, error)(qubit)
-                    temp_qc.data += qc.data[j:depth + 1]
-                    circuit_name[(j, qubit, error)] = temp_qc.name
-                    error_circuit[temp_qc.name] = temp_qc
-
-        simulator = Aer.get_backend('qasm_simulator')
-
-        job = execute(list(error_circuit.values()), simulator)
-
-        for j in range(depth):
-            qubits = qc.data[j][1]
-            for qubit in qubits:
-                for error in ['x', 'y', 'z']:
-                    raw_results = {}
-                    raw_results[logical] = job.result().get_counts(
-                        str((j, qubit, error)))
-                    results = code.process_results(raw_results)[logical]
-                    for string in results:
-
-                        nodes = decoder._string2nodes(string,
-                                                      logical=logical)
-
-                        assert len(nodes) in [0, 2], "Error of type " + \
-                            error + " on qubit " + str(qubit) + \
-                            " at depth " + str(j) + " creates " + \
-                            str(len(nodes)) + \
-                            " nodes in syndrome graph, instead of 2."
-
-
 class TestCodes(unittest.TestCase):
-    """The test class. """
+    """Test the topological codes module. """
+    def single_error_test(self, code):
+        """
+        Insert all possible single qubit errors into the given code,
+        and check that each creates a pair of syndrome nodes.
+        """
+        decoder = GraphDecoder(code)
+
+        for logical in ['0', '1']:
+            qc = code.circuit[logical]
+            blank_qc = QuantumCircuit()
+            for qreg in qc.qregs:
+                blank_qc.add_register(qreg)
+            for creg in qc.cregs:
+                blank_qc.add_register(creg)
+            error_circuit = {}
+            circuit_name = {}
+            depth = len(qc)
+            for j in range(depth):
+                qubits = qc.data[j][1]
+                for qubit in qubits:
+                    for error in ['x', 'y', 'z']:
+                        temp_qc = blank_qc.copy()
+                        temp_qc.name = str((j, qubit, error))
+                        temp_qc.data = qc.data[0:j]
+                        getattr(temp_qc, error)(qubit)
+                        temp_qc.data += qc.data[j:depth + 1]
+                        circuit_name[(j, qubit, error)] = temp_qc.name
+                        error_circuit[temp_qc.name] = temp_qc
+
+            simulator = Aer.get_backend('qasm_simulator')
+            job = execute(list(error_circuit.values()), simulator)
+
+            for j in range(depth):
+                qubits = qc.data[j][1]
+                for qubit in qubits:
+                    for error in ['x', 'y', 'z']:
+                        raw_results = {}
+                        raw_results[logical] = job.result().get_counts(
+                            str((j, qubit, error)))
+                        results = code.process_results(raw_results)[logical]
+                        for string in results:
+                            nodes = decoder._string2nodes(string,
+                                                          logical=logical)
+                            self.assertIn(len(nodes), [0, 2], "Error of type " + \
+                                error + " on qubit " + str(qubit) + \
+                                " at depth " + str(j) + " creates " + \
+                                str(len(nodes)) + \
+                                " nodes in syndrome graph, instead of 2."
 
     def test_string2nodes(self):
         """Test string2nodes with different logical values."""
