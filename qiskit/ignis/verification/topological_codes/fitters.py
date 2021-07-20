@@ -25,7 +25,7 @@ import retworkx as rx
 import numpy as np
 
 
-from sklearn.cluster import DBSCAN
+
 from qiskit.exceptions import QiskitError
 from qiskit import QuantumCircuit, execute
 
@@ -38,22 +38,10 @@ except ImportError:
     HAS_AER = False
 
 try:
-    from matplotlib import pyplot as plt
-    HAS_MATPLOTLIB = True
+    from sklearn.cluster import DBSCAN
+    HAS_SCIKIT = True
 except ImportError:
-    HAS_MATPLOTLIB = False
-
-try:
-    import pyvista as pv
-    HAS_PYVISTA = True
-except ImportError:
-    HAS_PYVISTA = False
-
-try:
-    import networkx as nx
-    HAS_NETWORKX = True
-except ImportError:
-    HAS_NETWORKX = False
+    HAS_SCIKIT = False
 
 
 class GraphDecoder():
@@ -395,7 +383,7 @@ class GraphDecoder():
 
         return logical_string
 
-    def Nearest_Cluster(self, Cluster, graph, target):
+    def nearest_cluster(self, cluster, graph, target):
         """Find the nearest cluster to the target cluster.
 
         Args:
@@ -415,16 +403,16 @@ class GraphDecoder():
             nearest_cluster : cluster to which nearest outside node
             belongs.
         """
-        Cluster_Graph = rx.PyGraph()
-        Cluster_Graph.add_nodes_from(graph.nodes())
-        Cluster_Graph.add_edges_from(graph.weighted_edge_list())
+        cluster_graph = rx.PyGraph()
+        cluster_graph.add_nodes_from(graph.nodes())
+        cluster_graph.add_edges_from(graph.weighted_edge_list())
         for i, __ in enumerate(graph.nodes()):
-            if __ not in Cluster[target]:
-                Cluster_Graph.remove_node(i)
-        Edges = rx.max_weight_matching(Cluster_Graph,
+            if __ not in cluster[target]:
+                cluster_graph.remove_node(i)
+        edges = rx.max_weight_matching(cluster_graph,
                                        max_cardinality=True, weight_fn=lambda x: x)
-        remaining_node = list(Cluster_Graph.node_indexes())
-        for edge in Edges:
+        remaining_node = list(cluster_graph.node_indexes())
+        for edge in edges:
             remaining_node.remove(edge[0])
             remaining_node.remove(edge[1])
         node_neigbours = {}
@@ -435,11 +423,11 @@ class GraphDecoder():
                 node_neigbours[graph[edge[0]]] = {'weight': edge[2]}
         nearest_neighbours = sorted(node_neigbours.items(),
                                     key=lambda e: e[1]["weight"],
-                                    reverse=True)[:len(Cluster[target])]
+                                    reverse=True)[:len(cluster[target])]
         nearest_outside_node = [x[0] for x in nearest_neighbours if x[0] not in
-                                Cluster[target]]
-        for x in Cluster.keys():
-            if nearest_outside_node[0] in Cluster[x]:
+                                cluster[target]]
+        for x in cluster.keys():
+            if nearest_outside_node[0] in cluster[x]:
                 nearest_cluster = x
         return [nearest_outside_node[0], nearest_cluster]
 
@@ -464,6 +452,9 @@ class GraphDecoder():
             This function can be run directly, or used indirectly to
             calculate a logical error probability with `get_logical_prob`
         """
+        if not HAS_SCIKIT:
+            raise QiskitError('please install scikit-learn')
+
         graph = self.make_error_graph(string)['0']
         logical_nodes = [(0, 0, 0), (0, 1, 0)]
         Non_neutral_nodes = list(graph.nodes())
@@ -479,45 +470,45 @@ class GraphDecoder():
             return logical_string
         # Cluster Decoder
         corrected_logical_string = []
-        Clustering = DBSCAN(eps=eps, min_samples=2,
+        clustering = DBSCAN(eps=eps, min_samples=2,
                             metric='manhattan').fit(Non_neutral_nodes)
-        Cluster = {_: [] for _ in set(Clustering.labels_)}
-        for _, __ in zip(Clustering.labels_, Non_neutral_nodes):
-            Cluster[_].append(__)
+        cluster = {_: [] for _ in set(clustering.labels_)}
+        for _, __ in zip(clustering.labels_, Non_neutral_nodes):
+            cluster[_].append(__)
         # appending logical nodes as separate clusters
-        Cluster['logical_0'] = [logical_nodes[0]]
-        Cluster['logical_1'] = [logical_nodes[1]]
-        Unmatched_node = True
-        while Unmatched_node:
-            for _ in Cluster.keys():
-                if len(Cluster[_]) % 2 != 0 and _ != 'logical_0' and _ != 'logical_1':
-                    S = self.Nearest_Cluster(Cluster, graph, _)
-                    if S[1] == 'logical_0' or S[1] == 'logical_1':
-                        corrected_logical_string.append(S[1][-1])
-                        Cluster[_].append(S[0])
+        cluster['logical_0'] = [logical_nodes[0]]
+        cluster['logical_1'] = [logical_nodes[1]]
+        unmatched_node = True
+        while unmatched_node:
+            for _ in cluster.keys():
+                if len(cluster[_]) % 2 != 0 and _ != 'logical_0' and _ != 'logical_1':
+                    s = self.nearest_cluster(cluster, graph, _)
+                    if s[1] == 'logical_0' or s[1] == 'logical_1':
+                        corrected_logical_string.append(s[1][-1])
+                        cluster[_].append(s[0])
                     else:
-                        Cluster[_] = Cluster[_] + Cluster[S[1]]
-                        Cluster.pop(S[1])
+                        cluster[_] = cluster[_] + cluster[s[1]]
+                        cluster.pop(s[1])
                         break
                 else:
-                    Unmatched_node = False
+                    unmatched_node = False
         neutral_nodelist = []
-        Edgelist = []
-        for _ in Cluster.keys():
-            Cluster_Graph = rx.PyGraph()
-            Cluster_Graph.add_nodes_from(graph.nodes())
-            Cluster_Graph.add_edges_from(graph.weighted_edge_list())
+        edgelist = []
+        for _ in cluster.keys():
+            cluster_graph = rx.PyGraph()
+            cluster_graph.add_nodes_from(graph.nodes())
+            cluster_graph.add_edges_from(graph.weighted_edge_list())
             for i, __ in enumerate(graph.nodes()):
-                if __ not in Cluster[_]:
-                    Cluster_Graph.remove_node(i)
-            Edges = [(Cluster_Graph[x[0]],
-                      Cluster_Graph[x[1]]) for x in rx.max_weight_matching(
-                Cluster_Graph, max_cardinality=True, weight_fn=lambda x: x)]
-            Edgelist = Edgelist + Edges
-            neutral_nodelist += [k[0] for k in list(Edges)] + [k[1] for k in list(Edges)]
+                if __ not in cluster[_]:
+                    cluster_graph.remove_node(i)
+            edges = [(cluster_graph[x[0]],
+                      cluster_graph[x[1]]) for x in rx.max_weight_matching(
+                cluster_graph, max_cardinality=True, weight_fn=lambda x: x)]
+            edgelist = edgelist + edges
+            neutral_nodelist += [k[0] for k in list(edges)] + [k[1] for k in list(edges)]
         # use it to construct and return a corrected logical string
         logicals = self._separate_string(string)[0]
-        for (source, target) in Edgelist:
+        for (source, target) in edgelist:
             if source[0] == 0 and target[0] != 0:
                 logicals[source[1]] = str((int(logicals[source[1]]) + 1) % 2)
             if target[0] == 0 and source[0] != 0:
@@ -526,7 +517,7 @@ class GraphDecoder():
         for logical in logicals:
             logical_string += logical + ' '
         logical_string = logical_string[:-1]
-        return [logical_string, Edgelist, neutral_nodelist]
+        return [logical_string, edgelist, neutral_nodelist]
 
     def get_logical_prob(self, results, eps=4, algorithm='matching'):
         """Calculate logical probabilty for graph decoders.
@@ -583,200 +574,6 @@ class GraphDecoder():
             logical_prob[log] = incorrect_shots / shots
 
         return logical_prob
-
-    def draw_3d_error_graph(self, graph, notebook=False):
-        """Draws a 3d Error Graph.
-
-        Args:
-            graph (retworkx.PyGraph) : Error Graph to be visualised.
-            notebook (bool) : Set True if using Jupyter.
-
-        Returns:
-            list: List of camera position, focal point, and view up.
-            numpy.ndarray: Array containing pixel RGB and optionally
-            alpha values.
-
-        Raises:
-            QiskitError: If pyvista is not installed, or there is
-                invalid input
-        """
-        if not HAS_PYVISTA:
-            raise QiskitError('please install pyvista')
-
-        nodes = np.array(graph.nodes(), dtype='f')
-        edges = []
-        edge_label = []
-        for edge in graph.weighted_edge_list():
-            edges.append(graph[edge[0]])
-            edges.append(graph[edge[1]])
-            edge_label.append(str(abs(edge[2])))
-        edges = np.array(edges, dtype='f')
-        if max(np.array(graph.nodes())[:, 2]) == 0:
-            resize = 1
-        else:
-            resize = float(max(np.array(graph.nodes())[:, 2]))
-        nodes[:, 2] = nodes[:, 2]/resize
-        edges[:, 2] = edges[:, 2]/resize
-        edge_centers = [(edges[i]+edges[i+1])/2
-                        for i in range(0, len(graph.edges())*2, 2)]
-        labels = [str(i)for i in graph.nodes()]
-        # Plotting
-        p = pv.Plotter(notebook=notebook)
-        p.set_background("white")
-        pdata = pv.PolyData(nodes)
-        edata = pv.PolyData(edge_centers)
-        p.add_point_labels(pdata, labels, point_size=10, font_size=10,
-                           text_color='black', point_color='red',
-                           render_points_as_spheres=True,
-                           shape_opacity=0, always_visible=True)
-        p.add_point_labels(edata, edge_label, show_points=False, font_size=10,
-                           text_color='black', shape_opacity=0, always_visible=True)
-        for i in range(0, len(edges), 2):
-            p.add_lines(np.array([edges[i], edges[i+1]]),
-                        width=1, color='black')
-        return p.show()
-
-    def draw_2d_error_graph(self, graph):
-        """Draws a 2d Error Graph.
-
-        Args:
-            graph (retworkx.PyGraph) : Error Graph to be visualised.
-
-        Returns:
-            networkx: A 2-d graph.
-
-        Raises:
-            QiskitError: If matplotlib and networkx is not installed, or there is
-                invalid input
-        """
-        if not HAS_MATPLOTLIB and not HAS_NETWORKX:
-            raise QiskitError('please install pyvista')
-        G = nx.Graph()
-        label = {}
-        pos = {}
-        i = 0
-        for x, y, z in graph.nodes():
-            if x == 0:
-                pos[i] = (y, z)
-                G.add_node(i, pos=(y, z))
-                label[i] = graph[i]
-                i += 1
-            else:
-                pos[i] = (y, z+2)
-                G.add_node(i, pos=(y, z+2))
-                label[i] = graph[i]
-                i += 1
-        plt.figure(figsize=(10, 10))
-        edge_labels = {}
-        for _ in graph.edge_list():
-            G.add_edge(_[0], _[1])
-            edge_labels[(_[0], _[1])] = abs(graph.get_edge_data(_[0], _[1]))
-        nx.draw_networkx_edge_labels(G, pos, edge_labels)
-        nx.draw_networkx_labels(G, pos, labels=label)
-        return nx.draw(G, pos, with_labels=False, node_color='red', font_size=8)
-
-    def draw_3d_decoded_graph(self, graph, Edgelist, nodelist, notebook=False):
-        """Draws a 3d Decoded Graph.
-
-        Args:
-            graph (retworkx.PyGraph) : Decoded Graph to be visualised.
-
-            Edgelist (list) : List of matched edges.
-
-            nodelist (list) : List of matched nodes.
-
-            notebook (bool) : Set True if using Jupyter.
-
-        Returns:
-            list: List of camera position, focal point, and view up.
-            numpy.ndarray: Array containing pixel RGB and optionally
-            alpha values.
-
-        Raises:
-            QiskitError: If pyvista is not installed, or there is
-                invalid input
-        """
-        nodes = np.array(nodelist, dtype='f')
-        labels = [str(i)for i in nodes]
-        edges = []
-        edge_label = []
-        for edge in Edgelist:
-            edges.append(edge[0])
-            edges.append(edge[1])
-            edge_label.append(abs(graph.get_edge_data(
-                    graph.nodes().index(edge[0]),
-                    graph.nodes().index(edge[1]))))
-        edges = np.array(edges, dtype='f')
-        if max(np.array(graph.nodes())[:, 2]) == 0:
-            resize = 1
-        else:
-            resize = float(max(np.array(graph.nodes())[:, 2]))
-        nodes[:, 2] = nodes[:, 2]/resize
-        edges[:, 2] = edges[:, 2]/resize
-        edge_centers = [(edges[i]+edges[i+1])/2
-                        for i in range(0, len(Edgelist)*2, 2)]
-        # Plotting
-        p = pv.Plotter(notebook=notebook)
-        p.set_background("white")
-        pdata = pv.PolyData(nodes)
-        edata = pv.PolyData(edge_centers)
-        p.add_point_labels(pdata, labels, point_size=10, font_size=10,
-                           text_color='black', point_color='blue',
-                           render_points_as_spheres=True,
-                           shape_opacity=0, always_visible=True)
-        p.add_point_labels(edata, edge_label, show_points=False, font_size=10,
-                           text_color='black', shape_opacity=0, always_visible=True)
-        for i in range(0, len(edges), 2):
-            p.add_lines(np.array([edges[i], edges[i+1]]),
-                        width=1, color='blue')
-        return p.show()
-
-    def draw_2d_decoded_graph(self, graph, Edgelist, neutral_nodelist):
-        """Draws a 3d Decoded Graph.
-
-        Args:
-            graph (retworkx.PyGraph) : Decoded Graph to be visualised
-
-            Edgelist (list) : List of matched edges.
-
-            neutral_nodelist (list) : List of matched nodes.
-
-        Returns:
-            networkx: A 2-d graph.
-
-        Raises:
-            QiskitError: If matplotlib and networkx is not installed, or there is
-                invalid input
-        """
-        if not HAS_MATPLOTLIB and not HAS_NETWORKX:
-            raise QiskitError('please install pyvista')
-        G = nx.Graph()
-        pos = {}
-        i = 0
-        label = {}
-        for x, y, z in graph.nodes():
-            if (x, y, z) in neutral_nodelist:
-                if x == 0:
-                    pos[i] = (y, z)
-                    G.add_node(i, pos=(y, z))
-                    label[i] = (x, y, z)
-                    i += 1
-                else:
-                    pos[i] = (y, z+2)
-                    G.add_node(i, pos=(y, z+2))
-                    label[i] = (x, y, z)
-                    i += 1
-        plt.figure(figsize=(10, 10))
-        edge_labels = {}
-        for _ in Edgelist:
-            G.add_edge(neutral_nodelist.index(_[0]), neutral_nodelist.index(_[1]))
-            edge_labels[neutral_nodelist.index(_[0]),
-                        neutral_nodelist.index(_[1])] = abs(graph.get_edge_data(
-                            graph.nodes().index(_[0]), graph.nodes().index(_[1])))
-        nx.draw_networkx_edge_labels(G, pos, edge_labels)
-        nx.draw_networkx_labels(G, pos, labels=label)
-        return nx.draw(G, pos, with_labels=False,
-                       node_color='b', font_size=8)
 
 
 def postselection_decoding(results):

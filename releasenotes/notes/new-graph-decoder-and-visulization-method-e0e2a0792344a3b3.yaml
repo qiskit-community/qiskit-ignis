@@ -11,13 +11,14 @@ features:
     .. jupyter-execute::
     
       from qiskit.ignis.verification.topological_codes.fitters import *
+      from qiskit.ignis.verification.topological_codes import GraphVisualization
       
       code = RepetitionCode(3,1)
       Graph = GraphDecoder(code)
       Error_Graph = Graph.make_error_graph('1 0  00 10 00')['0']
-      Graph.draw_2d_error_graph(Error_Graph)
+      GraphVisualization().draw_2d_error_graph(Error_Graph)
 
-    for 3D::
+    for 3D:
 
       code = RepetitionCode(3,1)
       Graph = GraphDecoder(code)
@@ -26,13 +27,15 @@ features:
       
   - |    
     Function for 3d and 2d decoded graph are also added.
-    for 2D::
+    for 2D:
+
+    .. jupyter-execute::
 
       code = RepetitionCode(3,1)
       Graph = GraphDecoder(code)
       Error_Graph = Graph.make_error_graph('1 0  00 10 00')['0']
       [logical, Edgelist, nodelist]=Graph.cluster_decoding('1 0  00 10 00')
-      Graph.draw_2d_decoded_graph(Error_Graph,Edgelist,nodelist)
+      GraphVisualization().draw_2d_decoded_graph(Error_Graph,Edgelist,nodelist)
 
     for 3D:
 
