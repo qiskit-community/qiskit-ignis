@@ -24,8 +24,6 @@ import warnings
 import retworkx as rx
 import numpy as np
 
-
-
 from qiskit.exceptions import QiskitError
 from qiskit import QuantumCircuit, execute
 
@@ -387,7 +385,7 @@ class GraphDecoder():
         """Find the nearest cluster to the target cluster.
 
         Args:
-            Cluster (dict): Dictionary that contains clusters in the
+            cluster (dict): Dictionary that contains clusters in the
             Error graph and the nodes in it.
 
             graph (retworkx.PyGraph):Error graph in which the
@@ -448,6 +446,8 @@ class GraphDecoder():
             str: A string with corrected logical values,
             computed using clustering and matching.
 
+        Raises:
+            QiskitError: if scikit-learn is not installed
         Additional information:
             This function can be run directly, or used indirectly to
             calculate a logical error probability with `get_logical_prob`

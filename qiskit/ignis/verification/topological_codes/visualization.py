@@ -54,8 +54,7 @@ class GraphVisualization():
             alpha values.
 
         Raises:
-            QiskitError: If pyvista is not installed, or there is
-                invalid input
+            QiskitError: If pyvista is not installed
         """
         if not HAS_PYVISTA:
             raise QiskitError('please install pyvista')
@@ -103,8 +102,7 @@ class GraphVisualization():
             retworkx: A 2-d graph.
 
         Raises:
-            QiskitError: If matplotlib and networkx is not installed, or there is
-                invalid input
+            QiskitError: If matplotlib is not installed.
         """
         if not HAS_MATPLOTLIB:
             raise QiskitError('please install matplotlib')
@@ -115,7 +113,7 @@ class GraphVisualization():
             else:
                 pos[i] = (graph[i][1], graph[i][2]+2)
         return mpl_draw(graph, pos=pos, with_labels=True, node_color='red',
-                        labels=lambda node: str(node),
+                        labels=lambda node: str(node),  # pylint: disable=W0108
                         edge_labels=lambda edge: str(abs(edge)))
 
     def draw_3d_decoded_graph(self, graph, edgelist, nodelist, notebook=False):
@@ -124,7 +122,7 @@ class GraphVisualization():
         Args:
             graph (retworkx.PyGraph) : Decoded Graph to be visualised.
 
-            Edgelist (list) : List of matched edges.
+            edgelist (list) : List of matched edges.
 
             nodelist (list) : List of matched nodes.
 
@@ -136,8 +134,7 @@ class GraphVisualization():
             alpha values.
 
         Raises:
-            QiskitError: If pyvista is not installed, or there is
-                invalid input
+            QiskitError: If pyvista is not installed.
         """
         if not HAS_PYVISTA:
             raise QiskitError('please install pyvista')
@@ -183,7 +180,7 @@ class GraphVisualization():
         Args:
             graph (retworkx.PyGraph) : Decoded Graph to be visualised
 
-            Edgelist (list) : List of matched edges.
+            edgelist (list) : List of matched edges.
 
             neutral_nodelist (list) : List of matched nodes.
 
@@ -191,8 +188,7 @@ class GraphVisualization():
             networkx: A 2-d graph.
 
         Raises:
-            QiskitError: If matplotlib and networkx is not installed, or there is
-                invalid input
+            QiskitError: If matplotlib is not installed.
         """
         if not HAS_MATPLOTLIB:
             raise QiskitError('please install matplotlib')
@@ -211,5 +207,5 @@ class GraphVisualization():
             if (graph[edge[0]], graph[edge[1]]) not in edgelist:
                 graph.remove_edge(edge)
         return mpl_draw(graph, pos=pos, with_labels=True, node_color='blue',
-                        labels=lambda node: str(node),
+                        labels=lambda node: str(node),  # pylint: disable=W0108
                         edge_labels=lambda edge: str(abs(edge)))
