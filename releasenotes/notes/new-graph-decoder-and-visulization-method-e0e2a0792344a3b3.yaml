@@ -10,8 +10,7 @@ features:
     
     .. jupyter-execute::
     
-      from qiskit.ignis.verification.topological_codes.fitters import *
-      from qiskit.ignis.verification.topological_codes import GraphVisualization
+      from qiskit.ignis.verification.topological_codes import RepetitionCode, GraphDecoder, GraphVisualization
       
       code = RepetitionCode(3,1)
       Graph = GraphDecoder(code)
@@ -30,6 +29,8 @@ features:
     for 2D:
 
     .. jupyter-execute::
+
+      from qiskit.ignis.verification.topological_codes import RepetitionCode, GraphDecoder, GraphVisualization
 
       code = RepetitionCode(3,1)
       Graph = GraphDecoder(code)
