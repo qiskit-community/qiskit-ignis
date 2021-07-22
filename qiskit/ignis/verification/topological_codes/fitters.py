@@ -70,7 +70,7 @@ class GraphDecoder():
             separated_string.append(syndrome_type_string.split(' '))
         return separated_string
 
-    def _string2nodes(self, string):
+    def _string2nodes(self, string, logical='0'):
 
         separated_string = self._separate_string(string)
         nodes = []
@@ -80,7 +80,7 @@ class GraphDecoder():
                 elements = \
                     separated_string[syn_type][syn_round]
                 for elem_num, element in enumerate(elements):
-                    if element == '1':
+                    if (syn_type == 0 and element != logical) or (syn_type != 0 and element == '1'):
                         nodes.append((syn_type,
                                       syn_round,
                                       elem_num))
@@ -159,13 +159,14 @@ class GraphDecoder():
 
         return S
 
-    def get_error_probs(self, results):
+    def get_error_probs(self, results, logical='0'):
         """
         Generate probabilities of single error events from result counts.
 
         Args:
             results (dict): A results dictionary, as produced by the
             `process_results` method of the code.
+            logical (string): Logical value whose results are used.
 
         Returns:
             dict: Keys are the edges for specific error
@@ -178,42 +179,55 @@ class GraphDecoder():
             https://doi.org/10.1002/qute.201800012
         """
 
-        results = results['0']
+        results = results[logical]
         shots = sum(results.values())
 
-        error_probs = {}
+        neighbours = {}
+        av_v = {}
+        for node in self.S.nodes():
+            av_v[node] = 0
+            neighbours[node] = []
+
+        av_vv = {}
+        av_xor = {}
         for edge in self.S.edge_list():
+            node0, node1 = self.S[edge[0]], self.S[edge[1]]
+            av_vv[node0, node1] = 0
+            av_xor[node0, node1] = 0
+            neighbours[node0].append(node1)
+            neighbours[node1].append(node0)
 
-            # initialize averages
-            av_vv = 0  # v_ij
-            av_v = [0, 0]  # [v_,v_j]
-            av_xor = 0  # v_{i xor j}
+        error_probs = {}
+        for string in results:
 
-            for string in results:
+            # list of i for which v_i=1
+            error_nodes = self._string2nodes(string, logical=logical)
 
-                # list of i for which v_i=1
-                error_nodes = self._string2nodes(string)
+            for node0 in error_nodes:
+                av_v[node0] += results[string]
+                for node1 in neighbours[node0]:
+                    if node1 in error_nodes and (node0, node1) in av_vv:
+                        av_vv[node0, node1] += results[string]
+                    if node1 not in error_nodes:
+                        if (node0, node1) in av_xor:
+                            av_xor[node0, node1] += results[string]
+                        else:
+                            av_xor[node1, node0] += results[string]
 
-                # get [v_i,v_j] for edge (i,j)
-                v = [int(self.S[edge[k]] in error_nodes) for k in range(2)]
+        for node in self.S.nodes():
+            av_v[node] /= shots
+        for edge in self.S.edge_list():
+            node0, node1 = self.S[edge[0]], self.S[edge[1]]
+            av_vv[node0, node1] /= shots
+            av_xor[node0, node1] /= shots
 
-                # update averages
-                av_vv += v[0]*v[1]*results[string]
-                for k in range(2):
-                    av_v[k] += v[k]*results[string]
-                av_xor += (v[0] != v[1])*results[string]
-
-            # normalize
-            av_vv /= shots
-            av_v[0] /= shots
-            av_v[1] /= shots
-            av_xor /= shots
-
-            if (1 - 2*av_xor) != 0:
-                x = (av_vv - av_v[0]*av_v[1])/(1 - 2*av_xor)
+        for edge in self.S.edge_list():
+            node0, node1 = self.S[edge[0]], self.S[edge[1]]
+            if (1 - 2*av_xor[node0, node1]) != 0:
+                x = (av_vv[node0, node1] - av_v[node0]*av_v[node1])/(1 - 2*av_xor[node0, node1])
+                error_probs[node0, node1] = max(0, 0.5 - np.sqrt(0.25-x))
             else:
-                x = np.nan
-            error_probs[self.S[edge[0]], self.S[edge[1]]] = max(0, 0.5 - np.sqrt(0.25-x))
+                error_probs[node0, node1] = np.nan
 
         return error_probs
 

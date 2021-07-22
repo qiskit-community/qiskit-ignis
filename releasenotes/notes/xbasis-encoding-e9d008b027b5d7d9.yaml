@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    The :class: `RepetitionCode` now supports encoding with x basis states, using
+    the `xbasis` keyword argument.
