@@ -192,20 +192,25 @@ class GraphVisualization():
         """
         if not HAS_MATPLOTLIB:
             raise QiskitError('please install matplotlib')
+        graph_c = graph.copy()
         pos = {}
-        for i in graph.node_indexes():
+        for i in graph_c.node_indexes():
             if graph[i][0] == 0:
                 pos[i] = (graph[i][1], graph[i][2])
             else:
                 pos[i] = (graph[i][1], graph[i][2]+2)
+        edges = graph.edge_list()
+        for edge in edges:
+            if (graph[edge[0]],
+                graph[edge[1]]) in edgelist or (graph[edge[1]],
+                                                graph[edge[0]]) in edgelist:
+                pass
+            else:
+                graph_c.remove_edge(edge[0], edge[1])
         nodes = graph.nodes()
         for node in nodes:
             if node not in neutral_nodelist:
-                graph.remove_node(graph.nodes().index(node))
-        edges = graph.edge_list()
-        for edge in edges:
-            if (graph[edge[0]], graph[edge[1]]) not in edgelist:
-                graph.remove_edge(edge)
-        return mpl_draw(graph, pos=pos, with_labels=True, node_color='blue',
+                graph_c.remove_node(graph.nodes().index(node))
+        return mpl_draw(graph_c, pos=pos, with_labels=True, node_color='blue',
                         labels=lambda node: str(node),  # pylint: disable=W0108
                         edge_labels=lambda edge: str(abs(edge)))
