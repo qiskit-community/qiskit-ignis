@@ -26,7 +26,7 @@ class RepetitionCode():
     T syndrome measurement rounds.
     """
 
-    def __init__(self, d, T=0):
+    def __init__(self, d, T=0, xbasis=False):
         """
         Creates the circuits corresponding to a logical 0 and 1 encoded
         using a repetition code.
@@ -34,6 +34,7 @@ class RepetitionCode():
         Args:
             d (int): Number of code qubits (and hence repetitions) used.
             T (int): Number of rounds of ancilla-assisted syndrome measurement.
+            xbasis (bool): Whether to use the X basis to use for encoding (Z basis used by default).
 
 
         Additional information:
@@ -57,6 +58,8 @@ class RepetitionCode():
         for log in ['0', '1']:
             self.circuit[log] = QuantumCircuit(
                 self.link_qubit, self.code_qubit, name=log)
+
+        self._xbasis = xbasis
 
         self._preparation()
 
@@ -88,16 +91,25 @@ class RepetitionCode():
                 the end.
         """
         for log in logs:
-            for j in range(self.d):
-                self.circuit[log].x(self.code_qubit[j])
+            if self._xbasis:
+                self.circuit[log].z(self.code_qubit)
+            else:
+                self.circuit[log].x(self.code_qubit)
             if barrier:
                 self.circuit[log].barrier()
 
-    def _preparation(self):
+    def _preparation(self, barrier=False):
         """
         Prepares logical bit states by applying an x to the circuit that will
         encode a 1.
         """
+
+        for log in ['0', '1']:
+            if self._xbasis:
+                self.circuit[log].h(self.code_qubit)
+            if barrier:
+                self.circuit[log].barrier()
+
         self.x(['1'])
 
     def syndrome_measurement(self, reset=True, barrier=False):
@@ -115,12 +127,27 @@ class RepetitionCode():
 
             self.circuit[log].add_register(self.link_bits[-1])
 
-            for j in range(self.d - 1):
-                self.circuit[log].cx(self.code_qubit[j], self.link_qubit[j])
+            if self._xbasis:
+                self.circuit[log].h(self.link_qubit)
 
             for j in range(self.d - 1):
-                self.circuit[log].cx(
-                    self.code_qubit[j + 1], self.link_qubit[j])
+                if self._xbasis:
+                    self.circuit[log].cx(
+                        self.link_qubit[j], self.code_qubit[j])
+                else:
+                    self.circuit[log].cx(
+                        self.code_qubit[j], self.link_qubit[j])
+
+            for j in range(self.d - 1):
+                if self._xbasis:
+                    self.circuit[log].cx(
+                        self.link_qubit[j], self.code_qubit[j + 1])
+                else:
+                    self.circuit[log].cx(
+                        self.code_qubit[j + 1], self.link_qubit[j])
+
+            if self._xbasis:
+                self.circuit[log].h(self.link_qubit)
 
             for j in range(self.d - 1):
                 self.circuit[log].measure(
@@ -138,7 +165,10 @@ class RepetitionCode():
         Readout of all code qubits, which corresponds to a logical measurement
         as well as allowing for a measurement of the syndrome to be inferred.
         """
+
         for log in ['0', '1']:
+            if self._xbasis:
+                self.circuit[log].h(self.code_qubit)
             self.circuit[log].add_register(self.code_bit)
             self.circuit[log].measure(self.code_qubit, self.code_bit)
 
