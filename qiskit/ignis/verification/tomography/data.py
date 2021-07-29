@@ -101,6 +101,26 @@ def marginal_counts(counts: Dict[str, int],
     return ret
 
 
+def subsystems_counts(counts: Dict[str, int]) -> List[Dict[str, int]]:
+    """
+    Extract all subsystems' counts from the single complete system count dictionary.
+
+    Args:
+        counts (dict): The measurement count dictionary of a complete system
+            that contains multiple classical registers for measurements s.t. the dictionary's
+            keys have space delimiters.
+    Returns:
+        list: A list of measurement count dictionaries corresponding to
+                each of the subsystems measured.
+    Example:
+        >>> subsystems_counts({'0 1 1': 5, '0 0 1': 2, '0 1 0': 3})
+        [{'0': 3, '1': 7}, {'0': 2, '1': 8}, {'0': 10}]
+    """
+    num_qubits = len(list(counts.keys())[0].replace(' ', ''))
+    return [marginal_counts(counts, [qubit])
+            for qubit in range(num_qubits)]
+
+
 def count_keys(num_qubits: int) -> List[str]:
     """Return ordered count keys.
 

@@ -109,6 +109,7 @@ from .fitters import TomographyFitter
 
 # Utility functions TODO: move to qiskit.quantum_info
 from .data import marginal_counts     # TODO: move to qiskit.tools
+from .data import subsystems_counts   # TODO: move to qiskit.tools
 from .data import combine_counts      # TODO: move to qiskit.tools
 from .data import expectation_counts  # TODO: move to qiskit.tools
-from .data import count_keys  # TODO: move to qiskit.tools
+from .data import count_keys          # TODO: move to qiskit.tools
