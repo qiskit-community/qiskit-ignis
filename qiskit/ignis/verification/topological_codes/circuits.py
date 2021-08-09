@@ -203,7 +203,7 @@ class RepetitionCode:
                         string[j] != string[j + 1]
                     )
                 # results from all other syndrome measurements then added
-                full_syndrome = full_syndrome + string[self.d :]
+                full_syndrome = full_syndrome + string[self.d:]
 
                 # changes between one syndrome and the next then calculated
                 syndrome_list = full_syndrome.split(" ")
@@ -322,26 +322,26 @@ class RepetitionCodeSyndromeGenerator:
     def get_m_ancilla(self, i, r):
         """
         Returns:
-            measurement_value: Measurement result of ancilla i in round r for the current set of errors.
+            measurement_val: Measurement result of ancilla i in round r for current set of errors.
         """
-        measurement_value = self.m_anc[r][i]
-        return measurement_value
+        measurement_val = self.m_anc[r][i]
+        return measurement_val
 
     def get_m_data(self, i, encoded=0):
         """
         Args:
             encoded: Initial logical value of the data qubits.
         Returns:
-            measurement_value: Final measurement result of data qubit i for the current set of errors.
+            measurement_val: Final measurement result of data qubit i for current set of errors.
 
         """
-        measurement_value = (self.m_fin[i] + encoded) % 2
-        return measurement_value
+        measurement_val = (self.m_fin[i] + encoded) % 2
+        return measurement_val
 
     def get_raw_results(self, encoded=0):
         """
         Returns:
-            raw_result: String of unprocessed results for the current set of errors.
+            raw_result: String of unprocessed results for current set of errors.
         """
         raw_result = ""
         for i in range(self.d - 1, -1, -1):  # qiskit's qubit ordering
@@ -355,7 +355,7 @@ class RepetitionCodeSyndromeGenerator:
     def get_processed_results(self, encoded=0):
         """
         Returns:
-            processed_result: String of processed results for the current set of errors.
+            processed_result: String of processed results for current set of errors.
         """
         processed_result = (
             str(self.get_m_data(self.d - 1, encoded))

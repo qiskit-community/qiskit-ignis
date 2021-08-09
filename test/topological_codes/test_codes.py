@@ -87,7 +87,7 @@ class TestCodes(unittest.TestCase):
                         temp_qc.name = str((j, qubit, error))
                         temp_qc.data = qc.data[0:j]
                         getattr(temp_qc, error)(qubit)
-                        temp_qc.data += qc.data[j : depth + 1]
+                        temp_qc.data += qc.data[j: depth + 1]
                         circuit_name[(j, qubit, error)] = temp_qc.name
                         error_circuit[temp_qc.name] = temp_qc
 
