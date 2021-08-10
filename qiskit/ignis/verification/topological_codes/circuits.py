@@ -203,7 +203,7 @@ class RepetitionCode:
                         string[j] != string[j + 1]
                     )
                 # results from all other syndrome measurements then added
-                full_syndrome = full_syndrome + string[self.d:]
+                full_syndrome = full_syndrome + string[self.d :]
 
                 # changes between one syndrome and the next then calculated
                 syndrome_list = full_syndrome.split(" ")
@@ -266,7 +266,6 @@ class RepetitionCodeSyndromeGenerator:
 
     def __init__(self, code):
         """
-
         Args:
             code (RepetitionCode): Code object under consideration.
         """
@@ -280,15 +279,20 @@ class RepetitionCodeSyndromeGenerator:
         for r in range(self.T):
             self.m_anc[r] = [0] * (self.d - 1)
 
-    def _bitflip_readout(self, i):
+    def bitflip_readout(self, i):
         """
         Introduces a bitflip error on data qubit i right before the (final) readout.
+        Args:
+            i (int): Qubit label.
         """
         self.m_fin[i] = (self.m_fin[i] + 1) % 2
 
-    def _bitflip_ancilla(self, i, r):
+    def bitflip_ancilla(self, i, r):
         """
         Introduces a bitflip error to ancilla i in round r.
+        Args:
+            i (int): Qubit label.
+            r (int): Label of round of syndrome extraction.
         """
         self.m_anc[r][i] = (self.m_anc[r][i] + 1) % 2
 
@@ -296,8 +300,10 @@ class RepetitionCodeSyndromeGenerator:
         """
         Introduces a bitflip error to data qubit i in round r0.
         Args:
-            middle: If False, the error is introduced before the first sequence of CNOTs.
-                    If True, the error is introduced in between the two CNOT sequences.
+            i (int): Qubit label.
+            r0 (int): Label of round of syndrome extraction.
+            middle (bool): If False, the error is introduced before the first sequence of CNOTs.
+                If True, the error is introduced in between the two CNOT sequences.
         """
         self.m_fin[i] = (self.m_fin[i] + 1) % 2
 
@@ -317,10 +323,13 @@ class RepetitionCodeSyndromeGenerator:
             self.m_anc[r0][i] = (
                 self.m_anc[r0][i] + middle + 1
             ) % 2  # no error induced if it occurs in the middle
-        return None
 
     def get_m_ancilla(self, i, r):
         """
+        Args:
+            i (int): Qubit label.
+            r (int): Label of round of syndrome extraction.
+
         Returns:
             measurement_val: Measurement result of ancilla i in round r for current set of errors.
         """
@@ -330,7 +339,8 @@ class RepetitionCodeSyndromeGenerator:
     def get_m_data(self, i, encoded=0):
         """
         Args:
-            encoded: Initial logical value of the data qubits.
+            i (int): Qubit label.
+            encoded (int): Initial logical value of the data qubits.
         Returns:
             measurement_val: Final measurement result of data qubit i for current set of errors.
 
@@ -340,6 +350,7 @@ class RepetitionCodeSyndromeGenerator:
 
     def get_raw_results(self, encoded=0):
         """
+        Args:
         Returns:
             raw_result: String of unprocessed results for current set of errors.
         """
@@ -354,6 +365,8 @@ class RepetitionCodeSyndromeGenerator:
 
     def get_processed_results(self, encoded=0):
         """
+        Args:
+            encoded (int): Initial logical value of the data qubits.
         Returns:
             processed_result: String of processed results for current set of errors.
         """
