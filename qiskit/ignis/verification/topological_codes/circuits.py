@@ -203,7 +203,7 @@ class RepetitionCode:
                         string[j] != string[j + 1]
                     )
                 # results from all other syndrome measurements then added
-                full_syndrome = full_syndrome + string[self.d :]
+                full_syndrome = full_syndrome + string[self.d:]
 
                 # changes between one syndrome and the next then calculated
                 syndrome_list = full_syndrome.split(" ")
