@@ -29,7 +29,6 @@ from qiskit.providers.aer.noise import NoiseModel
 from qiskit.providers.aer.noise.errors import pauli_error, depolarizing_error
 
 
-
 def get_syndrome(code, noise_model, shots=1014):
     """Runs a code to get required results."""
     circuits = [code.circuit[log] for log in ["0", "1"]]
@@ -89,7 +88,7 @@ class TestCodes(unittest.TestCase):
                         temp_qc.name = str((j, qubit, error))
                         temp_qc.data = qc.data[0:j]
                         getattr(temp_qc, error)(qubit)
-                        temp_qc.data += qc.data[j : depth + 1]
+                        temp_qc.data += qc.data[j: depth + 1]
                         circuit_name[(j, qubit, error)] = temp_qc.name
                         error_circuit[temp_qc.name] = temp_qc
 
