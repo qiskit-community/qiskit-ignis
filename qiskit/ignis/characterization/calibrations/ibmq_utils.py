@@ -17,12 +17,12 @@ Utility functions for calibrating IBMQ Devices
 """
 
 from collections import defaultdict
+from scipy.optimize import least_squares
 
 import numpy as np
 from qiskit import pulse
 from qiskit.circuit import Parameter
 from qiskit.pulse import library as pulse_lib, Schedule, Play, ShiftPhase
-from scipy.optimize import least_squares
 
 
 def _fit_drag_func(duration, amp, sigma, beta, exp_samples):
@@ -110,6 +110,7 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
             circuit instruction to schedule definitions.
         drives (list): List of drive chs
     """
+    # pylint: disable = invalid-name
 
     # U2 is -P1.Y90p.-P0
     # U3 is -P2.X90p.-P0.X90m.-P1
