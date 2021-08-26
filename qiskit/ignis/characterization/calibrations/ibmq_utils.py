@@ -17,11 +17,12 @@ Utility functions for calibrating IBMQ Devices
 """
 
 from collections import defaultdict
-from scipy.optimize import least_squares
-import numpy as np
 
+import numpy as np
+from qiskit import pulse
+from qiskit.circuit import Parameter
 from qiskit.pulse import library as pulse_lib, Schedule, Play, ShiftPhase
-from qiskit.pulse.schedule import ParameterizedSchedule
+from scipy.optimize import least_squares
 
 
 def _fit_drag_func(duration, amp, sigma, beta, exp_samples):
@@ -113,11 +114,6 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
     # U2 is -P1.Y90p.-P0
     # U3 is -P2.X90p.-P0.X90m.-P1
 
-    def parametrized_fc(kw_name, phi0, chan, t_offset):
-        def _parametrized_fc(**kwargs):
-            return ShiftPhase(phase=-kwargs[kw_name]+phi0, channel=chan).shift(t_offset)
-        return _parametrized_fc
-
     for qubit in qubits:
 
         drive_ch = drives[qubit]
@@ -129,17 +125,12 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
         else:
             x90_sched = pi2_pulse_schedules[qubit]
 
-        pulse_dur = x90_sched.duration
-
         # find channel dependency for u2
         for _u2_group in _find_channel_groups('u2', qubits=qubit, inst_map=inst_map):
             if drive_ch in _u2_group:
                 break
         else:
             _u2_group = (drive_ch, )
-
-        u2_fc1s = [parametrized_fc('P1', np.pi/2, ch, 0) for ch in _u2_group]
-        u2_fc2s = [parametrized_fc('P0', -np.pi/2, ch, pulse_dur) for ch in _u2_group]
 
         # find channel dependency for u3
         for _u3_group in _find_channel_groups('u3', qubits=qubit, inst_map=inst_map):
@@ -148,23 +139,34 @@ def update_u_gates(drag_params, pi2_pulse_schedules=None,
         else:
             _u3_group = (drive_ch, )
 
-        u3_fc1s = [parametrized_fc('P2', 0, ch, 0) for ch in _u3_group]
-        u3_fc2s = [parametrized_fc('P0', -np.pi, ch, pulse_dur) for ch in _u3_group]
-        u3_fc3s = [parametrized_fc('P1', np.pi, ch, 2*pulse_dur) for ch in _u3_group]
-
         # add commands to schedule
+
         # u2
-        sched_components = [*u2_fc1s, x90_sched, *u2_fc2s]
-        schedule1 = ParameterizedSchedule(*sched_components,
-                                          parameters=['P0', 'P1'], name='u2_%d' % qubit)
+        with pulse.build(name=f"u2_{qubit}", default_alignment="sequential") as u2_sched:
+            P0 = Parameter("P0")
+            P1 = Parameter("P1")
+            for ch in _u2_group:
+                pulse.shift_phase(-P1 + np.pi/2, ch)
+            pulse.call(x90_sched)
+            for ch in _u2_group:
+                pulse.shift_phase(-P0 - np.pi/2, ch)
 
         # u3
-        sched_components = [*u3_fc1s, x90_sched, *u3_fc2s, x90_sched.shift(pulse_dur), *u3_fc3s]
-        schedule2 = ParameterizedSchedule(*sched_components,
-                                          parameters=['P0', 'P1', 'P2'], name='u3_%d' % qubit)
+        with pulse.build(name=f"u3_{qubit}", default_alignment="sequential") as u3_sched:
+            P0 = Parameter("P0")
+            P1 = Parameter("P1")
+            P2 = Parameter("P2")
+            for ch in _u3_group:
+                pulse.shift_phase(-P2, ch)
+            pulse.call(x90_sched)
+            for ch in _u3_group:
+                pulse.shift_phase(-P0 - np.pi, ch)
+            pulse.call(x90_sched)
+            for ch in _u3_group:
+                pulse.shift_phase(-P1 + np.pi, ch)
 
-        inst_map.add('u2', qubits=qubit, schedule=schedule1)
-        inst_map.add('u3', qubits=qubit, schedule=schedule2)
+        inst_map.add('u2', qubits=qubit, schedule=u2_sched)
+        inst_map.add('u3', qubits=qubit, schedule=u3_sched)
 
 
 def _find_channel_groups(command, qubits, inst_map):
