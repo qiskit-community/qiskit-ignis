@@ -23,6 +23,7 @@ from qiskit.exceptions import QiskitError
 
 try:
     from retworkx.visualization import mpl_draw
+    import matplotlib.pyplot as plt
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
@@ -37,11 +38,17 @@ except ImportError:
 class GraphVisualization():
     """Class to draw 3D and 2D graphs needed for graph theoritical decoders."""
 
-    def __init__(self):
-        """Blank init function."""
-        pass
+    def __init__(self, height, width):
+        """ Size of the figure.
 
-    def draw_3d_error_graph(graph, notebook=False):
+        Args:
+            height : Height of the graph.
+            width : Width of the graph.
+        """
+        self.height = height
+        self.width = width
+
+    def draw_3d_error_graph(self, graph, notebook=False):
         """Draws a 3d Error Graph.
 
         Args:
@@ -92,7 +99,7 @@ class GraphVisualization():
                         width=1, color='black')
         return p.show()
 
-    def draw_2d_error_graph(graph):
+    def draw_2d_error_graph(self, graph):
         """Draws a 2d Error Graph.
 
         Args:
@@ -104,6 +111,7 @@ class GraphVisualization():
         Raises:
             QiskitError: If matplotlib is not installed.
         """
+        plt.figure(figsize=(self.height, self.width))
         if not HAS_MATPLOTLIB:
             raise QiskitError('please install matplotlib')
         pos = {}
@@ -116,7 +124,7 @@ class GraphVisualization():
                         labels=lambda node: str(node),  # pylint: disable=W0108
                         edge_labels=lambda edge: str(abs(edge)))
 
-    def draw_3d_decoded_graph(graph, edgelist, nodelist, notebook=False):
+    def draw_3d_decoded_graph(self, graph, edgelist, nodelist, notebook=False):
         """Draws a 3d Decoded Graph.
 
         Args:
@@ -174,8 +182,8 @@ class GraphVisualization():
                         width=1, color='blue')
         return p.show()
 
-    def draw_2d_decoded_graph(graph, edgelist, neutral_nodelist):
-        """Draws a 3d Decoded Graph.
+    def draw_2d_decoded_graph(self, graph, edgelist, neutral_nodelist):
+        """Draws a 2d Decoded Graph.
 
         Args:
             graph (retworkx.PyGraph) : Decoded Graph to be visualised
@@ -190,6 +198,7 @@ class GraphVisualization():
         Raises:
             QiskitError: If matplotlib is not installed.
         """
+        plt.figure(figsize=(self.height, self.width))
         if not HAS_MATPLOTLIB:
             raise QiskitError('please install matplotlib')
         graph_c = graph.copy()

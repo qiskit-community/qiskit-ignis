@@ -15,14 +15,16 @@ features:
       code = RepetitionCode(3,1)
       Graph = GraphDecoder(code)
       Error_Graph = Graph.make_error_graph('1 0  00 10 00')['0']
-      GraphVisualization().draw_2d_error_graph(Error_Graph)
+      Plot = GraphVisualization(10,10)
+      Plot.draw_2d_error_graph(Error_Graph)
 
     for 3D:
 
       code = RepetitionCode(3,1)
       Graph = GraphDecoder(code)
       Error_Graph = Graph.make_error_graph('1 0  00 10 00')['0']
-      Graph.draw_3d_error_graph(Error_Graph)
+      Plot = GraphVisualization(10,10)
+      Plot.draw_3d_error_graph(Error_Graph)
       
   - |    
     Function for 3d and 2d decoded graph are also added.
@@ -36,7 +38,8 @@ features:
       Graph = GraphDecoder(code)
       Error_Graph = Graph.make_error_graph('1 0  00 10 00')['0']
       [logical, Edgelist, nodelist]=Graph.cluster_decoding('1 0  00 10 00')
-      GraphVisualization().draw_2d_decoded_graph(Error_Graph,Edgelist,nodelist)
+      Plot = GraphVisualization(10,10)
+      Plot.draw_2d_decoded_graph(Error_Graph,Edgelist,nodelist)
 
     for 3D:
 
@@ -44,4 +47,5 @@ features:
       Graph = GraphDecoder(code)
       Error_Graph = Graph.make_error_graph('1 0  00 10 00')['0']
       [logical, Edgelist, nodelist]=Graph.cluster_decoding('1 0  00 10 00')
-      Graph.draw_3d_decoded_graph(Error_Graph,Edgelist,nodelist)
+      Plot = GraphVisualization(10,10)
+      Plot.draw_3d_decoded_graph(Error_Graph,Edgelist,nodelist)
