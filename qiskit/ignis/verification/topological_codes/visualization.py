@@ -41,7 +41,7 @@ class GraphVisualization():
         """Blank init function."""
         pass
 
-    def draw_3d_error_graph(self, graph, notebook=False):
+    def draw_3d_error_graph(graph, notebook=False):
         """Draws a 3d Error Graph.
 
         Args:
@@ -92,7 +92,7 @@ class GraphVisualization():
                         width=1, color='black')
         return p.show()
 
-    def draw_2d_error_graph(self, graph):
+    def draw_2d_error_graph(graph):
         """Draws a 2d Error Graph.
 
         Args:
@@ -116,7 +116,7 @@ class GraphVisualization():
                         labels=lambda node: str(node),  # pylint: disable=W0108
                         edge_labels=lambda edge: str(abs(edge)))
 
-    def draw_3d_decoded_graph(self, graph, edgelist, nodelist, notebook=False):
+    def draw_3d_decoded_graph(graph, edgelist, nodelist, notebook=False):
         """Draws a 3d Decoded Graph.
 
         Args:
@@ -174,7 +174,7 @@ class GraphVisualization():
                         width=1, color='blue')
         return p.show()
 
-    def draw_2d_decoded_graph(self, graph, edgelist, neutral_nodelist):
+    def draw_2d_decoded_graph(graph, edgelist, neutral_nodelist):
         """Draws a 3d Decoded Graph.
 
         Args:
