@@ -24,7 +24,9 @@ import warnings
 import retworkx as rx
 import numpy as np
 
+from qiskit.exceptions import QiskitError
 from qiskit import QuantumCircuit, execute
+
 
 try:
     from qiskit.providers.aer import Aer
@@ -32,6 +34,12 @@ try:
 except ImportError:
     from qiskit import BasicAer
     HAS_AER = False
+
+try:
+    from sklearn.cluster import DBSCAN
+    HAS_SCIKIT = True
+except ImportError:
+    HAS_SCIKIT = False
 
 
 class GraphDecoder():
@@ -312,7 +320,8 @@ class GraphDecoder():
         return E
 
     def matching(self, string):
-        """
+        """Graph theoritical decoder that uses minimum weight matching to decode errors.
+
         Args:
             string (str): A string describing the output from the code.
 
@@ -324,7 +333,6 @@ class GraphDecoder():
             This function can be run directly, or used indirectly to
             calculate a logical error probability with `get_logical_prob`
         """
-
         # this matching algorithm is designed for a single graph
         E = self.make_error_graph(string)['0']
 
@@ -387,19 +395,163 @@ class GraphDecoder():
 
         return logical_string
 
-    def get_logical_prob(self, results, algorithm='matching'):
+    def nearest_cluster(self, cluster, graph, target):
+        """Find the nearest cluster to the target cluster.
+
+        Args:
+            cluster (dict): Dictionary that contains clusters in the
+            Error graph and the nodes in it.
+
+            graph (retworkx.PyGraph):Error graph in which the
+            nearest cluster and the node will be searched.
+
+            target (int,int,int) : target cluster for which nearest
+            cluster is being searched.
+
+        Returns:
+            list: [nearest_outside_node, nearest_cluster]
+            nearest_outside_node : nearest node to the target node
+            which doesn't belong to the same cluster.
+            nearest_cluster : cluster to which nearest outside node
+            belongs.
         """
+        cluster_graph = rx.PyGraph()
+        cluster_graph.add_nodes_from(graph.nodes())
+        cluster_graph.add_edges_from(graph.weighted_edge_list())
+        for i, __ in enumerate(graph.nodes()):
+            if __ not in cluster[target]:
+                cluster_graph.remove_node(i)
+        edges = rx.max_weight_matching(cluster_graph,
+                                       max_cardinality=True, weight_fn=lambda x: x)
+        remaining_node = list(cluster_graph.node_indexes())
+        for edge in edges:
+            remaining_node.remove(edge[0])
+            remaining_node.remove(edge[1])
+        node_neigbours = {}
+        for edge in graph.weighted_edge_list():
+            if remaining_node[0] == edge[0]:
+                node_neigbours[graph[edge[1]]] = {'weight': edge[2]}
+            if remaining_node[0] == edge[1]:
+                node_neigbours[graph[edge[0]]] = {'weight': edge[2]}
+        nearest_neighbours = sorted(node_neigbours.items(),
+                                    key=lambda e: e[1]["weight"],
+                                    reverse=True)[:len(cluster[target])]
+        nearest_outside_node = [x[0] for x in nearest_neighbours if x[0] not in
+                                cluster[target]]
+        for x in cluster.keys():
+            if nearest_outside_node[0] in cluster[x]:
+                nearest_cluster = x
+        return [nearest_outside_node[0], nearest_cluster]
+
+    def cluster_decoding(self, string, eps=4):
+        """Graph theoritical decoder that uses Clustering and matching to decode errors.
+
+        Args:
+            string (str): A string describing the output from the code.
+
+            eps (int):The maximum distance between two samples for one
+            to be considered as in the neighborhood of the other. This
+            is not a maximum bound on the distances of points within a
+            cluster. This is the most important DBSCAN parameter to
+            choose appropriately for your data set and distance function.
+            Default value here is 4.
+
+        Returns:
+            str: A string with corrected logical values,
+            computed using clustering and matching.
+
+        Raises:
+            QiskitError: if scikit-learn is not installed
+        Additional information:
+            This function can be run directly, or used indirectly to
+            calculate a logical error probability with `get_logical_prob`
+        """
+        if not HAS_SCIKIT:
+            raise QiskitError('please install scikit-learn')
+
+        graph = self.make_error_graph(string)['0']
+        logical_nodes = [(0, 0, 0), (0, 1, 0)]
+        Non_neutral_nodes = list(graph.nodes())
+        for _ in logical_nodes:
+            Non_neutral_nodes.remove(_)
+        # Trivial Case
+        if len(Non_neutral_nodes) == 0:
+            logicals = self._separate_string(string)[0]
+            logical_string = ''
+            for logical in logicals:
+                logical_string += logical + ' '
+            logical_string = logical_string[:-1]
+            return logical_string
+        # Cluster Decoder
+        corrected_logical_string = []
+        clustering = DBSCAN(eps=eps, min_samples=2,
+                            metric='manhattan').fit(Non_neutral_nodes)
+        cluster = {_: [] for _ in set(clustering.labels_)}
+        for _, __ in zip(clustering.labels_, Non_neutral_nodes):
+            cluster[_].append(__)
+        # appending logical nodes as separate clusters
+        cluster['logical_0'] = [logical_nodes[0]]
+        cluster['logical_1'] = [logical_nodes[1]]
+        unmatched_node = True
+        while unmatched_node:
+            for _ in cluster.keys():
+                if len(cluster[_]) % 2 != 0 and _ != 'logical_0' and _ != 'logical_1':
+                    s = self.nearest_cluster(cluster, graph, _)
+                    if s[1] == 'logical_0' or s[1] == 'logical_1':
+                        corrected_logical_string.append(s[1][-1])
+                        cluster[_].append(s[0])
+                    else:
+                        cluster[_] = cluster[_] + cluster[s[1]]
+                        cluster.pop(s[1])
+                        break
+                else:
+                    unmatched_node = False
+        neutral_nodelist = []
+        edgelist = []
+        for _ in cluster.keys():
+            cluster_graph = rx.PyGraph()
+            cluster_graph.add_nodes_from(graph.nodes())
+            cluster_graph.add_edges_from(graph.weighted_edge_list())
+            for i, __ in enumerate(graph.nodes()):
+                if __ not in cluster[_]:
+                    cluster_graph.remove_node(i)
+            edges = [(cluster_graph[x[0]],
+                      cluster_graph[x[1]]) for x in rx.max_weight_matching(
+                cluster_graph, max_cardinality=True, weight_fn=lambda x: x)]
+            edgelist = edgelist + edges
+            neutral_nodelist += [k[0] for k in list(edges)] + [k[1] for k in list(edges)]
+        # use it to construct and return a corrected logical string
+        logicals = self._separate_string(string)[0]
+        for (source, target) in edgelist:
+            if source[0] == 0 and target[0] != 0:
+                logicals[source[1]] = str((int(logicals[source[1]]) + 1) % 2)
+            if target[0] == 0 and source[0] != 0:
+                logicals[target[1]] = str((int(logicals[target[1]]) + 1) % 2)
+        logical_string = ''
+        for logical in logicals:
+            logical_string += logical + ' '
+        logical_string = logical_string[:-1]
+        return [logical_string, edgelist, neutral_nodelist]
+
+    def get_logical_prob(self, results, eps=4, algorithm='matching'):
+        """Calculate logical probabilty for graph decoders.
+
         Args:
             results (dict): A results dictionary, as produced by the
             `process_results` method of the code.
             algorithm (str): Choice of which decoder to use.
-
+            eps (int): If algorithm is set to 'clustering'. The maximum
+            distance between two samples for one to be considered as in
+            the neighborhood of the other. This is not a maximum bound
+            on the distances of points within a cluster. This is the
+            most important DBSCAN parameter to choose appropriately for
+            your data set and distance function.
+            Default value here is 4.
         Returns:
             dict: Dictionary of logical error probabilities for
             each of the encoded logical states whose results were given in
             the input.
         """
-
         logical_prob = {}
         for log in results:
 
@@ -410,6 +562,13 @@ class GraphDecoder():
             if algorithm == 'matching':
                 for string in results[log]:
                     corr_str = self.matching(string)
+                    if corr_str in corrected_results:
+                        corrected_results[corr_str] += results[log][string]
+                    else:
+                        corrected_results[corr_str] = results[log][string]
+            elif algorithm == 'clustering':
+                for string in results[log]:
+                    corr_str = self.cluster_decoding(string, eps=eps)[0]
                     if corr_str in corrected_results:
                         corrected_results[corr_str] += results[log][string]
                     else:

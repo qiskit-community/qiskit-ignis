@@ -80,7 +80,7 @@ setuptools.setup(
     extras_require={
         'visualization': ['matplotlib>=2.1'],
         'cvx': ['cvxpy>=1.0.15'],
-        'iq': ["scikit-learn>=0.17"],
+        'clusteriq': ["scikit-learn>=0.17"],
         'jit': ['numba'],
     },
     install_requires=requirements,

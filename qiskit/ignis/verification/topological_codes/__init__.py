@@ -21,3 +21,4 @@ from .circuits import RepetitionCode
 from .fitters import GraphDecoder
 from .fitters import lookuptable_decoding
 from .fitters import postselection_decoding
+from .visualization import GraphVisualization
