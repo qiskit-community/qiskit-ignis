@@ -63,7 +63,7 @@ class GraphDecoder:
 
         if S:
             self.S = S
-        elif not brute and "_get_all_processed_results" in dir(code):
+        elif not brute and hasattr(code, "_get_all_processed_results"):
             self.S = self._make_syndrome_graph(
                 results=code._get_all_processed_results()
             )
