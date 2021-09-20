@@ -99,10 +99,9 @@ class GraphDecoder:
             node_map = {}
             for string in results:
                 nodes = self._string2nodes(string)
-                node_ids = S.add_nodes_from(nodes)
-                for node, node_id in zip(nodes, node_ids):
+                for node in nodes:
                     if node not in node_map:
-                        node_map[node] = node_id
+                        node_map[node] = S.add_node(node)
                 for source in nodes:
                     for target in nodes:
                         if target != source:
