@@ -26,7 +26,7 @@ class RepetitionCode:
     T syndrome measurement rounds.
     """
 
-    def __init__(self, d, T=0, xbasis=False):
+    def __init__(self, d, T=0, xbasis=False, resets=True, delay=0):
         """
         Creates the circuits corresponding to a logical 0 and 1 encoded
         using a repetition code.
@@ -35,6 +35,8 @@ class RepetitionCode:
             d (int): Number of code qubits (and hence repetitions) used.
             T (int): Number of rounds of ancilla-assisted syndrome measurement.
             xbasis (bool): Whether to use the X basis to use for encoding (Z basis used by default).
+            resets (bool): Whether to include a reset gate after mid-circuit measurements.
+            delay (float): Time (in dt) to delay after mid-circuit measurements (and delay).
 
 
         Additional information:
@@ -61,14 +63,15 @@ class RepetitionCode:
             )
 
         self._xbasis = xbasis
+        self._resets = resets
 
         self._preparation()
 
         for _ in range(T - 1):
-            self.syndrome_measurement()
+            self.syndrome_measurement(delay=delay)
 
         if T != 0:
-            self.syndrome_measurement(reset=False)
+            self.syndrome_measurement(final=True)
             self.readout()
 
     def get_circuit_list(self):
@@ -113,13 +116,14 @@ class RepetitionCode:
 
         self.x(["1"])
 
-    def syndrome_measurement(self, reset=True, barrier=False):
+    def syndrome_measurement(self, final=False, barrier=False, delay=0):
         """
         Application of a syndrome measurement round.
 
         Args:
-            reset (bool): If set to true add a boolean at the end of each round
+            final (bool): Whether this is the final syndrome measurement round.
             barrier (bool): Boolean denoting whether to include a barrier at the end.
+            delay (float): Time (in dt) to delay after mid-circuit measurements (and delay).
         """
         self.link_bits.append(
             ClassicalRegister((self.d - 1), "round_" + str(self.T) + "_link_bit")
@@ -148,9 +152,12 @@ class RepetitionCode:
                 self.circuit[log].h(self.link_qubit)
 
             for j in range(self.d - 1):
-                self.circuit[log].measure(self.link_qubit[j], self.link_bits[self.T][j])
-                if reset:
+                self.circuit[log].measure(
+                    self.link_qubit[j], self.link_bits[self.T][j])
+                if self._resets and not final:
                     self.circuit[log].reset(self.link_qubit[j])
+                if delay > 0 and not final:
+                    self.circuit[log].delay(delay, self.link_qubit[j])
 
             if barrier:
                 self.circuit[log].barrier()
@@ -210,11 +217,27 @@ class RepetitionCode:
                 syndrome_changes = ""
                 for t in range(self.T + 1):
                     for j in range(self.d - 1):
-                        if t == 0:
-                            change = syndrome_list[-1][j] != "0"
+                        if self._resets:
+                            if t == 0:
+                                change = (syndrome_list[-1][j] != '0')
+                            else:
+                                change = (syndrome_list[-t - 1][j]
+                                          != syndrome_list[-t][j])
                         else:
-                            change = syndrome_list[-t][j] != syndrome_list[-t - 1][j]
-                        syndrome_changes += "0" * (not change) + "1" * change
+                            if t <= 1:
+                                if t != self.T:
+                                    change = (syndrome_list[-t - 1][j] != '0')
+                                else:
+                                    change = (syndrome_list[-t - 1][j]
+                                          != syndrome_list[-t][j])
+                            elif t == self.T:
+                                last3 = ''
+                                for dt in range(3):   
+                                    last3 += syndrome_list[-t - 1 + dt][j]
+                                change = last3.count('1')%2 == 1
+                            else:
+                                change = (syndrome_list[-t - 1][j]
+                                          != syndrome_list[-t + 1][j])
                     syndrome_changes += " "
 
                 # the space separated string of syndrome changes then gets a
