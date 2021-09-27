@@ -219,25 +219,26 @@ class RepetitionCode:
                     for j in range(self.d - 1):
                         if self._resets:
                             if t == 0:
-                                change = (syndrome_list[-1][j] != '0')
+                                change = (syndrome_list[-1][j] != "0")
                             else:
                                 change = (syndrome_list[-t - 1][j]
                                           != syndrome_list[-t][j])
                         else:
                             if t <= 1:
                                 if t != self.T:
-                                    change = (syndrome_list[-t - 1][j] != '0')
+                                    change = (syndrome_list[-t - 1][j] != "0")
                                 else:
                                     change = (syndrome_list[-t - 1][j]
-                                          != syndrome_list[-t][j])
+                                              != syndrome_list[-t][j])
                             elif t == self.T:
-                                last3 = ''
-                                for dt in range(3):   
+                                last3 = ""
+                                for dt in range(3):
                                     last3 += syndrome_list[-t - 1 + dt][j]
-                                change = last3.count('1')%2 == 1
+                                change = last3.count("1") % 2 == 1
                             else:
                                 change = (syndrome_list[-t - 1][j]
                                           != syndrome_list[-t + 1][j])
+                        syndrome_changes += "0" * (not change) + "1" * change
                     syndrome_changes += " "
 
                 # the space separated string of syndrome changes then gets a
