@@ -137,8 +137,15 @@ class TestCodes(unittest.TestCase):
             for T in [1, 2]:
                 for xbasis in [False, True]:
                     for resets in [False, True]:
-                        code = RepetitionCode(d, T, xbasis=xbasis, resets=resets)
-                        self.single_error_test(code)
+                        for delay in [0, 16]:
+                            code = RepetitionCode(d, T, xbasis=xbasis, resets=resets, delay=delay)
+                            self.single_error_test(code)
+                            if delay > 0 and T > 1:
+                                num_delays = code.circuit['0'].count_ops()['delay']
+                                self.assertTrue(
+                                    num_delays == (d-1)*(T-1),
+                                    "Error: wrong number of delay gates."
+                                )
 
     def test_weight(self):
         """Error weighting code test."""
