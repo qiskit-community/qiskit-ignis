@@ -1,6 +1,13 @@
-# Qiskit Ignis
+# Qiskit Ignis (_DEPRECATED_)
 
 [![License](https://img.shields.io/github/license/Qiskit/qiskit-ignis.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)[![Build Status](https://img.shields.io/travis/com/Qiskit/qiskit-ignis/master.svg?style=popout-square)](https://travis-ci.com/Qiskit/qiskit-ignis)[![](https://img.shields.io/github/release/Qiskit/qiskit-ignis.svg?style=popout-square)](https://github.com/Qiskit/qiskit-ignis/releases)[![](https://img.shields.io/pypi/dm/qiskit-ignis.svg?style=popout-square)](https://pypi.org/project/qiskit-ignis/)
+
+**_NOTE_** _As of the version 0.6.0 Qiskit Ignis is deprecated and has been
+supersceded by the
+[Qiskit Experiments](https://github.com/Qiskit/qiskit-experiments) project.
+Active development on the project has stopped and only compatibility fixes
+and other critical bugfixes will be accepted until the project is officially
+retired and archived._
 
 **Qiskit** is an open-source framework for working with noisy quantum computers at the level of pulses, circuits, and algorithms.
 
