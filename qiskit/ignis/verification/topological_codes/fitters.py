@@ -179,16 +179,13 @@ class GraphDecoder:
     def get_error_probs(self, results, logical="0"):
         """
         Generate probabilities of single error events from result counts.
-
         Args:
             results (dict): A results dictionary, as produced by the
             `process_results` method of the code.
             logical (string): Logical value whose results are used.
-
         Returns:
             dict: Keys are the edges for specific error
             events, and values are the calculated probabilities
-
         Additional information:
             Uses `results` to estimate the probability of the errors that
             create the pairs of nodes specified by the edge.
@@ -238,15 +235,36 @@ class GraphDecoder:
             av_vv[node0, node1] /= shots
             av_xor[node0, node1] /= shots
 
+        boundary = []
         for edge in self.S.edge_list():
             node0, node1 = self.S[edge[0]], self.S[edge[1]]
-            if (1 - 2 * av_xor[node0, node1]) != 0:
-                x = (av_vv[node0, node1] - av_v[node0] * av_v[node1]) / (
-                    1 - 2 * av_xor[node0, node1]
-                )
-                error_probs[node0, node1] = max(0, 0.5 - np.sqrt(0.25 - x))
+
+            if node0[0] == 0:
+                boundary.append(node1)
+            elif node1[0] == 0:
+                boundary.append(node0)
             else:
-                error_probs[node0, node1] = np.nan
+                if (1 - 2 * av_xor[node0, node1]) != 0:
+                    x = (av_vv[node0, node1] - av_v[node0] * av_v[node1]) / (
+                        1 - 2 * av_xor[node0, node1]
+                    )
+                    error_probs[node0, node1] = max(0, 0.5 - np.sqrt(0.25 - x))
+                else:
+                    error_probs[node0, node1] = np.nan
+
+        prod = {}
+        for node0 in boundary:
+            for node1 in self.S.nodes():
+                if node0 != node1:
+                    if node0 not in prod:
+                        prod[node0] = 1
+                    if (node0, node1) in error_probs:
+                        prod[node0] *= (1 - 2*error_probs[node0, node1])
+                    elif (node1, node0) in error_probs:
+                        prod[node0] *= (1 - 2*error_probs[node1, node0])
+
+        for node0 in boundary:
+            error_probs[node0, node0] = 0.5 + (av_v[node0] - 0.5) / prod[node0]
 
         return error_probs
 
