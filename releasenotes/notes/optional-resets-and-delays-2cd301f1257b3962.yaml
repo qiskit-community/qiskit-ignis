@@ -1,7 +1,7 @@
 
 features:
   - |
-    The :class: `RepetitionCode` now has keyword arguments `resets` and `delay`.
+    The :class:`~qiskit.ignis.verification.RepetitionCode` now has keyword arguments ``resets`` and ``delay``.
     The former determines whether reset gates are inserted after measurement.
     The latter allows a time (in dt) to be specificed for a delay after each
     measurement (and reset, if applicable).
