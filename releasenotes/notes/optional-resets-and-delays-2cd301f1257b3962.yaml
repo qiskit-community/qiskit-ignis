@@ -5,7 +5,7 @@ features:
     The former determines whether reset gates are inserted after measurement.
     The latter allows a time (in dt) to be specificed for a delay after each
     measurement (and reset, if applicable).
-deprecations:
+upgrade:
   - |
     The keyword argument `reset` has been removed for the `syndrome_measurement`
     method of :class: `RepetitionCode`. This is replaced by the global `resets`
