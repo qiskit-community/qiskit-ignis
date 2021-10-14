@@ -134,7 +134,7 @@ class GraphDecoder:
             if HAS_AER:
                 simulator = Aer.get_backend("aer_simulator")
             else:
-                simulator = BasicAer.get_backend("aer_simulator")
+                simulator = BasicAer.get_backend("qasm_simulator")
 
             job = execute(list(error_circuit.values()), simulator)
 
