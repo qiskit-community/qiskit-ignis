@@ -6,7 +6,8 @@ features:
     The latter allows a time (in dt) to be specificed for a delay after each
     measurement (and reset, if applicable).
     
-    The `syndrome_measurement` method of :class: `RepetitionCode` now has keyword
+    The :meth:`~qiskit.ignis.verification.RepitionCode.syndrome_measurement` method of
+    :class:`~qiskit.ignis.verification.RepetitionCode` now has keyword
     arguments ``final`` and ``delay``. The former determines whether to add reset gates according
     to the global ``resets``, or to overwrite it with appropriate behavior for the
     final round of syndrome measurements. The latter allows a time (in dt) to be specificed 
