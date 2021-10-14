@@ -14,11 +14,10 @@ features:
     for a delay after each measurement (and reset, if applicable).
 upgrade:
   - |
-    The keyword argument `reset` has been removed for the
-     :meth:`~qiskit.ignis.verification.RepitionCode.syndrome_measurement` method of
+    The keyword argument `reset` has been removed for
+    the :meth:`~qiskit.ignis.verification.RepitionCode.syndrome_measurement` method of
     :class:`~qiskit.ignis.verification.RepetitionCode`. This is replaced by the global
-    ``resets``
-    keyword argument for the class as well as the keyword argument ``final`` for
-    ``syndrome_measurement``. In cases where one would previously add the final
+    ``resets` keyword argument for the class as well as the keyword argument ``final``
+    for ``syndrome_measurement``. In cases where one would previously add the final
     measurement round using ``reset=False`` to avoid the final reset gates, one
     should now use ``final=True``.
