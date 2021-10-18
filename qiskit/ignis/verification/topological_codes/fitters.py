@@ -132,7 +132,7 @@ class GraphDecoder:
                         error_circuit[temp_qc.name] = temp_qc
 
             if HAS_AER:
-                simulator = Aer.get_backend("qasm_simulator")
+                simulator = Aer.get_backend("aer_simulator")
             else:
                 simulator = BasicAer.get_backend("qasm_simulator")
 

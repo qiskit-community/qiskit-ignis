@@ -1,0 +1,23 @@
+
+features:
+  - |
+    The :class:`~qiskit.ignis.verification.RepetitionCode` now has keyword arguments ``resets`` and ``delay``.
+    The former determines whether reset gates are inserted after measurement.
+    The latter allows a time (in dt) to be specificed for a delay after each
+    measurement (and reset, if applicable).
+    
+    The :meth:`~qiskit.ignis.verification.RepitionCode.syndrome_measurement` method of
+    :class:`~qiskit.ignis.verification.RepetitionCode` now has keyword
+    arguments ``final`` and ``delay``. The former determines whether to add reset gates according
+    to the global ``resets``, or to overwrite it with appropriate behavior for the
+    final round of syndrome measurements. The latter allows a time (in dt) to be specificed 
+    for a delay after each measurement (and reset, if applicable).
+upgrade:
+  - |
+    The keyword argument `reset` has been removed for
+    the :meth:`~qiskit.ignis.verification.RepitionCode.syndrome_measurement` method of
+    :class:`~qiskit.ignis.verification.RepetitionCode`. This is replaced by the global
+    ``resets` keyword argument for the class as well as the keyword argument ``final``
+    for ``syndrome_measurement``. In cases where one would previously add the final
+    measurement round using ``reset=False`` to avoid the final reset gates, one
+    should now use ``final=True``.
