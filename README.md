@@ -13,6 +13,26 @@ retired and archived._
 
 Qiskit is made up of elements that each work together to enable quantum computing. This element is **Ignis**, which provides tools for quantum hardware verification, noise characterization, and error correction.
 
+## Migration Guide
+
+As of version 0.6.0, Qiskit Ignis has been deprecated and its functionality 
+was migrated into the `qiskit-experiments` package and into `qiskit-terra`.
+
+The following table gives a more detailed breakdown that relates the function, as it existed in Ignis, 
+to where it now lives after this move.
+
+| Old | New | Library |
+| :---: | :---: | :---: |
+| qiskit.ignis.characterization.calibrations | qiskit_experiments.library.calibration | qiskit-experiments |
+| qiskit.ignis.characterization.coherence | qiskit_experiments.library.characterization | qiskit-experiments |
+| qiskit.ignis.mitigation | qiskit_terra.mitigation | qiskit-terra |
+| qiskit.ignis.verification.quantum_volume | qiskit_experiments.library.quantum_volume | qiskit-experiments |
+| qiskit.ignis.verification.randomized_benchmarking | qiskit_experiments.library.randomized_benchmarking | qiskit-experiments |
+| qiskit.ignis.verification.tomography | qiskit_experiments.library.tomography | qiskit-experiments |
+
+
+
+
 
 ## Installation
 
