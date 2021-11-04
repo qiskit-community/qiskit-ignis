@@ -23,6 +23,8 @@ was migrated into the `qiskit-experiments` package and into `qiskit-terra`.
   * This module was partly migrated to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments) and split into two different modules:
   `qiskit_experiments.library.calibration`
   `qiskit_experiments.library.characterization`
+  * `AmpCal` is now replaced by `FineAmplitude`.
+  * `ZZFitter` was not migrated yet.
   
 * Ignis discriminator module
 
