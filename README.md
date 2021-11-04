@@ -15,9 +15,30 @@ Qiskit is made up of elements that each work together to enable quantum computin
 
 ## Migration Guide
 
-As of version 0.6.0, Qiskit Ignis has been deprecated and its functionality 
+As of version 0.6.0, Qiskit Ignis has been deprecated and some of its functionality 
 was migrated into the `qiskit-experiments` package and into `qiskit-terra`.
 
+* Ignis characterization module
+
+  * This module was partly migrated to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments) and split into two different modules:
+  `qiskit_experiments.library.calibration`
+  `qiskit_experiments.library.characterization`
+  
+* Ignis discriminator module
+
+  * This module is in the process of migration to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments)
+
+* Ignis mitigation module
+
+  * The readout mitigator will be soon added to [`qiskit-terra`](https://github.com/Qiskit/qiskit-terra).
+  * Experiments for generating the readout mitigators will be added to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments)
+  
+* Ignis verification module
+
+  * Randomized benchmarking, Quantum Volume and State and Process Tomography were migrated to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments).
+  * Migration of Gate-set tomography to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments) is in progress.
+  * Currently the Accredition, Entanglement and Topological code modules have not been migrated.
+  
 The following table gives a more detailed breakdown that relates the function, as it existed in Ignis, 
 to where it now lives after this move.
 
