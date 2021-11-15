@@ -35,7 +35,7 @@ def get_syndrome(code, noise_model, shots=1014):
 
     job = execute(
         circuits,
-        Aer.get_backend("qasm_simulator"),
+        Aer.get_backend("aer_simulator"),
         noise_model=noise_model,
         shots=shots,
     )
@@ -92,7 +92,7 @@ class TestCodes(unittest.TestCase):
                         circuit_name[(j, qubit, error)] = temp_qc.name
                         error_circuit[temp_qc.name] = temp_qc
 
-            simulator = Aer.get_backend("qasm_simulator")
+            simulator = Aer.get_backend("aer_simulator")
             job = execute(list(error_circuit.values()), simulator)
 
             for j in range(depth):
@@ -136,8 +136,16 @@ class TestCodes(unittest.TestCase):
         for d in [2, 3]:
             for T in [1, 2]:
                 for xbasis in [False, True]:
-                    code = RepetitionCode(d, T, xbasis=xbasis)
-                    self.single_error_test(code)
+                    for resets in [False, True]:
+                        for delay in [0, 16]:
+                            code = RepetitionCode(d, T, xbasis=xbasis, resets=resets, delay=delay)
+                            self.single_error_test(code)
+                            if delay > 0 and T > 1:
+                                num_delays = code.circuit['0'].count_ops()['delay']
+                                self.assertTrue(
+                                    num_delays == (d-1)*(T-1),
+                                    "Error: wrong number of delay gates."
+                                )
 
     def test_weight(self):
         """Error weighting code test."""
