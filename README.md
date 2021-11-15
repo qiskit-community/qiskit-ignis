@@ -13,6 +13,49 @@ retired and archived._
 
 Qiskit is made up of elements that each work together to enable quantum computing. This element is **Ignis**, which provides tools for quantum hardware verification, noise characterization, and error correction.
 
+## Migration Guide
+
+As of version 0.6.0, Qiskit Ignis has been deprecated and some of its functionality 
+was migrated into the `qiskit-experiments` package and into `qiskit-terra`.
+
+* Ignis characterization module
+
+  * This module was partly migrated to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments) and split into two different modules:
+  `qiskit_experiments.library.calibration`
+  `qiskit_experiments.library.characterization`
+  * `AmpCal` is now replaced by `FineAmplitude`.
+  * `ZZFitter` was not migrated yet.
+  
+* Ignis discriminator module
+
+  * This module is in the process of migration to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments)
+
+* Ignis mitigation module
+
+  * The readout mitigator will be soon added to [`qiskit-terra`](https://github.com/Qiskit/qiskit-terra).
+  * Experiments for generating the readout mitigators will be added to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments)
+  
+* Ignis verification module
+
+  * Randomized benchmarking, Quantum Volume and State and Process Tomography were migrated to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments).
+  * Migration of Gate-set tomography to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments) is in progress.
+  * Currently the Accredition, Entanglement and Topological code modules have not been migrated.
+  
+The following table gives a more detailed breakdown that relates the function, as it existed in Ignis, 
+to where it now lives after this move.
+
+| Old | New | Library |
+| :---: | :---: | :---: |
+| qiskit.ignis.characterization.calibrations | qiskit_experiments.library.calibration | qiskit-experiments |
+| qiskit.ignis.characterization.coherence | qiskit_experiments.library.characterization | qiskit-experiments |
+| qiskit.ignis.mitigation | qiskit_terra.mitigation | qiskit-terra |
+| qiskit.ignis.verification.quantum_volume | qiskit_experiments.library.quantum_volume | qiskit-experiments |
+| qiskit.ignis.verification.randomized_benchmarking | qiskit_experiments.library.randomized_benchmarking | qiskit-experiments |
+| qiskit.ignis.verification.tomography | qiskit_experiments.library.tomography | qiskit-experiments |
+
+
+
+
 
 ## Installation
 
