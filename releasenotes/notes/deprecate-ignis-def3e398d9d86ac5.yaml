@@ -15,4 +15,6 @@ deprecations:
     compatibility fixes and fixes for critical bugs will be made to the proejct.
     Instead of using Qiskit Ignis you should migrate to use
     `Qiskit Experiments <https://qiskit.org/documentation/experiments/>`__
-    instead. You can refer to the migration guide: INSERT LINK HERE
+    instead. You can refer to the migration guide:
+
+    https://github.com/Qiskit/qiskit-ignis#migration-guide

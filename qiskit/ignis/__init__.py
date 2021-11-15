@@ -19,6 +19,7 @@ from .version import __version__
 warnings.warn(
     "The qiskit.ignis package is deprecated and has been supersceded by the "
     "qiskit-experiments project. Refer to the migration guide: "
-    "INSERT LINK HERE on how to migrate to the new project.",
+    "https://github.com/Qiskit/qiskit-ignis#migration-guide on how to migrate "
+    "to the new project.",
     DeprecationWarning,
     stacklevel=2)
