@@ -34,6 +34,8 @@ was migrated into the `qiskit-experiments` package and into `qiskit-terra`.
 
   * The readout mitigator will be soon added to [`qiskit-terra`](https://github.com/Qiskit/qiskit-terra).
   * Experiments for generating the readout mitigators will be added to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments)
+  * For use of mitigators with `qiskit.algorithms` and the [`QuantumInstance` class](https://qiskit.org/documentation/stubs/qiskit.utils.QuantumInstance.html?highlight=quantuminstance#qiskit.utils.QuantumInstance)
+    this has been integrated into `qiskit-terra` directly with the `QuantumInstance`.
   
 * Ignis verification module
 
@@ -52,10 +54,6 @@ to where it now lives after this move.
 | qiskit.ignis.verification.quantum_volume | qiskit_experiments.library.quantum_volume | qiskit-experiments |
 | qiskit.ignis.verification.randomized_benchmarking | qiskit_experiments.library.randomized_benchmarking | qiskit-experiments |
 | qiskit.ignis.verification.tomography | qiskit_experiments.library.tomography | qiskit-experiments |
-
-
-
-
 
 ## Installation
 
