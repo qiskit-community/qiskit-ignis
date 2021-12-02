@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Added the option for the fast analytical generation of syndrome graphs.
+    The :class:`.RepetitionCode` now has a new bool argument ``brute``, which
+    allows to still use the brute force method.
+    Helper class :class:`.RepetitionCodeSyndromeGenerator` added to
+    facilitate this.
