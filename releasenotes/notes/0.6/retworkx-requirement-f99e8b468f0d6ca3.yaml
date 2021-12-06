@@ -1,6 +1,0 @@
----
-upgrade:
-  - |
-    The python package ``retworkx`` is now a requirement for installing
-    qiskit-ignis. It replaces the previous usage of ``networkx`` (which is
-    no longer a requirement) to get better performance.

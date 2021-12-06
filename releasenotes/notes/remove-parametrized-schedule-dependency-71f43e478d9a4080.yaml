@@ -1,9 +1,0 @@
----
-upgrade:
-  - |
-    Remove ``ParametrizedSchedule`` from
-    :py:func:`~qiskit.ignis.characterization.calibrations.ibmq_utils.update_u_gates`.
-
-    ``ParametrizedSchedule`` was deprecated as a part of Qiskit-terra 0.17.0 and will be
-    removed in next release. The function now updates u gates with ``Schedule`` programs
-    involving unassigned ``Parameter`` objects.
