@@ -1,6 +1,6 @@
 # Topological Codes
 
-This repository contains the `topological_codes` module of `Qiskit Ignis` as an independent package.
+This repository contains the `topological_codes` module of Qiskit Ignis as an independent package.
 
 For a guide on how to use it, see [here](https://github.com/quantumjim/TopologicalCodesTutorial).
 
