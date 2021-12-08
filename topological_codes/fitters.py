@@ -136,7 +136,7 @@ class GraphDecoder:
             else:
                 simulator = BasicAer.get_backend("qasm_simulator")
 
-            job = execute(list(error_circuit.values()), simulator)
+            job = execute(list(error_circuit.values()), simulator, shots=1)
 
             node_map = {}
             for j in range(depth):
