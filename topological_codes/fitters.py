@@ -24,7 +24,7 @@ import warnings
 import retworkx as rx
 import numpy as np
 
-from qiskit import QuantumCircuit, execute
+from qiskit import QuantumCircuit
 
 try:
     from qiskit.providers.aer import Aer
@@ -136,7 +136,7 @@ class GraphDecoder:
             else:
                 simulator = BasicAer.get_backend("qasm_simulator")
 
-            job = execute(list(error_circuit.values()), simulator, shots=1)
+            job = simulator.run(list(error_circuit.values()), shots=1)
 
             node_map = {}
             for j in range(depth):
