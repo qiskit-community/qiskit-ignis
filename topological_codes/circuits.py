@@ -419,3 +419,284 @@ class RepetitionCodeSyndromeGenerator:
                 % 2
             )
         return processed_result
+    
+    
+    class SurfaceCode():
+    
+    def __init__(self,d,T,basis='z',resets=True):
+        
+        self.d = d
+        self.T = 0
+        self._basis = basis
+        self._resets = resets
+        
+        self._num_xy = int((d**2 - 1)/2)
+        
+        # quantum registers
+        self.code_qubit = QuantumRegister(d**2, 'code_qubit')
+        self.zplaq_qubit = QuantumRegister(self._num_xy, 'zplaq_qubit')
+        self.xplaq_qubit = QuantumRegister(self._num_xy, 'xplaq_qubit')
+        self.qubit_registers = [self.code_qubit,self.zplaq_qubit,self.xplaq_qubit]
+        
+        # classical registers
+        self.xplaq_bits = []
+        self.zplaq_bits = []
+        self.code_bit = ClassicalRegister(d**2, 'code_bit')
+        
+        # plaquettes
+        self.zplaqs, self.xplaqs = self._get_plaquettes()
+
+        # create the circuits
+        self.circuit = {}
+        for log in ['0', '1']:
+            self.circuit[log] = QuantumCircuit(
+                self.code_qubit,self.zplaq_qubit,self.xplaq_qubit,
+                name=log)
+            
+        # apply initial logical paulis for encoded states
+        self._preparation()
+
+        # add the gates required for syndrome measurements
+        for _ in range(T-1):
+            self.syndrome_measurement()
+        if T != 0:
+            self.syndrome_measurement(final=True)
+            self.readout()
+            
+    def _get_plaquettes(self):
+
+        d = self.d
+        
+        zplaqs = []
+        xplaqs = []
+        for y in range(-1,d):
+            for x in range(-1,d):
+
+                bulk = x in range(d-1) and y in range(d-1)
+                ztab = (x==-1 and y%2==0) or (x==d-1 and y%2==1)
+                xtab = (y==-1 and x%2==1) or (y==d-1 and x%2==0)
+
+                if (x in range(d-1) or y in range(d-1)) and (bulk or ztab or xtab):
+                    plaq = []
+                    for dy in range(2):
+                        for dx in range(2):   
+                            if x+dx in range(d) and y+dy in range(d):
+                                plaq.append(x+dx+d*(y+dy))
+                            else:
+                                plaq.append(None)
+
+                    if (x+y)%2==0:
+                        xplaqs.append([plaq[0], plaq[1], plaq[2], plaq[3]])
+                    else:
+                        zplaqs.append([plaq[0], plaq[2], plaq[1], plaq[3]])
+                    
+        return zplaqs,xplaqs
+
+    def _preparation(self):
+        """
+        Prepares logical bit states by applying an x to the circuit that will
+        encode a 1.
+        """
+        if self._basis=='z':
+            self.x(['1'])
+        else:
+            for log in self.circuit:
+                self.circuit[log].h(self.code_qubit)
+            self.z(['1'])
+        
+    def get_circuit_list(self):
+        """
+        Returns:
+            circuit_list: self.circuit as a list, with
+            circuit_list[0] = circuit['0']
+            circuit_list[1] = circuit['1']
+        """
+        circuit_list = [self.circuit[log] for j,log in enumerate(['0', '1'])]
+        return circuit_list
+
+    def x(self, logs=('0', '1'), barrier=False):
+        """
+        Applies a logical x to the circuits for the given logical values.
+        Args:
+            logs (list or tuple): List or tuple of logical values expressed as
+                strings.
+            barrier (bool): Boolean denoting whether to include a barrier at
+                the end.
+        """
+        for log in logs:
+            for j in range(self.d):
+                self.circuit[log].x(self.code_qubit[j*d])
+            if barrier:
+                self.circuit[log].barrier()
+       
+    def z(self, logs=('0', '1'), barrier=False):
+        """
+        Applies a logical z to the circuits for the given logical values.
+        Args:
+            logs (list or tuple): List or tuple of logical values expressed as
+                strings.
+            barrier (bool): Boolean denoting whether to include a barrier at
+                the end.
+        """
+        for log in logs:
+            for j in range(self.d):
+                self.circuit[log].z(self.code_qubit[j])
+            if barrier:
+                self.circuit[log].barrier()
+
+    def syndrome_measurement(self, final=False, barrier=False):
+        """
+        Application of a syndrome measurement round.
+        Args:
+            reset (bool): If set to true add a boolean at the end of each round
+            barrier (bool): Boolean denoting whether to include a barrier at the end.
+            
+        """
+        
+        num_bits = int((self.d**2 - 1)/2)
+        
+        zplaqs,xplaqs = self.zplaqs, self.xplaqs
+        
+        # classical registers for this round
+        self.zplaq_bits.append(ClassicalRegister(
+            self._num_xy, 'round_' + str(self.T) + '_zplaq_bit'))
+        self.xplaq_bits.append(ClassicalRegister(
+            self._num_xy, 'round_' + str(self.T) + '_xplaq_bit'))
+
+        for log in ['0', '1']:
+
+            self.circuit[log].add_register(self.zplaq_bits[-1])
+            self.circuit[log].add_register(self.xplaq_bits[-1])
+            
+            self.circuit[log].h(self.xplaq_qubit)
+            
+            for j in range(4):
+                for p,plaq in enumerate(zplaqs):
+                    c = plaq[j]
+                    if c!=None:
+                        self.circuit[log].cx(self.code_qubit[c], self.zplaq_qubit[p])
+                for p,plaq in enumerate(xplaqs):
+                    c = plaq[j]
+                    if c!=None:
+                        self.circuit[log].cx(self.xplaq_qubit[p], self.code_qubit[c])
+            
+            self.circuit[log].h(self.xplaq_qubit)
+            
+            for j in range(self._num_xy):
+                self.circuit[log].measure(
+                    self.xplaq_qubit[j], self.xplaq_bits[self.T][j])
+                self.circuit[log].measure(
+                    self.zplaq_qubit[j], self.zplaq_bits[self.T][j])
+                if self._resets and not final:
+                    self.circuit[log].reset(self.xplaq_qubit[j])
+                    self.circuit[log].reset(self.zplaq_qubit[j])
+
+            if barrier:
+                self.circuit[log].barrier()
+
+        self.T += 1
+        
+    def readout(self):
+        """
+        Readout of all code qubits, which corresponds to a logical measurement
+        as well as allowing for a measurement of the syndrome to be inferred.
+        """
+        
+        for log in ['0', '1']:
+            if self._basis=='x':
+                self.circuit[log].h(self.code_qubit)
+            self.circuit[log].add_register(self.code_bit)
+            self.circuit[log].measure(self.code_qubit, self.code_bit)
+            
+    def process_results(self, raw_results):
+        
+        zplaqs,xplaqs = self.zplaqs, self.xplaqs
+        
+        results = {}
+        for log in raw_results:
+            results[log] = {}
+            for string in raw_results[log]:
+                
+                final_readout = string.split(' ')[0][::-1]
+                
+                # get logical readout
+                # (though it's called Z, it actually depends on the basis)
+                Z = [0,0]
+                for j in range(self.d):
+                    if self._basis=='z':
+                        # evaluated using top row
+                        Z[0] = (Z[0] + int(final_readout[j]))%2
+                        # evaluated using bottom row
+                        Z[1] = (Z[1] + int(final_readout[self.d**2-1-j]))%2
+                    else:
+                        # evaluated using left side
+                        Z[0] = (Z[0] + int(final_readout[j*self.d]))%2
+                        # evaluated using right side
+                        Z[1] = (Z[1] + int(final_readout[(j+1)*self.d-1]))%2  
+                    
+                measured_Z = str(Z[0]) + ' ' + str(Z[1]) 
+                
+                # final syndrome for plaquettes deduced from final code qubit readout
+                if self._basis=='z':
+                    plaqs = zplaqs
+                else:
+                    plaqs = xplaqs
+                full_syndrome = ''
+                for plaq in plaqs:
+                    parity = 0
+                    for q in plaq:
+                        if q!=None:
+                            parity += int(final_readout[q])
+                    full_syndrome = str(parity%2) + full_syndrome
+                
+                # results from all other plaquette syndrome measurements then added
+                if self._basis=='z':
+                    full_syndrome = full_syndrome + ' ' + ' '.join(string.split(' ')[2::2])
+                else:
+                    full_syndrome = full_syndrome + ' ' + ' '.join(string.split(' ')[1::2])
+
+                # changes between one syndrome and the next then calculated
+                syndrome_list = full_syndrome.split(' ')
+
+                height = len(syndrome_list)
+                width = len(syndrome_list[0])
+                syndrome_changes = ''
+                for t in range(height):
+                    for j in range(width):
+                        if self._resets:
+                            if t == 0:
+                                change = (syndrome_list[-1][j] != '0')
+                            else:
+                                change = (syndrome_list[-t][j]
+                                          != syndrome_list[-t - 1][j])
+                            syndrome_changes += '0' * (not change) + '1' * change
+                        else:
+                            if t <= 1:
+                                if t != self.T:
+                                    change = (syndrome_list[-t - 1][j] != '0')
+                                else:
+                                    change = (syndrome_list[-t - 1][j]
+                                              != syndrome_list[-t][j])
+                            elif t == self.T:
+                                last3 = ''
+                                for dt in range(3):
+                                    last3 += syndrome_list[-t - 1 + dt][j]
+                                change = last3.count('1') % 2 == 1
+                            else:
+                                change = (syndrome_list[-t - 1][j]
+                                          != syndrome_list[-t + 1][j])
+                            syndrome_changes += '0' * (not change) + '1' * change
+                        syndrome_changes += ' '
+                    
+                # the space separated string of syndrome changes then gets a
+                # double space separated logical value on the end
+                new_string = measured_Z + '  ' + syndrome_changes[:-1]
+                
+                if new_string in results[log]:
+                    results[log][new_string] += raw_results[log][string]
+                else:
+                    results[log][new_string] = raw_results[log][string]
+                
+        return results
+
+    
