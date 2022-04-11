@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9]
         os: ["ubuntu-latest"]
     steps:
       - uses: actions/checkout@v2
@@ -37,7 +37,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9]
         os: ["macOS-latest"]
     steps:
       - uses: actions/checkout@v2
@@ -87,10 +87,10 @@ jobs:
         run: tox -e no-opt
   windows-tests:
     name: tests-python${{ matrix.python-version }}-windows
-    runs-on: windows-latest
+    runs-on: 'windows-2019'
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.8, 3.9]
     steps:
       - uses: actions/checkout@v2
       - name: Add msbuild to PATH
