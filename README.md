@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/github/license/Qiskit/qiskit-ignis.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)[![Build Status](https://img.shields.io/travis/com/Qiskit/qiskit-ignis/master.svg?style=popout-square)](https://travis-ci.com/Qiskit/qiskit-ignis)[![](https://img.shields.io/github/release/Qiskit/qiskit-ignis.svg?style=popout-square)](https://github.com/Qiskit/qiskit-ignis/releases)[![](https://img.shields.io/pypi/dm/qiskit-ignis.svg?style=popout-square)](https://pypi.org/project/qiskit-ignis/)
 
 **_NOTE_** _As of the version 0.7.0 Qiskit Ignis is deprecated and has been
-supersceded by the
+superseded by the
 [Qiskit Experiments](https://github.com/Qiskit/qiskit-experiments) project.
 Active development on the project has stopped and only compatibility fixes
 and other critical bugfixes will be accepted until the project is officially
@@ -57,13 +57,13 @@ to where it now lives after this move.
 
 ## Installation
 
-We encourage installing Qiskit via the PIP tool (a python package manager), which installs all Qiskit elements, including this one.
+We encourage installing Qiskit via the pip tool (a python package manager). The following command installs the core Qiskit components, including Ignis.
 
 ```bash
 pip install qiskit
 ```
 
-PIP will handle all dependencies automatically for us and you will always install the latest (and well-tested) version.
+Pip will handle all dependencies automatically for us and you will always install the latest (and well-tested) version.
 
 To install from source, follow the instructions in the [contribution guidelines](./CONTRIBUTING.md).
 
