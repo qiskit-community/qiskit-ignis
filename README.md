@@ -41,8 +41,8 @@ was migrated into the `qiskit-experiments` package and into `qiskit-terra`.
 
   * Randomized benchmarking, Quantum Volume and State and Process Tomography were migrated to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments).
   * Migration of Gate-set tomography to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments) is in progress.
-  * Currently the Accredition, Entanglement and Topological code modules have not been migrated.
-  
+  * `topological_codes` will continue development under [NCCR-SPIN](https://github.com/NCCR-SPIN/topological_codes/blob/master/README.md), while the functionality is reintegrated into Qiskit. Some additional functionality can also be found in the offshoot project [qtcodes](https://github.com/yaleqc/qtcodes).
+  * Currently the Accredition and Entanglement modules have not been migrated.  
 The following table gives a more detailed breakdown that relates the function, as it existed in Ignis, 
 to where it now lives after this move.
 
