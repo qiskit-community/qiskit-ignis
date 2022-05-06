@@ -76,7 +76,7 @@ setuptools.setup(
         "Topic :: Scientific/Engineering",
     ],
     keywords="qiskit sdk quantum",
-    packages=setuptools.find_namespace_packages(exclude=['test*']),
+    packages=setuptools.find_namespace_packages(exclude=['test*', 'docs']),
     extras_require={
         'visualization': ['matplotlib>=2.1'],
         'cvx': ['cvxpy>=1.0.15'],
