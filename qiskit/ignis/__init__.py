@@ -12,4 +12,14 @@
 
 """Qiskit Ignis Root."""
 
+import warnings
+
 from .version import __version__
+
+warnings.warn(
+    "The qiskit.ignis package is deprecated and has been supersceded by the "
+    "qiskit-experiments project. Refer to the migration guide: "
+    "https://github.com/Qiskit/qiskit-ignis#migration-guide on how to migrate "
+    "to the new project.",
+    DeprecationWarning,
+    stacklevel=2)

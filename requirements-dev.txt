@@ -8,8 +8,7 @@ sphinx-tabs>=1.1.11
 sphinx-autodoc-typehints
 stestr>=2.5.0
 ddt>=1.2.0,!=1.4.0
-jupyter;python_version<'3.9'
-jupyter-sphinx;python_version<'3.9'
+jupyter-sphinx
 reno
 matplotlib
 pyfakefs
