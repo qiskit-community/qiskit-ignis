@@ -1,0 +1,5 @@
+---
+prelude: |
+    This is a bugfix release that primarily fixes a packaging issue that was
+    causing the ``docs/`` directory, which contains the source files used to
+    build the qiskit-ignis documentation, to get included in the Python package.
