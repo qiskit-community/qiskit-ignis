@@ -4,3 +4,5 @@ pywin32==225
 setuptools==49.6.0
 pyfakefs==4.1.0
 cvxpy==1.1.7
+scs==2.1.4
+cvxopt==1.2.7

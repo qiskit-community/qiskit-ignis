@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/github/license/Qiskit/qiskit-ignis.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)[![Build Status](https://img.shields.io/travis/com/Qiskit/qiskit-ignis/master.svg?style=popout-square)](https://travis-ci.com/Qiskit/qiskit-ignis)[![](https://img.shields.io/github/release/Qiskit/qiskit-ignis.svg?style=popout-square)](https://github.com/Qiskit/qiskit-ignis/releases)[![](https://img.shields.io/pypi/dm/qiskit-ignis.svg?style=popout-square)](https://pypi.org/project/qiskit-ignis/)
 
 **_NOTE_** _As of the version 0.7.0 Qiskit Ignis is deprecated and has been
-supersceded by the
+superseded by the
 [Qiskit Experiments](https://github.com/Qiskit/qiskit-experiments) project.
 Active development on the project has stopped and only compatibility fixes
 and other critical bugfixes will be accepted until the project is officially
@@ -41,8 +41,8 @@ was migrated into the `qiskit-experiments` package and into `qiskit-terra`.
 
   * Randomized benchmarking, Quantum Volume and State and Process Tomography were migrated to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments).
   * Migration of Gate-set tomography to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments) is in progress.
-  * Currently the Accredition, Entanglement and Topological code modules have not been migrated.
-  
+  * `topological_codes` will continue development under [NCCR-SPIN](https://github.com/NCCR-SPIN/topological_codes/blob/master/README.md), while the functionality is reintegrated into Qiskit. Some additional functionality can also be found in the offshoot project [qtcodes](https://github.com/yaleqc/qtcodes).
+  * Currently the Accredition and Entanglement modules have not been migrated.  
 The following table gives a more detailed breakdown that relates the function, as it existed in Ignis, 
 to where it now lives after this move.
 
@@ -57,13 +57,13 @@ to where it now lives after this move.
 
 ## Installation
 
-We encourage installing Qiskit via the PIP tool (a python package manager), which installs all Qiskit elements, including this one.
+We encourage installing Qiskit via the pip tool (a python package manager). The following command installs the core Qiskit components, including Ignis.
 
 ```bash
 pip install qiskit
 ```
 
-PIP will handle all dependencies automatically for us and you will always install the latest (and well-tested) version.
+Pip will handle all dependencies automatically for us and you will always install the latest (and well-tested) version.
 
 To install from source, follow the instructions in the [contribution guidelines](./CONTRIBUTING.md).
 
