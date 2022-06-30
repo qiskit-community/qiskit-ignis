@@ -32,8 +32,8 @@ was migrated into the `qiskit-experiments` package and into `qiskit-terra`.
 
 * Ignis mitigation module
 
-  * The readout mitigator will be soon added to [`qiskit-terra`](https://github.com/Qiskit/qiskit-terra).
-  * Experiments for generating the readout mitigators will be added to [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments)
+  * The readout mitigator is in [`qiskit-terra`](https://github.com/Qiskit/qiskit-terra): [`qiskit.utils.mitigation`](https://qiskit.org/documentation/apidoc/utils_mitigation.html).
+  * Experiments for generating the readout mitigators is in  [`qiskit-experiments`](https://github.com/Qiskit/qiskit-experiments): [local readout error characterization experiment](https://qiskit.org/documentation/experiments/stubs/qiskit_experiments.library.characterization.LocalReadoutError.html) and [correlated readout error characterization experiment](https://qiskit.org/documentation/experiments/stubs/qiskit_experiments.library.characterization.CorrelatedReadoutError.html) 
   * For use of mitigators with `qiskit.algorithms` and the [`QuantumInstance` class](https://qiskit.org/documentation/stubs/qiskit.utils.QuantumInstance.html?highlight=quantuminstance#qiskit.utils.QuantumInstance)
     this has been integrated into `qiskit-terra` directly with the `QuantumInstance`.
   

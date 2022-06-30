@@ -44,7 +44,7 @@ def qv_circuits(qubit_lists, ntrials=1,
         seed (int): An optional RNG seed to use for the generated circuit
 
     Returns:
-        tuple: A tuple of the type (``circuits``, ``circuits_nomeas``) wheere:
+        tuple: A tuple of the type (``circuits``, ``circuits_nomeas``) where:
             ``circuits`` is a list of lists of circuits for the qv sequences
             (separate list for each trial) and `` circuitss_nomeas`` is the
             same circuits but with no measurements for the ideal simulation
