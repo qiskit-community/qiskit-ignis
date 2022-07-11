@@ -462,20 +462,19 @@ def _tomography_circuits(
         # Generate preparation circuit
         if prep_label is not None:
             for j in range(num_qubits):
-                prep += preparation(prep_label[j], prep_qubits[j])
+                prep.compose(preparation(prep_label[j], prep_qubits[j]), [j], inplace=True)
             prep.barrier(*qubit_registers)
         # Add circuit being tomographed
-        prep += circuit
+        prep.compose(circuit, inplace=True)
         # Generate Measurement circuit
         for meas_label in meas_labels:
             meas = QuantumCircuit(*registers)
             if meas_label is not None:
                 meas.barrier(*qubit_registers)
                 for j in range(num_qubits):
-                    meas += measurement(meas_label[j],
-                                        meas_qubits[j],
-                                        clbits[j])
-            circ = prep + meas
+                    meas.compose(measurement(meas_label[j], meas_qubits[j], clbits[j]),
+                                 [j], [j], inplace=True)
+            circ = prep.compose(meas)
             if prep_label is None:
                 # state tomography circuit
                 circ.name = str(meas_label)
